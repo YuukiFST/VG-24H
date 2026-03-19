@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Serviços e Informações do Brasil — Gov.br</title>
+    <!-- Fonte Rawline -->
+    <link
+      rel="stylesheet"
+      href="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/fonts/rawline/css/rawline.css"
+    />
+    <!-- Fonte Raleway -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Raleway:300,400,500,600,700,800,900&display=swap"
+    />
+    <!-- Design System de Governo (core CSS compilado) -->
+    <link rel="stylesheet" href="../../GOV/govbr-ds-core/dist/core.css" />
+    <!-- Fontawesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css"
+    />
+    <style>
+      /* ======== Overrides mínimos para a página de serviços ======== */
+
+      /* Busca centralizada abaixo do header */
+      .search-area {
+        max-width: 720px;
+        margin: 32px auto 8px;
+        padding: 0 16px;
+      }
+
+      /* Título "Serviços para você" */
+      .servicos-titulo {
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color, #333);
+        margin: 24px 0 32px;
+      }
+
+      /* Duas colunas */
+      .servicos-columns {
+        display: flex;
+        gap: 48px;
+      }
+      .servicos-columns > div {
+        flex: 1;
+      }
+
+      /* Headers das colunas (MAIS ACESSADOS / DESTAQUE) */
+      .column-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding-bottom: 12px;
+      }
+      .column-header i {
+        font-size: 0.875rem;
+      }
+      .column-header span {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+      }
+
+      /* Lista de mais acessados */
+      .mais-acessados-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .mais-acessados-list li {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 8px;
+        border-bottom: 1px solid var(--gray-10, #ededed);
+      }
+      .mais-acessados-list .item-number {
+        color: var(--gray-40, #888);
+        font-size: 0.875rem;
+        min-width: 16px;
+        text-align: center;
+      }
+      .mais-acessados-list a {
+        color: var(--interactive, #1351b4);
+        font-weight: 500;
+        text-decoration: none;
+      }
+      .mais-acessados-list a:hover {
+        text-decoration: underline;
+      }
+
+      /* Lista de destaques */
+      .destaque-item {
+        padding: 14px 8px;
+        border-bottom: 1px solid var(--gray-10, #ededed);
+      }
+      .destaque-categoria {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--interactive, #1351b4);
+        margin-bottom: 4px;
+      }
+      .destaque-titulo {
+        display: block;
+        font-size: 0.9375rem;
+        font-weight: 700;
+        color: var(--color, #333);
+        text-decoration: none;
+        line-height: 1.4;
+      }
+      .destaque-titulo:hover {
+        color: var(--interactive, #1351b4);
+      }
+      .destaque-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      /* Tag Novo */
+      .tag-novo {
+        display: inline-flex;
+        align-items: center;
+        background: var(--success, #168821);
+        color: #fff;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        padding: 2px 10px;
+        border-radius: 100px;
+        flex-shrink: 0;
+      }
+
+      /* Responsivo */
+      @media (max-width: 991px) {
+        .servicos-columns {
+          flex-direction: column;
+          gap: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="template-base">
+
+      <!-- ====== Skip Links (Atalhos de teclado) ====== -->
+      <nav class="br-skiplink" role="menubar">
+        <a class="br-item" href="#main-content" role="menuitem" accesskey="1"
+          >Ir para o conteúdo <span aria-hidden="true">(1/4)</span>
+          <span aria-hidden="true" class="br-tag text ml-1">1</span></a
+        >
+        <a class="br-item" href="#header-navigation" role="menuitem" accesskey="2"
+          >Ir para o menu <span aria-hidden="true">(2/4)</span>
+          <span aria-hidden="true" class="br-tag text ml-1">2</span></a
+        >
+        <a class="br-item" href="#main-searchbox" role="menuitem" accesskey="3"
+          >Ir para a busca <span aria-hidden="true">(3/4)</span>
+          <span aria-hidden="true" class="br-tag text ml-1">3</span></a
+        >
+        <a class="br-item" href="#footer" role="menuitem" accesskey="4"
+          >Ir para o rodapé <span aria-hidden="true">(4/4)</span>
+          <span aria-hidden="true" class="br-tag text ml-1">4</span></a
+        >
+      </nav>
+
+      <!-- ====== HEADER (componente br-header) ====== -->
+      <header class="br-header" id="header" data-sticky="data-sticky">
+        <div class="container-lg">
+          <!-- Header Top -->
+          <div class="header-top">
+            <div class="header-logo">
+              <img
+                src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png"
+                alt="logo gov.br"
+              />
+              <span class="br-divider vertical"></span>
+              <div class="header-sign">Serviços em Destaque</div>
+            </div>
+            <div class="header-actions">
+              <!-- Links rápidos -->
+              <div class="header-links dropdown">
+                <button
+                  class="br-button circle small"
+                  type="button"
+                  data-toggle="dropdown"
+                  aria-label="Abrir Acesso Rápido"
+                >
+                  <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                </button>
+                <div class="br-list">
+                  <div class="header">
+                    <div class="title">Acesso Rápido</div>
+                  </div>
+                  <a class="br-item" href="javascript:void(0)">Sobre</a>
+                  <a class="br-item" href="javascript:void(0)">Política de Privacidade</a>
+                </div>
+              </div>
+              <span class="br-divider vertical mx-half mx-sm-1"></span>
+              <!-- Funcionalidades -->
+              <div class="header-functions dropdown">
+                <button
+                  class="br-button circle small"
+                  type="button"
+                  data-toggle="dropdown"
+                  aria-label="Abrir Funcionalidades do Sistema"
+                >
+                  <i class="fas fa-th" aria-hidden="true"></i>
+                </button>
+                <div class="br-list">
+                  <div class="header">
+                    <div class="title">Funcionalidades do Sistema</div>
+                  </div>
+                  <div class="br-item">
+                    <button class="br-button circle small" type="button" aria-label="VLibras">
+                      <i class="fas fa-hand-point-up" aria-hidden="true"></i>
+                      <span class="text">VLibras</span>
+                    </button>
+                  </div>
+                  <div class="br-item">
+                    <button class="br-button circle small" type="button" aria-label="Alto Contraste">
+                      <i class="fas fa-adjust" aria-hidden="true"></i>
+                      <span class="text">Alto Contraste</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <!-- Busca mobile -->
+              <div class="header-search-trigger">
+                <button
+                  class="br-button circle"
+                  type="button"
+                  aria-label="Abrir Busca"
+                  data-toggle="search"
+                  data-target=".header-search"
+                >
+                  <i class="fas fa-search" aria-hidden="true"></i>
+                </button>
+              </div>
+              <!-- Login -->
+              <div class="header-login">
+                <div class="header-sign-in">
+                  <button
+                    class="br-sign-in small"
+                    type="button"
+                    data-trigger="login"
+                  >
+                    <i class="fas fa-user" aria-hidden="true"></i>
+                    <span class="d-sm-inline">Entrar com gov.br</span>
+                  </button>
+                </div>
+                <div class="header-avatar"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Header Bottom -->
+          <div class="header-bottom">
+            <div class="header-menu">
+              <div class="header-menu-trigger" id="header-navigation">
+              </div>
+              <div class="header-info">
+                <div class="header-title">Serviços em Destaque</div>
+              </div>
+            </div>
+            <div class="header-search" id="main-searchbox">
+              <div class="br-input has-icon">
+                <label for="searchbox">Texto da pesquisa</label>
+                <input
+                  id="searchbox"
+                  type="text"
+                  placeholder="O que você procura?"
+                />
+                <button
+                  class="br-button circle small"
+                  type="button"
+                  aria-label="Pesquisar"
+                >
+                  <i class="fas fa-search" aria-hidden="true"></i>
+                </button>
+              </div>
+              <button
+                class="br-button circle search-close ml-1"
+                type="button"
+                aria-label="Fechar Busca"
+                data-dismiss="search"
+              >
+                <i class="fas fa-times" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ====== CONTEÚDO PRINCIPAL ====== -->
+      <main class="d-flex flex-fill" id="main">
+        <div class="container-lg d-flex">
+          <div class="row">
+
+            <!-- Menu lateral (br-menu) -->
+            <div class="br-menu" id="main-navigation">
+              <div class="menu-container">
+                <div class="menu-panel">
+                  <div class="menu-header">
+                    <div class="menu-title">
+                      <img
+                        src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png"
+                        alt="logo gov.br"
+                      />
+                      <span>Serviços em Destaque</span>
+                    </div>
+                    <div class="menu-close">
+                      <button
+                        class="br-button circle"
+                        type="button"
+                        aria-label="Fechar o menu"
+                        data-dismiss="menu"
+                      >
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <nav class="menu-body" role="tree">
+                    <a class="menu-item divider" href="javascript:void(0)" role="treeitem">
+                      <span class="icon"><i class="fas fa-home" aria-hidden="true"></i></span>
+                      <span class="content">Página Inicial</span>
+                    </a>
+                    <div class="menu-folder">
+                      <a class="menu-item" href="javascript:void(0)" role="treeitem">
+                        <span class="icon"><i class="fas fa-concierge-bell" aria-hidden="true"></i></span>
+                        <span class="content">Serviços</span>
+                      </a>
+                      <ul>
+                        <li><a class="menu-item" href="javascript:void(0)" role="treeitem"><span class="content">Buscar serviços por Categorias</span></a></li>
+                        <li><a class="menu-item" href="javascript:void(0)" role="treeitem"><span class="content">Buscar serviços por Órgãos</span></a></li>
+                        <li><a class="menu-item" href="javascript:void(0)" role="treeitem"><span class="content">Buscar serviços por Estados</span></a></li>
+                      </ul>
+                    </div>
+                    <a class="menu-item divider" href="javascript:void(0)" role="treeitem">
+                      <span class="icon"><i class="fas fa-star" aria-hidden="true"></i></span>
+                      <span class="content">Temas em Destaque</span>
+                    </a>
+                    <a class="menu-item divider" href="javascript:void(0)" role="treeitem">
+                      <span class="icon"><i class="fas fa-newspaper" aria-hidden="true"></i></span>
+                      <span class="content">Notícias</span>
+                    </a>
+                    <a class="menu-item divider" href="javascript:void(0)" role="treeitem">
+                      <span class="icon"><i class="fas fa-building" aria-hidden="true"></i></span>
+                      <span class="content">Órgãos do Governo</span>
+                    </a>
+                  </nav>
+                  <div class="menu-footer">
+                    <div class="menu-links">
+                      <a href="javascript:void(0)"><span class="mr-1">Acesso à Informação</span><i class="fas fa-external-link-square-alt" aria-hidden="true"></i></a>
+                      <a href="javascript:void(0)"><span class="mr-1">Legislação</span><i class="fas fa-external-link-square-alt" aria-hidden="true"></i></a>
+                    </div>
+                    <div class="social-network">
+                      <div class="social-network-title">Redes Sociais</div>
+                      <div class="d-flex">
+                        <a class="br-button circle" href="javascript:void(0)" aria-label="Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
+                        <a class="br-button circle" href="javascript:void(0)" aria-label="Twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+                        <a class="br-button circle" href="javascript:void(0)" aria-label="YouTube"><i class="fab fa-youtube" aria-hidden="true"></i></a>
+                        <a class="br-button circle" href="javascript:void(0)" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+                      </div>
+                    </div>
+                    <div class="menu-info">
+                      <div class="text-center text-down-01">
+                        Todo o conteúdo deste site está publicado sob a licença
+                        <strong>Creative Commons Atribuição-SemDerivações 3.0</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="menu-scrim" data-dismiss="menu" tabindex="0"></div>
+              </div>
+            </div>
+
+            <!-- Coluna de conteúdo -->
+            <div class="col pt-3 pb-5">
+              <div class="main-content pl-sm-3" id="main-content">
+
+                <!-- Barra de busca centralizada -->
+                <div class="search-area">
+                  <div class="br-input has-icon">
+                    <label for="search-main">Pesquisar</label>
+                    <input
+                      id="search-main"
+                      type="text"
+                      placeholder="O que você procura?"
+                    />
+                    <button
+                      class="br-button circle small"
+                      type="button"
+                      aria-label="Pesquisar"
+                    >
+                      <i class="fas fa-search" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Título -->
+                <h1 class="servicos-titulo">Serviços para você</h1>
+
+                <!-- Colunas MAIS ACESSADOS / DESTAQUE -->
+                <div class="servicos-columns">
+
+                  <!-- MAIS ACESSADOS -->
+                  <div>
+                    <div class="column-header">
+                      <i class="fas fa-fire" aria-hidden="true"></i>
+                      <span>MAIS ACESSADOS</span>
+                    </div>
+                    <span class="br-divider"></span>
+                    <ul class="mais-acessados-list">
+                      <li>
+                        <span class="item-number">1</span>
+                        <a href="javascript:void(0)">Assinatura Eletrônica</a>
+                      </li>
+                      <li>
+                        <span class="item-number">2</span>
+                        <a href="javascript:void(0)">Consultar Meu Imposto de Renda</a>
+                      </li>
+                      <li>
+                        <span class="item-number">3</span>
+                        <a href="javascript:void(0)">Consultar restituição do imposto de renda</a>
+                      </li>
+                      <li>
+                        <span class="item-number">4</span>
+                        <a href="javascript:void(0)">Consultar CPF</a>
+                      </li>
+                      <li>
+                        <span class="item-number">5</span>
+                        <a href="javascript:void(0)">Entregar Meu Imposto de Renda</a>
+                      </li>
+                      <li>
+                        <span class="item-number">6</span>
+                        <a href="javascript:void(0)">Consultar dados do Cadastro Único</a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <!-- DESTAQUE -->
+                  <div>
+                    <div class="column-header">
+                      <i class="fas fa-star" aria-hidden="true"></i>
+                      <span>DESTAQUE</span>
+                    </div>
+                    <span class="br-divider"></span>
+
+                    <div class="destaque-item">
+                      <span class="destaque-categoria">Meio Ambiente e Clima</span>
+                      <a href="javascript:void(0)" class="destaque-titulo">Cadastrar Cães e Gatos (SinPatinhas)</a>
+                    </div>
+
+                    <div class="destaque-item">
+                      <span class="destaque-categoria">Trabalho, Emprego e Previdência</span>
+                      <a href="javascript:void(0)" class="destaque-titulo">Concurso Público Nacional Unificado 2 (CPNU2)</a>
+                    </div>
+
+                    <div class="destaque-item">
+                      <div class="destaque-header-row">
+                        <span class="destaque-categoria">Agricultura e Pecuária</span>
+                        <span class="tag-novo">Novo</span>
+                      </div>
+                      <a href="javascript:void(0)" class="destaque-titulo">Consultar dados e baixar documentos de imóveis rurais na plataforma Meu Imóvel Rural</a>
+                    </div>
+
+                    <div class="destaque-item">
+                      <span class="destaque-categoria">Justiça e Segurança</span>
+                      <a href="javascript:void(0)" class="destaque-titulo">Celular Seguro</a>
+                    </div>
+
+                    <div class="destaque-item">
+                      <span class="destaque-categoria">Educação e Pesquisa</span>
+                      <a href="javascript:void(0)" class="destaque-titulo">Prouni - Programa Universidade para Todos</a>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- ====== FOOTER (componente br-footer) ====== -->
+      <footer class="br-footer pt-3" id="footer">
+        <div class="container-lg">
+          <div class="logo">
+            <img
+              src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-negative.png"
+              alt="Imagem"
+            />
+          </div>
+          <div class="br-list horizontal" data-toggle="data-toggle" data-sub="data-sub">
+            <div class="col-2">
+              <a class="br-item header" href="javascript:void(0)">
+                <div class="content text-down-01 text-bold text-uppercase">Serviços</div>
+                <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div>
+              </a>
+              <div class="br-list">
+                <span class="br-divider d-md-none"></span>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Categorias</div></a>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Órgãos</div></a>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Estados</div></a>
+                <span class="br-divider d-md-none"></span>
+              </div>
+            </div>
+            <div class="col-2">
+              <a class="br-item header" href="javascript:void(0)">
+                <div class="content text-down-01 text-bold text-uppercase">Sobre o gov.br</div>
+                <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div>
+              </a>
+              <div class="br-list">
+                <span class="br-divider d-md-none"></span>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Dúvidas Frequentes</div></a>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Termos de Uso</div></a>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Governo Digital</div></a>
+                <span class="br-divider d-md-none"></span>
+              </div>
+            </div>
+            <div class="col-2">
+              <a class="br-item header" href="javascript:void(0)">
+                <div class="content text-down-01 text-bold text-uppercase">Navegação</div>
+                <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div>
+              </a>
+              <div class="br-list">
+                <span class="br-divider d-md-none"></span>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Acessibilidade</div></a>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Mapa do Site</div></a>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Termos de Uso e Privacidade</div></a>
+                <span class="br-divider d-md-none"></span>
+              </div>
+            </div>
+            <div class="col-2">
+              <a class="br-item header" href="javascript:void(0)">
+                <div class="content text-down-01 text-bold text-uppercase">Dados</div>
+                <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div>
+              </a>
+              <div class="br-list">
+                <span class="br-divider d-md-none"></span>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Dados Abertos</div></a>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Acesso à Informação</div></a>
+                <span class="br-divider d-md-none"></span>
+              </div>
+            </div>
+          </div>
+          <div class="d-none d-sm-block">
+            <div class="row align-items-end justify-content-between py-5">
+              <div class="col">
+                <div class="social-network">
+                  <div class="social-network-title">Redes Sociais</div>
+                  <div class="d-flex">
+                    <a class="br-button circle" href="javascript:void(0)" aria-label="Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
+                    <a class="br-button circle" href="javascript:void(0)" aria-label="Twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+                    <a class="br-button circle" href="javascript:void(0)" aria-label="LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i></a>
+                    <a class="br-button circle" href="javascript:void(0)" aria-label="WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="col assigns text-right">
+                <img
+                  class="ml-4"
+                  src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-assign-negative.png"
+                  alt="Acesso à Informação"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="br-divider my-3"></span>
+        <div class="container-lg">
+          <div class="info">
+            <div class="text-down-01 text-medium pb-3">
+              Todo o conteúdo deste site está publicado sob a licença
+              <strong>Creative Commons Atribuição-SemDerivações 3.0 Não Adaptada</strong>.
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <!-- Cookiebar -->
+      <div class="br-cookiebar default d-none" tabindex="-1"></div>
+    </div>
+
+    <!-- JS do Design System (inicialização dos componentes) -->
+    <script src="../../GOV/govbr-ds-core/dist/core-init.js"></script>
+  </body>
+</html>
