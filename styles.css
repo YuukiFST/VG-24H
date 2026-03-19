@@ -1,0 +1,519 @@
+/* ==============================================
+   Gov.br - Página de Serviços
+   Reprodução fiel do layout gov.br/servicos
+   ============================================== */
+
+/* ---- Reset & Base ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Rawline", "Raleway", sans-serif;
+  background-color: #fff;
+  color: #333;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+.container {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* =============================================
+   HEADER TOP BAR (barra azul escura)
+   ============================================= */
+.govbr-header-top {
+  background-color: #071d41;
+  padding: 0;
+  position: relative;
+  z-index: 100;
+}
+
+.header-top-inner {
+  display: flex;
+  align-items: center;
+  height: 56px;
+  gap: 16px;
+}
+
+/* Logo gov.br */
+.govbr-logo {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-decoration: none;
+  margin-right: 24px;
+  flex-shrink: 0;
+}
+
+.logo-gov {
+  color: #fff;
+  font-weight: 700;
+}
+
+.logo-br {
+  color: #ffcd07;
+  font-weight: 700;
+}
+
+/* Nav links */
+.header-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex: 1;
+}
+
+.header-links a {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: color 0.2s;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.header-links a:hover {
+  color: #fff;
+}
+
+/* Ações do header */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.language-selector {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.language-selector:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.language-selector i {
+  font-size: 0.625rem;
+}
+
+.header-icons {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Botão Entrar */
+.btn-entrar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1351b4;
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 100px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.btn-entrar:hover {
+  background: #0c326f;
+}
+
+.btn-entrar i {
+  font-size: 0.875rem;
+}
+
+/* =============================================
+   HEADER BOTTOM (faixa branca)
+   ============================================= */
+.govbr-header-bottom {
+  background: #fff;
+  border-bottom: 1px solid #ededed;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 90;
+}
+
+.header-bottom-inner {
+  display: flex;
+  align-items: center;
+  height: 56px;
+  gap: 16px;
+}
+
+.menu-trigger {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1351b4;
+  font-size: 1.125rem;
+  border-radius: 50%;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.menu-trigger:hover {
+  background: #e8f0fe;
+}
+
+.header-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1351b4;
+  margin: 0;
+}
+
+/* =============================================
+   SEARCH SECTION
+   ============================================= */
+.search-section {
+  background: #fff;
+  padding: 32px 0 40px;
+}
+
+.search-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-box input {
+  width: 100%;
+  height: 48px;
+  padding: 0 90px 0 16px;
+  border: 1px solid #888;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  color: #333;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-box input::placeholder {
+  color: #888;
+}
+
+.search-box input:focus {
+  border-color: #1351b4;
+  box-shadow: 0 0 0 2px rgba(19, 81, 180, 0.15);
+}
+
+.search-icons {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.search-icon-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1351b4;
+  font-size: 1rem;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.search-icon-btn:hover {
+  background: #e8f0fe;
+}
+
+.search-btn {
+  color: #1351b4;
+}
+
+/* =============================================
+   MAIN CONTENT (Serviços para você)
+   ============================================= */
+.main-content {
+  background: #fff;
+  padding: 0 0 60px;
+}
+
+.servicos-titulo {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 40px;
+}
+
+/* Layout 2 colunas */
+.servicos-columns {
+  display: flex;
+  gap: 48px;
+}
+
+.column-mais-acessados,
+.column-destaque {
+  flex: 1;
+}
+
+/* ---- Column Header ---- */
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-bottom: 12px;
+}
+
+.column-header i {
+  color: #333;
+  font-size: 0.875rem;
+}
+
+.column-header span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #333;
+  text-transform: uppercase;
+}
+
+/* Divider / separator */
+.divider {
+  height: 1px;
+  background: #cccccc;
+  margin-bottom: 0;
+}
+
+/* =============================================
+   MAIS ACESSADOS (lista numerada)
+   ============================================= */
+.mais-acessados-list li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 8px;
+  border-bottom: 1px solid #ededed;
+  transition: background 0.15s;
+}
+
+.mais-acessados-list li:hover {
+  background: #f8f9fa;
+}
+
+.item-number {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #888;
+  min-width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.mais-acessados-list a {
+  font-size: 0.9375rem;
+  color: #1351b4;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.mais-acessados-list a:hover {
+  color: #0c326f;
+  text-decoration: underline;
+}
+
+/* =============================================
+   DESTAQUE (cards com categoria)
+   ============================================= */
+.destaque-list {
+  /* Nothing extra needed */
+}
+
+.destaque-item {
+  padding: 16px 8px;
+  border-bottom: 1px solid #ededed;
+  transition: background 0.15s;
+}
+
+.destaque-item:hover {
+  background: #f8f9fa;
+}
+
+.destaque-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.destaque-categoria {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1351b4;
+  margin-bottom: 4px;
+}
+
+.destaque-titulo {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #333;
+  line-height: 1.4;
+  transition: color 0.2s;
+}
+
+.destaque-titulo:hover {
+  color: #1351b4;
+}
+
+/* Tag "Novo" */
+.tag-novo {
+  display: inline-flex;
+  align-items: center;
+  background: #168821;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 100px;
+  text-transform: capitalize;
+  flex-shrink: 0;
+}
+
+/* =============================================
+   MAGIC BUTTON (VLibras flutuante)
+   ============================================= */
+.magic-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+}
+
+.vlibras-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #1351b4;
+  color: #fff;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+
+.vlibras-btn:hover {
+  background: #0c326f;
+  transform: scale(1.05);
+}
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+@media (max-width: 992px) {
+  .header-links {
+    display: none;
+  }
+
+  .servicos-columns {
+    flex-direction: column;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-top-inner {
+    height: 48px;
+  }
+
+  .govbr-logo {
+    font-size: 1.25rem;
+    margin-right: 12px;
+  }
+
+  .btn-entrar span {
+    display: none;
+  }
+
+  .btn-entrar {
+    padding: 8px 12px;
+  }
+
+  .header-title {
+    font-size: 1rem;
+  }
+
+  .servicos-titulo {
+    font-size: 1.25rem;
+  }
+
+  .search-box input {
+    height: 44px;
+    font-size: 0.875rem;
+  }
+}
