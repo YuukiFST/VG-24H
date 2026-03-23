@@ -101,6 +101,13 @@ def equipe_chamado_detalhe(request, pk):
                 novo = form_s.cleaned_data["id_status"]
                 ch.id_status = novo
                 ch.resolucao = form_s.cleaned_data.get("resolucao") or None
+                # Priority
+                pri = request.POST.get("prioridade")
+                if pri is not None:
+                    try:
+                        ch.prioridade = max(0, min(5, int(pri)))
+                    except (ValueError, TypeError):
+                        pass
                 ch.save()
                 messages.success(request, "Status atualizado.")
                 return redirect("portal:equipe_chamado", pk=pk)
@@ -137,7 +144,9 @@ def equipe_chamado_detalhe(request, pk):
                 messages.error(request, "Selecione uma imagem.")
             return redirect("portal:equipe_chamado", pk=pk)
 
-    historicos = HistoricoChamado.objects.filter(id_chamado=ch).order_by(
+    historicos = HistoricoChamado.objects.filter(id_chamado=ch).select_related(
+        "id_usuario_responsavel"
+    ).order_by(
         "dt_alteracao"
     )
     fotos = FotoChamado.objects.filter(id_chamado=ch).order_by("dt_upload")
@@ -155,6 +164,15 @@ def equipe_chamado_detalhe(request, pk):
             }
         )
 
+    PRIORIDADES = [
+        (0, "0 — Sem classificação"),
+        (1, "1 — Muito baixa"),
+        (2, "2 — Baixa"),
+        (3, "3 — Média"),
+        (4, "4 — Alta"),
+        (5, "5 — Urgente"),
+    ]
+
     return render(
         request,
         "portal/equipe/chamado_detalhe.html",
@@ -169,5 +187,6 @@ def equipe_chamado_detalhe(request, pk):
             "form_status": form_status,
             "form_obs": ObservacaoForm(),
             "form_foto": FotoForm(),
+            "prioridades": PRIORIDADES,
         },
     )

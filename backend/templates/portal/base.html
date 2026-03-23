@@ -75,14 +75,12 @@
               {% if request.portal_user %}
                 <!-- Notifications -->
                 <div class="notification-bell" style="margin-right: 15px;">
-                  <button class="br-button circle small" type="button" aria-label="Notificações">
+                  <a href="{% url 'portal:cidadao_notificacoes' %}" class="br-button circle small" aria-label="Notificações">
                     <i class="fas fa-bell" aria-hidden="true"></i>
-                  </button>
-                  {% with total_notif=request.portal_user.notificacoes.filter.count %}
-                    {% if total_notif > 0 %}
-                      <span class="notification-badge">{{ total_notif }}</span>
-                    {% endif %}
-                  {% endwith %}
+                  </a>
+                  {% if notif_count > 0 %}
+                    <span class="notification-badge">{{ notif_count }}</span>
+                  {% endif %}
                 </div>
               {% endif %}
 
@@ -115,7 +113,7 @@
                       <div class="header">
                         <div class="title">{{ request.portal_user.nome_completo|truncatechars:20 }}</div>
                       </div>
-                      <a class="br-item" href="{% url 'portal:dashboard_cidadao' %}">Meu Painel</a>
+                      <a class="br-item" href="{% url 'portal:cidadao_chamados' %}">Meu Painel</a>
                       <form action="{% url 'portal:logout' %}" method="post" style="display:inline;">
                         {% csrf_token %}
                         <button type="submit" class="br-item w-100 text-left border-0 bg-transparent">Sair</button>

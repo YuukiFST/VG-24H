@@ -135,6 +135,17 @@
             </div>
 
             <div class="form-group mb-3">
+              <label for="prioridade-select">Prioridade (0 = sem classificação):</label>
+              <div class="br-input">
+                <select id="prioridade-select" name="prioridade" class="w-100" style="height:40px; border:1px solid #888; border-radius:4px;">
+                  {% for val, lbl in prioridades %}
+                    <option value="{{ val }}" {% if ch.prioridade == val %}selected{% endif %}>{{ lbl }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
               <div class="br-input">
                 <label for="resolucao-text">Resolução Final / Motivo</label>
                 <textarea id="resolucao-text" name="resolucao" rows="4" placeholder="Obrigatório para concluir ou cancelar.">{{ ch.resolucao|default:'' }}</textarea>
@@ -161,8 +172,8 @@
             <div class="timeline-item">
               <div class="timeline-dot small"></div>
               <div class="timeline-content">
-                <span class="small font-weight-bold">{{ h.id_status_novo.descricao }}</span>
-                <p class="small text-muted mb-0">{{ h.dt_alteracao|date:"d/m/Y H:i" }} — {{ h.id_usuario_acao.nome_completo|default:"Sistema" }}</p>
+                <span class="small font-weight-bold">{{ h.tipo_status }}</span>
+                <p class="small text-muted mb-0">{{ h.dt_alteracao|date:"d/m/Y H:i" }} — {{ h.id_usuario_responsavel.nome_completo|default:"Sistema" }}</p>
               </div>
             </div>
           {% endfor %}
