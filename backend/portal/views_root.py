@@ -35,10 +35,19 @@ def catalogo_servicos(request):
 
 
 def root_view(request):
-    u = request.portal_user
-    if not u:
-        return render(request, "portal/public/landing.html")
-    p = perfil_codigo(u)
-    if p == "CID":
-        return render(request, "portal/cidadao/inicio.html", {"u": u})
-    return redirect("portal:equipe_chamados")
+    servicos = Servico.objects.filter(ativo=True).order_by("nome")[:5]
+    from django.db.models import Count
+    from portal.models import Chamado, BairroRegiao
+    
+    # Basic stats for the landing page
+    stats = {
+        "total_resolvidos": Chamado.objects.filter(id_status__tipo_status="CO").count(),
+        "total_bairros": BairroRegiao.objects.filter(ativo=True).count(),
+        "total_servicos": Servico.objects.filter(ativo=True).count(),
+    }
+    
+    return render(
+        request, 
+        "portal/root.html", 
+        {"servicos": servicos, "stats": stats}
+    )

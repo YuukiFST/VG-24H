@@ -14,11 +14,39 @@ from portal.forms import (
     ColaboradorNovoForm,
     ServicoForm,
 )
-from portal.models import BairroRegiao, CategoriaServico, Servico, Usuario
+from portal.models import (
+    BairroRegiao,
+    CategoriaServico,
+    Chamado,
+    Servico,
+    Usuario,
+)
 
 
 @perfis("ADM")
 def gestao_estatisticas(request):
+    from django.db.models import Count
+    
+    # Summary Stats
+    now = timezone.now()
+    total = Chamado.objects.count()
+    concluidos = Chamado.objects.filter(id_status__tipo_status="CO").count()
+    em_andamento = Chamado.objects.filter(id_status__tipo_status__in=["AN", "EX"]).count()
+    
+    # Critical (+10 days and not closed)
+    criticos = 0
+    # A bit simplified here, ideally we'd use a query with F expression or similar
+    for ch in Chamado.objects.exclude(id_status__tipo_status__in=["CO", "CA"]):
+        if (now - ch.dt_abertura).days > 10:
+            criticos += 1
+
+    stats = {
+        "total": total,
+        "concluidos": concluidos,
+        "em_andamento": em_andamento,
+        "criticos": criticos,
+    }
+
     linhas = []
     try:
         with connection.cursor() as c:
@@ -36,10 +64,11 @@ def gestao_estatisticas(request):
             request,
             "View vw_estatisticas_chamados indisponível. Rode o script SQL em database/.",
         )
+    
     return render(
         request,
         "portal/gestao/estatisticas.html",
-        {"linhas": linhas},
+        {"linhas": linhas, "stats": stats},
     )
 
 
@@ -105,10 +134,11 @@ def gestao_servicos(request):
     lista = Servico.objects.select_related("id_categoria").order_by(
         "id_categoria__nome", "nome"
     )
+    categorias = CategoriaServico.objects.filter(ativo=True).order_by("nome")
     return render(
         request,
         "portal/gestao/servicos.html",
-        {"form": form, "lista": lista},
+        {"form": form, "lista": lista, "categorias": categorias},
     )
 
 
@@ -124,10 +154,11 @@ def gestao_servico_editar(request, pk):
             return redirect("portal:gestao_servicos")
     else:
         form = ServicoForm(instance=srv)
+    categorias = CategoriaServico.objects.filter(ativo=True).order_by("nome")
     return render(
         request,
         "portal/gestao/servico_form.html",
-        {"form": form, "srv": srv},
+        {"form": form, "srv": srv, "categorias": categorias},
     )
 
 

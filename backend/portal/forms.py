@@ -17,6 +17,13 @@ class CadastroCidadaoForm(forms.Form):
     email = forms.EmailField(max_length=255, label="E-mail")
     senha = forms.CharField(widget=forms.PasswordInput, min_length=6, label="Senha")
     senha2 = forms.CharField(widget=forms.PasswordInput, label="Confirmar senha")
+    
+    # Address fields (Step 2)
+    rua = forms.CharField(max_length=200, required=False)
+    numero_endereco = forms.CharField(max_length=10, required=False)
+    complemento_endereco = forms.CharField(max_length=200, required=False)
+    bairro_endereco = forms.CharField(max_length=200, required=False)
+    cep_endereco = forms.CharField(max_length=8, required=False)
 
     def clean(self):
         d = super().clean()

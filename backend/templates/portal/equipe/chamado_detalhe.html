@@ -1,71 +1,174 @@
 {% extends "portal/base.html" %}
-{% block title %}Chamado {{ ch.protocolo }}{% endblock %}
+{% load static %}
+
+{% block title %}Gerenciar Chamado #{{ ch.protocolo }} — VG 24H{% endblock %}
+
 {% block content %}
-  <h1 class="mb-2">Protocolo {{ ch.protocolo }}</h1>
-  <p class="text-down-01">Cidadão: {{ ch.id_usuario.nome_completo }} — Status: {{ tipo_status }}</p>
-  <p>{{ ch.descricao }}</p>
-  {% if ch.resolucao %}<p class="mt-2"><strong>Resolução:</strong> {{ ch.resolucao }}</p>{% endif %}
-
-  {% if bloqueia_status_col %}
-  <p class="br-message is-warning mt-3" role="status">Como colaborador, você não altera chamados concluídos ou cancelados.</p>
-  {% endif %}
-
-  {% if pode_status %}
-  <h2 class="mt-4 h5">Alterar status</h2>
-  <form method="post" class="col-lg-8 mb-4">
-    {% csrf_token %}
-    <input type="hidden" name="acao" value="status" />
-    <div class="br-input mb-2">
-      <label for="id_id_status">{{ form_status.id_status.label }}</label>
-      {{ form_status.id_status.errors }}
-      {{ form_status.id_status }}
+<div class="dashboard-content">
+  <!-- Breadcrumb -->
+  <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
+    <div class="br-breadcrumb-list">
+      <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
+      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+      <span class="crumb"><a href="{% url 'portal:equipe_chamados' %}">Gestão de Chamados</a></span>
+      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+      <span class="crumb"><span>Gerenciar #{{ ch.protocolo }}</span></span>
     </div>
-    <div class="br-input mb-2">
-      <label for="id_resolucao">{{ form_status.resolucao.label }}</label>
-      {{ form_status.resolucao.errors }}
-      {{ form_status.resolucao }}
+  </nav>
+
+  <div class="ticket-detail">
+    <!-- Left — Info + Observations -->
+    <div>
+      <!-- Ticket Info -->
+      <div class="ticket-info-card mb-3">
+        <h2 class="h5 mb-4"><i class="fas fa-info-circle mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Informações do Chamado</h2>
+        <div class="info-row">
+          <span class="info-label">Cidadão</span>
+          <span class="info-value"><strong>{{ ch.id_usuario.nome_completo }}</strong> ({{ ch.id_usuario.email }})</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Protocolo</span>
+          <span class="info-value"><strong>{{ ch.protocolo }}</strong></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Serviço</span>
+          <span class="info-value">{{ ch.id_servico.nome }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Status Atual</span>
+          <span class="info-value">
+            <span class="br-tag status-{{ tipo_status|lower }}">{{ ch.id_status.descricao }}</span>
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Localização</span>
+          <span class="info-value">{{ ch.rua }}, {{ ch.numero }} — {{ ch.id_bairro.nome }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Abertura</span>
+          <span class="info-value">{{ ch.dt_abertura|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Descrição</span>
+          <span class="info-value">{{ ch.descricao }}</span>
+        </div>
+      </div>
+
+      <!-- Observations -->
+      <div class="ticket-info-card mb-3">
+        <h2 class="h5 mb-4"><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Observações</h2>
+        <div class="observations-list">
+          {% for obs in observacoes %}
+            <div class="obs-bubble {% if obs.id_usuario_autor.perfil == 'CID' %}cidadao{% else %}colaborador{% endif %}">
+              <p>{{ obs.texto_observacao }}</p>
+              <div class="obs-meta">
+                {{ obs.id_usuario_autor.nome_completo }} 
+                {% if obs.id_usuario_autor.perfil != 'CID' %}(Equipe){% endif %}
+                — {{ obs.criado_em|date:"d/m/Y H:i" }}
+              </div>
+            </div>
+          {% empty %}
+            <p class="text-muted text-center py-3">Nenhuma observação registrada.</p>
+          {% endfor %}
+        </div>
+        
+        <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post" class="mt-4">
+          {% csrf_token %}
+          <input type="hidden" name="acao" value="obs">
+          <div class="br-input mb-2">
+            <textarea name="texto" rows="3" placeholder="Escreva uma observação interna ou para o cidadão..." required></textarea>
+          </div>
+          <button class="br-button primary" type="submit">
+            <i class="fas fa-comment-alt mr-1"></i> Adicionar Observação
+          </button>
+        </form>
+      </div>
+
+      <!-- Photos -->
+      <div class="ticket-info-card">
+        <h2 class="h5 mb-4"><i class="fas fa-images mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Galeria de Fotos</h2>
+        <div class="row">
+          {% for foto in fotos %}
+            <div class="col-sm-4 mb-3">
+              <a href="{{ foto.url_foto }}" target="_blank" class="d-block">
+                <img src="{{ foto.url_foto }}" alt="Foto do chamado" class="img-fluid rounded shadow-sm" style="height:120px; width:100%; object-fit:cover;">
+              </a>
+            </div>
+          {% empty %}
+            <div class="col-12 text-center text-muted py-3">Nenhuma foto anexada.</div>
+          {% endfor %}
+        </div>
+        
+        <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post" enctype="multipart/form-data" class="mt-2">
+          {% csrf_token %}
+          <input type="hidden" name="acao" value="foto">
+          <input type="file" name="foto" id="input-foto" style="display:none;" onchange="this.form.submit()" required>
+          <button class="br-button secondary small" type="button" onclick="document.getElementById('input-foto').click()">
+            <i class="fas fa-camera mr-1"></i> Anexar Nova Foto
+          </button>
+        </form>
+      </div>
     </div>
-    {{ form_status.non_field_errors }}
-    <button type="submit" class="br-button primary">Salvar status</button>
-  </form>
-  {% endif %}
 
-  <h2 class="h5">Histórico</h2>
-  <ul class="mb-4">
-    {% for h in historicos %}
-    <li>{{ h.dt_alteracao|date:"d/m/Y H:i" }} — {{ h.tipo_status }}</li>
-    {% endfor %}
-  </ul>
+    <!-- Right — Internal Actions & Timeline -->
+    <div>
+      <!-- Status Management -->
+      <div class="ticket-info-card mb-3">
+        <h2 class="h5 mb-4"><i class="fas fa-tasks mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Gestão de Status</h2>
+        
+        {% if pode_status %}
+          <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="acao" value="status">
+            
+            <div class="form-group mb-3">
+              <label for="status-select">Alterar para:</label>
+              <div class="br-input">
+                <select id="status-select" name="id_status" class="w-100" style="height:40px; border:1px solid #888; border-radius:4px;" required>
+                  {% for code, label in form_status.fields.id_status.choices %}
+                    {% if code %}
+                      <option value="{{ code }}" {% if ch.id_status_id == code %}selected{% endif %}>{{ label }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
 
-  <h2 class="h5">Fotos</h2>
-  <div class="d-flex flex-wrap gap-2 mb-4">
-    {% for f in fotos %}
-    <a href="{{ f.url_foto }}" target="_blank" rel="noopener noreferrer"><img src="{{ f.url_foto }}" alt="" width="100" height="100" style="object-fit:cover" loading="lazy" /></a>
-    {% endfor %}
+            <div class="form-group mb-3">
+              <div class="br-input">
+                <label for="resolucao-text">Resolução Final / Motivo</label>
+                <textarea id="resolucao-text" name="resolucao" rows="4" placeholder="Obrigatório para concluir ou cancelar.">{{ ch.resolucao|default:'' }}</textarea>
+              </div>
+            </div>
+
+            <button class="br-button primary w-100" type="submit">
+              <i class="fas fa-save mr-1"></i> Atualizar Status
+            </button>
+          </form>
+        {% else %}
+          <div class="br-message warning" role="alert">
+            <div class="icon"><i class="fas fa-lock" aria-hidden="true"></i></div>
+            <div class="content">Este chamado está concluído ou cancelado e não permite mais alterações de status pela equipe de campo.</div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Internal Timeline -->
+      <div class="ticket-info-card">
+        <h2 class="h5 mb-4"><i class="fas fa-history mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Alterações</h2>
+        <div class="timeline compact">
+          {% for h in historicos %}
+            <div class="timeline-item">
+              <div class="timeline-dot small"></div>
+              <div class="timeline-content">
+                <span class="small font-weight-bold">{{ h.id_status_novo.descricao }}</span>
+                <p class="small text-muted mb-0">{{ h.dt_alteracao|date:"d/m/Y H:i" }} — {{ h.id_usuario_acao.nome_completo|default:"Sistema" }}</p>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
   </div>
-
-  <h2 class="h5">Observações</h2>
-  <ul class="mb-3">
-    {% for o in observacoes %}
-    <li><strong>{{ o.id_usuario_autor.nome_completo }}</strong>: {{ o.texto_observacao }}</li>
-    {% endfor %}
-  </ul>
-
-  <h2 class="h5">Nova observação</h2>
-  <form method="post" class="mb-4">
-    {% csrf_token %}
-    <input type="hidden" name="acao" value="obs" />
-    <div class="br-input mb-2">{{ form_obs.texto }}</div>
-    <button type="submit" class="br-button secondary is-small">Enviar</button>
-  </form>
-
-  <h2 class="h5">Nova foto</h2>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input type="hidden" name="acao" value="foto" />
-    <div class="br-input mb-2">{{ form_foto.foto }}</div>
-    <button type="submit" class="br-button secondary is-small">Enviar</button>
-  </form>
-
-  <p class="mt-4"><a href="{% url 'portal:equipe_chamados' %}">Voltar</a></p>
+</div>
 {% endblock %}

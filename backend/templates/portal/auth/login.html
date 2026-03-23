@@ -1,18 +1,89 @@
 {% extends "portal/base.html" %}
-{% block title %}Entrar{% endblock %}
+{% load static %}
+
+{% block title %}Entrar — VG 24H{% endblock %}
+
 {% block content %}
-  <h1 class="mb-4">Acesso ao portal</h1>
-  <form method="post" action="{% url 'portal:login' %}" class="col-md-6">
-    {% csrf_token %}
-    <div class="br-input mb-3">
-      <label for="id_email">E-mail</label>
-      <input type="email" name="email" id="id_email" required autocomplete="username" />
-    </div>
-    <div class="br-input mb-3">
-      <label for="id_password">Senha</label>
-      <input type="password" name="password" id="id_password" required autocomplete="current-password" />
-    </div>
-    <button type="submit" class="br-button primary">Entrar</button>
-  </form>
-  <p class="mt-3"><a href="{% url 'portal:recuperar_senha' %}">Esqueci minha senha</a> · <a href="{% url 'portal:cadastro' %}">Cadastrar</a></p>
+      <!-- ====== LOGIN FORM ====== -->
+      <main class="auth-main" id="main-content">
+        <div class="auth-card">
+          <div class="auth-logo">
+            <img
+              src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png"
+              alt="logo gov.br"
+            />
+            <span>VG 24H</span>
+          </div>
+
+          <h1 class="auth-title">Acesse sua conta</h1>
+          <p class="auth-subtitle">Informe seus dados para entrar no portal.</p>
+
+          <form id="login-form" action="{% url 'portal:login' %}" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+              <div class="br-input">
+                <label for="login-email">E-mail</label>
+                <input
+                  id="login-email"
+                  name="email"
+                  type="email"
+                  placeholder="seu.email@exemplo.com"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="br-input has-icon">
+                <label for="login-senha">Senha</label>
+                <input
+                  id="login-senha"
+                  name="password"
+                  type="password"
+                  placeholder="Digite sua senha"
+                  required
+                />
+                <button class="br-button circle small" type="button" aria-label="Mostrar senha" onclick="togglePassword(this)">
+                  <i class="fas fa-eye" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+
+            <div style="text-align: right; margin-bottom: 8px;">
+              <a href="{% url 'portal:recuperar_senha' %}" style="font-size: .875rem; color: var(--vg-primary); font-weight: 500;">
+                Esqueci minha senha
+              </a>
+            </div>
+
+            <div class="form-actions">
+              <button class="br-button primary large" type="submit" id="btn-login">
+                <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Entrar
+              </button>
+            </div>
+          </form>
+
+          <span class="br-divider my-4"></span>
+
+          <div class="form-link">
+            Não tem uma conta?
+            <a href="{% url 'portal:cadastro' %}">Crie sua conta gratuitamente</a>
+          </div>
+        </div>
+      </main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function togglePassword(btn) {
+    const input = btn.parentElement.querySelector('input');
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+  }
+</script>
 {% endblock %}

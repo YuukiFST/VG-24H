@@ -5,135 +5,173 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>{% block title %}VG 24H{% endblock %} — Prefeitura de Várzea Grande</title>
-    <style>
-      .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-    </style>
-    <link rel="stylesheet" href="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/fonts/rawline/css/rawline.css" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway:300,400,500,600,700,800,900&display=swap" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" crossorigin="anonymous" />
-    <link rel="stylesheet" href="{% static 'portal/govbr-layout.css' %}" />
+    <meta
+      name="description"
+      content="VG 24H — Portal de serviços públicos da Prefeitura de Várzea Grande. Registro e acompanhamento de chamados urbanos com padrão Gov.br."
+    />
+    <title>{% block title %}VG 24H — Portal de Serviços Públicos{% endblock %} | Prefeitura de Várzea Grande</title>
+    <!-- Fonte Rawline -->
+    <link
+      rel="stylesheet"
+      href="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/fonts/rawline/css/rawline.css"
+    />
+    <!-- Fonte Raleway -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Raleway:300,400,500,600,700,800,900&display=swap"
+    />
+    <!-- Design System Gov.br -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core.min.css"
+    />
+    <!-- Fontawesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css"
+    />
+    <!-- VG 24H Custom Styles -->
+    <link rel="stylesheet" href="{% static 'portal/css/vg24h.css' %}" />
     {% block extra_head %}{% endblock %}
   </head>
   <body>
     <div class="template-base">
 
-      <nav class="br-skiplink" id="skip-links" role="menubar">
+      <!-- ====== Skip Links ====== -->
+      <nav class="br-skiplink" role="menubar">
         <a class="br-item" href="#main-content" role="menuitem" accesskey="1"
           >Ir para o conteúdo <span aria-hidden="true">(1/4)</span>
-          <span aria-hidden="true" class="br-tag text ml-1">1</span></a>
+          <span aria-hidden="true" class="br-tag text ml-1">1</span></a
+        >
         <a class="br-item" href="#header-navigation" role="menuitem" accesskey="2"
           >Ir para o menu <span aria-hidden="true">(2/4)</span>
-          <span aria-hidden="true" class="br-tag text ml-1">2</span></a>
+          <span aria-hidden="true" class="br-tag text ml-1">2</span></a
+        >
         <a class="br-item" href="#main-searchbox" role="menuitem" accesskey="3"
           >Ir para a busca <span aria-hidden="true">(3/4)</span>
-          <span aria-hidden="true" class="br-tag text ml-1">3</span></a>
+          <span aria-hidden="true" class="br-tag text ml-1">3</span></a
+        >
         <a class="br-item" href="#footer" role="menuitem" accesskey="4"
           >Ir para o rodapé <span aria-hidden="true">(4/4)</span>
-          <span aria-hidden="true" class="br-tag text ml-1">4</span></a>
+          <span aria-hidden="true" class="br-tag text ml-1">4</span></a
+        >
       </nav>
 
-      <header class="br-header" id="header" data-sticky="data-sticky" role="banner">
+      <!-- ====== HEADER ====== -->
+      <header class="br-header" id="header" data-sticky="data-sticky">
         <div class="container-lg">
           <div class="header-top">
             <div class="header-logo">
-              <img src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png" alt="Logotipo gov.br" width="70" height="24" />
-              <span class="br-divider vertical mx-half mx-sm-1"></span>
+              <a href="{% url 'portal:root' %}">
+                <img
+                  src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png"
+                  alt="logo gov.br"
+                />
+              </a>
+              <span class="br-divider vertical"></span>
               <div class="header-sign">Prefeitura de Várzea Grande — VG 24H</div>
             </div>
             <div class="header-actions">
+              {% if request.portal_user %}
+                <!-- Notifications -->
+                <div class="notification-bell" style="margin-right: 15px;">
+                  <button class="br-button circle small" type="button" aria-label="Notificações">
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                  </button>
+                  {% with total_notif=request.portal_user.notificacoes.filter.count %}
+                    {% if total_notif > 0 %}
+                      <span class="notification-badge">{{ total_notif }}</span>
+                    {% endif %}
+                  {% endwith %}
+                </div>
+              {% endif %}
+
               <div class="header-links dropdown">
-                <button class="br-button circle small" type="button" data-toggle="dropdown" aria-label="Abrir Acesso Rápido" aria-haspopup="true" aria-expanded="false">
+                <button
+                  class="br-button circle small"
+                  type="button"
+                  data-toggle="dropdown"
+                  aria-label="Abrir Acesso Rápido"
+                >
                   <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
                 </button>
                 <div class="br-list">
-                  <div class="header"><div class="title">Acesso Rápido</div></div>
-                  <a class="br-item" href="{% url 'portal:catalogo_servicos' %}">Categorias e serviços</a>
-                  <a class="br-item" href="{% url 'portal:root' %}">Página inicial</a>
+                  <div class="header">
+                    <div class="title">Acesso Rápido</div>
+                  </div>
+                  <a class="br-item" href="javascript:void(0)">Sobre</a>
+                  <a class="br-item" href="javascript:void(0)">Política de Privacidade</a>
                 </div>
               </div>
               <span class="br-divider vertical mx-half mx-sm-1"></span>
-              <div class="header-functions dropdown">
-                <button class="br-button circle small" type="button" data-toggle="dropdown" aria-label="Abrir Funcionalidades do Sistema" aria-haspopup="true" aria-expanded="false">
-                  <i class="fas fa-th" aria-hidden="true"></i>
-                </button>
-                <div class="br-list">
-                  <div class="header"><div class="title">Funcionalidades do Sistema</div></div>
-                  <div class="br-item">
-                    <a class="br-button circle small" href="https://www.gov.br/vlibras/" rel="noopener noreferrer" target="_blank" aria-label="VLibras (abre em nova aba)">
-                      <i class="fas fa-hand-point-up" aria-hidden="true"></i><span class="text">VLibras</span>
+              
+              <div class="header-login">
+                {% if request.portal_user %}
+                  <div class="header-avatar">
+                    <button class="br-button circle small" type="button" aria-label="Menu do usuário" data-toggle="dropdown">
+                      <i class="fas fa-user-circle" aria-hidden="true" style="font-size:1.5rem; color:var(--vg-primary);"></i>
+                    </button>
+                    <div class="br-list">
+                      <div class="header">
+                        <div class="title">{{ request.portal_user.nome_completo|truncatechars:20 }}</div>
+                      </div>
+                      <a class="br-item" href="{% url 'portal:dashboard_cidadao' %}">Meu Painel</a>
+                      <form action="{% url 'portal:logout' %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="br-item w-100 text-left border-0 bg-transparent">Sair</button>
+                      </form>
+                    </div>
+                  </div>
+                {% else %}
+                  <div class="header-sign-in">
+                    <a href="{% url 'portal:login' %}" class="br-sign-in small" aria-label="Entrar no sistema">
+                      <i class="fas fa-user" aria-hidden="true"></i>
+                      <span class="d-sm-inline">Entrar</span>
                     </a>
                   </div>
-                  <div class="br-item">
-                    <button class="br-button circle small" type="button" aria-label="Alto contraste — use as configurações do sistema ou do navegador">
-                      <i class="fas fa-adjust" aria-hidden="true"></i><span class="text">Alto contraste</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div class="header-search-trigger">
-                <button class="br-button circle" type="button" aria-label="Abrir Busca" data-toggle="search" data-target=".header-search">
-                  <i class="fas fa-search" aria-hidden="true"></i>
-                </button>
-              </div>
-              <div class="header-login">
-                {% if nav_user %}
-                <div class="header-sign-in">
-                  <button class="br-sign-in small" type="button" id="avatar-dropdown-trigger" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Conta: {{ nav_user.nome_completo|truncatechars:40 }}">
-                    <span class="br-avatar" title="{{ nav_user.nome_completo }}"><span class="content bg-orange-vivid-30 text-pure-0">{{ nav_user.nome_completo|default:nav_user.email|slice:":1"|upper }}</span></span>
-                    <span class="ml-2 text-gray-80 text-weight-regular d-none d-sm-inline">Olá, <span class="text-weight-semi-bold">{{ nav_user.nome_completo|truncatechars:18 }}</span></span>
-                    <i class="fas fa-caret-down ml-1" aria-hidden="true"></i>
-                  </button>
-                  <div class="br-list" id="avatar-menu-header" hidden="hidden" role="menu" aria-labelledby="avatar-dropdown-trigger">
-                    {% if nav_perfil == "CID" %}
-                    <a class="br-item" href="{% url 'portal:cidadao_chamados' %}" role="menuitem">Meus chamados</a>
-                    <a class="br-item" href="{% url 'portal:cidadao_notificacoes' %}" role="menuitem">Notificações</a>
-                    {% elif nav_perfil == "COL" or nav_perfil == "ADM" %}
-                    <a class="br-item" href="{% url 'portal:equipe_chamados' %}" role="menuitem">Chamados da equipe</a>
-                    {% endif %}
-                    <form method="post" action="{% url 'portal:logout' %}" class="m-0 p-0 border-0">
-                      {% csrf_token %}
-                      <button type="submit" class="br-item text-left w-100 border-0 bg-transparent" role="menuitem" style="cursor: pointer">Encerrar sessão</button>
-                    </form>
-                  </div>
-                </div>
-                <div class="header-avatar"></div>
-                {% else %}
-                <div class="header-sign-in">
-                  <a href="{% url 'portal:login' %}" class="br-sign-in small" aria-label="Entrar no portal">
-                    <i class="fas fa-user" aria-hidden="true"></i>
-                    <span class="d-sm-inline">Entrar</span>
-                  </a>
-                </div>
-                <div class="header-avatar"></div>
                 {% endif %}
               </div>
             </div>
           </div>
           <div class="header-bottom">
             <div class="header-menu">
-              <div class="header-menu-trigger">
-                <button class="br-button small circle" type="button" aria-label="Menu" data-toggle="menu" data-target="#main-navigation" id="header-navigation">
+              <div class="header-menu-trigger" id="header-navigation">
+                <button
+                  class="br-button small circle"
+                  type="button"
+                  aria-label="Menu"
+                  data-toggle="menu"
+                  data-target="#main-navigation"
+                >
                   <i class="fas fa-bars" aria-hidden="true"></i>
                 </button>
               </div>
               <div class="header-info">
-                <div class="header-title">{% block header_title %}Portal de Serviços Públicos{% endblock %}</div>
-                <div class="header-subtitle">{% block header_subtitle %}Prefeitura de Várzea Grande{% endblock %}</div>
+                <div class="header-title">Portal de Serviços Públicos</div>
               </div>
             </div>
             <div class="header-search" id="main-searchbox">
-              <form method="get" action="{% url 'portal:catalogo_servicos' %}" role="search" class="d-flex flex-fill align-items-center">
-                <div class="br-input has-icon flex-fill">
-                  <label for="searchbox">Texto da pesquisa</label>
-                  <input id="searchbox" name="q" type="search" placeholder="O que você procura?" autocomplete="off" />
-                  <button class="br-button circle small" type="submit" aria-label="Pesquisar">
-                    <i class="fas fa-search" aria-hidden="true"></i>
-                  </button>
-                </div>
-              </form>
-              <button class="br-button circle search-close ml-1" type="button" aria-label="Fechar Busca" data-dismiss="search">
+              <div class="br-input has-icon">
+                <label for="searchbox">Texto da pesquisa</label>
+                <input
+                  id="searchbox"
+                  type="text"
+                  placeholder="O que você procura?"
+                />
+                <button
+                  class="br-button circle small"
+                  type="button"
+                  aria-label="Pesquisar"
+                >
+                  <i class="fas fa-search" aria-hidden="true"></i>
+                </button>
+              </div>
+              <button
+                class="br-button circle search-close ml-1"
+                type="button"
+                aria-label="Fechar Busca"
+                data-dismiss="search"
+              >
                 <i class="fas fa-times" aria-hidden="true"></i>
               </button>
             </div>
@@ -141,215 +179,178 @@
         </div>
       </header>
 
-      <main class="d-flex flex-fill" id="main" role="main">
-        <div class="container-lg d-flex">
-          <div class="row flex-fill w-100">
-
-            <div class="br-menu pt-md-3" id="main-navigation">
-              <div class="menu-container">
-                <div class="menu-panel">
-                  <div class="menu-header">
-                    <div class="menu-title">
-                      <img src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png" alt="" width="56" height="20" />
-                      <span>VG 24H</span>
-                    </div>
-                    <div class="menu-close">
-                      <button class="br-button circle" type="button" aria-label="Fechar o menu" data-dismiss="menu">
-                        <i class="fas fa-times" aria-hidden="true"></i>
-                      </button>
-                    </div>
-                  </div>
-                  <nav class="menu-body" role="tree" aria-label="Menu do portal">
-                    <a class="menu-item divider" href="{% url 'portal:root' %}" role="treeitem">
-                      <span class="icon"><i class="fas fa-home" aria-hidden="true"></i></span>
-                      <span class="content">Página inicial</span>
-                    </a>
-
-                    {% if not nav_user %}
-                    <div class="menu-folder">
-                      <a class="menu-item" href="{% url 'portal:login' %}" role="treeitem">
-                        <span class="icon"><i class="fas fa-sign-in-alt" aria-hidden="true"></i></span>
-                        <span class="content">Acesso</span>
-                      </a>
-                      <ul>
-                        <li><a class="menu-item" href="{% url 'portal:login' %}" role="treeitem"><span class="content">Entrar</span></a></li>
-                        <li><a class="menu-item" href="{% url 'portal:cadastro' %}" role="treeitem"><span class="content">Cadastro (cidadão)</span></a></li>
-                        <li><a class="menu-item" href="{% url 'portal:recuperar_senha' %}" role="treeitem"><span class="content">Esqueci minha senha</span></a></li>
-                      </ul>
-                    </div>
-                    <a class="menu-item divider" href="{% url 'portal:catalogo_servicos' %}" role="treeitem">
-                      <span class="icon"><i class="fas fa-list" aria-hidden="true"></i></span>
-                      <span class="content">Categorias e serviços</span>
-                    </a>
-                    {% endif %}
-
-                    {% if nav_user and nav_perfil == "CID" %}
-                    <a class="menu-item divider" href="{% url 'portal:catalogo_servicos' %}" role="treeitem">
-                      <span class="icon"><i class="fas fa-list" aria-hidden="true"></i></span>
-                      <span class="content">Categorias e serviços</span>
-                    </a>
-                    <a class="menu-item" href="{% url 'portal:cidadao_chamado_novo' %}" role="treeitem">
-                      <span class="icon"><i class="fas fa-plus-circle" aria-hidden="true"></i></span>
-                      <span class="content">Abrir chamado</span>
-                    </a>
-                    <a class="menu-item" href="{% url 'portal:cidadao_chamados' %}" role="treeitem">
-                      <span class="icon"><i class="fas fa-folder-open" aria-hidden="true"></i></span>
-                      <span class="content">Meus chamados</span>
-                    </a>
-                    <a class="menu-item divider" href="{% url 'portal:cidadao_notificacoes' %}" role="treeitem">
-                      <span class="icon"><i class="fas fa-bell" aria-hidden="true"></i></span>
-                      <span class="content">Notificações</span>
-                    </a>
-                    {% endif %}
-
-                    {% if nav_user and nav_perfil == "COL" or nav_user and nav_perfil == "ADM" %}
-                    <a class="menu-item divider" href="{% url 'portal:equipe_chamados' %}" role="treeitem">
-                      <span class="icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></span>
-                      <span class="content">Chamados (equipe)</span>
-                    </a>
-                    <a class="menu-item" href="{% url 'portal:catalogo_servicos' %}" role="treeitem">
-                      <span class="icon"><i class="fas fa-list" aria-hidden="true"></i></span>
-                      <span class="content">Categorias e serviços</span>
-                    </a>
-                    {% endif %}
-
-                    {% if nav_user and nav_perfil == "ADM" %}
-                    <div class="menu-folder">
-                      <a class="menu-item" href="{% url 'portal:gestao_estatisticas' %}" role="treeitem">
-                        <span class="icon"><i class="fas fa-chart-bar" aria-hidden="true"></i></span>
-                        <span class="content">Administração</span>
-                      </a>
-                      <ul>
-                        <li><a class="menu-item" href="{% url 'portal:gestao_estatisticas' %}" role="treeitem"><span class="content">Estatísticas</span></a></li>
-                        <li><a class="menu-item" href="{% url 'portal:gestao_categorias' %}" role="treeitem"><span class="content">Categorias</span></a></li>
-                        <li><a class="menu-item" href="{% url 'portal:gestao_servicos' %}" role="treeitem"><span class="content">Serviços</span></a></li>
-                        <li><a class="menu-item" href="{% url 'portal:gestao_bairros' %}" role="treeitem"><span class="content">Bairros</span></a></li>
-                        <li><a class="menu-item" href="{% url 'portal:gestao_colaboradores' %}" role="treeitem"><span class="content">Colaboradores</span></a></li>
-                      </ul>
-                    </div>
-                    {% endif %}
-
-                    {% if nav_user %}
-                    <div class="menu-item divider">
-                      <form method="post" action="{% url 'portal:logout' %}" class="px-3 py-2">
-                        {% csrf_token %}
-                        <button type="submit" class="br-button secondary block">Encerrar sessão</button>
-                      </form>
-                    </div>
-                    {% endif %}
-                  </nav>
-                  <div class="menu-footer">
-                    <div class="menu-links">
-                      <a href="https://www.gov.br/acessoainformacao/pt-br" rel="noopener noreferrer" target="_blank"><span class="mr-1">Acesso à Informação</span><i class="fas fa-external-link-square-alt" aria-hidden="true"></i></a>
-                    </div>
-                    <div class="menu-info">
-                      <div class="text-center text-down-01">Padrão Digital de Governo — Gov.br</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="menu-scrim" data-dismiss="menu" tabindex="0" role="presentation"></div>
+      <!-- ====== MENU LATERAL ====== -->
+      <div class="br-menu" id="main-navigation">
+        <div class="menu-container">
+          <div class="menu-panel">
+            <div class="menu-header">
+              <div class="menu-title">
+                <img
+                  src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png"
+                  alt="logo gov.br"
+                />
+                <span>VG 24H</span>
+              </div>
+              <div class="menu-close">
+                <button
+                  class="br-button circle"
+                  type="button"
+                  aria-label="Fechar o menu"
+                  data-dismiss="menu"
+                >
+                  <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
               </div>
             </div>
-
-            <div class="col pt-3 pb-5">
-              {% block breadcrumb %}
-              <nav class="br-breadcrumb mb-3" aria-label="Breadcrumbs">
-                <ol class="crumb-list" role="list">
-                  <li class="crumb home">
-                    <a class="br-button circle" href="{% url 'portal:root' %}"><span class="sr-only">Página inicial</span><i class="fas fa-home" aria-hidden="true"></i></a>
-                  </li>
-                  {% block breadcrumb_trail %}{% endblock %}
-                </ol>
-              </nav>
-              {% endblock %}
-
-              <div id="main-content" class="main-content pl-sm-3" tabindex="-1">
-                {% if messages %}
-                <div class="mb-3" role="status" aria-live="polite">
-                  {% for message in messages %}
-                  <div class="br-message mb-2 {% if 'error' in message.tags %}danger{% elif 'success' in message.tags %}success{% elif 'warning' in message.tags %}warning{% else %}info{% endif %}">
-                    <div class="icon">
-                      {% if 'error' in message.tags %}<i class="fas fa-times-circle fa-lg" aria-hidden="true"></i>
-                      {% elif 'success' in message.tags %}<i class="fas fa-check-circle fa-lg" aria-hidden="true"></i>
-                      {% elif 'warning' in message.tags %}<i class="fas fa-exclamation-triangle fa-lg" aria-hidden="true"></i>
-                      {% else %}<i class="fas fa-info-circle fa-lg" aria-hidden="true"></i>{% endif %}
-                    </div>
-                    <div class="content" role="alert"><span class="message-body">{{ message }}</span></div>
-                    <div class="close">
-                      <button class="br-button circle small" type="button" aria-label="Fechar mensagem">
-                        <i class="fas fa-times" aria-hidden="true"></i>
-                      </button>
-                    </div>
-                  </div>
-                  {% endfor %}
-                </div>
+            <nav class="menu-body" role="tree">
+              <a class="menu-item divider" href="{% url 'portal:root' %}" role="treeitem">
+                <span class="icon"><i class="fas fa-home" aria-hidden="true"></i></span>
+                <span class="content">Página Inicial</span>
+              </a>
+              
+              {% if not request.portal_user %}
+                <a class="menu-item divider" href="{% url 'portal:login' %}" role="treeitem">
+                  <span class="icon"><i class="fas fa-sign-in-alt" aria-hidden="true"></i></span>
+                  <span class="content">Entrar</span>
+                </a>
+                <a class="menu-item divider" href="{% url 'portal:cadastro' %}" role="treeitem">
+                  <span class="icon"><i class="fas fa-user-plus" aria-hidden="true"></i></span>
+                  <span class="content">Criar Conta</span>
+                </a>
+              {% else %}
+                {% if request.portal_user.perfil == 'CID' %}
+                  <a class="menu-item divider" href="{% url 'portal:cidadao_chamado_novo' %}" role="treeitem">
+                    <span class="icon"><i class="fas fa-plus-circle" aria-hidden="true"></i></span>
+                    <span class="content">Novo Chamado</span>
+                  </a>
+                  <a class="menu-item divider" href="{% url 'portal:cidadao_chamados' %}" role="treeitem">
+                    <span class="icon"><i class="fas fa-list-ul" aria-hidden="true"></i></span>
+                    <span class="content">Meus Chamados</span>
+                  </a>
                 {% endif %}
-                {% block content %}{% endblock %}
+
+                {% if request.portal_user.perfil == 'COL' or request.portal_user.perfil == 'ADM' %}
+                  <a class="menu-item divider" href="{% url 'portal:equipe_chamados' %}" role="treeitem">
+                    <span class="icon"><i class="fas fa-tasks" aria-hidden="true"></i></span>
+                    <span class="content">Gestão de Chamados</span>
+                  </a>
+                {% endif %}
+
+                {% if request.portal_user.perfil == 'ADM' %}
+                  <div class="menu-folder">
+                    <a class="menu-item" href="javascript:void(0)" role="treeitem">
+                      <span class="icon"><i class="fas fa-shield-alt" aria-hidden="true"></i></span>
+                      <span class="content">Administração</span>
+                    </a>
+                    <ul>
+                      <li><a class="menu-item" href="{% url 'portal:gestao_estatisticas' %}"><span class="content text-sm">📊 Estatísticas</span></a></li>
+                      <li><a class="menu-item" href="{% url 'portal:gestao_categorias' %}"><span class="content text-sm">📁 Categorias</span></a></li>
+                      <li><a class="menu-item" href="{% url 'portal:gestao_servicos' %}"><span class="content text-sm">🛎️ Serviços</span></a></li>
+                      <li><a class="menu-item" href="{% url 'portal:gestao_bairros' %}"><span class="content text-sm">📍 Bairros</span></a></li>
+                      <li><a class="menu-item" href="{% url 'portal:gestao_colaboradores' %}"><span class="content text-sm">👥 Colaboradores</span></a></li>
+                    </ul>
+                  </div>
+                {% endif %}
+              {% endif %}
+
+              <div class="menu-folder">
+                <a class="menu-item" href="javascript:void(0)" role="treeitem">
+                  <span class="icon"><i class="fas fa-concierge-bell" aria-hidden="true"></i></span>
+                  <span class="content">Serviços Disponíveis</span>
+                </a>
+                <ul>
+                  <li><a class="menu-item" href="javascript:void(0)"><span class="content">Iluminação Pública</span></a></li>
+                  <li><a class="menu-item" href="javascript:void(0)"><span class="content">Pavimentação e Vias</span></a></li>
+                  <li><a class="menu-item" href="javascript:void(0)"><span class="content">Saneamento e Drenagem</span></a></li>
+                </ul>
+              </div>
+            </nav>
+            <div class="menu-footer">
+              <div class="social-network">
+                <div class="social-network-title">Redes Sociais</div>
+                <div class="d-flex">
+                  <a class="br-button circle" href="javascript:void(0)" aria-label="Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
+                  <a class="br-button circle" href="javascript:void(0)" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+                </div>
               </div>
             </div>
           </div>
+          <div class="menu-scrim" data-dismiss="menu" tabindex="0"></div>
         </div>
+      </div>
+
+      <!-- ====== MAIN CONTENT ====== -->
+      <main id="main-content">
+        {% if messages %}
+          <div class="container-lg mt-3">
+            {% for message in messages %}
+              <div class="br-message {{ message.tags }}" role="alert">
+                <div class="icon"><i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-times-circle{% else %}fa-info-circle{% endif %}" aria-hidden="true"></i></div>
+                <div class="content">{{ message }}</div>
+                <div class="close">
+                  <button class="br-button circle small" type="button" aria-label="Fechar"><i class="fas fa-times" aria-hidden="true"></i></button>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
       </main>
 
-      <footer class="br-footer pt-3" id="footer" role="contentinfo">
+      <!-- ====== FOOTER ====== -->
+      <footer class="br-footer pt-3" id="footer">
         <div class="container-lg">
           <div class="logo">
-            <img src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-negative.png" alt="Governo Federal" width="120" height="40" />
+            <img
+              src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-negative.png"
+              alt="Imagem"
+            />
           </div>
           <div class="br-list horizontal" data-toggle="data-toggle" data-sub="data-sub">
             <div class="col-2">
-              <a class="br-item header" href="#footer">
+              <a class="br-item header" href="javascript:void(0)">
                 <div class="content text-down-01 text-bold text-uppercase">Serviços</div>
                 <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div>
               </a>
               <div class="br-list">
                 <span class="br-divider d-md-none"></span>
-                <a class="br-item" href="{% url 'portal:catalogo_servicos' %}"><div class="content">Categorias</div></a>
-                {% if nav_user and nav_perfil == "CID" %}
-                <a class="br-item" href="{% url 'portal:cidadao_chamado_novo' %}"><div class="content">Abrir chamado</div></a>
-                {% endif %}
-                <span class="br-divider d-md-none"></span>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Iluminação Pública</div></a>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Pavimentação e Vias</div></a>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Saneamento e Drenagem</div></a>
               </div>
             </div>
             <div class="col-2">
-              <a class="br-item header" href="#footer">
-                <div class="content text-down-01 text-bold text-uppercase">Acesso</div>
+              <a class="br-item header" href="javascript:void(0)">
+                <div class="content text-down-01 text-bold text-uppercase">Sobre</div>
                 <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div>
               </a>
               <div class="br-list">
                 <span class="br-divider d-md-none"></span>
-                <a class="br-item" href="{% url 'portal:login' %}"><div class="content">Entrar</div></a>
-                <a class="br-item" href="{% url 'portal:cadastro' %}"><div class="content">Cadastro</div></a>
-                <span class="br-divider d-md-none"></span>
-              </div>
-            </div>
-            <div class="col-2">
-              <a class="br-item header" href="#footer">
-                <div class="content text-down-01 text-bold text-uppercase">Navegação</div>
-                <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div>
-              </a>
-              <div class="br-list">
-                <span class="br-divider d-md-none"></span>
-                <a class="br-item" href="{% url 'portal:root' %}"><div class="content">Página inicial</div></a>
-                <span class="br-divider d-md-none"></span>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Sobre o VG 24H</div></a>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Política de Privacidade</div></a>
               </div>
             </div>
           </div>
         </div>
         <span class="br-divider my-3"></span>
         <div class="container-lg">
-          <div class="info">
-            <div class="text-down-01 text-medium pb-3">
-              Prefeitura de Várzea Grande — VG 24H. Interface alinhada ao <strong>Padrão Digital de Governo (Gov.br)</strong>.
+          <div class="info text-center pb-3">
+            <div class="text-down-01 text-medium">
+              Todo o conteúdo deste site está publicado sob a licença
+              <strong>Creative Commons Atribuição-SemDerivações 3.0</strong>.
             </div>
           </div>
         </div>
       </footer>
 
-      <div class="br-cookiebar default d-none" tabindex="-1" aria-hidden="true"></div>
+      <!-- Cookiebar -->
+      <div class="br-cookiebar default d-none" tabindex="-1"></div>
     </div>
 
+    <!-- JS do Design System -->
     <script src="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core-init.min.js"></script>
-    <script src="{% static 'portal/govbr-message-close.js' %}"></script>
+    <script src="{% static 'portal/js/vg24h.js' %}"></script>
+    {% block extra_js %}{% endblock %}
   </body>
 </html>

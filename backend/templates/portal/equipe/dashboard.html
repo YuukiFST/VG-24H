@@ -1,0 +1,164 @@
+{% extends "portal/base.html" %}
+{% load static %}
+
+{% block title %}Painel do Colaborador — VG 24H{% endblock %}
+
+{% block content %}
+<div class="dashboard-content">
+  <!-- Breadcrumb -->
+  <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
+    <div class="br-breadcrumb-list">
+      <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
+      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+      <span class="crumb"><span>Painel do Colaborador</span></span>
+    </div>
+  </nav>
+
+  <div class="dashboard-header d-flex justify-content-between align-items-center">
+    <div>
+      <h1>Gestão de Chamados</h1>
+      <p class="welcome-msg">Bem-vindo(a), <strong>{{ request.portal_user.nome_completo }}</strong>.</p>
+    </div>
+  </div>
+
+  <!-- ====== SUMMARY CARDS (Semáforo) ====== -->
+  <div class="semaforo-grid mb-4">
+    <div class="semaforo-card total">
+      <div class="card-value">{{ total_count|default:0 }}</div>
+      <div class="card-label">Total de chamados</div>
+      <div class="card-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></div>
+    </div>
+    <div class="semaforo-card verde">
+      <div class="card-value">{{ stats.no_prazo|default:0 }}</div>
+      <div class="card-label">No prazo (Verde)</div>
+      <div class="card-icon"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
+    </div>
+    <div class="semaforo-card amarelo">
+      <div class="card-value">{{ stats.atencao|default:0 }}</div>
+      <div class="card-label">Atenção (Amarelo)</div>
+      <div class="card-icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>
+    </div>
+    <div class="semaforo-card vermelho">
+      <div class="card-value">{{ stats.critico|default:0 }}</div>
+      <div class="card-label">Crítico (Vermelho)</div>
+      <div class="card-icon"><i class="fas fa-fire" aria-hidden="true"></i></div>
+    </div>
+  </div>
+
+  <!-- ====== FILTER BAR ====== -->
+  <div class="filter-bar br-card p-3 mb-4">
+    <form method="get" class="row align-items-end">
+      <div class="col-md-3 mb-2">
+        <label for="filter-status" class="small font-weight-bold">Status</label>
+        <select id="filter-status" name="status" class="br-input w-100" style="height:38px; border:1px solid #888; border-radius:4px;">
+          <option value="">Todos os Status</option>
+          {% for s in statuses %}
+            <option value="{{ s.id_status }}" {% if filtro_status == s.id_status %}selected{% endif %}>{{ s.descricao }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3 mb-2">
+        <label for="filter-bairro" class="small font-weight-bold">Bairro</label>
+        <select id="filter-bairro" name="bairro" class="br-input w-100" style="height:38px; border:1px solid #888; border-radius:4px;">
+          <option value="">Todos os Bairros</option>
+          {% for b in bairros %}
+            <option value="{{ b.id_bairro }}" {% if filtro_bairro == b.id_bairro %}selected{% endif %}>{{ b.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 mb-2">
+        <label for="filter-de" class="small font-weight-bold">De</label>
+        <input id="filter-de" name="de" type="date" class="br-input w-100" value="{{ filtro_de }}" style="height:38px;" />
+      </div>
+      <div class="col-md-2 mb-2">
+        <label for="filter-ate" class="small font-weight-bold">Até</label>
+        <input id="filter-ate" name="ate" type="date" class="br-input w-100" value="{{ filtro_ate }}" style="height:38px;" />
+      </div>
+      <div class="col-md-2 mb-2">
+        <button class="br-button primary w-100" type="submit">
+          <i class="fas fa-filter mr-1"></i> Filtrar
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ====== TICKETS TABLE ====== -->
+  <div class="vg-table-wrapper">
+    <div class="br-table">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Protocolo</th>
+            <th scope="col">Cidadão</th>
+            <th scope="col">Serviço</th>
+            <th scope="col">Bairro</th>
+            <th scope="col">Status</th>
+            <th scope="col">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for linha in linhas %}
+            <tr>
+              <td><strong>{{ linha.ch.protocolo }}</strong></td>
+              <td>{{ linha.ch.id_usuario.nome_completo|truncatechars:20 }}</td>
+              <td>{{ linha.ch.id_servico.nome }}</td>
+              <td>{{ linha.ch.id_bairro.nome }}</td>
+              <td>
+                <span class="status-tag {{ linha.ch.id_status.tipo_status|lower }}">
+                  {{ linha.ch.id_status.descricao }}
+                </span>
+              </td>
+              <td>
+                <a href="{% url 'portal:equipe_chamado' linha.ch.pk %}" class="br-button circle small" title="Ver Detalhes">
+                  <i class="fas fa-eye" aria-hidden="true"></i>
+                </a>
+                <button class="br-button circle small" type="button" title="Alterar Status" data-toggle="modal" data-target="#modal-status-{{ linha.ch.pk }}">
+                  <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+                </button>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-4">Nenhum chamado encontrado.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% for linha in linhas %}
+<!-- Modal Alterar Status -->
+<div class="br-modal" id="modal-status-{{ linha.ch.pk }}">
+  <div class="container-fluid p-4">
+    <div class="br-modal-body">
+      <div class="br-modal-header">
+        <div class="br-modal-title">Atualizar Chamado {{ linha.ch.protocolo }}</div>
+        <button class="br-button circle small" type="button" data-dismiss="modal" aria-label="Fechar"><i class="fas fa-times"></i></button>
+      </div>
+      <form action="{% url 'portal:equipe_chamado' linha.ch.pk %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="status">
+        <div class="form-group mb-3">
+          <label for="st-{{ linha.ch.pk }}">Novo Status *</label>
+          <select id="st-{{ linha.ch.pk }}" name="id_status" class="br-input w-100" style="height:40px; border:1px solid #888; border-radius:4px;" required>
+            {% for s in statuses %}
+              <option value="{{ s.id_status }}" {% if linha.ch.id_status_id == s.id_status %}selected{% endif %}>{{ s.descricao }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group mb-3">
+          <label for="res-{{ linha.ch.pk }}">Resolução / Observação</label>
+          <textarea id="res-{{ linha.ch.pk }}" name="resolucao" rows="3" placeholder="O que foi feito?"></textarea>
+        </div>
+        <div class="br-modal-footer justify-content-end mt-4">
+          <button class="br-button secondary mr-2" type="button" data-dismiss="modal">Fechar</button>
+          <button class="br-button primary" type="submit">Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}
