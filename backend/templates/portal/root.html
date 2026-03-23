@@ -1,0 +1,120 @@
+{% extends "portal/base.html" %}
+{% load static %}
+
+{% block title %}Página Inicial — VG 24H{% endblock %}
+
+{% block content %}
+      <!-- ====== HERO SECTION ====== -->
+      <section class="hero">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <i class="fas fa-shield-alt" aria-hidden="true"></i>
+            Portal oficial — Prefeitura de Várzea Grande
+          </div>
+          <h1>Sua cidade mais inteligente começa aqui</h1>
+          <p>
+            Registre problemas urbanos, acompanhe o andamento pelo protocolo e
+            ajude a construir uma Várzea Grande melhor para todos.
+          </p>
+          <div class="hero-actions">
+            <a href="{% url 'portal:novo_chamado' %}" class="br-button primary" id="btn-abrir-chamado">
+              <i class="fas fa-plus-circle" aria-hidden="true"></i> Abrir Chamado
+            </a>
+            <a href="{% url 'portal:protocolo' %}" class="br-button secondary" id="btn-consultar-protocolo">
+              <i class="fas fa-search" aria-hidden="true"></i> Consultar Protocolo
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== SERVICE CARDS ====== -->
+      <section class="services-section" id="servicos" aria-labelledby="servicos-titulo">
+        <div class="container-custom">
+          <h2 class="section-title" id="servicos-titulo">Serviços disponíveis</h2>
+          <p class="section-subtitle">
+            Selecione a categoria do problema que deseja reportar à prefeitura.
+          </p>
+          <div class="services-grid">
+            {% for servico in servicos %}
+              <div class="service-card" id="card-{{ servico.id_servico }}">
+                <div class="service-card-icon">
+                  <i class="fas {% if 'Iluminação' in servico.nome %}fa-lightbulb{% elif 'Pavimentação' in servico.nome %}fa-road{% elif 'Saneamento' in servico.nome %}fa-water{% elif 'Trânsito' in servico.nome %}fa-traffic-light{% else %}fa-heartbeat{% endif %}" aria-hidden="true"></i>
+                </div>
+                <h3>{{ servico.nome }}</h3>
+                <p>{{ servico.descricao }}</p>
+              </div>
+            {% empty %}
+              <div class="service-card">
+                <div class="service-card-icon"><i class="fas fa-info-circle"></i></div>
+                <h3>Carregando...</h3>
+                <p>Os serviços estarão disponíveis em breve.</p>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== COMO FUNCIONA (Steps) ====== -->
+      <section class="steps-section" aria-labelledby="steps-titulo">
+        <div class="container-custom">
+          <h2 class="section-title" id="steps-titulo">Como funciona</h2>
+          <p class="section-subtitle">
+            Em três passos simples você reporta e acompanha problemas na sua cidade.
+          </p>
+          <div class="steps-grid">
+            <div class="step-item">
+              <div class="step-number">1</div>
+              <h3>Registre</h3>
+              <p>Escolha o serviço, descreva o problema, tire uma foto e envie.</p>
+            </div>
+            <div class="step-item">
+              <div class="step-number">2</div>
+              <h3>Acompanhe</h3>
+              <p>Receba um protocolo numérico e veja o status do seu chamado em tempo real.</p>
+            </div>
+            <div class="step-item">
+              <div class="step-number">3</div>
+              <h3>Avalie</h3>
+              <p>Após a conclusão, avalie o atendimento e ajude a melhorar os serviços.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== STATS ====== -->
+      <section class="stats-section" aria-label="Estatísticas do portal">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" data-counter="{{ stats.total_resolvidos|default:1247 }}">0</div>
+            <div class="stat-label">Chamados resolvidos</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" data-counter="{{ stats.total_bairros|default:53 }}">0</div>
+            <div class="stat-label">Bairros atendidos</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" data-counter="{{ stats.total_servicos|default:5 }}">0</div>
+            <div class="stat-label">Serviços disponíveis</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" data-counter="98">0</div>
+            <div class="stat-label">% de satisfação</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== CTA ====== -->
+      {% if not request.portal_user %}
+      <section class="cta-section" aria-label="Chamada para ação">
+        <div class="container-custom">
+          <h2>Viu um problema na sua rua?</h2>
+          <p>Crie sua conta gratuitamente e comece a reportar agora mesmo.</p>
+          <div class="hero-actions">
+            <a href="{% url 'portal:cadastro' %}" class="br-button primary" id="btn-criar-conta">
+              <i class="fas fa-user-plus" aria-hidden="true"></i> Criar Conta Gratuita
+            </a>
+          </div>
+        </div>
+      </section>
+      {% endif %}
+{% endblock %}

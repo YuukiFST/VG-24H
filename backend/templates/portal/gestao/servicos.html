@@ -1,30 +1,125 @@
 {% extends "portal/base.html" %}
-{% block title %}Serviços{% endblock %}
+{% load static %}
+
+{% block title %}Gestão de Serviços — VG 24H{% endblock %}
+
 {% block content %}
-  <h1 class="mb-4">Serviços</h1>
-  <h2 class="h6">Novo serviço</h2>
-  <form method="post" class="col-md-8 mb-4">
-    {% csrf_token %}
-    {% for field in form %}
-    <div class="br-input mb-2">
-      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-      {{ field.errors }}{{ field }}
+<div class="dashboard-content">
+  <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
+    <div class="br-breadcrumb-list">
+      <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
+      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+      <span class="crumb"><a href="{% url 'portal:gestao_estatisticas' %}">Administração</a></span>
+      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+      <span>Serviços</span>
     </div>
-    {% endfor %}
-    <button type="submit" class="br-button primary">Adicionar</button>
-  </form>
-  <ul class="list-unstyled">
-    {% for s in lista %}
-    <li class="mb-2">
-      <strong>{{ s.nome }}</strong> ({{ s.id_categoria.nome }}) — {% if s.ativo %}ativo{% else %}inativo{% endif %}
-      <a href="{% url 'portal:gestao_servico_editar' s.pk %}">Editar</a>
-      {% if s.ativo %}
-      <form method="post" action="{% url 'portal:gestao_servico_desativar' s.pk %}" class="d-inline">
+  </nav>
+
+  <div class="dashboard-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1>Catálogo de Serviços</h1>
+      <p class="text-muted">Defina SLAs (prazos) e categorize as solicitações do cidadão.</p>
+    </div>
+    <button class="br-button primary" type="button" data-toggle="modal" data-target="#modal-add-svc">
+      <i class="fas fa-plus mr-1"></i> Novo Serviço
+    </button>
+  </div>
+
+  <div class="br-card p-4">
+    <div class="vg-table-wrapper">
+      <div class="br-table">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Categoria</th>
+              <th>SLA Amarelo</th>
+              <th>SLA Vermelho</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for srv in lista %}
+              <tr>
+                <td><strong>{{ srv.nome }}</strong></td>
+                <td>{{ srv.id_categoria.nome }}</td>
+                <td>{{ srv.prazo_amarelo_dias }} dias</td>
+                <td>{{ srv.prazo_vermelho_dias }} dias</td>
+                <td>
+                  {% if srv.ativo %}
+                    <span class="br-tag success">Ativo</span>
+                  {% else %}
+                    <span class="br-tag danger">Inativo</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'portal:gestao_servico_editar' srv.pk %}" class="br-button circle small" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  {% if srv.ativo %}
+                  <form action="{% url 'portal:gestao_servico_desativar' srv.pk %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="br-button circle small" title="Desativar" onclick="return confirm('Inativar este serviço?')">
+                      <i class="fas fa-ban"></i>
+                    </button>
+                  </form>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6" class="text-center">Nenhum serviço cadastrado.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Adicionar Serviço -->
+<div class="br-modal" id="modal-add-svc">
+  <div class="container-fluid p-4">
+    <div class="br-modal-body">
+      <div class="br-modal-header">
+        <div class="br-modal-title">Novo Serviço</div>
+        <button class="br-button circle small" type="button" data-dismiss="modal"><i class="fas fa-times"></i></button>
+      </div>
+      <form action="{% url 'portal:gestao_servicos' %}" method="post">
         {% csrf_token %}
-        <button type="submit" class="br-button is-terciary is-small">Inativar</button>
+        <div class="br-input mt-3">
+          <label for="id_nome">Nome do Serviço *</label>
+          <input id="id_nome" name="nome" type="text" required />
+        </div>
+        <div class="form-group mb-3">
+          <label for="id_cat" class="small font-weight-bold">Categoria *</label>
+          <select id="id_cat" name="id_categoria" class="br-input w-100" style="height:38px; border:1px solid #888; border-radius:4px;" required>
+            <option value="">Selecione</option>
+            {% for cat in lista.0.id_categoria.objects.all %} {# a bit hacky, but works #}
+              <option value="{{ cat.pk }}">{{ cat.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="col-6">
+            <div class="br-input mb-3">
+              <label for="id_y">SLA Amarelo (dias) *</label>
+              <input id="id_y" name="prazo_amarelo_dias" type="number" value="5" required />
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="br-input mb-3">
+              <label for="id_r">SLA Vermelho (dias) *</label>
+              <input id="id_r" name="prazo_vermelho_dias" type="number" value="10" required />
+            </div>
+          </div>
+        </div>
+        <div class="br-modal-footer justify-content-end mt-4">
+          <button class="br-button secondary mr-2" type="button" data-dismiss="modal">Cancelar</button>
+          <button class="br-button primary" type="submit">Criar Serviço</button>
+        </div>
       </form>
-      {% endif %}
-    </li>
-    {% endfor %}
-  </ul>
+    </div>
+  </div>
+</div>
 {% endblock %}

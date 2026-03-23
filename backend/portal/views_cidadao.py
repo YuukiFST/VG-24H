@@ -14,6 +14,8 @@ from portal.forms import (
     ObservacaoForm,
 )
 from portal.models import (
+    BairroRegiao,
+    CategoriaServico,
     Chamado,
     FotoChamado,
     HistoricoChamado,
@@ -34,15 +36,45 @@ def _chamado_do_cidadao(request, pk):
 @autenticado
 @perfis("CID")
 def cidadao_chamados_lista(request):
-    lista = (
+    qs = (
         Chamado.objects.filter(id_usuario=request.portal_user)
         .select_related("id_status", "id_servico", "id_bairro")
         .order_by("-dt_abertura")
     )
+
+    # Filters
+    st_filter = request.GET.get("status")
+    if st_filter:
+        qs = qs.filter(id_status__tipo_status=st_filter)
+    
+    dt_filter = request.GET.get("data")
+    if dt_filter:
+        qs = qs.filter(dt_abertura__date=dt_filter)
+        
+    q_filter = request.GET.get("q")
+    if q_filter:
+        qs = qs.filter(protocolo__icontains=q_filter)
+
+    # Stats calculation (Semáforo)
+    # We calculate stats on the unfiltered list of user's active tickets
+    base_qs = Chamado.objects.filter(id_usuario=request.portal_user)
+    stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
+    now = timezone.now()
+    
+    for ch in base_qs.select_related("id_servico"):
+        dias = (now - ch.dt_abertura).days
+        s = ch.id_servico
+        if dias >= s.prazo_vermelho_dias:
+            stats["critico"] += 1
+        elif dias >= s.prazo_amarelo_dias:
+            stats["atencao"] += 1
+        else:
+            stats["no_prazo"] += 1
+
     return render(
         request,
-        "portal/cidadao/chamados_lista.html",
-        {"lista": lista},
+        "portal/cidadao/dashboard.html",
+        {"lista": qs, "stats": stats},
     )
 
 
@@ -50,6 +82,11 @@ def cidadao_chamados_lista(request):
 @perfis("CID")
 @require_http_methods(["GET", "POST"])
 def cidadao_chamado_novo(request):
+    categorias = CategoriaServico.objects.filter(ativo=True).prefetch_related(
+        "servicos"
+    )
+    bairros = BairroRegiao.objects.filter(ativo=True).order_by("nome")
+
     if request.method == "POST":
         form = ChamadoNovoForm(request.POST, request.FILES)
         if form.is_valid():
@@ -60,8 +97,8 @@ def cidadao_chamado_novo(request):
                 messages.error(request, str(e))
                 return render(
                     request,
-                    "portal/cidadao/chamado_form.html",
-                    {"form": form},
+                    "portal/cidadao/novo_chamado.html",
+                    {"form": form, "categorias": categorias, "bairros": bairros},
                 )
             ab = StatusChamado.objects.get(tipo_status="AB")
             now = timezone.now()
@@ -93,7 +130,11 @@ def cidadao_chamado_novo(request):
             return redirect("portal:cidadao_chamado", pk=ch.pk)
     else:
         form = ChamadoNovoForm()
-    return render(request, "portal/cidadao/chamado_form.html", {"form": form})
+    return render(
+        request, 
+        "portal/cidadao/novo_chamado.html", 
+        {"form": form, "categorias": categorias, "bairros": bairros}
+    )
 
 
 @autenticado

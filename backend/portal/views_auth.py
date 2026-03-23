@@ -15,7 +15,7 @@ from portal.forms import (
     RedefinirSenhaForm,
     TrocaSenhaObrigatoriaForm,
 )
-from portal.models import Usuario
+from portal.models import Usuario, BairroRegiao
 
 
 @require_http_methods(["GET", "POST"])
@@ -53,6 +53,7 @@ def logout_view(request):
 @anonimo
 @require_http_methods(["GET", "POST"])
 def cadastro_view(request):
+    bairros = BairroRegiao.objects.filter(ativo=True).order_by("nome")
     if request.method == "POST":
         form = CadastroCidadaoForm(request.POST)
         if form.is_valid():
@@ -69,6 +70,12 @@ def cadastro_view(request):
                     telefone=d["telefone"],
                     email=d["email"].lower(),
                     senha_hash=make_password(d["senha"]),
+                    # Campos de endereço (do Step 2)
+                    rua=d.get("rua"),
+                    numero_endereco=d.get("numero_endereco"),
+                    complemento_endereco=d.get("complemento_endereco"),
+                    bairro_endereco=d.get("bairro_endereco"),
+                    cep_endereco=d.get("cep_endereco"),
                     perfil="CID",
                     ativo=True,
                     dt_cadastro=timezone.now(),
@@ -77,7 +84,11 @@ def cadastro_view(request):
                 return redirect("portal:login")
     else:
         form = CadastroCidadaoForm()
-    return render(request, "portal/auth/cadastro.html", {"form": form})
+    return render(
+        request, 
+        "portal/auth/cadastro.html", 
+        {"form": form, "bairros": bairros}
+    )
 
 
 @anonimo

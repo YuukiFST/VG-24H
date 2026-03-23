@@ -1,16 +1,208 @@
 {% extends "portal/base.html" %}
-{% block title %}Cadastro{% endblock %}
+{% load static %}
+
+{% block title %}Criar Conta — VG 24H{% endblock %}
+
 {% block content %}
-  <h1 class="mb-4">Cadastro de cidadão</h1>
-  <form method="post" class="col-md-8">
-    {% csrf_token %}
-    {% for field in form %}
-    <div class="br-input mb-3">
-      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-      {{ field.errors }}
-      {{ field }}
-    </div>
-    {% endfor %}
-    <button type="submit" class="br-button primary">Cadastrar</button>
-  </form>
+      <!-- ====== CADASTRO FORM ====== -->
+      <main class="auth-main" id="main-content">
+        <div class="auth-card auth-card-wide">
+          <div class="auth-logo">
+            <img
+              src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png"
+              alt="logo gov.br"
+            />
+            <span>VG 24H</span>
+          </div>
+
+          <h1 class="auth-title">Criar sua conta</h1>
+          <p class="auth-subtitle">Preencha os dados abaixo para se cadastrar como cidadão.</p>
+
+          <!-- Step Indicator -->
+          <div class="br-step" data-type="simple">
+            <div class="step-progress">
+              <div class="step-progress-btn" step-num="1" active title="Dados Pessoais">
+                <span class="step-info">Dados Pessoais</span>
+              </div>
+              <div class="step-progress-btn" step-num="2" title="Endereço">
+                <span class="step-info">Endereço</span>
+              </div>
+              <div class="step-progress-btn" step-num="3" title="Segurança">
+                <span class="step-info">Segurança</span>
+              </div>
+            </div>
+          </div>
+
+          <form id="cadastro-form" action="{% url 'portal:cadastro' %}" method="post">
+            {% csrf_token %}
+            <div class="wizard-container">
+
+              <!-- STEP 1 — Dados Pessoais -->
+              <div class="wizard-step active" id="step-dados">
+                <div class="form-group">
+                  <div class="br-input">
+                    <label for="cad-nome">Nome completo *</label>
+                    <input id="cad-nome" name="nome_completo" type="text" placeholder="Seu nome completo" required />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <div class="br-input">
+                      <label for="cad-cpf">CPF *</label>
+                      <input id="cad-cpf" name="cpf" type="text" placeholder="000.000.000-00" required />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="br-input">
+                      <label for="cad-nascimento">Data de nascimento *</label>
+                      <input id="cad-nascimento" name="dt_nascimento" type="date" required />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <div class="br-input">
+                      <label for="cad-telefone">Telefone *</label>
+                      <input id="cad-telefone" name="telefone" type="tel" placeholder="(65) 99999-0000" required />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="br-input">
+                      <label for="cad-email">E-mail *</label>
+                      <input id="cad-email" name="email" type="email" placeholder="seu.email@exemplo.com" required />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wizard-nav">
+                  <span></span>
+                  <button class="br-button primary" type="button" data-wizard-next>
+                    Próximo <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- STEP 2 — Endereço -->
+              <div class="wizard-step" id="step-endereco">
+                <div class="form-row">
+                  <div class="form-group">
+                    <div class="br-input">
+                      <label for="cad-rua">Rua</label>
+                      <input id="cad-rua" name="rua" type="text" placeholder="Nome da rua" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="br-input">
+                      <label for="cad-numero">Número</label>
+                      <input id="cad-numero" name="numero_endereco" type="text" placeholder="Nº" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <div class="br-input">
+                    <label for="cad-complemento">Complemento</label>
+                    <input id="cad-complemento" name="complemento_endereco" type="text" placeholder="Apto, bloco, etc." />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="cad-bairro" style="display:block; font-size:.875rem; font-weight:600; margin-bottom:6px;">Bairro</label>
+                    <select id="cad-bairro" name="bairro_endereco" class="br-input" style="width:100%; padding:10px; border:1px solid #888; border-radius:4px; font-family:inherit;">
+                      <option value="">Selecione o bairro</option>
+                      {% for bairro in bairros %}
+                        <option value="{{ bairro.nome }}">{{ bairro.nome }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <div class="br-input">
+                      <label for="cad-cep">CEP</label>
+                      <input id="cad-cep" name="cep_endereco" type="text" placeholder="78000-000" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wizard-nav">
+                  <button class="br-button secondary" type="button" data-wizard-prev>
+                    <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+                  </button>
+                  <button class="br-button primary" type="button" data-wizard-next>
+                    Próximo <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- STEP 3 — Segurança -->
+              <div class="wizard-step" id="step-seguranca">
+                <div class="form-group">
+                  <div class="br-input has-icon">
+                    <label for="cad-senha">Senha *</label>
+                    <input id="cad-senha" name="senha" type="password" placeholder="Crie uma senha segura" required />
+                    <button class="br-button circle small" type="button" aria-label="Mostrar senha" onclick="togglePassword(this)">
+                      <i class="fas fa-eye" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <div class="br-input has-icon">
+                    <label for="cad-senha-confirm">Confirmar senha *</label>
+                    <input id="cad-senha-confirm" name="senha2" type="password" placeholder="Repita a senha" required />
+                    <button class="br-button circle small" type="button" aria-label="Mostrar senha" onclick="togglePassword(this)">
+                      <i class="fas fa-eye" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 16px;">
+                  <label class="br-checkbox">
+                    <input type="checkbox" id="cad-termos" required />
+                    <label for="cad-termos">
+                      Li e concordo com os <a href="javascript:void(0)">Termos de Uso</a> e a
+                      <a href="javascript:void(0)">Política de Privacidade</a>.
+                    </label>
+                  </label>
+                </div>
+
+                <div class="wizard-nav">
+                  <button class="br-button secondary" type="button" data-wizard-prev>
+                    <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+                  </button>
+                  <button class="br-button primary" type="submit" id="btn-cadastrar">
+                    <i class="fas fa-user-check" aria-hidden="true"></i> Criar Conta
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </form>
+
+          <span class="br-divider my-4"></span>
+
+          <div class="form-link">
+            Já tem uma conta?
+            <a href="{% url 'portal:login' %}">Faça login</a>
+          </div>
+        </div>
+      </main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function togglePassword(btn) {
+    const input = btn.parentElement.querySelector('input');
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+  }
+</script>
 {% endblock %}

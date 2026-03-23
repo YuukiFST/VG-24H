@@ -6,10 +6,12 @@ from django.views.decorators.http import require_http_methods
 from portal.decorators import perfil_codigo, perfis
 from portal.forms import EquipeStatusForm, FotoForm, ObservacaoForm
 from portal.models import (
+    BairroRegiao,
     Chamado,
     FotoChamado,
     HistoricoChamado,
     ObservacaoChamado,
+    StatusChamado,
 )
 from portal.utils import cor_semaforo, salvar_foto_upload, tipo_status
 
@@ -28,6 +30,22 @@ def equipe_chamados_lista(request):
     qs = Chamado.objects.select_related(
         "id_status", "id_servico", "id_bairro", "id_usuario"
     ).order_by("-dt_abertura")
+    
+    # Calculate global stats (Semáforo) before filtering
+    stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
+    now = timezone.now()
+    for ch in qs:
+        dias = (now - ch.dt_abertura).days
+        s = ch.id_servico
+        if dias >= s.prazo_vermelho_dias:
+            stats["critico"] += 1
+        elif dias >= s.prazo_amarelo_dias:
+            stats["atencao"] += 1
+        else:
+            stats["no_prazo"] += 1
+    total_count = qs.count()
+
+    # Apply Filters
     bairro = _int_none(request.GET.get("bairro"))
     st = _int_none(request.GET.get("status"))
     d0 = request.GET.get("de")
@@ -45,13 +63,13 @@ def equipe_chamados_lista(request):
     for ch in qs:
         linhas.append({"ch": ch, "cor": cor_semaforo(ch)})
 
-    from portal.models import BairroRegiao, StatusChamado
-
     return render(
         request,
-        "portal/equipe/chamados_lista.html",
+        "portal/equipe/dashboard.html",
         {
             "linhas": linhas,
+            "stats": stats,
+            "total_count": total_count,
             "bairros": BairroRegiao.objects.filter(ativo=True).order_by("nome"),
             "statuses": StatusChamado.objects.order_by("id_status"),
             "filtro_bairro": bairro,
