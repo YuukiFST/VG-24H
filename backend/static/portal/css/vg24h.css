@@ -124,12 +124,7 @@ img {
    HERO SECTION
    =================================================================== */
 .hero {
-  background: linear-gradient(
-    135deg,
-    var(--vg-primary-dark) 0%,
-    var(--vg-primary) 50%,
-    var(--vg-primary-light) 100%
-  );
+  background: var(--vg-primary-dark);
   color: #fff;
   padding: 80px 16px 64px;
   text-align: center;
@@ -423,7 +418,7 @@ img {
    =================================================================== */
 .stats-section {
   padding: 56px 16px;
-  background: var(--vg-primary-dark);
+  background: var(--vg-primary);
   color: #fff;
 }
 
@@ -455,11 +450,7 @@ img {
    =================================================================== */
 .cta-section {
   padding: 64px 16px;
-  background: linear-gradient(
-    135deg,
-    var(--vg-primary) 0%,
-    var(--vg-primary-light) 100%
-  );
+  background: var(--vg-primary-dark);
   color: #fff;
   text-align: center;
 }
