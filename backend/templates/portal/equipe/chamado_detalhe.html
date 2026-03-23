@@ -1,0 +1,71 @@
+{% extends "portal/base.html" %}
+{% block title %}Chamado {{ ch.protocolo }}{% endblock %}
+{% block content %}
+  <h1 class="mb-2">Protocolo {{ ch.protocolo }}</h1>
+  <p class="text-down-01">Cidadão: {{ ch.id_usuario.nome_completo }} — Status: {{ tipo_status }}</p>
+  <p>{{ ch.descricao }}</p>
+  {% if ch.resolucao %}<p class="mt-2"><strong>Resolução:</strong> {{ ch.resolucao }}</p>{% endif %}
+
+  {% if bloqueia_status_col %}
+  <p class="br-message is-warning mt-3" role="status">Como colaborador, você não altera chamados concluídos ou cancelados.</p>
+  {% endif %}
+
+  {% if pode_status %}
+  <h2 class="mt-4 h5">Alterar status</h2>
+  <form method="post" class="col-lg-8 mb-4">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="status" />
+    <div class="br-input mb-2">
+      <label for="id_id_status">{{ form_status.id_status.label }}</label>
+      {{ form_status.id_status.errors }}
+      {{ form_status.id_status }}
+    </div>
+    <div class="br-input mb-2">
+      <label for="id_resolucao">{{ form_status.resolucao.label }}</label>
+      {{ form_status.resolucao.errors }}
+      {{ form_status.resolucao }}
+    </div>
+    {{ form_status.non_field_errors }}
+    <button type="submit" class="br-button primary">Salvar status</button>
+  </form>
+  {% endif %}
+
+  <h2 class="h5">Histórico</h2>
+  <ul class="mb-4">
+    {% for h in historicos %}
+    <li>{{ h.dt_alteracao|date:"d/m/Y H:i" }} — {{ h.tipo_status }}</li>
+    {% endfor %}
+  </ul>
+
+  <h2 class="h5">Fotos</h2>
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    {% for f in fotos %}
+    <a href="{{ f.url_foto }}" target="_blank" rel="noopener noreferrer"><img src="{{ f.url_foto }}" alt="" width="100" height="100" style="object-fit:cover" loading="lazy" /></a>
+    {% endfor %}
+  </div>
+
+  <h2 class="h5">Observações</h2>
+  <ul class="mb-3">
+    {% for o in observacoes %}
+    <li><strong>{{ o.id_usuario_autor.nome_completo }}</strong>: {{ o.texto_observacao }}</li>
+    {% endfor %}
+  </ul>
+
+  <h2 class="h5">Nova observação</h2>
+  <form method="post" class="mb-4">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="obs" />
+    <div class="br-input mb-2">{{ form_obs.texto }}</div>
+    <button type="submit" class="br-button secondary is-small">Enviar</button>
+  </form>
+
+  <h2 class="h5">Nova foto</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="foto" />
+    <div class="br-input mb-2">{{ form_foto.foto }}</div>
+    <button type="submit" class="br-button secondary is-small">Enviar</button>
+  </form>
+
+  <p class="mt-4"><a href="{% url 'portal:equipe_chamados' %}">Voltar</a></p>
+{% endblock %}

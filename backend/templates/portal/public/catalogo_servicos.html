@@ -1,0 +1,34 @@
+{% extends "portal/base.html" %}
+{% block title %}Categorias e serviços{% endblock %}
+{% block breadcrumb_trail %}
+<li class="crumb" data-active="active"><i class="icon fas fa-chevron-right" aria-hidden="true"></i><span tabindex="0" aria-current="page">Categorias e serviços</span></li>
+{% endblock %}
+{% block content %}
+  <h1 class="mb-3">Categorias e serviços oferecidos</h1>
+  {% if q %}
+  <p class="text-down-01 mb-3" role="status">Resultados para “{{ q }}”. <a href="{% url 'portal:catalogo_servicos' %}">Limpar busca</a></p>
+  {% endif %}
+  <p class="text-down-01 mb-4">
+    Consulte os tipos de solicitação disponíveis. Para registrar um problema, use
+    {% if nav_user and nav_perfil == "CID" %}
+    <a href="{% url 'portal:cidadao_chamado_novo' %}">Abrir chamado</a>.
+    {% else %}
+    <a href="{% url 'portal:cadastro' %}">cadastro</a> e <a href="{% url 'portal:login' %}">login</a>, depois “Abrir chamado”.
+    {% endif %}
+  </p>
+  {% for cat, servicos in blocos %}
+  <section class="mb-4" aria-labelledby="cat-{{ cat.pk }}">
+    <h2 class="h5 mb-2" id="cat-{{ cat.pk }}">{{ cat.nome }}</h2>
+    {% if cat.descricao %}<p class="text-down-01 mb-2">{{ cat.descricao }}</p>{% endif %}
+    <ul class="mb-0">
+      {% for s in servicos %}
+      <li><strong>{{ s.nome }}</strong>{% if s.descricao %} — {{ s.descricao }}{% endif %}</li>
+      {% empty %}
+      <li class="text-down-01">Nenhum serviço ativo nesta categoria.</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% empty %}
+  <p>{% if q %}Nenhum serviço encontrado para essa busca.{% else %}Nenhuma categoria cadastrada.{% endif %}</p>
+  {% endfor %}
+{% endblock %}

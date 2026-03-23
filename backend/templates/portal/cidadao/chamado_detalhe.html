@@ -1,0 +1,88 @@
+{% extends "portal/base.html" %}
+{% block title %}Chamado {{ ch.protocolo }}{% endblock %}
+{% block content %}
+  <h1 class="mb-2">Protocolo {{ ch.protocolo }}</h1>
+  <p class="text-down-01 mb-3">Status: <strong>{{ tipo_status }}</strong> — {{ ch.id_status.descricao }}</p>
+  <p>{{ ch.descricao }}</p>
+  <p class="text-down-01">Endereço: {{ ch.rua }}, {{ ch.numero }} — {{ ch.id_bairro.nome }}</p>
+
+  <h2 class="mt-4 h5">Histórico</h2>
+  <ul class="mb-4">
+    {% for h in historicos %}
+    <li>{{ h.dt_alteracao|date:"d/m/Y H:i" }} — {{ h.tipo_status }}</li>
+    {% endfor %}
+  </ul>
+
+  <h2 class="h5">Fotos</h2>
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    {% for f in fotos %}
+    <a href="{{ f.url_foto }}" target="_blank" rel="noopener noreferrer"><img src="{{ f.url_foto }}" alt="Foto do chamado" width="120" height="120" style="object-fit:cover" loading="lazy" /></a>
+    {% empty %}
+    <p>Nenhuma foto.</p>
+    {% endfor %}
+  </div>
+
+  <h2 class="h5">Observações</h2>
+  <ul class="mb-4">
+    {% for o in observacoes %}
+    <li><strong>{{ o.id_usuario_autor.nome_completo }}</strong> ({{ o.criado_em|date:"d/m/Y H:i" }}): {{ o.texto_observacao }}</li>
+    {% empty %}
+    <li>Nenhuma observação.</li>
+    {% endfor %}
+  </ul>
+
+  {% if pode_obs_foto %}
+  <h2 class="h5">Nova observação</h2>
+  <form method="post" class="mb-4">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="obs" />
+    <div class="br-input mb-2">
+      <label for="id_obs">{{ form_obs.texto.label }}</label>
+      {{ form_obs.texto }}
+    </div>
+    <button type="submit" class="br-button secondary is-small">Enviar</button>
+  </form>
+  <h2 class="h5">Adicionar foto</h2>
+  <form method="post" enctype="multipart/form-data" class="mb-4">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="foto" />
+    <div class="br-input mb-2">
+      <label for="id_foto">{{ form_foto.foto.label }}</label>
+      {{ form_foto.foto }}
+    </div>
+    <button type="submit" class="br-button secondary is-small">Enviar foto</button>
+  </form>
+  {% endif %}
+
+  {% if pode_cancelar %}
+  <h2 class="h5">Cancelar chamado</h2>
+  <form method="post" class="mb-4">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="cancelar" />
+    <div class="br-input mb-2">
+      <label for="id_motivo">{{ form_cancelar.motivo.label }}</label>
+      {{ form_cancelar.motivo }}
+    </div>
+    <button type="submit" class="br-button secondary is-small">Confirmar cancelamento</button>
+  </form>
+  {% endif %}
+
+  {% if pode_avaliar %}
+  <h2 class="h5">Avaliar atendimento</h2>
+  <form method="post" class="col-md-6">
+    {% csrf_token %}
+    <input type="hidden" name="acao" value="avaliar" />
+    <div class="br-input mb-2">
+      <label for="id_nota">{{ form_avaliar.nota.label }}</label>
+      {{ form_avaliar.nota }}
+    </div>
+    <div class="br-input mb-2">
+      <label for="id_comentario">{{ form_avaliar.comentario.label }}</label>
+      {{ form_avaliar.comentario }}
+    </div>
+    <button type="submit" class="br-button primary">Enviar avaliação</button>
+  </form>
+  {% endif %}
+
+  <p class="mt-4"><a href="{% url 'portal:cidadao_chamados' %}">Voltar à lista</a></p>
+{% endblock %}

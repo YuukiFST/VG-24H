@@ -1,0 +1,27 @@
+{% extends "portal/base.html" %}
+{% block title %}Categorias{% endblock %}
+{% block content %}
+  <h1 class="mb-4">Categorias de serviço</h1>
+  <h2 class="h6">Nova categoria</h2>
+  <form method="post" class="col-md-8 mb-4">
+    {% csrf_token %}
+    <div class="br-input mb-2"><label for="id_nome">Nome</label>{{ form.nome }}</div>
+    <div class="br-input mb-2"><label for="id_descricao">Descrição</label>{{ form.descricao }}</div>
+    <button type="submit" class="br-button primary">Adicionar</button>
+  </form>
+  <ul class="list-unstyled">
+    {% for c in lista %}
+    <li class="mb-2 d-flex flex-wrap align-items-center gap-2">
+      <strong>{{ c.nome }}</strong> — {% if c.ativo %}ativa{% else %}inativa{% endif %}
+      <a href="{% url 'portal:gestao_categoria_editar' c.pk %}">Editar</a>
+      {% if c.ativo %}
+      <form method="post" class="d-inline">
+        {% csrf_token %}
+        <input type="hidden" name="desativar" value="{{ c.pk }}" />
+        <button type="submit" class="br-button is-terciary is-small">Inativar</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

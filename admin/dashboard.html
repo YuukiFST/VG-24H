@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Painel administrativo — VG 24H." />
+    <title>Painel Administrativo — VG 24H</title>
+    <link rel="stylesheet" href="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/fonts/rawline/css/rawline.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway:300,400,500,600,700,800,900&display=swap" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" />
+    <link rel="stylesheet" href="../css/vg24h.css" />
+  </head>
+  <body>
+    <div class="template-base">
+
+      <!-- ====== HEADER ====== -->
+      <header class="br-header" id="header" data-sticky="data-sticky">
+        <div class="container-lg">
+          <div class="header-top">
+            <div class="header-logo">
+              <a href="../index.html">
+                <img src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png" alt="logo gov.br" />
+              </a>
+              <span class="br-divider vertical"></span>
+              <div class="header-sign">VG 24H — Administração</div>
+            </div>
+            <div class="header-actions">
+              <div class="notification-bell">
+                <button class="br-button circle small" type="button" aria-label="Notificações">
+                  <i class="fas fa-bell" aria-hidden="true"></i>
+                </button>
+                <span class="notification-badge">12</span>
+              </div>
+              <span class="br-divider vertical mx-half mx-sm-1"></span>
+              <div class="header-login">
+                <div class="header-avatar">
+                  <button class="br-button circle small" type="button" aria-label="Menu do usuário">
+                    <i class="fas fa-user-shield" aria-hidden="true" style="font-size:1.5rem; color:var(--vg-primary);"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="header-bottom">
+            <div class="header-menu">
+              <div class="header-info">
+                <div class="header-title">Painel Administrativo</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ====== MAIN ====== -->
+      <main id="main-content">
+        <div class="dashboard-content">
+
+          <!-- Breadcrumb -->
+          <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
+            <div class="br-breadcrumb-list">
+              <span class="crumb"><a href="../index.html"><i class="fas fa-home" aria-hidden="true"></i></a></span>
+              <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+              <span class="crumb"><span>Administração</span></span>
+            </div>
+          </nav>
+
+          <div class="dashboard-header">
+            <div>
+              <h1>Painel Administrativo</h1>
+              <p class="welcome-msg">Bem-vindo, <strong>Administrador</strong>.</p>
+            </div>
+          </div>
+
+          <!-- ---- Statistics ---- -->
+          <div class="semaforo-grid">
+            <div class="semaforo-card total">
+              <div class="card-value">156</div>
+              <div class="card-label">Total de chamados</div>
+              <div class="card-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></div>
+            </div>
+            <div class="semaforo-card verde">
+              <div class="card-value">89</div>
+              <div class="card-label">Concluídos</div>
+              <div class="card-icon"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
+            </div>
+            <div class="semaforo-card amarelo">
+              <div class="card-value">43</div>
+              <div class="card-label">Em andamento</div>
+              <div class="card-icon"><i class="fas fa-clock" aria-hidden="true"></i></div>
+            </div>
+            <div class="semaforo-card vermelho">
+              <div class="card-value">24</div>
+              <div class="card-label">Críticos (&gt; 10 dias)</div>
+              <div class="card-icon"><i class="fas fa-fire" aria-hidden="true"></i></div>
+            </div>
+          </div>
+
+          <!-- ---- Charts Placeholder ---- -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:32px;">
+            <div class="ticket-info-card">
+              <h2><i class="fas fa-chart-bar" style="color:var(--vg-primary);" aria-hidden="true"></i> Chamados por Categoria</h2>
+              <div style="padding:40px 0; text-align:center; color:var(--gray-40);">
+                <i class="fas fa-chart-bar" style="font-size:4rem; opacity:.3;" aria-hidden="true"></i>
+                <p style="margin-top:12px; font-size:.875rem;">Gráfico disponível após integração com backend</p>
+              </div>
+            </div>
+            <div class="ticket-info-card">
+              <h2><i class="fas fa-chart-pie" style="color:var(--vg-primary);" aria-hidden="true"></i> Chamados por Bairro</h2>
+              <div style="padding:40px 0; text-align:center; color:var(--gray-40);">
+                <i class="fas fa-chart-pie" style="font-size:4rem; opacity:.3;" aria-hidden="true"></i>
+                <p style="margin-top:12px; font-size:.875rem;">Gráfico disponível após integração com backend</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---- Management Tabs ---- -->
+          <div class="ticket-info-card" data-tab-group="admin">
+            <h2 class="mb-3"><i class="fas fa-cogs" style="color:var(--vg-primary);" aria-hidden="true"></i> Gerenciamento</h2>
+
+            <div class="br-tab mb-3" data-counter="true">
+              <nav class="tab-nav">
+                <ul>
+                  <li class="tab-item">
+                    <button type="button" data-tab-target="tab-usuarios" class="active is-active">
+                      <span class="name"><i class="fas fa-users mr-1" aria-hidden="true"></i>Usuários</span>
+                    </button>
+                  </li>
+                  <li class="tab-item">
+                    <button type="button" data-tab-target="tab-categorias">
+                      <span class="name"><i class="fas fa-folder mr-1" aria-hidden="true"></i>Categorias</span>
+                    </button>
+                  </li>
+                  <li class="tab-item">
+                    <button type="button" data-tab-target="tab-servicos">
+                      <span class="name"><i class="fas fa-concierge-bell mr-1" aria-hidden="true"></i>Serviços</span>
+                    </button>
+                  </li>
+                  <li class="tab-item">
+                    <button type="button" data-tab-target="tab-bairros">
+                      <span class="name"><i class="fas fa-map-marker-alt mr-1" aria-hidden="true"></i>Bairros</span>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+
+            <!-- Tab: Usuários -->
+            <div class="tab-content active" id="tab-usuarios">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <span style="color:var(--gray-60); font-size:.875rem;">5 usuários cadastrados</span>
+                <button class="br-button primary small" type="button" data-modal-open="modal-add-user">
+                  <i class="fas fa-plus" aria-hidden="true"></i> Novo Usuário
+                </button>
+              </div>
+              <div class="vg-table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Nome</th>
+                      <th scope="col">E-mail</th>
+                      <th scope="col">Perfil</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>João da Silva</td>
+                      <td>joao@email.com</td>
+                      <td><span class="status-tag ab">Cidadão</span></td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                        <button class="br-button circle small" type="button" aria-label="Desativar"><i class="fas fa-ban" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Maria Santos</td>
+                      <td>maria@prefeitura.gov.br</td>
+                      <td><span class="status-tag an">Colaborador</span></td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                        <button class="br-button circle small" type="button" aria-label="Desativar"><i class="fas fa-ban" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Admin Sistema</td>
+                      <td>admin@prefeitura.gov.br</td>
+                      <td><span class="status-tag ex">Admin</span></td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tab: Categorias -->
+            <div class="tab-content" id="tab-categorias">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <span style="color:var(--gray-60); font-size:.875rem;">2 categorias</span>
+                <button class="br-button primary small" type="button">
+                  <i class="fas fa-plus" aria-hidden="true"></i> Nova Categoria
+                </button>
+              </div>
+              <div class="vg-table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Nome</th>
+                      <th scope="col">Descrição</th>
+                      <th scope="col">Serviços vinculados</th>
+                      <th scope="col">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Infraestrutura e Via Pública</td>
+                      <td>Serviços de infraestrutura urbana</td>
+                      <td>3</td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                        <button class="br-button circle small" type="button" aria-label="Desativar"><i class="fas fa-ban" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Mobilidade e Cidadania</td>
+                      <td>Serviços de mobilidade e saúde</td>
+                      <td>2</td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                        <button class="br-button circle small" type="button" aria-label="Desativar"><i class="fas fa-ban" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tab: Serviços -->
+            <div class="tab-content" id="tab-servicos">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <span style="color:var(--gray-60); font-size:.875rem;">5 serviços</span>
+                <button class="br-button primary small" type="button">
+                  <i class="fas fa-plus" aria-hidden="true"></i> Novo Serviço
+                </button>
+              </div>
+              <div class="vg-table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Nome</th>
+                      <th scope="col">Categoria</th>
+                      <th scope="col">SLA (dias)</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Iluminação Pública</td>
+                      <td>Infraestrutura</td>
+                      <td>5</td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                        <button class="br-button circle small" type="button" aria-label="Desativar"><i class="fas fa-ban" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Pavimentação e Vias</td>
+                      <td>Infraestrutura</td>
+                      <td>10</td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                        <button class="br-button circle small" type="button" aria-label="Desativar"><i class="fas fa-ban" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Saneamento e Drenagem</td>
+                      <td>Infraestrutura</td>
+                      <td>7</td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                        <button class="br-button circle small" type="button" aria-label="Desativar"><i class="fas fa-ban" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Trânsito e Sinalização</td>
+                      <td>Mobilidade</td>
+                      <td>5</td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                        <button class="br-button circle small" type="button" aria-label="Desativar"><i class="fas fa-ban" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Saúde e Bem-estar</td>
+                      <td>Mobilidade</td>
+                      <td>3</td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                        <button class="br-button circle small" type="button" aria-label="Desativar"><i class="fas fa-ban" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tab: Bairros -->
+            <div class="tab-content" id="tab-bairros">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <span style="color:var(--gray-60); font-size:.875rem;">7 bairros</span>
+                <button class="br-button primary small" type="button">
+                  <i class="fas fa-plus" aria-hidden="true"></i> Novo Bairro
+                </button>
+              </div>
+              <div class="vg-table-wrapper">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Nome</th>
+                      <th scope="col">Total chamados</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Centro</td>
+                      <td>32</td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Cristo Rei</td>
+                      <td>28</td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Jardim Glória</td>
+                      <td>22</td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Manga</td>
+                      <td>18</td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Nova Várzea Grande</td>
+                      <td>21</td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Santa Isabel</td>
+                      <td>15</td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>São Mateus</td>
+                      <td>20</td>
+                      <td><span style="color:var(--vg-accent); font-weight:600;">Ativo</span></td>
+                      <td>
+                        <button class="br-button circle small" type="button" aria-label="Editar"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </main>
+
+      <!-- Modal — Novo Usuário -->
+      <div class="vg-modal-overlay" id="modal-add-user">
+        <div class="vg-modal">
+          <h2><i class="fas fa-user-plus" style="color:var(--vg-primary);" aria-hidden="true"></i> Novo Usuário</h2>
+          <div class="form-group">
+            <div class="br-input">
+              <label for="user-nome">Nome completo *</label>
+              <input id="user-nome" type="text" placeholder="Nome completo" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="br-input">
+              <label for="user-email">E-mail *</label>
+              <input id="user-email" type="email" placeholder="email@exemplo.com" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="user-perfil" style="display:block; font-size:.875rem; font-weight:600; margin-bottom:6px;">Perfil *</label>
+            <select id="user-perfil" style="width:100%; padding:10px; border:1px solid #888; border-radius:4px; font-family:inherit;" required>
+              <option value="">Selecione</option>
+              <option value="cidadao">Cidadão</option>
+              <option value="colaborador">Colaborador</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div class="br-input">
+              <label for="user-senha">Senha provisória *</label>
+              <input id="user-senha" type="password" placeholder="Senha provisória" required />
+            </div>
+          </div>
+          <div style="display:flex; gap:12px; justify-content:flex-end;">
+            <button class="br-button secondary" type="button" data-modal-close>Cancelar</button>
+            <button class="br-button primary" type="button" data-modal-close>Criar Usuário</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== FOOTER ====== -->
+      <footer class="br-footer pt-3" id="footer">
+        <div class="container-lg">
+          <div class="info">
+            <div class="text-down-01 text-medium pb-3 text-center">
+              VG 24H — Portal de Serviços Públicos de Várzea Grande. Conforme o <strong>Design System Gov.br</strong>.
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core-init.min.js"></script>
+    <script src="../js/vg24h.js"></script>
+  </body>
+</html>

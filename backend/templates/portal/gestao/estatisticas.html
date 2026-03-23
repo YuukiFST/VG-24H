@@ -1,0 +1,32 @@
+{% extends "portal/base.html" %}
+{% block title %}Estatísticas{% endblock %}
+{% block content %}
+  <h1 class="mb-4">Estatísticas consolidadas</h1>
+  <div class="table-responsive">
+    <table class="table">
+      <caption class="sr-only">Totais por categoria, bairro e status</caption>
+      <thead>
+        <tr>
+          <th scope="col">Categoria</th>
+          <th scope="col">Bairro</th>
+          <th scope="col">Status</th>
+          <th scope="col">Descrição</th>
+          <th scope="col">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in linhas %}
+        <tr>
+          <td>{{ r.categoria }}</td>
+          <td>{{ r.bairro }}</td>
+          <td>{{ r.tipo_status }}</td>
+          <td>{{ r.status_descricao }}</td>
+          <td>{{ r.total_chamados }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">Sem dados ou view não criada no banco.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

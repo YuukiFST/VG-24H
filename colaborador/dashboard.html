@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Painel do colaborador — VG 24H." />
+    <title>Painel do Colaborador — VG 24H</title>
+    <link rel="stylesheet" href="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/fonts/rawline/css/rawline.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway:300,400,500,600,700,800,900&display=swap" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" />
+    <link rel="stylesheet" href="../css/vg24h.css" />
+  </head>
+  <body>
+    <div class="template-base">
+
+      <!-- ====== HEADER ====== -->
+      <header class="br-header" id="header" data-sticky="data-sticky">
+        <div class="container-lg">
+          <div class="header-top">
+            <div class="header-logo">
+              <a href="../index.html">
+                <img src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png" alt="logo gov.br" />
+              </a>
+              <span class="br-divider vertical"></span>
+              <div class="header-sign">VG 24H — Colaborador</div>
+            </div>
+            <div class="header-actions">
+              <div class="notification-bell">
+                <button class="br-button circle small" type="button" aria-label="Notificações">
+                  <i class="fas fa-bell" aria-hidden="true"></i>
+                </button>
+                <span class="notification-badge">8</span>
+              </div>
+              <span class="br-divider vertical mx-half mx-sm-1"></span>
+              <div class="header-login">
+                <div class="header-avatar">
+                  <button class="br-button circle small" type="button" aria-label="Menu do usuário">
+                    <i class="fas fa-user-cog" aria-hidden="true" style="font-size:1.5rem; color:var(--vg-primary);"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="header-bottom">
+            <div class="header-menu">
+              <div class="header-info">
+                <div class="header-title">Painel do Colaborador</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ====== MAIN ====== -->
+      <main id="main-content">
+        <div class="dashboard-content">
+
+          <!-- Breadcrumb -->
+          <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
+            <div class="br-breadcrumb-list">
+              <span class="crumb"><a href="../index.html"><i class="fas fa-home" aria-hidden="true"></i></a></span>
+              <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+              <span class="crumb"><span>Painel do Colaborador</span></span>
+            </div>
+          </nav>
+
+          <div class="dashboard-header">
+            <div>
+              <h1>Gestão de Chamados</h1>
+              <p class="welcome-msg">Bem-vinda, <strong>Maria Santos</strong>.</p>
+            </div>
+          </div>
+
+          <!-- Semáforo -->
+          <div class="semaforo-grid">
+            <div class="semaforo-card total">
+              <div class="card-value">42</div>
+              <div class="card-label">Total de chamados</div>
+              <div class="card-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></div>
+            </div>
+            <div class="semaforo-card verde">
+              <div class="card-value">18</div>
+              <div class="card-label">No prazo (≤ 5 dias)</div>
+              <div class="card-icon"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
+            </div>
+            <div class="semaforo-card amarelo">
+              <div class="card-value">15</div>
+              <div class="card-label">Atenção (6-10 dias)</div>
+              <div class="card-icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>
+            </div>
+            <div class="semaforo-card vermelho">
+              <div class="card-value">9</div>
+              <div class="card-label">Crítico (> 10 dias)</div>
+              <div class="card-icon"><i class="fas fa-fire" aria-hidden="true"></i></div>
+            </div>
+          </div>
+
+          <!-- Filter Bar -->
+          <div class="filter-bar">
+            <div class="filter-item">
+              <label for="filter-status">Status</label>
+              <select id="filter-status" style="width:100%; padding:8px; border:1px solid #888; border-radius:4px; font-family:inherit;">
+                <option value="">Todos</option>
+                <option value="AB">Aberto</option>
+                <option value="AN">Em Análise</option>
+                <option value="EX">Em Execução</option>
+                <option value="CO">Concluído</option>
+                <option value="CA">Cancelado</option>
+              </select>
+            </div>
+            <div class="filter-item">
+              <label for="filter-bairro">Bairro</label>
+              <select id="filter-bairro" style="width:100%; padding:8px; border:1px solid #888; border-radius:4px; font-family:inherit;">
+                <option value="">Todos</option>
+                <option value="centro">Centro</option>
+                <option value="cristo-rei">Cristo Rei</option>
+                <option value="jardim-gloria">Jardim Glória</option>
+                <option value="manga">Manga</option>
+                <option value="nova-varzea-grande">Nova Várzea Grande</option>
+                <option value="santa-isabel">Santa Isabel</option>
+                <option value="sao-mateus">São Mateus</option>
+              </select>
+            </div>
+            <div class="filter-item">
+              <label for="filter-categoria">Categoria</label>
+              <select id="filter-categoria" style="width:100%; padding:8px; border:1px solid #888; border-radius:4px; font-family:inherit;">
+                <option value="">Todas</option>
+                <option value="iluminacao">Iluminação Pública</option>
+                <option value="pavimentacao">Pavimentação e Vias</option>
+                <option value="saneamento">Saneamento e Drenagem</option>
+                <option value="transito">Trânsito e Sinalização</option>
+                <option value="saude">Saúde e Bem-estar</option>
+              </select>
+            </div>
+            <div class="filter-item" style="flex:0 0 auto;">
+              <label>&nbsp;</label>
+              <button class="br-button primary small" type="button">
+                <i class="fas fa-filter" aria-hidden="true"></i> Filtrar
+              </button>
+            </div>
+          </div>
+
+          <!-- Tickets Table -->
+          <div class="vg-table-wrapper">
+            <div class="br-table">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Protocolo</th>
+                    <th scope="col">Cidadão</th>
+                    <th scope="col">Serviço</th>
+                    <th scope="col">Bairro</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Dias</th>
+                    <th scope="col">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>20260001</strong></td>
+                    <td>João da Silva</td>
+                    <td>Iluminação Pública</td>
+                    <td>Cristo Rei</td>
+                    <td><span class="status-tag ab">Aberto</span></td>
+                    <td><span style="color:var(--vg-accent); font-weight:700;">2</span></td>
+                    <td>
+                      <button class="br-button circle small" type="button" aria-label="Alterar status" data-modal-open="modal-status"><i class="fas fa-exchange-alt" aria-hidden="true"></i></button>
+                      <button class="br-button circle small" type="button" aria-label="Adicionar observação" data-modal-open="modal-obs"><i class="fas fa-comment" aria-hidden="true"></i></button>
+                      <a href="../cidadao/protocolo.html" class="br-button circle small" aria-label="Ver detalhes"><i class="fas fa-eye" aria-hidden="true"></i></a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>20260002</strong></td>
+                    <td>Ana Oliveira</td>
+                    <td>Pavimentação e Vias</td>
+                    <td>Centro</td>
+                    <td><span class="status-tag an">Em Análise</span></td>
+                    <td><span style="color:var(--vg-orange); font-weight:700;">7</span></td>
+                    <td>
+                      <button class="br-button circle small" type="button" aria-label="Alterar status" data-modal-open="modal-status"><i class="fas fa-exchange-alt" aria-hidden="true"></i></button>
+                      <button class="br-button circle small" type="button" aria-label="Adicionar observação" data-modal-open="modal-obs"><i class="fas fa-comment" aria-hidden="true"></i></button>
+                      <a href="../cidadao/protocolo.html" class="br-button circle small" aria-label="Ver detalhes"><i class="fas fa-eye" aria-hidden="true"></i></a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>20260003</strong></td>
+                    <td>Carlos Pereira</td>
+                    <td>Saneamento e Drenagem</td>
+                    <td>Manga</td>
+                    <td><span class="status-tag ex">Em Execução</span></td>
+                    <td><span style="color:var(--vg-danger); font-weight:700;">12</span></td>
+                    <td>
+                      <button class="br-button circle small" type="button" aria-label="Alterar status" data-modal-open="modal-status"><i class="fas fa-exchange-alt" aria-hidden="true"></i></button>
+                      <button class="br-button circle small" type="button" aria-label="Adicionar observação" data-modal-open="modal-obs"><i class="fas fa-comment" aria-hidden="true"></i></button>
+                      <a href="../cidadao/protocolo.html" class="br-button circle small" aria-label="Ver detalhes"><i class="fas fa-eye" aria-hidden="true"></i></a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>20260004</strong></td>
+                    <td>Fernanda Lima</td>
+                    <td>Trânsito e Sinalização</td>
+                    <td>Jardim Glória</td>
+                    <td><span class="status-tag ab">Aberto</span></td>
+                    <td><span style="color:var(--vg-accent); font-weight:700;">1</span></td>
+                    <td>
+                      <button class="br-button circle small" type="button" aria-label="Alterar status" data-modal-open="modal-status"><i class="fas fa-exchange-alt" aria-hidden="true"></i></button>
+                      <button class="br-button circle small" type="button" aria-label="Adicionar observação" data-modal-open="modal-obs"><i class="fas fa-comment" aria-hidden="true"></i></button>
+                      <a href="../cidadao/protocolo.html" class="br-button circle small" aria-label="Ver detalhes"><i class="fas fa-eye" aria-hidden="true"></i></a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>20260005</strong></td>
+                    <td>Roberto Alves</td>
+                    <td>Saúde e Bem-estar</td>
+                    <td>São Mateus</td>
+                    <td><span class="status-tag co">Concluído</span></td>
+                    <td><span style="color:var(--vg-accent); font-weight:700;">4</span></td>
+                    <td>
+                      <a href="../cidadao/protocolo.html" class="br-button circle small" aria-label="Ver detalhes"><i class="fas fa-eye" aria-hidden="true"></i></a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+      <!-- Modal — Alterar Status -->
+      <div class="vg-modal-overlay" id="modal-status">
+        <div class="vg-modal">
+          <h2><i class="fas fa-exchange-alt" style="color:var(--vg-primary);" aria-hidden="true"></i> Alterar Status</h2>
+          <div class="form-group">
+            <label for="modal-novo-status" style="display:block; font-size:.875rem; font-weight:600; margin-bottom:6px;">Novo status *</label>
+            <select id="modal-novo-status" style="width:100%; padding:10px; border:1px solid #888; border-radius:4px; font-family:inherit;" required>
+              <option value="">Selecione</option>
+              <option value="AN">Em Análise</option>
+              <option value="EX">Em Execução</option>
+              <option value="CO">Concluído</option>
+              <option value="CA">Cancelado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div class="br-input">
+              <label for="modal-obs-status">Observação *</label>
+              <textarea id="modal-obs-status" rows="3" placeholder="Justifique a mudança de status..." required></textarea>
+            </div>
+          </div>
+          <div style="display:flex; gap:12px; justify-content:flex-end;">
+            <button class="br-button secondary" type="button" data-modal-close>Cancelar</button>
+            <button class="br-button primary" type="button" data-modal-close>Confirmar Alteração</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal — Observação -->
+      <div class="vg-modal-overlay" id="modal-obs">
+        <div class="vg-modal">
+          <h2><i class="fas fa-comment" style="color:var(--vg-primary);" aria-hidden="true"></i> Adicionar Observação</h2>
+          <div class="form-group">
+            <div class="br-input">
+              <label for="modal-texto-obs">Texto da observação *</label>
+              <textarea id="modal-texto-obs" rows="4" placeholder="Escreva sua observação sobre este chamado..." required></textarea>
+            </div>
+          </div>
+          <div style="display:flex; gap:12px; justify-content:flex-end;">
+            <button class="br-button secondary" type="button" data-modal-close>Cancelar</button>
+            <button class="br-button primary" type="button" data-modal-close>Enviar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== FOOTER ====== -->
+      <footer class="br-footer pt-3" id="footer">
+        <div class="container-lg">
+          <div class="info">
+            <div class="text-down-01 text-medium pb-3 text-center">
+              VG 24H — Portal de Serviços Públicos de Várzea Grande. Conforme o <strong>Design System Gov.br</strong>.
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core-init.min.js"></script>
+    <script src="../js/vg24h.js"></script>
+  </body>
+</html>
