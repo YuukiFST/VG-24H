@@ -1,0 +1,20 @@
+{% extends "portal/base.html" %}
+{% block title %}Notificações{% endblock %}
+{% block content %}
+  <h1 class="mb-3">Notificações</h1>
+  <ul class="list-unstyled">
+    {% for n in lista %}
+    <li class="mb-3 p-3 border-bottom">
+      <p class="mb-1">{{ n.mensagem }}</p>
+      <p class="text-down-01 mb-2">{{ n.dt_envio|date:"d/m/Y H:i" }}</p>
+      <form method="post" class="d-inline">
+        {% csrf_token %}
+        <input type="hidden" name="excluir" value="{{ n.pk }}" />
+        <button type="submit" class="br-button is-terciary is-small">Excluir</button>
+      </form>
+    </li>
+    {% empty %}
+    <li>Nenhuma notificação.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

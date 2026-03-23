@@ -1,1 +1,9 @@
 GOV/
+.env
+backend/.env
+backend/.venv/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/db.sqlite3
+backend/staticfiles/
+backend/media/

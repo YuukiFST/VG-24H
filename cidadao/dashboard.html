@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Painel do cidadão — VG 24H." />
+    <title>Meus Chamados — VG 24H</title>
+    <link rel="stylesheet" href="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/fonts/rawline/css/rawline.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway:300,400,500,600,700,800,900&display=swap" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" />
+    <link rel="stylesheet" href="../css/vg24h.css" />
+  </head>
+  <body>
+    <div class="template-base">
+
+      <!-- ====== HEADER ====== -->
+      <header class="br-header" id="header" data-sticky="data-sticky">
+        <div class="container-lg">
+          <div class="header-top">
+            <div class="header-logo">
+              <a href="../index.html">
+                <img src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png" alt="logo gov.br" />
+              </a>
+              <span class="br-divider vertical"></span>
+              <div class="header-sign">VG 24H</div>
+            </div>
+            <div class="header-actions">
+              <!-- Notificação -->
+              <div class="notification-bell" id="btn-notifications">
+                <button class="br-button circle small" type="button" aria-label="Notificações">
+                  <i class="fas fa-bell" aria-hidden="true"></i>
+                </button>
+                <span class="notification-badge">3</span>
+              </div>
+              <span class="br-divider vertical mx-half mx-sm-1"></span>
+              <!-- Avatar -->
+              <div class="header-login">
+                <div class="header-avatar">
+                  <button class="br-button circle small" type="button" aria-label="Menu do usuário">
+                    <i class="fas fa-user-circle" aria-hidden="true" style="font-size:1.5rem; color:var(--vg-primary);"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="header-bottom">
+            <div class="header-menu">
+              <div class="header-menu-trigger" id="header-navigation"></div>
+              <div class="header-info">
+                <div class="header-title">Painel do Cidadão</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ====== MAIN CONTENT ====== -->
+      <main id="main-content">
+        <div class="dashboard-content">
+
+          <!-- Breadcrumb -->
+          <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
+            <div class="br-breadcrumb-list">
+              <span class="crumb"><a href="../index.html"><i class="fas fa-home" aria-hidden="true"></i></a></span>
+              <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+              <span class="crumb"><span>Meus Chamados</span></span>
+            </div>
+          </nav>
+
+          <!-- Dashboard Header -->
+          <div class="dashboard-header">
+            <div>
+              <h1>Meus Chamados</h1>
+              <p class="welcome-msg">Olá, <strong>João da Silva</strong>! Aqui estão seus chamados.</p>
+            </div>
+            <a href="novo-chamado.html" class="br-button primary" id="btn-novo-chamado">
+              <i class="fas fa-plus-circle" aria-hidden="true"></i> Novo Chamado
+            </a>
+          </div>
+
+          <!-- Summary Cards -->
+          <div class="semaforo-grid">
+            <div class="semaforo-card total">
+              <div class="card-value">7</div>
+              <div class="card-label">Total de chamados</div>
+              <div class="card-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></div>
+            </div>
+            <div class="semaforo-card verde">
+              <div class="card-value">3</div>
+              <div class="card-label">Concluídos</div>
+              <div class="card-icon"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
+            </div>
+            <div class="semaforo-card amarelo">
+              <div class="card-value">2</div>
+              <div class="card-label">Em andamento</div>
+              <div class="card-icon"><i class="fas fa-clock" aria-hidden="true"></i></div>
+            </div>
+            <div class="semaforo-card vermelho">
+              <div class="card-value">1</div>
+              <div class="card-label">Cancelados</div>
+              <div class="card-icon"><i class="fas fa-times-circle" aria-hidden="true"></i></div>
+            </div>
+          </div>
+
+          <!-- Filter Bar -->
+          <div class="filter-bar">
+            <div class="filter-item">
+              <label for="filter-status">Status</label>
+              <select id="filter-status" class="br-input" style="width:100%; padding:8px; border:1px solid #888; border-radius:4px; font-family:inherit;">
+                <option value="">Todos</option>
+                <option value="AB">Aberto</option>
+                <option value="AN">Em Análise</option>
+                <option value="EX">Em Execução</option>
+                <option value="CO">Concluído</option>
+                <option value="CA">Cancelado</option>
+              </select>
+            </div>
+            <div class="filter-item">
+              <label for="filter-categoria">Categoria</label>
+              <select id="filter-categoria" class="br-input" style="width:100%; padding:8px; border:1px solid #888; border-radius:4px; font-family:inherit;">
+                <option value="">Todas</option>
+                <option value="infra">Infraestrutura e Via Pública</option>
+                <option value="mob">Mobilidade e Cidadania</option>
+              </select>
+            </div>
+            <div class="filter-item">
+              <label for="filter-data-inicio">Data início</label>
+              <div class="br-input">
+                <input id="filter-data-inicio" type="date" />
+              </div>
+            </div>
+            <div class="filter-item" style="flex: 0 0 auto;">
+              <label>&nbsp;</label>
+              <button class="br-button primary small" type="button">
+                <i class="fas fa-filter" aria-hidden="true"></i> Filtrar
+              </button>
+            </div>
+          </div>
+
+          <!-- Tickets Table -->
+          <div class="vg-table-wrapper">
+            <div class="br-table" data-search="data-search" data-selection="data-selection">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Protocolo</th>
+                    <th scope="col">Serviço</th>
+                    <th scope="col">Bairro</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Data</th>
+                    <th scope="col">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>20260001</strong></td>
+                    <td>Iluminação Pública</td>
+                    <td>Cristo Rei</td>
+                    <td><span class="status-tag co">Concluído</span></td>
+                    <td>10/03/2026</td>
+                    <td>
+                      <a href="protocolo.html" class="br-button circle small" aria-label="Ver detalhes"><i class="fas fa-eye" aria-hidden="true"></i></a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>20260002</strong></td>
+                    <td>Pavimentação e Vias</td>
+                    <td>Centro</td>
+                    <td><span class="status-tag ex">Em Execução</span></td>
+                    <td>12/03/2026</td>
+                    <td>
+                      <a href="protocolo.html" class="br-button circle small" aria-label="Ver detalhes"><i class="fas fa-eye" aria-hidden="true"></i></a>
+                      <button class="br-button circle small" type="button" aria-label="Adicionar foto"><i class="fas fa-camera" aria-hidden="true"></i></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>20260003</strong></td>
+                    <td>Saneamento e Drenagem</td>
+                    <td>Manga</td>
+                    <td><span class="status-tag an">Em Análise</span></td>
+                    <td>15/03/2026</td>
+                    <td>
+                      <a href="protocolo.html" class="br-button circle small" aria-label="Ver detalhes"><i class="fas fa-eye" aria-hidden="true"></i></a>
+                      <button class="br-button circle small" type="button" aria-label="Adicionar foto"><i class="fas fa-camera" aria-hidden="true"></i></button>
+                      <button class="br-button circle small" type="button" aria-label="Cancelar chamado" data-modal-open="modal-cancelar"><i class="fas fa-times" aria-hidden="true"></i></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>20260004</strong></td>
+                    <td>Trânsito e Sinalização</td>
+                    <td>Jardim Glória</td>
+                    <td><span class="status-tag ab">Aberto</span></td>
+                    <td>18/03/2026</td>
+                    <td>
+                      <a href="protocolo.html" class="br-button circle small" aria-label="Ver detalhes"><i class="fas fa-eye" aria-hidden="true"></i></a>
+                      <button class="br-button circle small" type="button" aria-label="Adicionar foto"><i class="fas fa-camera" aria-hidden="true"></i></button>
+                      <button class="br-button circle small" type="button" aria-label="Cancelar chamado" data-modal-open="modal-cancelar"><i class="fas fa-times" aria-hidden="true"></i></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>20260005</strong></td>
+                    <td>Saúde e Bem-estar</td>
+                    <td>Nova Várzea Grande</td>
+                    <td><span class="status-tag ca">Cancelado</span></td>
+                    <td>20/03/2026</td>
+                    <td>
+                      <a href="protocolo.html" class="br-button circle small" aria-label="Ver detalhes"><i class="fas fa-eye" aria-hidden="true"></i></a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+      <!-- Modal — Cancelar Chamado -->
+      <div class="vg-modal-overlay" id="modal-cancelar">
+        <div class="vg-modal">
+          <h2><i class="fas fa-exclamation-triangle" style="color:var(--vg-danger);" aria-hidden="true"></i> Cancelar chamado</h2>
+          <p style="margin-bottom:20px; color:var(--gray-60);">Tem certeza que deseja cancelar este chamado? Esta ação não poderá ser desfeita após a confirmação.</p>
+          <div style="display:flex; gap:12px; justify-content:flex-end;">
+            <button class="br-button secondary" type="button" data-modal-close>Voltar</button>
+            <button class="br-button primary danger" type="button" data-modal-close>Confirmar Cancelamento</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== FOOTER ====== -->
+      <footer class="br-footer pt-3" id="footer">
+        <div class="container-lg">
+          <div class="info">
+            <div class="text-down-01 text-medium pb-3 text-center">
+              VG 24H — Portal de Serviços Públicos de Várzea Grande. Conforme o <strong>Design System Gov.br</strong>.
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core-init.min.js"></script>
+    <script src="../js/vg24h.js"></script>
+  </body>
+</html>

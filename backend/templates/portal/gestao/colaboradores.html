@@ -1,0 +1,24 @@
+{% extends "portal/base.html" %}
+{% block title %}Colaboradores{% endblock %}
+{% block content %}
+  <h1 class="mb-4">Colaboradores</h1>
+  <h2 class="h6">Novo colaborador</h2>
+  <form method="post" class="col-md-8 mb-4">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="br-input mb-2">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field.errors }}{{ field }}
+    </div>
+    {% endfor %}
+    <button type="submit" class="br-button primary">Criar</button>
+  </form>
+  <h2 class="h6">Cadastrados</h2>
+  <ul>
+    {% for u in lista %}
+    <li>{{ u.nome_completo }} — {{ u.email }}</li>
+    {% empty %}
+    <li>Nenhum.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

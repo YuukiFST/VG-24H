@@ -1,0 +1,6 @@
+/* Complementos ao @govbr-ds/core — alinhado ao protótipo index.html */
+.search-area {
+  max-width: 720px;
+  margin: 0 auto 24px;
+  padding: 0 8px;
+}

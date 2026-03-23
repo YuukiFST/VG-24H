@@ -1,0 +1,30 @@
+{% extends "portal/base.html" %}
+{% block title %}Bairros{% endblock %}
+{% block content %}
+  <h1 class="mb-4">Bairros</h1>
+  <h2 class="h6">Novo bairro</h2>
+  <form method="post" class="col-md-8 mb-4">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="br-input mb-2">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field.errors }}{{ field }}
+    </div>
+    {% endfor %}
+    <button type="submit" class="br-button primary">Adicionar</button>
+  </form>
+  <ul class="list-unstyled">
+    {% for b in lista %}
+    <li class="mb-2">
+      <strong>{{ b.nome }}</strong> — CEP {{ b.cep }}
+      <a href="{% url 'portal:gestao_bairro_editar' b.pk %}">Editar</a>
+      {% if b.ativo %}
+      <form method="post" action="{% url 'portal:gestao_bairro_desativar' b.pk %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="br-button is-terciary is-small">Inativar</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

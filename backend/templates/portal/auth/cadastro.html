@@ -1,0 +1,16 @@
+{% extends "portal/base.html" %}
+{% block title %}Cadastro{% endblock %}
+{% block content %}
+  <h1 class="mb-4">Cadastro de cidadão</h1>
+  <form method="post" class="col-md-8">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="br-input mb-3">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field.errors }}
+      {{ field }}
+    </div>
+    {% endfor %}
+    <button type="submit" class="br-button primary">Cadastrar</button>
+  </form>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "portal/base.html" %}
+{% block title %}Chamados — equipe{% endblock %}
+{% block content %}
+  <h1 class="mb-3">Chamados</h1>
+  <form method="get" class="row g-2 mb-4" aria-label="Filtros">
+    <div class="col-md-3">
+      <label for="f_bairro">Bairro</label>
+      <select name="bairro" id="f_bairro" class="input">
+        <option value="">Todos</option>
+        {% for b in bairros %}
+        <option value="{{ b.pk }}" {% if filtro_bairro == b.pk %}selected{% endif %}>{{ b.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label for="f_status">Status</label>
+      <select name="status" id="f_status" class="input">
+        <option value="">Todos</option>
+        {% for s in statuses %}
+        <option value="{{ s.pk }}" {% if filtro_status == s.pk %}selected{% endif %}>{{ s.tipo_status }} — {{ s.descricao }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label for="f_de">De</label>
+      <input type="date" name="de" id="f_de" value="{{ filtro_de }}" class="input" />
+    </div>
+    <div class="col-md-2">
+      <label for="f_ate">Até</label>
+      <input type="date" name="ate" id="f_ate" value="{{ filtro_ate }}" class="input" />
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <button type="submit" class="br-button primary">Filtrar</button>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table">
+      <caption class="sr-only">Chamados com indicador de prazo</caption>
+      <thead>
+        <tr>
+          <th scope="col">Semáforo</th>
+          <th scope="col">Protocolo</th>
+          <th scope="col">Cidadão</th>
+          <th scope="col">Bairro</th>
+          <th scope="col">Status</th>
+          <th scope="col">Abertura</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in linhas %}
+        {% with ch=row.ch %}
+        <tr>
+          <td>
+            {% if row.cor == "verde" %}<span class="br-tag" style="background:#168821;color:#fff" title="Dentro do prazo">●</span>{% endif %}
+            {% if row.cor == "amarelo" %}<span class="br-tag" style="background:#ffcd07;color:#333" title="Atenção">●</span>{% endif %}
+            {% if row.cor == "vermelho" %}<span class="br-tag" style="background:#e52207;color:#fff" title="Atraso">●</span>{% endif %}
+          </td>
+          <td>{{ ch.protocolo }}</td>
+          <td>{{ ch.id_usuario.nome_completo }}</td>
+          <td>{{ ch.id_bairro.nome }}</td>
+          <td>{{ ch.id_status.tipo_status }}</td>
+          <td>{{ ch.dt_abertura|date:"d/m/Y" }}</td>
+          <td><a href="{% url 'portal:equipe_chamado' ch.pk %}">Abrir</a></td>
+        </tr>
+        {% endwith %}
+        {% empty %}
+        <tr><td colspan="7">Nenhum chamado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

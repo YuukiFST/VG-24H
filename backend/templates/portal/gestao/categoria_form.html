@@ -1,0 +1,16 @@
+{% extends "portal/base.html" %}
+{% block title %}Editar categoria{% endblock %}
+{% block content %}
+  <h1 class="mb-4">Editar categoria</h1>
+  <form method="post" class="col-md-8">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="br-input mb-3">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field.errors }}{{ field }}
+    </div>
+    {% endfor %}
+    <button type="submit" class="br-button primary">Salvar</button>
+  </form>
+  <p class="mt-3"><a href="{% url 'portal:gestao_categorias' %}">Voltar</a></p>
+{% endblock %}

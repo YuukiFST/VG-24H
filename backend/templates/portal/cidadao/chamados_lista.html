@@ -1,0 +1,33 @@
+{% extends "portal/base.html" %}
+{% block title %}Meus chamados{% endblock %}
+{% block content %}
+  <h1 class="mb-3">Meus chamados</h1>
+  <p><a class="br-button primary is-small" href="{% url 'portal:cidadao_chamado_novo' %}">Novo chamado</a></p>
+  <div class="table-responsive mt-3">
+    <table class="table">
+      <caption class="sr-only">Lista dos seus chamados</caption>
+      <thead>
+        <tr>
+          <th scope="col">Protocolo</th>
+          <th scope="col">Serviço</th>
+          <th scope="col">Status</th>
+          <th scope="col">Abertura</th>
+          <th scope="col">Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ch in lista %}
+        <tr>
+          <td>{{ ch.protocolo }}</td>
+          <td>{{ ch.id_servico.nome }}</td>
+          <td>{{ ch.id_status.tipo_status }} — {{ ch.id_status.descricao }}</td>
+          <td>{{ ch.dt_abertura|date:"d/m/Y H:i" }}</td>
+          <td><a href="{% url 'portal:cidadao_chamado' ch.pk %}">Detalhes</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">Nenhum chamado ainda.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
