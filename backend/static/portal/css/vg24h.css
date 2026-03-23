@@ -297,7 +297,7 @@ img {
 .service-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--vg-shadow-lg);
-  border-color: rgba(19, 81, 180, 0.15);
+  border-color: rgba(var(--rgb-primary-default), 0.15);
 }
 
 .service-card:hover::before {
@@ -308,7 +308,7 @@ img {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #edf5ff, #d4e5ff);
+  background: var(--blue-warm-vivid-5, #edf5ff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -319,11 +319,7 @@ img {
 }
 
 .service-card:hover .service-card-icon {
-  background: linear-gradient(
-    135deg,
-    var(--vg-primary),
-    var(--vg-primary-light)
-  );
+  background: var(--vg-primary);
   color: #fff;
 }
 
@@ -378,11 +374,7 @@ img {
   width: 96px;
   height: 96px;
   border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    var(--vg-primary),
-    var(--vg-primary-light)
-  );
+  background: var(--vg-primary);
   color: #fff;
   font-size: 2rem;
   font-weight: 800;
@@ -390,7 +382,7 @@ img {
   align-items: center;
   justify-content: center;
   margin: 0 auto 20px;
-  box-shadow: 0 4px 20px rgba(19, 81, 180, 0.25);
+  box-shadow: 0 4px 20px rgba(var(--rgb-primary-default), 0.25);
   transition: transform var(--vg-transition);
 }
 
@@ -485,7 +477,7 @@ img {
   align-items: center;
   justify-content: center;
   padding: 48px 16px;
-  background: linear-gradient(135deg, #f0f4f8 0%, #dbe8fb 100%);
+  background: var(--gray-5, #f0f0f0);
 }
 
 .auth-card {
@@ -655,21 +647,17 @@ img {
 }
 
 .semaforo-card.verde {
-  background: linear-gradient(135deg, #168821, #21c834);
+  background: var(--green-cool-vivid-50, #168821);
 }
 .semaforo-card.amarelo {
-  background: linear-gradient(135deg, #b38c00, #ffcd07);
-  color: #333;
+  background: var(--yellow-vivid-20, #ffcd07);
+  color: var(--gray-80, #333);
 }
 .semaforo-card.vermelho {
-  background: linear-gradient(135deg, #b50909, #e52207);
+  background: var(--red-vivid-50, #e52207);
 }
 .semaforo-card.total {
-  background: linear-gradient(
-    135deg,
-    var(--vg-primary-dark),
-    var(--vg-primary)
-  );
+  background: var(--vg-primary-dark);
 }
 
 .semaforo-card .card-value {
@@ -893,13 +881,13 @@ img {
 }
 
 .obs-bubble.cidadao {
-  background: #edf5ff;
+  background: var(--blue-warm-vivid-5, #edf5ff);
   align-self: flex-start;
   border-bottom-left-radius: 4px;
 }
 
 .obs-bubble.colaborador {
-  background: #e3f5e1;
+  background: var(--green-cool-vivid-5, #e3f5e1);
   align-self: flex-end;
   border-bottom-right-radius: 4px;
 }
@@ -983,13 +971,13 @@ img {
 
 .selection-card:hover {
   border-color: var(--vg-primary);
-  background: #edf5ff;
+  background: var(--blue-warm-vivid-5, #edf5ff);
 }
 
 .selection-card.selected {
   border-color: var(--vg-primary);
-  background: #edf5ff;
-  box-shadow: 0 0 0 3px rgba(19, 81, 180, 0.15);
+  background: var(--blue-warm-vivid-5, #edf5ff);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-primary-default), 0.15);
 }
 
 .selection-card i {
@@ -1095,7 +1083,7 @@ img {
 
 .upload-area:hover {
   border-color: var(--vg-primary);
-  background: #edf5ff;
+  background: var(--blue-warm-vivid-5, #edf5ff);
 }
 
 .upload-area i {
