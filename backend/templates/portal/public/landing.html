@@ -1,0 +1,12 @@
+{% extends "portal/base.html" %}
+{% block title %}Portal VG 24H{% endblock %}
+{% block content %}
+  <h1 class="mb-3">VG 24H</h1>
+  <p class="text-down-01 mb-4">Prefeitura de Várzea Grande — serviços urbanos e acompanhamento de chamados.</p>
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <a class="br-button primary" href="{% url 'portal:login' %}">Entrar</a>
+    <a class="br-button secondary" href="{% url 'portal:cadastro' %}">Cadastro (cidadão)</a>
+    <a class="br-button secondary" href="{% url 'portal:catalogo_servicos' %}">Ver categorias e serviços</a>
+  </div>
+  <p class="text-down-01"><a href="{% url 'portal:recuperar_senha' %}">Esqueci minha senha</a></p>
+{% endblock %}

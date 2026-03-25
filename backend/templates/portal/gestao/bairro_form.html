@@ -1,0 +1,41 @@
+{% extends "portal/base.html" %}
+{% load static %}
+
+{% block title %}Editar Bairro — VG 24H{% endblock %}
+
+{% block content %}
+<div class="dashboard-content">
+  <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
+    <div class="br-breadcrumb-list">
+      <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
+      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+      <span class="crumb"><a href="{% url 'portal:gestao_bairros' %}">Bairros</a></span>
+      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+      <span>Editar Bairro</span>
+    </div>
+  </nav>
+
+  <h1 class="h3 mb-4">Editar Bairro: {{ bairro.nome }}</h1>
+
+  <div class="br-card p-4 mx-auto" style="max-width: 600px;">
+    <form action="{% url 'portal:gestao_bairro_editar' bairro.pk %}" method="post">
+      {% csrf_token %}
+      <div class="br-input mb-3">
+        <label for="id_nome">Nome do Bairro *</label>
+        <input id="id_nome" name="nome" type="text" value="{{ bairro.nome }}" required />
+      </div>
+      <div class="br-input mb-4">
+        <label>Status</label>
+        <div class="br-check mt-1">
+          <input id="id_ativo" name="ativo" type="checkbox" {% if bairro.ativo %}checked{% endif %} />
+          <label for="id_ativo">Bairro Ativo</label>
+        </div>
+      </div>
+      <div class="d-flex justify-content-end">
+        <a href="{% url 'portal:gestao_bairros' %}" class="br-button secondary mr-2">Cancelar</a>
+        <button class="br-button primary" type="submit">Salvar Alterações</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

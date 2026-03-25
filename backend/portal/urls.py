@@ -1,0 +1,112 @@
+from django.urls import path
+
+from portal import views_auth, views_cidadao, views_equipe, views_gestao, views_root
+
+app_name = "portal"
+
+urlpatterns = [
+    path("", views_root.root_view, name="root"),
+    path(
+        "servicos/",
+        views_root.catalogo_servicos,
+        name="catalogo_servicos",
+    ),
+    path("accounts/login/", views_auth.login_view, name="login"),
+    path("accounts/logout/", views_auth.logout_view, name="logout"),
+    path("accounts/cadastro/", views_auth.cadastro_view, name="cadastro"),
+    path(
+        "accounts/recuperar-senha/",
+        views_auth.recuperar_senha_view,
+        name="recuperar_senha",
+    ),
+    path(
+        "accounts/redefinir-senha/<str:token>/",
+        views_auth.redefinir_senha_view,
+        name="redefinir_senha",
+    ),
+    path(
+        "accounts/trocar-senha/",
+        views_auth.troca_senha_obrigatoria_view,
+        name="troca_senha_obrigatoria",
+    ),
+    path(
+        "cidadao/chamados/",
+        views_cidadao.cidadao_chamados_lista,
+        name="cidadao_chamados",
+    ),
+    path(
+        "cidadao/chamados/novo/",
+        views_cidadao.cidadao_chamado_novo,
+        name="cidadao_chamado_novo",
+    ),
+    path(
+        "cidadao/chamados/<int:pk>/",
+        views_cidadao.cidadao_chamado_detalhe,
+        name="cidadao_chamado",
+    ),
+    path(
+        "cidadao/notificacoes/",
+        views_cidadao.cidadao_notificacoes,
+        name="cidadao_notificacoes",
+    ),
+    path(
+        "equipe/chamados/",
+        views_equipe.equipe_chamados_lista,
+        name="equipe_chamados",
+    ),
+    path(
+        "equipe/chamados/<int:pk>/",
+        views_equipe.equipe_chamado_detalhe,
+        name="equipe_chamado",
+    ),
+    path(
+        "gestao/estatisticas/",
+        views_gestao.gestao_estatisticas,
+        name="gestao_estatisticas",
+    ),
+    path(
+        "gestao/categorias/",
+        views_gestao.gestao_categorias,
+        name="gestao_categorias",
+    ),
+    path(
+        "gestao/categorias/<int:pk>/editar/",
+        views_gestao.gestao_categoria_editar,
+        name="gestao_categoria_editar",
+    ),
+    path(
+        "gestao/servicos/",
+        views_gestao.gestao_servicos,
+        name="gestao_servicos",
+    ),
+    path(
+        "gestao/servicos/<int:pk>/editar/",
+        views_gestao.gestao_servico_editar,
+        name="gestao_servico_editar",
+    ),
+    path(
+        "gestao/servicos/<int:pk>/desativar/",
+        views_gestao.gestao_servico_desativar,
+        name="gestao_servico_desativar",
+    ),
+    path(
+        "gestao/bairros/",
+        views_gestao.gestao_bairros,
+        name="gestao_bairros",
+    ),
+    path(
+        "gestao/bairros/<int:pk>/editar/",
+        views_gestao.gestao_bairro_editar,
+        name="gestao_bairro_editar",
+    ),
+    path(
+        "gestao/bairros/<int:pk>/desativar/",
+        views_gestao.gestao_bairro_desativar,
+        name="gestao_bairro_desativar",
+    ),
+    path(
+        "gestao/colaboradores/",
+        views_gestao.gestao_colaboradores,
+        name="gestao_colaboradores",
+    ),
+]

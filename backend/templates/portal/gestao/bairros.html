@@ -1,0 +1,96 @@
+{% extends "portal/base.html" %}
+{% load static %}
+
+{% block title %}Gestão de Bairros — VG 24H{% endblock %}
+
+{% block content %}
+<div class="dashboard-content">
+  <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
+    <div class="br-breadcrumb-list">
+      <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
+      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+      <span class="crumb"><a href="{% url 'portal:gestao_estatisticas' %}">Administração</a></span>
+      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+      <span>Bairros e Regiões</span>
+    </div>
+  </nav>
+
+  <div class="dashboard-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1>Bairros e Regiões</h1>
+      <p class="text-muted">Gerencie as áreas geográficas atendidas pelo VG 24H.</p>
+    </div>
+    <button class="br-button primary" type="button" data-toggle="modal" data-target="#modal-add-bairro">
+      <i class="fas fa-plus mr-1"></i> Novo Bairro
+    </button>
+  </div>
+
+  <div class="br-card p-4">
+    <div class="vg-table-wrapper">
+      <div class="br-table">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in lista %}
+              <tr>
+                <td><strong>{{ b.nome }}</strong></td>
+                <td>
+                  {% if b.ativo %}
+                    <span class="br-tag success">Ativo</span>
+                  {% else %}
+                    <span class="br-tag danger">Inativo</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'portal:gestao_bairro_editar' b.pk %}" class="br-button circle small" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  {% if b.ativo %}
+                  <form action="{% url 'portal:gestao_bairro_desativar' b.pk %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="br-button circle small" title="Desativar" onclick="return confirm('Inativar este bairro?')">
+                      <i class="fas fa-ban"></i>
+                    </button>
+                  </form>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3" class="text-center">Nenhum bairro cadastrado.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Adicionar Bairro -->
+<div class="br-modal" id="modal-add-bairro">
+  <div class="container-fluid p-4">
+    <div class="br-modal-body">
+      <div class="br-modal-header">
+        <div class="br-modal-title">Novo Bairro</div>
+        <button class="br-button circle small" type="button" data-dismiss="modal"><i class="fas fa-times"></i></button>
+      </div>
+      <form action="{% url 'portal:gestao_bairros' %}" method="post">
+        {% csrf_token %}
+        <div class="br-input mt-3">
+          <label for="id_nome_b">Nome do Bairro *</label>
+          <input id="id_nome_b" name="nome" type="text" required />
+        </div>
+        <div class="br-modal-footer justify-content-end mt-4">
+          <button class="br-button secondary mr-2" type="button" data-dismiss="modal">Cancelar</button>
+          <button class="br-button primary" type="submit">Criar Bairro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

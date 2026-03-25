@@ -1,0 +1,168 @@
+{% extends "portal/base.html" %}
+{% load static %}
+
+{% block title %}Meu Painel — VG 24H{% endblock %}
+
+{% block content %}
+<div class="container-lg py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Meu Painel de Chamados</h1>
+    <a href="{% url 'portal:novo_chamado' %}" class="br-button primary">
+      <i class="fas fa-plus mr-1" aria-hidden="true"></i> Novo Chamado
+    </a>
+  </div>
+
+  <!-- ====== SUMMARY CARDS (Semáforo) ====== -->
+  <div class="row mb-4">
+    <div class="col-sm-6 col-lg-3 mb-3">
+      <div class="stats-card card-total">
+        <div class="stats-icon"><i class="fas fa-list-ul"></i></div>
+        <div class="stats-info">
+          <span class="stats-value">{{ lista.count }}</span>
+          <span class="stats-label">Total de Chamados</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3 mb-3">
+      <div class="stats-card card-prazo">
+        <div class="stats-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stats-info">
+          <span class="stats-value">{{ stats.no_prazo|default:0 }}</span>
+          <span class="stats-label">No Prazo (Verde)</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3 mb-3">
+      <div class="stats-card card-atencao">
+        <div class="stats-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="stats-info">
+          <span class="stats-value">{{ stats.atencao|default:0 }}</span>
+          <span class="stats-label">Atenção (Amarelo)</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3 mb-3">
+      <div class="stats-card card-critico">
+        <div class="stats-icon"><i class="fas fa-clock"></i></div>
+        <div class="stats-info">
+          <span class="stats-value">{{ stats.critico|default:0 }}</span>
+          <span class="stats-label">Crítico (Vermelho)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== FILTER BAR ====== -->
+  <div class="br-card p-3 mb-4">
+    <form method="get" class="row align-items-end">
+      <div class="col-md-3 mb-2 mb-md-0">
+        <div class="br-input">
+          <label for="filter-status">Status</label>
+          <select id="filter-status" name="status" class="br-input w-100" style="height:40px; border:1px solid #888; border-radius:4px;">
+            <option value="">Todos os Status</option>
+            <option value="AB" {% if request.GET.status == 'AB' %}selected{% endif %}>Aberto</option>
+            <option value="AN" {% if request.GET.status == 'AN' %}selected{% endif %}>Em Análise</option>
+            <option value="EX" {% if request.GET.status == 'EX' %}selected{% endif %}>Em Execução</option>
+            <option value="CO" {% if request.GET.status == 'CO' %}selected{% endif %}>Concluído</option>
+            <option value="CA" {% if request.GET.status == 'CA' %}selected{% endif %}>Cancelado</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-3 mb-2 mb-md-0">
+        <div class="br-input">
+          <label for="filter-date">Abertura</label>
+          <input id="filter-date" name="data" type="date" class="w-100" value="{{ request.GET.data }}" />
+        </div>
+      </div>
+      <div class="col-md-4 mb-2 mb-md-0">
+        <div class="br-input">
+          <label for="filter-search">Buscar Protocolo</label>
+          <input id="filter-search" name="q" type="text" placeholder="Ex: 20260001" value="{{ request.GET.q }}" />
+        </div>
+      </div>
+      <div class="col-md-2">
+        <button class="br-button primary w-100" type="submit">
+          <i class="fas fa-filter mr-1"></i> Filtrar
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ====== TICKETS TABLE ====== -->
+  <div class="br-table">
+    <div class="table-header">
+      <div class="top-bar">
+        <div class="table-title">Meus Chamados Recentes</div>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Protocolo</th>
+          <th scope="col">Serviço</th>
+          <th scope="col">Abertura</th>
+          <th scope="col">Status</th>
+          <th scope="col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ch in lista %}
+          <tr>
+            <td data-th="Protocolo"><span class="text-bold">{{ ch.protocolo }}</span></td>
+            <td data-th="Serviço">{{ ch.id_servico.nome }}</td>
+            <td data-th="Abertura">{{ ch.dt_abertura|date:"d/m/Y H:i" }}</td>
+            <td data-th="Status">
+              {% with st_lower=ch.id_status.tipo_status|lower %}
+                <span class="br-tag status-{{ st_lower }}">{{ ch.id_status.descricao }}</span>
+              {% endwith %}
+            </td>
+            <td data-th="Ações">
+              <a href="{% url 'portal:cidadao_chamado' ch.pk %}" class="br-button circle small" title="Ver Detalhes">
+                <i class="fas fa-eye" aria-hidden="true"></i>
+              </a>
+              {% if ch.id_status.tipo_status == 'AB' or ch.id_status.tipo_status == 'AN' %}
+                <button class="br-button circle small" type="button" title="Cancelar Chamado" data-toggle="modal" data-target="#modal-cancel-{{ ch.pk }}">
+                  <i class="fas fa-times text-danger" aria-hidden="true"></i>
+                </button>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5" class="text-center py-4">Você ainda não possui chamados registrados.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% for ch in lista %}
+  {% if ch.id_status.tipo_status == 'AB' or ch.id_status.tipo_status == 'AN' %}
+    <!-- Modal Cancelamento -->
+    <div class="br-modal" id="modal-cancel-{{ ch.pk }}">
+      <div class="container-fluid p-1 p-sm-4">
+        <div class="br-modal-body">
+          <div class="br-modal-header">
+            <div class="br-modal-title" title="Confirmar Cancelamento">Cancelar Chamado {{ ch.protocolo }}</div>
+            <button class="br-button circle small" type="button" data-dismiss="modal" aria-label="Fechar"><i class="fas fa-times" aria-hidden="true"></i></button>
+          </div>
+          <p>Você tem certeza que deseja cancelar este chamado? Esta ação não pode ser desfeita.</p>
+          <form action="{% url 'portal:cidadao_chamado' ch.pk %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="acao" value="cancelar">
+            <div class="br-input mt-3">
+              <label for="motivo-{{ ch.pk }}">Motivo do cancelamento (opcional)</label>
+              <textarea id="motivo-{{ ch.pk }}" name="motivo" rows="3" placeholder="Por que deseja cancelar?"></textarea>
+            </div>
+            <div class="br-modal-footer justify-content-end mt-4">
+              <button class="br-button secondary mr-2" type="button" data-dismiss="modal">Desistir</button>
+              <button class="br-button primary" type="submit">Confirmar Cancelamento</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endfor %}
+{% endblock %}

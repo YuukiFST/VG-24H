@@ -1,0 +1,179 @@
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.hashers import check_password, make_password
+from django.core import signing
+from django.core.mail import send_mail
+from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.http import require_http_methods
+
+from portal.decorators import anonimo, autenticado, perfil_codigo
+from portal.forms import (
+    CadastroCidadaoForm,
+    RecuperarSenhaForm,
+    RedefinirSenhaForm,
+    TrocaSenhaObrigatoriaForm,
+)
+from portal.models import Usuario, BairroRegiao
+
+
+@require_http_methods(["GET", "POST"])
+def login_view(request):
+    if request.portal_user:
+        return redirect("portal:root")
+
+    if request.method == "POST":
+        email = (request.POST.get("email") or "").strip().lower()
+        senha = request.POST.get("password") or ""
+        try:
+            u = Usuario.objects.get(email__iexact=email, ativo=True)
+        except Usuario.DoesNotExist:
+            messages.error(request, "E-mail ou senha incorretos.")
+        else:
+            if check_password(senha, u.senha_hash):
+                request.session["usuario_id"] = u.pk
+                if (u.senha_temporaria or "").strip():
+                    request.session["forcar_troca_senha"] = True
+                    return redirect("portal:troca_senha_obrigatoria")
+                messages.success(request, f"Olá, {u.nome_completo}.")
+                return redirect("portal:root")
+            messages.error(request, "E-mail ou senha incorretos.")
+
+    return render(request, "portal/auth/login.html")
+
+
+@require_http_methods(["POST"])
+def logout_view(request):
+    request.session.flush()
+    messages.info(request, "Sessão encerrada.")
+    return redirect("portal:login")
+
+
+@anonimo
+@require_http_methods(["GET", "POST"])
+def cadastro_view(request):
+    bairros = BairroRegiao.objects.filter(ativo=True).order_by("nome")
+    if request.method == "POST":
+        form = CadastroCidadaoForm(request.POST)
+        if form.is_valid():
+            d = form.cleaned_data
+            if Usuario.objects.filter(
+                email__iexact=d["email"].lower()
+            ).exists() or Usuario.objects.filter(cpf=d["cpf"]).exists():
+                messages.error(request, "E-mail ou CPF já cadastrado.")
+            else:
+                Usuario.objects.create(
+                    nome_completo=d["nome_completo"],
+                    cpf=d["cpf"],
+                    dt_nascimento=d["dt_nascimento"],
+                    telefone=d["telefone"],
+                    email=d["email"].lower(),
+                    senha_hash=make_password(d["senha"]),
+                    # Campos de endereço (do Step 2)
+                    rua=d.get("rua"),
+                    numero_endereco=d.get("numero_endereco"),
+                    complemento_endereco=d.get("complemento_endereco"),
+                    bairro_endereco=d.get("bairro_endereco"),
+                    cep_endereco=d.get("cep_endereco"),
+                    perfil="CID",
+                    ativo=True,
+                    dt_cadastro=timezone.now(),
+                )
+                messages.success(request, "Cadastro concluído. Faça login.")
+                return redirect("portal:login")
+    else:
+        form = CadastroCidadaoForm()
+    return render(
+        request, 
+        "portal/auth/cadastro.html", 
+        {"form": form, "bairros": bairros}
+    )
+
+
+@anonimo
+@require_http_methods(["GET", "POST"])
+def recuperar_senha_view(request):
+    if request.method == "POST":
+        form = RecuperarSenhaForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"].lower()
+            try:
+                u = Usuario.objects.get(email__iexact=email, ativo=True)
+            except Usuario.DoesNotExist:
+                messages.info(
+                    request,
+                    "Se o e-mail existir, você receberá instruções em instantes.",
+                )
+                return redirect("portal:login")
+            if perfil_codigo(u) != "CID":
+                messages.error(request, "Recuperação disponível apenas para cidadãos.")
+                return redirect("portal:login")
+            token = signing.dumps({"id": u.pk}, salt="vg.pwreset")
+            link = request.build_absolute_uri(
+                reverse("portal:redefinir_senha", args=[token])
+            )
+            body = f"Use o link para definir nova senha (válido por 3 dias):\n{link}"
+            send_mail(
+                "VG 24H — redefinição de senha",
+                body,
+                settings.DEFAULT_FROM_EMAIL,
+                [u.email],
+                fail_silently=True,
+            )
+            messages.info(
+                request,
+                "Se o e-mail existir, verifique a caixa de entrada.",
+            )
+            return redirect("portal:login")
+    else:
+        form = RecuperarSenhaForm()
+    return render(request, "portal/auth/recuperar_senha.html", {"form": form})
+
+
+@anonimo
+@require_http_methods(["GET", "POST"])
+def redefinir_senha_view(request, token):
+    try:
+        data = signing.loads(token, salt="vg.pwreset", max_age=86400 * 3)
+    except signing.BadSignature:
+        messages.error(request, "Link inválido ou expirado.")
+        return redirect("portal:login")
+    try:
+        u = Usuario.objects.get(pk=data["id"], ativo=True)
+    except Usuario.DoesNotExist:
+        return redirect("portal:login")
+    if request.method == "POST":
+        form = RedefinirSenhaForm(request.POST)
+        if form.is_valid():
+            u.senha_hash = make_password(form.cleaned_data["senha"])
+            u.save(update_fields=["senha_hash"])
+            messages.success(request, "Senha atualizada. Entre com a nova senha.")
+            return redirect("portal:login")
+    else:
+        form = RedefinirSenhaForm()
+    return render(request, "portal/auth/redefinir_senha.html", {"form": form})
+
+
+@autenticado
+@require_http_methods(["GET", "POST"])
+def troca_senha_obrigatoria_view(request):
+    if not request.session.get("forcar_troca_senha"):
+        return redirect("portal:root")
+    if request.method == "POST":
+        form = TrocaSenhaObrigatoriaForm(request.POST)
+        if form.is_valid():
+            u = request.portal_user
+            u.senha_hash = make_password(form.cleaned_data["senha"])
+            u.senha_temporaria = None
+            u.save(update_fields=["senha_hash", "senha_temporaria"])
+            del request.session["forcar_troca_senha"]
+            messages.success(request, "Senha alterada.")
+            return redirect("portal:root")
+    else:
+        form = TrocaSenhaObrigatoriaForm()
+    return render(
+        request,
+        "portal/auth/troca_senha_obrigatoria.html",
+        {"form": form},
+    )

@@ -1,3 +1,14 @@
+GOV/
+.env
+backend/.env
+backend/.venv/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/db.sqlite3
+backend/staticfiles/
+backend/media/
+*.md
+
 # =========================
 # Python e Django
 # =========================
@@ -21,6 +32,17 @@ media/
 venv/
 env/
 ENV/
+
+GOV/
+.env
+backend/.env
+backend/.venv/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/db.sqlite3
+backend/staticfiles/
+backend/media/
+*.md
 
 # =========================
 # Variáveis de Ambiente (Segurança)
