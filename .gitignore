@@ -1,0 +1,38 @@
+# =========================
+# Python e Django
+# =========================
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+
+# Banco de dados local (NUNCA subir para o Git)
+db.sqlite3
+db.sqlite3-journal
+
+# Uploads de mídia (Fotos que os usuários sobem no painel)
+media/
+
+# =========================
+# Ambientes Virtuais (uv, venv, etc)
+# =========================
+.venv/
+venv/
+env/
+ENV/
+
+# =========================
+# Variáveis de Ambiente (Segurança)
+# =========================
+.env
+.env.local
+.env.*
+
+# =========================
+# IDEs e Sistema Operacional
+# =========================
+.vscode/
+__MACOSX/
+.DS_Store
+Thumbs.db
