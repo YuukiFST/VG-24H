@@ -29,7 +29,7 @@ A execução técnica, incluindo a arquitetura de sistemas, modelagem de dados (
 > a **propriedade intelectual do código-fonte, arquitetura e implementação técnica** pertence exclusivamente aos desenvolvedores supracitados.
 >
 > Este software é um **protótipo estritamente acadêmico**. Até a presente data, **não possui qualquer termo de cessão de direitos**, licença de uso comercial ou autorização de transferência de tecnologia para órgãos públicos ou empresas privadas.
-> Qualquer utilização do código ou da arquitetura aqui presente sem a autorização expressa e assinada dos autores constitui violação de direitos autorais (Lei 9.609/98 e Lei 9.610/98).
+> Este software é distribuído sob GPL-3.0. A propriedade intelectual e os créditos de autoria pertencem aos desenvolvedores. Uso comercial sem os termos da GPL-3.0 ou sem acordo formal com os autores não é autorizado (Lei 9.609/98 e Lei 9.610/98).
 
 ---
 
