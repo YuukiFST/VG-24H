@@ -1,0 +1,289 @@
+{% extends "portal/base.html" %}
+{% load static %}
+
+{% block title %}Novo Chamado — VG 24H{% endblock %}
+
+{% block content %}
+<div class="dashboard-content">
+  <!-- Breadcrumb -->
+  <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
+    <div class="br-breadcrumb-list">
+      <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
+      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+      <span class="crumb"><a href="{% url 'portal:cidadao_chamados' %}">Meus Chamados</a></span>
+      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+      <span class="crumb"><span>Novo Chamado</span></span>
+    </div>
+  </nav>
+
+  <h1 class="section-title mb-2" style="text-align:left;">Abrir Novo Chamado</h1>
+  <p class="mb-4" style="color:var(--gray-60);">Siga os passos abaixo para reportar um problema urbano.</p>
+
+  <!-- Step Indicator -->
+  <div class="br-step mb-4" data-type="simple">
+    <div class="step-progress">
+      <div class="step-progress-btn" step-num="1" active title="Serviço"><span class="step-info">Serviço</span></div>
+      <div class="step-progress-btn" step-num="2" title="Detalhes"><span class="step-info">Detalhes</span></div>
+      <div class="step-progress-btn" step-num="3" title="Endereço"><span class="step-info">Endereço</span></div>
+      <div class="step-progress-btn" step-num="4" title="Foto"><span class="step-info">Foto</span></div>
+      <div class="step-progress-btn" step-num="5" title="Confirmação"><span class="step-info">Confirmar</span></div>
+    </div>
+  </div>
+
+  <form id="novo-chamado-form" action="{% url 'portal:novo_chamado' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="id_servico" id="input-servico" value="{{ form.id_servico.value|default:'' }}" required />
+    
+    <div class="wizard-container">
+
+      <!-- STEP 1 — Categoria/Serviço -->
+      <div class="wizard-step active" id="step-categoria">
+        <h2 class="mb-3" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
+          Qual serviço você deseja solicitar?
+        </h2>
+        
+        {% for cat in categorias %}
+          <div class="category-group mb-4">
+            <h3 class="h6 mb-2 text-uppercase text-muted" style="font-size:0.75rem; letter-spacing:1px; font-weight:700;">{{ cat.nome }}</h3>
+            <div class="selection-grid">
+              {% for svc in cat.servicos.all %}
+                <div class="selection-card {% if form.id_servico.value|add:0 == svc.id_servico %}selected{% endif %}" data-value="{{ svc.id_servico }}">
+                  <i class="fas {% if 'Iluminação' in cat.nome %}fa-lightbulb{% elif 'Pavimentação' in cat.nome %}fa-road{% elif 'Saneamento' in cat.nome %}fa-water{% elif 'Trânsito' in cat.nome %}fa-traffic-light{% else %}fa-heartbeat{% endif %}" aria-hidden="true"></i>
+                  <span>{{ svc.nome }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+
+        <div class="wizard-nav">
+          <span></span>
+          <button class="br-button primary" type="button" data-wizard-next id="btn-next-1" disabled>
+            Próximo <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2 — Detalhes -->
+      <div class="wizard-step" id="step-detalhes">
+        <h2 class="mb-3" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
+          Descreva o problema
+        </h2>
+        <div class="form-group">
+          <div class="br-input">
+            <label for="chamado-descricao">Descrição detalhada *</label>
+            <textarea
+              id="chamado-descricao"
+              name="descricao"
+              rows="5"
+              placeholder="Descreva o problema com o máximo de detalhes possível..."
+              maxlength="500"
+              required
+            >{{ form.descricao.value|default:'' }}</textarea>
+          </div>
+          <div class="char-counter">0/500 caracteres</div>
+        </div>
+        <div class="wizard-nav">
+          <button class="br-button secondary" type="button" data-wizard-prev>
+            <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+          </button>
+          <button class="br-button primary" type="button" data-wizard-next>
+            Próximo <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3 — Endereço -->
+      <div class="wizard-step" id="step-endereco">
+        <h2 class="mb-3" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
+          Localização do problema
+        </h2>
+        <div class="form-row">
+          <div class="form-group">
+            <div class="br-input">
+              <label for="chamado-rua">Rua / Avenida *</label>
+              <input id="chamado-rua" name="rua" type="text" placeholder="Nome da rua" value="{{ form.rua.value|default:'' }}" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="br-input">
+              <label for="chamado-numero">Número</label>
+              <input id="chamado-numero" name="numero" type="text" placeholder="Ex: 123" value="{{ form.numero.value|default:'' }}" required />
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="chamado-bairro" style="display:block; font-size:.875rem; font-weight:600; margin-bottom:6px;">Bairro *</label>
+            <select id="chamado-bairro" name="id_bairro" style="width:100%; padding:10px; border:1px solid #888; border-radius:4px; font-family:inherit;" required>
+              <option value="">Selecione o bairro</option>
+              {% for bairro in bairros %}
+                <option value="{{ bairro.id_bairro }}" {% if form.id_bairro.value|add:0 == bairro.id_bairro %}selected{% endif %}>{{ bairro.nome }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <div class="br-input">
+              <label for="chamado-referencia">Ponto de Referência</label>
+              <input id="chamado-referencia" name="ponto_referencia" type="text" placeholder="Perto de onde?" value="{{ form.ponto_referencia.value|default:'' }}" />
+            </div>
+          </div>
+        </div>
+        <div class="wizard-nav">
+          <button class="br-button secondary" type="button" data-wizard-prev>
+            <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+          </button>
+          <button class="br-button primary" type="button" data-wizard-next>
+            Próximo <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 4 — Foto -->
+      <div class="wizard-step" id="step-foto">
+        <h2 class="mb-3" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
+          Anexar foto do problema *
+        </h2>
+        <p class="mb-3" style="color:var(--gray-60); font-size:.9375rem;">
+          Uma foto é essencial para que a equipe identifique o problema e agilize o atendimento.
+        </p>
+        <div class="upload-area" id="upload-area" onclick="document.getElementById('chamado-foto').click();">
+          <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+          <p>Clique ou arraste uma imagem aqui</p>
+          <p class="upload-hint">Formatos aceitos: JPG, PNG, WEBP — Máx. 10MB</p>
+        </div>
+        <input type="file" id="chamado-foto" name="foto" accept="image/*" style="display:none;" required />
+        <div id="upload-preview" style="margin-top:16px; display:none;">
+          <div style="display:flex; align-items:center; gap:12px; padding:12px; background:var(--gray-2); border-radius:8px;">
+            <i class="fas fa-image" style="font-size:1.5rem; color:var(--vg-primary);" aria-hidden="true"></i>
+            <span id="upload-filename" style="flex:1; font-size:.9375rem;"></span>
+            <button class="br-button circle small" type="button" aria-label="Remover arquivo" id="upload-remove">
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <div class="wizard-nav">
+          <button class="br-button secondary" type="button" data-wizard-prev>
+            <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+          </button>
+          <button class="br-button primary" type="button" data-wizard-next id="btn-next-4" disabled>
+            Próximo <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 5 — Confirmação -->
+      <div class="wizard-step" id="step-confirmar">
+        <h2 class="mb-3" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
+          Revise seus dados
+        </h2>
+        <div class="summary-card mb-4">
+          <div class="summary-row">
+            <span class="summary-label">Serviço</span>
+            <span id="sum-servico">—</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Descrição</span>
+            <span id="sum-descricao">—</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Endereço</span>
+            <span id="sum-endereco">—</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Bairro</span>
+            <span id="sum-bairro">—</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Foto</span>
+            <span id="sum-foto">Selecionada</span>
+          </div>
+        </div>
+
+        <div class="br-message info" role="alert">
+          <div class="icon"><i class="fas fa-info-circle fa-lg" aria-hidden="true"></i></div>
+          <div class="content">
+            Ao enviar, um protocolo será gerado para você acompanhar o chamado.
+          </div>
+        </div>
+
+        <div class="wizard-nav" style="margin-top:24px;">
+          <button class="br-button secondary" type="button" data-wizard-prev>
+            <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
+          </button>
+          <button class="br-button primary" type="submit" id="btn-enviar-chamado">
+            <i class="fas fa-paper-plane" aria-hidden="true"></i> Confirmar e Enviar
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('chamado-foto');
+    const preview = document.getElementById('upload-preview');
+    const filename = document.getElementById('upload-filename');
+    const removeBtn = document.getElementById('upload-remove');
+    const btnNext4 = document.getElementById('btn-next-4');
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) {
+        filename.textContent = fileInput.files[0].name;
+        preview.style.display = 'block';
+        btnNext4.disabled = false;
+      } else {
+        btnNext4.disabled = true;
+      }
+    });
+
+    removeBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      preview.style.display = 'none';
+      btnNext4.disabled = true;
+    });
+
+    // Handle service selection
+    const cards = document.querySelectorAll('.selection-card');
+    const inputSvc = document.getElementById('input-servico');
+    const btnNext1 = document.getElementById('btn-next-1');
+
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        cards.forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        inputSvc.value = card.dataset.value;
+        btnNext1.disabled = false;
+      });
+    });
+
+    // Character counter
+    const textarea = document.getElementById('chamado-descricao');
+    const counter = document.querySelector('.char-counter');
+    textarea.addEventListener('input', () => {
+      counter.textContent = `${textarea.value.length}/500 caracteres`;
+    });
+
+    // Populate summary
+    document.querySelectorAll('[data-wizard-next]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setTimeout(() => {
+          const svc = document.querySelector('.selection-card.selected span');
+          document.getElementById('sum-servico').textContent = svc ? svc.textContent : '—';
+          document.getElementById('sum-descricao').textContent = textarea.value || '—';
+          const rua = document.getElementById('chamado-rua').value;
+          const num = document.getElementById('chamado-numero').value;
+          document.getElementById('sum-endereco').textContent = rua ? (rua + ', ' + num) : '—';
+          const bairro = document.getElementById('chamado-bairro');
+          document.getElementById('sum-bairro').textContent = bairro.selectedIndex > 0 ? bairro.options[bairro.selectedIndex].text : '—';
+          document.getElementById('sum-foto').textContent = fileInput.files.length ? fileInput.files[0].name : 'Nenhuma';
+        }, 100);
+      });
+    });
+  });
+</script>
+{% endblock %}

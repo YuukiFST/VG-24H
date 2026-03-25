@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Consulte o andamento de um chamado pelo protocolo — VG 24H." />
+    <title>Consultar Protocolo — VG 24H</title>
+    <link rel="stylesheet" href="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/fonts/rawline/css/rawline.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway:300,400,500,600,700,800,900&display=swap" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" />
+    <link rel="stylesheet" href="../css/vg24h.css" />
+  </head>
+  <body>
+    <div class="template-base">
+
+      <!-- ====== HEADER ====== -->
+      <header class="br-header" id="header" data-sticky="data-sticky">
+        <div class="container-lg">
+          <div class="header-top">
+            <div class="header-logo">
+              <a href="../index.html">
+                <img src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png" alt="logo gov.br" />
+              </a>
+              <span class="br-divider vertical"></span>
+              <div class="header-sign">VG 24H</div>
+            </div>
+            <div class="header-actions">
+              <div class="header-login">
+                <div class="header-sign-in">
+                  <a href="../login.html" class="br-sign-in small" aria-label="Entrar no sistema">
+                    <i class="fas fa-user" aria-hidden="true"></i>
+                    <span class="d-sm-inline">Entrar</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="header-bottom">
+            <div class="header-menu">
+              <div class="header-info">
+                <div class="header-title">Consultar Protocolo</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ====== MAIN CONTENT ====== -->
+      <main id="main-content">
+        <div class="dashboard-content">
+
+          <!-- Breadcrumb -->
+          <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
+            <div class="br-breadcrumb-list">
+              <span class="crumb"><a href="../index.html"><i class="fas fa-home" aria-hidden="true"></i></a></span>
+              <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+              <span class="crumb"><span>Consultar Protocolo</span></span>
+            </div>
+          </nav>
+
+          <!-- Search Protocol -->
+          <div class="text-center mb-5 mt-4">
+            <h1 style="font-size:1.75rem; font-weight:700; color:var(--vg-primary-dark); margin-bottom:8px;">
+              Acompanhe seu chamado
+            </h1>
+            <p style="color:var(--gray-60); margin-bottom:24px;">
+              Digite o número do protocolo para ver o andamento do seu chamado.
+            </p>
+            <div style="display:flex; gap:12px; max-width:440px; margin:0 auto;">
+              <div class="br-input" style="flex:1;">
+                <input id="protocolo-search" type="text" placeholder="Ex: 20260002" />
+              </div>
+              <button class="br-button primary" type="button" id="btn-buscar-protocolo">
+                <i class="fas fa-search" aria-hidden="true"></i> Buscar
+              </button>
+            </div>
+          </div>
+
+          <!-- Ticket Detail (demo — visible by default) -->
+          <div id="ticket-result" class="ticket-detail">
+
+            <!-- Left — Info + Observations -->
+            <div>
+              <!-- Ticket Info -->
+              <div class="ticket-info-card mb-3">
+                <h2><i class="fas fa-clipboard-check" style="color:var(--vg-primary);" aria-hidden="true"></i> Detalhes do Chamado</h2>
+                <div class="info-row">
+                  <span class="info-label">Protocolo</span>
+                  <span class="info-value"><strong>20260002</strong></span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Categoria</span>
+                  <span class="info-value">Pavimentação e Vias</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Serviço</span>
+                  <span class="info-value">Reparação de buraco</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Status</span>
+                  <span class="info-value"><span class="status-tag ex">Em Execução</span></span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Data de abertura</span>
+                  <span class="info-value">12/03/2026</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Endereço</span>
+                  <span class="info-value">Rua Principal, 450 — Centro</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Descrição</span>
+                  <span class="info-value">Buraco de aproximadamente 1m na pista, próximo ao cruzamento com Av. Brasil. Risco para veículos e pedestres.</span>
+                </div>
+              </div>
+
+              <!-- Observations -->
+              <div class="ticket-info-card">
+                <h2><i class="fas fa-comments" style="color:var(--vg-primary);" aria-hidden="true"></i> Observações</h2>
+                <div class="observations-list">
+                  <div class="obs-bubble cidadao">
+                    <p>O buraco está ficando cada vez maior com a chuva. Urgente!</p>
+                    <div class="obs-meta">João da Silva — 12/03/2026 10:30</div>
+                  </div>
+                  <div class="obs-bubble colaborador">
+                    <p>Chamado recebido. Encaminhamos para a equipe de pavimentação. Previsão de visita técnica em 48h.</p>
+                    <div class="obs-meta">Maria Santos (Colaboradora) — 13/03/2026 09:15</div>
+                  </div>
+                  <div class="obs-bubble colaborador">
+                    <p>Visita técnica realizada. Reparo programado para a próxima semana.</p>
+                    <div class="obs-meta">Maria Santos (Colaboradora) — 15/03/2026 16:00</div>
+                  </div>
+                </div>
+                <!-- New observation (logged-in only) -->
+                <div style="display:flex; gap:8px; margin-top:12px;">
+                  <div class="br-input" style="flex:1;">
+                    <input type="text" placeholder="Adicionar observação..." id="nova-obs" />
+                  </div>
+                  <button class="br-button primary small" type="button">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right — Timeline + Rating -->
+            <div>
+              <!-- Status Timeline -->
+              <div class="ticket-info-card mb-3">
+                <h2><i class="fas fa-route" style="color:var(--vg-primary);" aria-hidden="true"></i> Status do Chamado</h2>
+                <div class="timeline">
+                  <div class="timeline-item">
+                    <div class="timeline-dot"><i class="fas fa-check" aria-hidden="true"></i></div>
+                    <div class="timeline-content">
+                      <h4>Aberto (AB)</h4>
+                      <p>12/03/2026 — Chamado registrado pelo cidadão.</p>
+                    </div>
+                  </div>
+                  <div class="timeline-item">
+                    <div class="timeline-dot"><i class="fas fa-check" aria-hidden="true"></i></div>
+                    <div class="timeline-content">
+                      <h4>Em Análise (AN)</h4>
+                      <p>13/03/2026 — Chamado recebido e encaminhado.</p>
+                    </div>
+                  </div>
+                  <div class="timeline-item">
+                    <div class="timeline-dot"><i class="fas fa-cog" aria-hidden="true"></i></div>
+                    <div class="timeline-content">
+                      <h4>Em Execução (EX)</h4>
+                      <p>15/03/2026 — Equipe técnica designada.</p>
+                    </div>
+                  </div>
+                  <div class="timeline-item">
+                    <div class="timeline-dot inactive"><i class="fas fa-flag" aria-hidden="true"></i></div>
+                    <div class="timeline-content">
+                      <h4 style="color: var(--gray-40);">Concluído (CO)</h4>
+                      <p style="color: var(--gray-30);">Aguardando conclusão.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rating (only when CO) -->
+              <div class="ticket-info-card">
+                <h2><i class="fas fa-star" style="color:var(--vg-warning);" aria-hidden="true"></i> Avaliação</h2>
+                <p style="color:var(--gray-60); font-size:.9375rem; margin-bottom:16px;">
+                  Quando o chamado for concluído, você poderá avaliar o atendimento.
+                </p>
+                <div class="rating-stars mb-3">
+                  <input type="hidden" name="rating" id="input-rating" />
+                  <span class="star" aria-label="1 estrela"><i class="fas fa-star" aria-hidden="true"></i></span>
+                  <span class="star" aria-label="2 estrelas"><i class="fas fa-star" aria-hidden="true"></i></span>
+                  <span class="star" aria-label="3 estrelas"><i class="fas fa-star" aria-hidden="true"></i></span>
+                  <span class="star" aria-label="4 estrelas"><i class="fas fa-star" aria-hidden="true"></i></span>
+                  <span class="star" aria-label="5 estrelas"><i class="fas fa-star" aria-hidden="true"></i></span>
+                </div>
+                <div class="form-group">
+                  <div class="br-input">
+                    <label for="rating-comment">Comentário (opcional)</label>
+                    <textarea id="rating-comment" rows="3" placeholder="Descreva sua experiência..."></textarea>
+                  </div>
+                </div>
+                <button class="br-button primary small" type="button" disabled>
+                  <i class="fas fa-paper-plane" aria-hidden="true"></i> Enviar Avaliação
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </main>
+
+      <!-- ====== FOOTER ====== -->
+      <footer class="br-footer pt-3" id="footer">
+        <div class="container-lg">
+          <div class="info">
+            <div class="text-down-01 text-medium pb-3 text-center">
+              VG 24H — Portal de Serviços Públicos de Várzea Grande. Conforme o <strong>Design System Gov.br</strong>.
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core-init.min.js"></script>
+    <script src="../js/vg24h.js"></script>
+  </body>
+</html>

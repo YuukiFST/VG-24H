@@ -1,0 +1,15 @@
+{% extends "portal/base.html" %}
+{% block title %}Recuperar senha{% endblock %}
+{% block content %}
+  <h1 class="mb-4">Recuperar senha</h1>
+  <form method="post" class="col-md-6">
+    {% csrf_token %}
+    <div class="br-input mb-3">
+      <label for="id_email">{{ form.email.label }}</label>
+      {{ form.email.errors }}
+      {{ form.email }}
+    </div>
+    <button type="submit" class="br-button primary">Enviar link</button>
+  </form>
+  <p class="mt-2"><a href="{% url 'portal:login' %}">Voltar ao login</a></p>
+{% endblock %}

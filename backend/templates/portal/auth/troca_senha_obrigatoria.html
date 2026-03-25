@@ -1,0 +1,17 @@
+{% extends "portal/base.html" %}
+{% block title %}Trocar senha{% endblock %}
+{% block content %}
+  <h1 class="mb-4">Defina uma nova senha</h1>
+  <p class="text-down-01 mb-3">Obrigatório no primeiro acesso com senha provisória.</p>
+  <form method="post" class="col-md-6">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="br-input mb-3">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field.errors }}
+      {{ field }}
+    </div>
+    {% endfor %}
+    <button type="submit" class="br-button primary">Confirmar</button>
+  </form>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "portal/base.html" %}
+{% load static %}
+
+{% block title %}Painel Administrativo — VG 24H{% endblock %}
+
+{% block content %}
+<div class="dashboard-content">
+  <!-- Breadcrumb -->
+  <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
+    <div class="br-breadcrumb-list">
+      <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
+      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+      <span class="crumb"><span>Administração</span></span>
+      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+      <span class="crumb"><span>Estatísticas</span></span>
+    </div>
+  </nav>
+
+  <div class="dashboard-header mb-4">
+    <h1>Painel de Controle e Estatísticas</h1>
+    <p class="text-muted">Visão geral do desempenho do sistema e gestão de recursos.</p>
+  </div>
+
+  <!-- ====== SUMMARY CARDS ====== -->
+  <div class="semaforo-grid mb-5">
+    <div class="semaforo-card total">
+      <div class="card-value">{{ stats.total|default:0 }}</div>
+      <div class="card-label">Total de chamados</div>
+      <div class="card-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></div>
+    </div>
+    <div class="semaforo-card verde">
+      <div class="card-value">{{ stats.concluidos|default:0 }}</div>
+      <div class="card-label">Concluídos</div>
+      <div class="card-icon"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
+    </div>
+    <div class="semaforo-card amarelo">
+      <div class="card-value">{{ stats.em_andamento|default:0 }}</div>
+      <div class="card-label">Em andamento</div>
+      <div class="card-icon"><i class="fas fa-clock" aria-hidden="true"></i></div>
+    </div>
+    <div class="semaforo-card vermelho">
+      <div class="card-value">{{ stats.criticos|default:0 }}</div>
+      <div class="card-label">Críticos (> 10 dias)</div>
+      <div class="card-icon"><i class="fas fa-fire" aria-hidden="true"></i></div>
+    </div>
+  </div>
+
+  <!-- ====== CHARTS PLACEHOLDER ====== -->
+  <div class="row mb-5">
+    <div class="col-md-6 mb-4">
+      <div class="br-card p-4 h-100">
+        <h2 class="h5 mb-4 text-primary"><i class="fas fa-chart-bar mr-2"></i> Chamados por Categoria</h2>
+        <div style="height:250px; background:var(--gray-2); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--gray-30);">
+          <div class="text-center">
+            <i class="fas fa-chart-bar fa-4x mb-2 opacity-5"></i>
+            <p>Os dados estão sendo processados via view SQL.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4">
+      <div class="br-card p-4 h-100">
+        <h2 class="h5 mb-4 text-primary"><i class="fas fa-chart-pie mr-2"></i> Chamados por Bairro</h2>
+        <div style="height:250px; background:var(--gray-2); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--gray-30);">
+          <div class="text-center">
+            <i class="fas fa-chart-pie fa-4x mb-2 opacity-5"></i>
+            <p>Dados agregados em tempo real.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== DETAILED STATS TABLE (from VIEW) ====== -->
+  <div class="br-card p-4">
+    <h2 class="h5 mb-4"><i class="fas fa-table mr-2 text-primary"></i> Relatórios por Categoria e Bairro</h2>
+    <div class="vg-table-wrapper">
+      <div class="br-table">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Categoria</th>
+              <th>Bairro</th>
+              <th>Status</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in linhas %}
+              <tr>
+                <td>{{ row.categoria }}</td>
+                <td>{{ row.bairro }}</td>
+                <td>
+                  <span class="status-tag {{ row.tipo_status|lower }}">{{ row.status_descricao }}</span>
+                </td>
+                <td class="font-weight-bold">{{ row.total_chamados }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-center py-4">Nenhum dado estatístico disponível. Verifique a view no banco de dados.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
