@@ -6,25 +6,29 @@ O sistema foca no registro e monitoramento de incidentes como iluminação públ
 ---
 
 ## 🎓 Contexto Acadêmico e Cronograma
+
 Este projeto é um trabalho original desenvolvido para a disciplina de **Programação de Banco de Dados** do 4º Semestre de **TSI (Tecnologia em Sistemas Para Internet)**.
 
-* **Início do Desenvolvimento:** 19 de março de 2026
-* **Status Atual:** Protótipo em fase de implementação (MVP Acadêmico)
-* **Padrão Visual:** Baseado no Design System Padrão Digital GOV.BR, conforme sugestão técnica apresentada em 11/03/2026 para alinhamento com padrões de mercado.
+- **Início do Desenvolvimento:** 19 de março de 2026
+- **Status Atual:** Protótipo em fase de implementação (MVP Acadêmico)
+- **Padrão Visual:** Baseado no Design System Padrão Digital GOV.BR, conforme sugestão técnica apresentada em 11/03/2026 para alinhamento com padrões de mercado.
 
 ---
 
 ## ✍️ Autoria e Implementação Técnica
+
 A execução técnica, incluindo a arquitetura de sistemas, modelagem de dados (NeonDB), lógica de back-end (Django) e integração de interface, foi realizada integralmente pelos desenvolvedores:
 
-* **Bruno Dias Fonteles**
-* **Fausto Yuuki Tadano Araújo Freire**
-* **Rafael Pereira Marques**
+- **Bruno Dias Fonteles**
+- **Fausto Yuuki Tadano Araújo Freire**
+- **Rafael Pereira Marques**
 
 ---
 
 ## 🛡️ Propriedade Intelectual e Direitos
+
 > ### ⚠️ AVISO LEGAL IMPORTANTE
+>
 > Embora o plano de trabalho conte com a colaboração de **Yuri Batista de Almeida** na definição inicial de requisitos e sugestão de referências (Product Owner - PO),
 > a **propriedade intelectual do código-fonte, arquitetura e implementação técnica** pertence exclusivamente aos desenvolvedores supracitados.
 >
@@ -34,4 +38,55 @@ A execução técnica, incluindo a arquitetura de sistemas, modelagem de dados (
 ---
 
 ## 📄 Licença
+
 Este repositório está protegido sob a licença **GNU General Public License v3.0 (GPL-3.0)**. Esta licença garante que o código permaneça aberto para fins de estudo e que os créditos de autoria original sejam permanentemente preservados e vinculados ao projeto.
+
+---
+
+## 🛠️ Guia de Inicialização (Como Rodar o Projeto)
+
+Para rodar o projeto localmente no Windows, siga os passos abaixo:
+
+### 1. Requisitos
+
+- **Python 3.12** instalado.
+- O projeto usa um **Ambiente Virtual (venv)** para isolar o Django e as bibliotecas.
+
+### 2. Passo Automático (Recomendado)
+
+Se você tiver o `uv` instalado, basta rodar na pasta raiz:
+
+```powershell
+uv run --project backend python manage.py runserver
+```
+
+### 3. Passo Manual (Padrão)
+
+Se preferir o modo tradicional, no seu terminal:
+
+1. **Entre na pasta do código**:
+   ```powershell
+   cd backend
+   ```
+2. **Ative o Ambiente Virtual** (Isso "liga" o Django do projeto):
+   ```powershell
+   .\.venv\Scripts\activate
+   ```
+3. **Inicie o Servidor**:
+   ```powershell
+   python manage.py runserver
+   ```
+
+### 🌐 Acesso
+
+Após iniciar, abra seu navegador em: **[http://localhost:8000/](http://localhost:8000/)**
+
+---
+
+## 📋 Credenciais de Teste
+
+Para testar as diferentes visões do portal, consulte os arquivos de roteiro na raiz:
+
+- `roteiro_rafael_pereira.md` (Banco de Dados)
+- `roteiro_bruno_dias.md` (Cidadão)
+- `roteiro_fausto_yuuki.md` (Colaborador/Gestor)
