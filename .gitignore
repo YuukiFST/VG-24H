@@ -1,14 +1,3 @@
-GOV/
-.env
-backend/.env
-backend/.venv/
-backend/**/__pycache__/
-backend/**/*.pyc
-backend/db.sqlite3
-backend/staticfiles/
-backend/media/
-*.md
-
 # =========================
 # Python e Django
 # =========================
@@ -33,17 +22,6 @@ venv/
 env/
 ENV/
 
-GOV/
-.env
-backend/.env
-backend/.venv/
-backend/**/__pycache__/
-backend/**/*.pyc
-backend/db.sqlite3
-backend/staticfiles/
-backend/media/
-*.md
-
 # =========================
 # Variáveis de Ambiente (Segurança)
 # =========================
@@ -58,3 +36,15 @@ backend/media/
 __MACOSX/
 .DS_Store
 Thumbs.db
+
+# =========================
+# Configurações Específicas do Projeto
+# =========================
+GOV/
+backend/.env
+backend/.venv/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/db.sqlite3
+backend/staticfiles/
+backend/media/
