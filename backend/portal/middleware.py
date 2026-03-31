@@ -1,15 +1,20 @@
 from django.db import connection
 
-from portal.models import Usuario
+from portal.models import Cidadao, Servidor
 
 
 def _usuario_da_sessao(request):
+    """Recupera o usuário logado da sessão (cidadão ou servidor)."""
     uid = request.session.get("usuario_id")
-    if not uid:
+    tipo = request.session.get("usuario_tipo")  # 'cidadao' ou 'servidor'
+    if not uid or not tipo:
         return None
     try:
-        return Usuario.objects.get(pk=uid, ativo=True)
-    except Usuario.DoesNotExist:
+        if tipo == "servidor":
+            return Servidor.objects.get(pk=uid, ativo=True)
+        else:
+            return Cidadao.objects.get(pk=uid, ativo=True)
+    except (Cidadao.DoesNotExist, Servidor.DoesNotExist):
         request.session.flush()
         return None
 

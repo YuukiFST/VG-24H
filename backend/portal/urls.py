@@ -71,7 +71,7 @@ urlpatterns = [
     ),
     path(
         "gestao/categorias/<int:pk>/editar/",
-        views_gestao.gestao_categoria_editar,
+        views_gestao.gestao_categoria_edit,
         name="gestao_categoria_editar",
     ),
     path(
@@ -81,7 +81,7 @@ urlpatterns = [
     ),
     path(
         "gestao/servicos/<int:pk>/editar/",
-        views_gestao.gestao_servico_editar,
+        views_gestao.gestao_servico_edit,
         name="gestao_servico_editar",
     ),
     path(
@@ -96,7 +96,7 @@ urlpatterns = [
     ),
     path(
         "gestao/bairros/<int:pk>/editar/",
-        views_gestao.gestao_bairro_editar,
+        views_gestao.gestao_bairro_edit,
         name="gestao_bairro_editar",
     ),
     path(
@@ -108,5 +108,31 @@ urlpatterns = [
         "gestao/colaboradores/",
         views_gestao.gestao_colaboradores,
         name="gestao_colaboradores",
+    ),
+    path(
+        "gestao/colaboradores/<int:pk>/toggle/",
+        views_gestao.gestao_colaborador_toggle,
+        name="gestao_colaborador_toggle",
+    ),
+    # ─── Banners ───
+    path(
+        "gestao/banners/",
+        views_gestao.gestao_banners,
+        name="gestao_banners",
+    ),
+    path(
+        "gestao/banners/novo/",
+        views_gestao.gestao_banner_novo,
+        name="gestao_banner_novo",
+    ),
+    path(
+        "gestao/banners/<int:pk>/editar/",
+        views_gestao.gestao_banner_editar,
+        name="gestao_banner_editar",
+    ),
+    path(
+        "gestao/banners/<int:pk>/excluir/",
+        views_gestao.gestao_banner_excluir,
+        name="gestao_banner_excluir",
     ),
 ]

@@ -17,7 +17,7 @@
       <select name="status" id="f_status" class="input">
         <option value="">Todos</option>
         {% for s in statuses %}
-        <option value="{{ s.pk }}" {% if filtro_status == s.pk %}selected{% endif %}>{{ s.tipo_status }} — {{ s.descricao }}</option>
+        <option value="{{ s.pk }}" {% if filtro_status == s.pk %}selected{% endif %}>{{ s.sigla }} — {{ s.descricao }}</option>
         {% endfor %}
       </select>
     </div>
@@ -57,10 +57,10 @@
             {% if row.cor == "amarelo" %}<span class="br-tag" style="background:#ffcd07;color:#333" title="Atenção">●</span>{% endif %}
             {% if row.cor == "vermelho" %}<span class="br-tag" style="background:#e52207;color:#fff" title="Atraso">●</span>{% endif %}
           </td>
-          <td>{{ ch.protocolo }}</td>
-          <td>{{ ch.id_usuario.nome_completo }}</td>
-          <td>{{ ch.id_bairro.nome }}</td>
-          <td>{{ ch.id_status.tipo_status }}</td>
+          <td>{{ ch.num_protocolo }}</td>
+          <td>{{ ch.id_cidadao.nome_completo }}</td>
+          <td>{{ ch.id_bairro.nome_bairro }}</td>
+          <td>{{ ch.id_status.sigla }}</td>
           <td>{{ ch.dt_abertura|date:"d/m/Y" }}</td>
           <td><a href="{% url 'portal:equipe_chamado' ch.pk %}">Abrir</a></td>
         </tr>

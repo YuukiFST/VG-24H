@@ -31,7 +31,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css"
     />
     <!-- VG 24H Custom Styles -->
-    <link rel="stylesheet" href="{% static 'portal/css/vg24h.css' %}" />
+    <link rel="stylesheet" href="{% static 'portal/css/vg24h.css' %}?v=1.1" />
     {% block extra_head %}{% endblock %}
   </head>
   <body>
@@ -64,12 +64,14 @@
             <div class="header-logo">
               <a href="{% url 'portal:root' %}">
                 <img
-                  src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png"
-                  alt="logo gov.br"
+                  src="{% static 'img/logo.png' %}"
+                  alt="Prefeitura de Várzea Grande"
+                  style="max-height:40px;"
                 />
-              </a>
               <span class="br-divider vertical"></span>
-              <div class="header-sign">Prefeitura de Várzea Grande — VG 24H</div>
+              <div class="header-sign">
+                <a href="https://www.varzeagrande.mt.gov.br/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">Prefeitura de Várzea Grande</a> — VG 24H
+              </div>
             </div>
             <div class="header-actions">
               {% if request.portal_user %}
@@ -227,18 +229,19 @@
                   </a>
                 {% endif %}
 
-                {% if request.portal_user.perfil == 'COL' or request.portal_user.perfil == 'ADM' %}
+                {% if request.portal_user.perfil == 'COL' or request.portal_user.perfil == 'GES' %}
                   <a class="menu-item divider" href="{% url 'portal:equipe_chamados' %}" role="treeitem">
                     <span class="icon"><i class="fas fa-tasks" aria-hidden="true"></i></span>
                     <span class="content">Gestão de Chamados</span>
                   </a>
                 {% endif %}
 
-                {% if request.portal_user.perfil == 'ADM' %}
+                {% if request.portal_user.perfil == 'GES' %}
                   <div class="menu-folder">
                     <a class="menu-item" href="javascript:void(0)" role="treeitem">
                       <span class="icon"><i class="fas fa-shield-alt" aria-hidden="true"></i></span>
                       <span class="content">Administração</span>
+                      <span class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
                     </a>
                     <ul>
                       <li><a class="menu-item" href="{% url 'portal:gestao_estatisticas' %}"><span class="content text-sm">📊 Estatísticas</span></a></li>
@@ -246,6 +249,7 @@
                       <li><a class="menu-item" href="{% url 'portal:gestao_servicos' %}"><span class="content text-sm">🛎️ Serviços</span></a></li>
                       <li><a class="menu-item" href="{% url 'portal:gestao_bairros' %}"><span class="content text-sm">📍 Bairros</span></a></li>
                       <li><a class="menu-item" href="{% url 'portal:gestao_colaboradores' %}"><span class="content text-sm">👥 Colaboradores</span></a></li>
+                      <li><a class="menu-item" href="{% url 'portal:gestao_banners' %}"><span class="content text-sm">🖼️ Banners</span></a></li>
                     </ul>
                   </div>
                 {% endif %}
@@ -255,6 +259,7 @@
                 <a class="menu-item" href="javascript:void(0)" role="treeitem">
                   <span class="icon"><i class="fas fa-concierge-bell" aria-hidden="true"></i></span>
                   <span class="content">Serviços Disponíveis</span>
+                  <span class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
                 </a>
                 <ul>
                   <li><a class="menu-item" href="javascript:void(0)"><span class="content">Iluminação Pública</span></a></li>
@@ -263,15 +268,7 @@
                 </ul>
               </div>
             </nav>
-            <div class="menu-footer">
-              <div class="social-network">
-                <div class="social-network-title">Redes Sociais</div>
-                <div class="d-flex">
-                  <a class="br-button circle" href="javascript:void(0)" aria-label="Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
-                  <a class="br-button circle" href="javascript:void(0)" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
-                </div>
-              </div>
-            </div>
+            <div class="menu-footer"></div>
           </div>
           <div class="menu-scrim" data-dismiss="menu" tabindex="0"></div>
         </div>
@@ -297,12 +294,13 @@
       </main>
 
       <!-- ====== FOOTER ====== -->
-      <footer class="br-footer pt-3" id="footer">
+      <footer class="br-footer inverted pt-3" id="footer">
         <div class="container-lg">
           <div class="logo">
             <img
-              src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-negative.png"
-              alt="Imagem"
+              src="{% static 'img/logo.png' %}"
+              alt="Prefeitura de Várzea Grande"
+              style="max-height:48px;"
             />
           </div>
           <div class="br-list horizontal" data-toggle="data-toggle" data-sub="data-sub">
@@ -330,9 +328,19 @@
               </div>
             </div>
           </div>
+
+
         </div>
         <span class="br-divider my-3"></span>
         <div class="container-lg">
+          <!-- Assign / Acesso à Informação -->
+          <div class="assign text-center py-2">
+            <img
+              src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-assign-negative.png"
+              alt="Acesso à Informação"
+              style="max-height: 48px;"
+            />
+          </div>
           <div class="info text-center pb-3">
             <div class="text-down-01 text-medium">
               Todo o conteúdo deste site está publicado sob a licença

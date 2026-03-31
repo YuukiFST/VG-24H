@@ -99,12 +99,12 @@
         <tbody>
           {% for linha in linhas %}
             <tr>
-              <td><strong>{{ linha.ch.protocolo }}</strong></td>
-              <td>{{ linha.ch.id_usuario.nome_completo|truncatechars:20 }}</td>
+              <td><strong>{{ linha.ch.num_protocolo }}</strong></td>
+              <td>{{ linha.ch.id_cidadao.nome_completo|truncatechars:20 }}</td>
               <td>{{ linha.ch.id_servico.nome }}</td>
-              <td>{{ linha.ch.id_bairro.nome }}</td>
+              <td>{{ linha.ch.id_bairro.nome_bairro }}</td>
               <td>
-                <span class="status-tag {{ linha.ch.id_status.tipo_status|lower }}">
+                <span class="status-tag {{ linha.ch.id_status.sigla|lower }}">
                   {{ linha.ch.id_status.descricao }}
                 </span>
               </td>
@@ -124,6 +124,18 @@
           {% endfor %}
         </tbody>
       </table>
+      <!-- Paginação -->
+      <div class="table-footer d-flex justify-content-center pt-3 pb-2 border-top">
+        <nav class="br-pagination" aria-label="Paginação de resultados">
+          <ul class="pagination d-flex align-items-center mb-0" style="list-style: none; padding: 0; gap: 4px;">
+            <li><button class="br-button circle small" type="button" aria-label="Voltar página" disabled><i class="fas fa-angle-left" aria-hidden="true"></i></button></li>
+            <li><button class="br-button circle small primary" type="button">1</button></li>
+            <li><button class="br-button circle small" type="button">2</button></li>
+            <li><button class="br-button circle small" type="button">3</button></li>
+            <li><button class="br-button circle small" type="button" aria-label="Avançar página"><i class="fas fa-angle-right" aria-hidden="true"></i></button></li>
+          </ul>
+        </nav>
+      </div>
     </div>
   </div>
 </div>
@@ -134,7 +146,7 @@
   <div class="container-fluid p-4">
     <div class="br-modal-body">
       <div class="br-modal-header">
-        <div class="br-modal-title">Atualizar Chamado {{ linha.ch.protocolo }}</div>
+        <div class="br-modal-title">Atualizar Chamado {{ linha.ch.num_protocolo }}</div>
         <button class="br-button circle small" type="button" data-dismiss="modal" aria-label="Fechar"><i class="fas fa-times"></i></button>
       </div>
       <form action="{% url 'portal:equipe_chamado' linha.ch.pk %}" method="post">

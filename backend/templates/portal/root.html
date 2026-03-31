@@ -3,27 +3,158 @@
 
 {% block title %}Página Inicial — VG 24H{% endblock %}
 
+{% block extra_head %}
+<style>
+  /* ====== Banner Carousel ====== */
+  .banner-wrapper {
+    background: #f0f0f0;
+    padding: 24px 0;
+  }
+  .banner-carousel {
+    position: relative;
+    max-width: 1120px;
+    margin: 0 auto;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  }
+  .banner-carousel .carousel-track {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    width: 100%;
+  }
+  .banner-carousel .carousel-slide {
+    min-width: 100%;
+    position: relative;
+  }
+  .banner-carousel .carousel-slide img {
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+    display: block;
+  }
+  .carousel-controls {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    pointer-events: none;
+    padding: 0 8px;
+    z-index: 2;
+    box-sizing: border-box;
+  }
+  .carousel-controls button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.4);
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    pointer-events: all;
+  }
+  .carousel-controls button:hover {
+    background: rgba(0,0,0,0.7);
+  }
+  .carousel-dots {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 2;
+  }
+  .carousel-dots .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    cursor: pointer;
+    transition: background 0.2s;
+    border: 1px solid rgba(0,0,0,0.15);
+  }
+  .carousel-dots .dot.active {
+    background: #fff;
+  }
+
+  /* ====== Quick Actions ====== */
+  .quick-actions {
+    background: var(--blue-warm-vivid-80, #0C326F);
+    padding: 16px 0;
+  }
+  .quick-actions .container-custom {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .quick-actions .br-button {
+    min-width: 200px;
+  }
+
+  @media (max-width: 576px) {
+    .banner-carousel .carousel-slide img { height: 160px; }
+    .banner-wrapper { padding: 16px; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-      <!-- ====== HERO SECTION ====== -->
-      <section class="hero">
-        <div class="hero-content">
-          <div class="hero-badge">
-            <i class="fas fa-shield-alt" aria-hidden="true"></i>
-            Portal oficial — Prefeitura de Várzea Grande
+      <!-- ====== BANNER CAROUSEL ====== -->
+      <section class="banner-wrapper" aria-label="Banners e Notícias">
+        {% if banners %}
+        <div class="banner-carousel">
+          <div class="carousel-track" id="carousel-track">
+            {% for banner in banners %}
+            <div class="carousel-slide">
+              {% if banner.link %}<a href="{{ banner.link }}" target="_blank" rel="noopener">{% endif %}
+              <img src="{{ banner.url_imagem }}" alt="{{ banner.titulo }}" />
+              {% if banner.link %}</a>{% endif %}
+            </div>
+            {% endfor %}
           </div>
-          <h1>Sua cidade mais inteligente começa aqui</h1>
-          <p>
-            Registre problemas urbanos, acompanhe o andamento pelo protocolo e
-            ajude a construir uma Várzea Grande melhor para todos.
-          </p>
-          <div class="hero-actions">
-            <a href="{% url 'portal:novo_chamado' %}" class="br-button primary" id="btn-abrir-chamado">
-              <i class="fas fa-plus-circle" aria-hidden="true"></i> Abrir Chamado
-            </a>
-            <a href="{% url 'portal:protocolo' %}" class="br-button secondary" id="btn-consultar-protocolo">
-              <i class="fas fa-search" aria-hidden="true"></i> Consultar Protocolo
-            </a>
+          {% if banners|length > 1 %}
+          <div class="carousel-dots" id="carousel-dots">
+            {% for banner in banners %}
+            <span class="dot {% if forloop.first %}active{% endif %}" data-idx="{{ forloop.counter0 }}"></span>
+            {% endfor %}
           </div>
+          <div class="carousel-controls">
+            <button type="button" id="carousel-prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+            <button type="button" id="carousel-next" aria-label="Próximo"><i class="fas fa-chevron-right"></i></button>
+          </div>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="banner-carousel" style="display:flex;align-items:center;justify-content:center;height:240px;background:var(--blue-warm-vivid-90,#071D41);">
+          <div style="text-align:center;color:#fff;">
+            <h2 style="margin:0 0 8px;font-size:1.25rem;">Portal VG 24H</h2>
+            <p style="opacity:.8;margin:0;font-size:.875rem;">Serviços Públicos da Prefeitura de Várzea Grande</p>
+          </div>
+        </div>
+        {% endif %}
+      </section>
+
+      <!-- ====== QUICK ACTIONS ====== -->
+      <section class="quick-actions">
+        <div class="container-custom">
+          <a href="{% url 'portal:cidadao_chamado_novo' %}" class="br-button primary" id="btn-abrir-chamado">
+            <i class="fas fa-plus-circle" aria-hidden="true"></i> Abrir Chamado
+          </a>
+          <a href="{% url 'portal:cidadao_chamados' %}" class="br-button secondary inverted" id="btn-consultar-protocolo">
+            <i class="fas fa-search" aria-hidden="true"></i> Consultar Protocolo
+          </a>
         </div>
       </section>
 
@@ -85,20 +216,16 @@
       <section class="stats-section" aria-label="Estatísticas do portal">
         <div class="stats-grid">
           <div class="stat-item">
-            <div class="stat-value" data-counter="{{ stats.total_resolvidos|default:1247 }}">0</div>
+            <div class="stat-value" data-counter="{{ stats.total_resolvidos|default:0 }}">0</div>
             <div class="stat-label">Chamados resolvidos</div>
           </div>
           <div class="stat-item">
-            <div class="stat-value" data-counter="{{ stats.total_bairros|default:53 }}">0</div>
+            <div class="stat-value" data-counter="{{ stats.total_bairros|default:0 }}">0</div>
             <div class="stat-label">Bairros atendidos</div>
           </div>
           <div class="stat-item">
-            <div class="stat-value" data-counter="{{ stats.total_servicos|default:5 }}">0</div>
+            <div class="stat-value" data-counter="{{ stats.total_servicos|default:0 }}">0</div>
             <div class="stat-label">Serviços disponíveis</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" data-counter="98">0</div>
-            <div class="stat-label">% de satisfação</div>
           </div>
         </div>
       </section>
@@ -117,4 +244,32 @@
         </div>
       </section>
       {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const track = document.getElementById('carousel-track');
+  if (!track) return;
+  const slides = track.querySelectorAll('.carousel-slide');
+  if (slides.length <= 1) return;
+
+  let current = 0;
+  const total = slides.length;
+  const dots = document.querySelectorAll('#carousel-dots .dot');
+
+  function goTo(idx) {
+    current = ((idx % total) + total) % total;
+    track.style.transform = `translateX(-${current * 100}%)`;
+    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  document.getElementById('carousel-prev')?.addEventListener('click', () => goTo(current - 1));
+  document.getElementById('carousel-next')?.addEventListener('click', () => goTo(current + 1));
+  dots.forEach(d => d.addEventListener('click', () => goTo(+d.dataset.idx)));
+
+  // Auto-advance every 6 seconds
+  setInterval(() => goTo(current + 1), 6000);
+});
+</script>
 {% endblock %}

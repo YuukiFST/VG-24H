@@ -15,14 +15,14 @@
     </div>
   </nav>
 
-  <h1 class="h3 mb-4">Editar Bairro: {{ bairro.nome }}</h1>
+  <h1 class="h3 mb-4">Editar Bairro: {{ bairro.nome_bairro }}</h1>
 
   <div class="br-card p-4 mx-auto" style="max-width: 600px;">
     <form action="{% url 'portal:gestao_bairro_editar' bairro.pk %}" method="post">
       {% csrf_token %}
       <div class="br-input mb-3">
         <label for="id_nome">Nome do Bairro *</label>
-        <input id="id_nome" name="nome" type="text" value="{{ bairro.nome }}" required />
+        <input id="id_nome" name="nome" type="text" value="{{ bairro.nome_bairro }}" required />
       </div>
       <div class="br-input mb-4">
         <label>Status</label>

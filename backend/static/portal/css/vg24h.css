@@ -410,8 +410,8 @@ img {
    =================================================================== */
 .stats-section {
   padding: 56px 16px;
-  background: var(--vg-primary);
-  color: #fff;
+  background: #fff;
+  color: var(--vg-primary-dark);
 }
 
 .stats-grid {
@@ -428,7 +428,7 @@ img {
   font-weight: 800;
   line-height: 1;
   margin-bottom: 8px;
-  color: var(--vg-warning);
+  color: var(--vg-primary);
 }
 
 .stat-item .stat-label {
@@ -442,8 +442,8 @@ img {
    =================================================================== */
 .cta-section {
   padding: 64px 16px;
-  background: var(--vg-primary-dark);
-  color: #fff;
+  background: #fff;
+  color: var(--vg-primary-dark);
   text-align: center;
 }
 

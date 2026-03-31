@@ -1,26 +1,25 @@
 from django import forms
 
 from portal.models import (
-    BairroRegiao,
+    Bairro,
     CategoriaServico,
     Servico,
     StatusChamado,
-    Usuario,
 )
 
 
 class CadastroCidadaoForm(forms.Form):
     nome_completo = forms.CharField(max_length=200, label="Nome completo")
-    cpf = forms.CharField(max_length=14, label="CPF")
+    cpf = forms.CharField(max_length=11, label="CPF")
     dt_nascimento = forms.DateField(label="Data de nascimento")
     telefone = forms.CharField(max_length=20, label="Telefone")
     email = forms.EmailField(max_length=255, label="E-mail")
     senha = forms.CharField(widget=forms.PasswordInput, min_length=6, label="Senha")
     senha2 = forms.CharField(widget=forms.PasswordInput, label="Confirmar senha")
-    
+
     # Address fields (Step 2)
-    rua = forms.CharField(max_length=200, required=False)
-    numero_endereco = forms.CharField(max_length=10, required=False)
+    rua = forms.CharField(max_length=100, required=False)
+    num_endereco = forms.CharField(max_length=10, required=False)
     complemento_endereco = forms.CharField(max_length=200, required=False)
     bairro_endereco = forms.CharField(max_length=200, required=False)
     cep_endereco = forms.CharField(max_length=8, required=False)
@@ -57,14 +56,8 @@ class ChamadoNovoForm(forms.Form):
         label="Serviço",
     )
     id_bairro = forms.ModelChoiceField(
-        queryset=BairroRegiao.objects.filter(ativo=True),
+        queryset=Bairro.objects.filter(ativo=True),
         label="Bairro",
-    )
-    rua = forms.CharField(max_length=200, label="Logradouro")
-    numero = forms.CharField(max_length=10, label="Número (0 se não houver)")
-    complemento = forms.CharField(max_length=200, required=False, label="Complemento")
-    ponto_referencia = forms.CharField(
-        max_length=200, required=False, label="Ponto de referência"
     )
     descricao = forms.CharField(
         max_length=500,
@@ -120,7 +113,7 @@ class EquipeStatusForm(forms.Form):
         d = super().clean()
         st = d.get("id_status")
         r = (d.get("resolucao") or "").strip()
-        if st and st.tipo_status.strip() in ("CO", "CA") and not r:
+        if st and st.sigla.strip() in ("CO", "CA") and not r:
             raise forms.ValidationError(
                 "Informe a resolução ou motivo ao concluir ou cancelar."
             )
@@ -151,13 +144,13 @@ class ServicoForm(forms.ModelForm):
 
 class BairroForm(forms.ModelForm):
     class Meta:
-        model = BairroRegiao
-        fields = ["nome", "cep", "regiao_administrativa"]
+        model = Bairro
+        fields = ["nome_bairro", "cep", "regiao"]
 
 
 class ColaboradorNovoForm(forms.Form):
     nome_completo = forms.CharField(max_length=200)
-    cpf = forms.CharField(max_length=14)
+    cpf = forms.CharField(max_length=11)
     dt_nascimento = forms.DateField()
     telefone = forms.CharField(max_length=20)
     email = forms.EmailField(max_length=255)

@@ -1,7 +1,7 @@
 {% extends "portal/base.html" %}
 {% load static %}
 
-{% block title %}Gerenciar Chamado #{{ ch.protocolo }} — VG 24H{% endblock %}
+{% block title %}Gerenciar Chamado #{{ ch.num_protocolo }} — VG 24H{% endblock %}
 
 {% block content %}
 <div class="dashboard-content">
@@ -12,23 +12,30 @@
       <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
       <span class="crumb"><a href="{% url 'portal:equipe_chamados' %}">Gestão de Chamados</a></span>
       <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
-      <span class="crumb"><span>Gerenciar #{{ ch.protocolo }}</span></span>
+      <span class="crumb"><span>Gerenciar #{{ ch.num_protocolo }}</span></span>
     </div>
   </nav>
 
   <div class="ticket-detail">
     <!-- Left — Info + Observations -->
-    <div>
-      <!-- Ticket Info -->
-      <div class="ticket-info-card mb-3">
-        <h2 class="h5 mb-4"><i class="fas fa-info-circle mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Informações do Chamado</h2>
+    <!-- Left — Info + Observations wrapped in Accordion -->
+    <div class="br-accordion" id="accordion-equipe" data-behavior="accordion">
+
+      <!-- ITEM 1: Detalhes -->
+      <div class="item">
+        <button class="header" type="button" aria-controls="panel-info" aria-expanded="true">
+          <span class="icon"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
+          <span class="title h6 mb-0 text-bold"><i class="fas fa-info-circle mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Informações do Chamado</span>
+        </button>
+      </div>
+      <div class="content ticket-info-card" id="panel-info" aria-hidden="false">
         <div class="info-row">
           <span class="info-label">Cidadão</span>
-          <span class="info-value"><strong>{{ ch.id_usuario.nome_completo }}</strong> ({{ ch.id_usuario.email }})</span>
+          <span class="info-value"><strong>{{ ch.id_cidadao.nome_completo }}</strong> ({{ ch.id_cidadao.email }})</span>
         </div>
         <div class="info-row">
           <span class="info-label">Protocolo</span>
-          <span class="info-value"><strong>{{ ch.protocolo }}</strong></span>
+          <span class="info-value"><strong>{{ ch.num_protocolo }}</strong></span>
         </div>
         <div class="info-row">
           <span class="info-label">Serviço</span>
@@ -37,12 +44,12 @@
         <div class="info-row">
           <span class="info-label">Status Atual</span>
           <span class="info-value">
-            <span class="br-tag status-{{ tipo_status|lower }}">{{ ch.id_status.descricao }}</span>
+            <span class="br-tag status-{{ sigla_status|lower }}">{{ ch.id_status.descricao }}</span>
           </span>
         </div>
         <div class="info-row">
           <span class="info-label">Localização</span>
-          <span class="info-value">{{ ch.rua }}, {{ ch.numero }} — {{ ch.id_bairro.nome }}</span>
+          <span class="info-value">{{ ch.id_bairro.nome_bairro }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">Abertura</span>
@@ -54,17 +61,22 @@
         </div>
       </div>
 
-      <!-- Observations -->
-      <div class="ticket-info-card mb-3">
-        <h2 class="h5 mb-4"><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Observações</h2>
+      <!-- ITEM 2: Observações -->
+      <div class="item">
+        <button class="header" type="button" aria-controls="panel-obs" aria-expanded="false">
+          <span class="icon"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
+          <span class="title h6 mb-0 text-bold"><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Observações</span>
+        </button>
+      </div>
+      <div class="content ticket-info-card" id="panel-obs" aria-hidden="true">
         <div class="observations-list">
           {% for obs in observacoes %}
-            <div class="obs-bubble {% if obs.id_usuario_autor.perfil == 'CID' %}cidadao{% else %}colaborador{% endif %}">
-              <p>{{ obs.texto_observacao }}</p>
+            <div class="obs-bubble {% if obs.id_servidor.perfil == 'CID' %}cidadao{% else %}colaborador{% endif %}">
+              <p>{{ obs.observacao }}</p>
               <div class="obs-meta">
-                {{ obs.id_usuario_autor.nome_completo }} 
-                {% if obs.id_usuario_autor.perfil != 'CID' %}(Equipe){% endif %}
-                — {{ obs.criado_em|date:"d/m/Y H:i" }}
+                {{ obs.id_servidor.nome_completo }} 
+                {% if obs.id_servidor.perfil != 'CID' %}(Equipe){% endif %}
+                — {{ obs.dt_alteracao|date:"d/m/Y H:i" }}
               </div>
             </div>
           {% empty %}
@@ -84,9 +96,14 @@
         </form>
       </div>
 
-      <!-- Photos -->
-      <div class="ticket-info-card">
-        <h2 class="h5 mb-4"><i class="fas fa-images mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Galeria de Fotos</h2>
+      <!-- ITEM 3: Fotos -->
+      <div class="item">
+        <button class="header" type="button" aria-controls="panel-fotos" aria-expanded="false">
+          <span class="icon"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
+          <span class="title h6 mb-0 text-bold"><i class="fas fa-images mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Galeria de Fotos</span>
+        </button>
+      </div>
+      <div class="content ticket-info-card" id="panel-fotos" aria-hidden="true">
         <div class="row">
           {% for foto in fotos %}
             <div class="col-sm-4 mb-3">
@@ -99,7 +116,7 @@
           {% endfor %}
         </div>
         
-        <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post" enctype="multipart/form-data" class="mt-2">
+        <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post" enctype="multipart/form-data" class="mt-2 text-center">
           {% csrf_token %}
           <input type="hidden" name="acao" value="foto">
           <input type="file" name="foto" id="input-foto" style="display:none;" onchange="this.form.submit()" required>
@@ -108,6 +125,7 @@
           </button>
         </form>
       </div>
+
     </div>
 
     <!-- Right — Internal Actions & Timeline -->
@@ -172,8 +190,8 @@
             <div class="timeline-item">
               <div class="timeline-dot small"></div>
               <div class="timeline-content">
-                <span class="small font-weight-bold">{{ h.tipo_status }}</span>
-                <p class="small text-muted mb-0">{{ h.dt_alteracao|date:"d/m/Y H:i" }} — {{ h.id_usuario_responsavel.nome_completo|default:"Sistema" }}</p>
+                <span class="small font-weight-bold">{{ h.sigla }}</span>
+                <p class="small text-muted mb-0">{{ h.dt_alteracao|date:"d/m/Y H:i" }} — {{ h.id_servidor.nome_completo|default:"Sistema" }}</p>
               </div>
             </div>
           {% endfor %}
