@@ -87,6 +87,22 @@ Após iniciar, abra seu navegador em: **[http://localhost:8000/](http://localhos
 
 Para testar as diferentes visões do portal, consulte os arquivos de roteiro na raiz:
 
-- `roteiro_rafael_pereira.md` (Banco de Dados)
-- `roteiro_bruno_dias.md` (Cidadão)
-- `roteiro_fausto_yuuki.md` (Colaborador/Gestor)
+---
+
+## 👥 Guia para Novos Desenvolvedores (Clone)
+
+Se você acabou de baixar o projeto do GitHub, o seu código virá sem a "caixinha" de ferramentas (`.venv`) e sem as configurações de banco (`.env`) por segurança. Siga este passo-a-passo:
+
+1. **Abra o terminal na pasta raiz**.
+2. **Crie seu Ambiente Virtual**:
+   ```powershell
+   python -m venv backend\.venv
+   ```
+3. **Instale as bibliotecas**:
+   ```powershell
+   .\backend\.venv\Scripts\pip install -r backend\requirements.txt
+   ```
+4. **Configure o Banco de Dados**:
+   - Copie o arquivo `backend\.env.example` e renomeie para `backend\.env`.
+   - Peça as **credenciais do banco (Neon)** para o dono do projeto e preencha no arquivo `.env`.
+5. **Rode o projeto**: (veja o _Guia de Inicialização_ acima).
