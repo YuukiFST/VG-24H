@@ -6,14 +6,13 @@ from django.views.decorators.http import require_http_methods
 from portal.decorators import perfil_codigo, perfis
 from portal.forms import EquipeStatusForm, FotoForm, ObservacaoForm
 from portal.models import (
-    BairroRegiao,
+    Bairro,
     Chamado,
     FotoChamado,
     HistoricoChamado,
-    ObservacaoChamado,
     StatusChamado,
 )
-from portal.utils import cor_semaforo, salvar_foto_upload, tipo_status
+from portal.utils import cor_semaforo, salvar_foto_upload, sigla_status
 
 
 def _int_none(v):
@@ -25,12 +24,12 @@ def _int_none(v):
         return None
 
 
-@perfis("COL", "ADM")
+@perfis("COL", "GES")
 def equipe_chamados_lista(request):
     qs = Chamado.objects.select_related(
-        "id_status", "id_servico", "id_bairro", "id_usuario"
+        "id_status", "id_servico", "id_bairro", "id_cidadao"
     ).order_by("-dt_abertura")
-    
+
     # Calculate global stats (Semáforo) before filtering
     stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
     now = timezone.now()
@@ -70,7 +69,7 @@ def equipe_chamados_lista(request):
             "linhas": linhas,
             "stats": stats,
             "total_count": total_count,
-            "bairros": BairroRegiao.objects.filter(ativo=True).order_by("nome"),
+            "bairros": Bairro.objects.filter(ativo=True).order_by("nome_bairro"),
             "statuses": StatusChamado.objects.order_by("id_status"),
             "filtro_bairro": bairro,
             "filtro_status": st,
@@ -80,15 +79,15 @@ def equipe_chamados_lista(request):
     )
 
 
-@perfis("COL", "ADM")
+@perfis("COL", "GES")
 @require_http_methods(["GET", "POST"])
 def equipe_chamado_detalhe(request, pk):
     ch = get_object_or_404(
-        Chamado.objects.select_related("id_status", "id_servico", "id_usuario"),
+        Chamado.objects.select_related("id_status", "id_servico", "id_cidadao"),
         pk=pk,
     )
     p = perfil_codigo(request.portal_user)
-    ts = tipo_status(ch)
+    ts = sigla_status(ch)
     bloqueia_status_col = p == "COL" and ts in ("CO", "CA")
     pode_status = not bloqueia_status_col
 
@@ -117,11 +116,13 @@ def equipe_chamado_detalhe(request, pk):
         if acao == "obs":
             form_o = ObservacaoForm(request.POST)
             if form_o.is_valid():
-                ObservacaoChamado.objects.create(
+                # Observação centralizada em historico_chamado (Plano v6)
+                HistoricoChamado.objects.create(
                     id_chamado=ch,
-                    id_usuario_autor=request.portal_user,
-                    texto_observacao=form_o.cleaned_data["texto"],
-                    criado_em=timezone.now(),
+                    id_servidor=request.portal_user,
+                    id_status=ch.id_status,
+                    observacao=form_o.cleaned_data["texto"],
+                    dt_alteracao=timezone.now(),
                 )
                 messages.success(request, "Observação registrada.")
             return redirect("portal:equipe_chamado", pk=pk)
@@ -144,15 +145,15 @@ def equipe_chamado_detalhe(request, pk):
                 messages.error(request, "Selecione uma imagem.")
             return redirect("portal:equipe_chamado", pk=pk)
 
-    historicos = HistoricoChamado.objects.filter(id_chamado=ch).select_related(
-        "id_usuario_responsavel"
-    ).order_by(
-        "dt_alteracao"
+    historicos = (
+        HistoricoChamado.objects.filter(id_chamado=ch)
+        .select_related("id_servidor", "id_status")
+        .order_by("dt_alteracao")
     )
     fotos = FotoChamado.objects.filter(id_chamado=ch).order_by("dt_upload")
-    obs = ObservacaoChamado.objects.filter(id_chamado=ch).order_by(
-        "criado_em"
-    ).select_related("id_usuario_autor")
+
+    # Observações = registros com observacao preenchida
+    observacoes = historicos.filter(observacao__isnull=False).exclude(observacao="")
 
     if form_status_erro:
         form_status = form_status_erro
@@ -178,12 +179,12 @@ def equipe_chamado_detalhe(request, pk):
         "portal/equipe/chamado_detalhe.html",
         {
             "ch": ch,
-            "tipo_status": ts,
+            "sigla_status": ts,
             "pode_status": pode_status,
             "bloqueia_status_col": bloqueia_status_col,
             "historicos": historicos,
             "fotos": fotos,
-            "observacoes": obs,
+            "observacoes": observacoes,
             "form_status": form_status,
             "form_obs": ObservacaoForm(),
             "form_foto": FotoForm(),

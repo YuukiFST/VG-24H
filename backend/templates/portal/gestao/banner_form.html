@@ -1,0 +1,45 @@
+{% extends "portal/base.html" %}
+{% block title %}{% if banner %}Editar Banner{% else %}Novo Banner{% endif %} — Gestão{% endblock %}
+{% block content %}
+<div class="dashboard-content">
+  <h1 class="h3 mb-4">{% if banner %}Editar Banner: {{ banner.titulo }}{% else %}Novo Banner{% endif %}</h1>
+
+  <form method="post" enctype="multipart/form-data" class="col-lg-8">
+    {% csrf_token %}
+    <div class="br-input mb-3">
+      <label for="titulo">Título *</label>
+      <input id="titulo" name="titulo" type="text" maxlength="100" required value="{{ banner.titulo|default:'' }}" />
+    </div>
+    <div class="br-input mb-3">
+      <label for="descricao">Descrição (até 300 caracteres)</label>
+      <textarea id="descricao" name="descricao" rows="3" maxlength="300">{{ banner.descricao|default:'' }}</textarea>
+    </div>
+    <div class="br-input mb-3">
+      <label for="link">Link (opcional — abre em nova aba ao clicar no banner)</label>
+      <input id="link" name="link" type="url" maxlength="500" value="{{ banner.link|default:'' }}" />
+    </div>
+    <div class="br-input mb-3">
+      <label for="ordem">Ordem de exibição (menor = primeiro)</label>
+      <input id="ordem" name="ordem" type="number" min="0" value="{{ banner.ordem|default:0 }}" />
+    </div>
+    <div class="mb-3">
+      <label for="imagem" style="display:block;font-size:.875rem;font-weight:600;margin-bottom:6px;">
+        Imagem{% if not banner %} *{% endif %}
+      </label>
+      {% if banner and banner.url_imagem %}
+        <div class="mb-2">
+          <img src="{{ banner.url_imagem }}" alt="Imagem atual" style="max-width:300px;border-radius:8px;" />
+          <p class="text-muted" style="font-size:.8125rem;">Selecione uma nova imagem para substituir a atual.</p>
+        </div>
+      {% endif %}
+      <input id="imagem" name="imagem" type="file" accept="image/*" {% if not banner %}required{% endif %} />
+    </div>
+    <div class="d-flex gap-2 mt-4">
+      <button type="submit" class="br-button primary">
+        <i class="fas fa-save" aria-hidden="true"></i> Salvar
+      </button>
+      <a href="{% url 'portal:gestao_banners' %}" class="br-button secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

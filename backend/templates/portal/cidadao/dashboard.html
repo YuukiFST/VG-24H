@@ -108,11 +108,11 @@
       <tbody>
         {% for ch in lista %}
           <tr>
-            <td data-th="Protocolo"><span class="text-bold">{{ ch.protocolo }}</span></td>
+            <td data-th="Protocolo"><span class="text-bold">{{ ch.num_protocolo }}</span></td>
             <td data-th="Serviço">{{ ch.id_servico.nome }}</td>
             <td data-th="Abertura">{{ ch.dt_abertura|date:"d/m/Y H:i" }}</td>
             <td data-th="Status">
-              {% with st_lower=ch.id_status.tipo_status|lower %}
+              {% with st_lower=ch.id_status.sigla|lower %}
                 <span class="br-tag status-{{ st_lower }}">{{ ch.id_status.descricao }}</span>
               {% endwith %}
             </td>
@@ -120,7 +120,7 @@
               <a href="{% url 'portal:cidadao_chamado' ch.pk %}" class="br-button circle small" title="Ver Detalhes">
                 <i class="fas fa-eye" aria-hidden="true"></i>
               </a>
-              {% if ch.id_status.tipo_status == 'AB' or ch.id_status.tipo_status == 'AN' %}
+              {% if ch.id_status.sigla == 'AB' or ch.id_status.sigla == 'AN' %}
                 <button class="br-button circle small" type="button" title="Cancelar Chamado" data-toggle="modal" data-target="#modal-cancel-{{ ch.pk }}">
                   <i class="fas fa-times text-danger" aria-hidden="true"></i>
                 </button>
@@ -134,17 +134,29 @@
         {% endfor %}
       </tbody>
     </table>
+    <!-- Paginação -->
+    <div class="table-footer d-flex justify-content-center pt-3 pb-2 border-top">
+      <nav class="br-pagination" aria-label="Paginação de resultados">
+        <ul class="pagination d-flex align-items-center mb-0" style="list-style: none; padding: 0; gap: 4px;">
+          <li><button class="br-button circle small" type="button" aria-label="Voltar página" disabled><i class="fas fa-angle-left" aria-hidden="true"></i></button></li>
+          <li><button class="br-button circle small primary" type="button">1</button></li>
+          <li><button class="br-button circle small" type="button">2</button></li>
+          <li><button class="br-button circle small" type="button">3</button></li>
+          <li><button class="br-button circle small" type="button" aria-label="Avançar página"><i class="fas fa-angle-right" aria-hidden="true"></i></button></li>
+        </ul>
+      </nav>
+    </div>
   </div>
 </div>
 
 {% for ch in lista %}
-  {% if ch.id_status.tipo_status == 'AB' or ch.id_status.tipo_status == 'AN' %}
+  {% if ch.id_status.sigla == 'AB' or ch.id_status.sigla == 'AN' %}
     <!-- Modal Cancelamento -->
     <div class="br-modal" id="modal-cancel-{{ ch.pk }}">
       <div class="container-fluid p-1 p-sm-4">
         <div class="br-modal-body">
           <div class="br-modal-header">
-            <div class="br-modal-title" title="Confirmar Cancelamento">Cancelar Chamado {{ ch.protocolo }}</div>
+            <div class="br-modal-title" title="Confirmar Cancelamento">Cancelar Chamado {{ ch.num_protocolo }}</div>
             <button class="br-button circle small" type="button" data-dismiss="modal" aria-label="Fechar"><i class="fas fa-times" aria-hidden="true"></i></button>
           </div>
           <p>Você tem certeza que deseja cancelar este chamado? Esta ação não pode ser desfeita.</p>

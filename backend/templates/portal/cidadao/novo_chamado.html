@@ -30,7 +30,7 @@
     </div>
   </div>
 
-  <form id="novo-chamado-form" action="{% url 'portal:novo_chamado' %}" method="post" enctype="multipart/form-data">
+  <form id="novo-chamado-form" action="{% url 'portal:cidadao_chamado_novo' %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <input type="hidden" name="id_servico" id="input-servico" value="{{ form.id_servico.value|default:'' }}" required />
     
@@ -93,41 +93,19 @@
         </div>
       </div>
 
-      <!-- STEP 3 — Endereço -->
+      <!-- STEP 3 — Bairro -->
       <div class="wizard-step" id="step-endereco">
         <h2 class="mb-3" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
           Localização do problema
         </h2>
-        <div class="form-row">
-          <div class="form-group">
-            <div class="br-input">
-              <label for="chamado-rua">Rua / Avenida *</label>
-              <input id="chamado-rua" name="rua" type="text" placeholder="Nome da rua" value="{{ form.rua.value|default:'' }}" required />
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="br-input">
-              <label for="chamado-numero">Número</label>
-              <input id="chamado-numero" name="numero" type="text" placeholder="Ex: 123" value="{{ form.numero.value|default:'' }}" required />
-            </div>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="chamado-bairro" style="display:block; font-size:.875rem; font-weight:600; margin-bottom:6px;">Bairro *</label>
-            <select id="chamado-bairro" name="id_bairro" style="width:100%; padding:10px; border:1px solid #888; border-radius:4px; font-family:inherit;" required>
-              <option value="">Selecione o bairro</option>
-              {% for bairro in bairros %}
-                <option value="{{ bairro.id_bairro }}" {% if form.id_bairro.value|add:0 == bairro.id_bairro %}selected{% endif %}>{{ bairro.nome }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <div class="br-input">
-              <label for="chamado-referencia">Ponto de Referência</label>
-              <input id="chamado-referencia" name="ponto_referencia" type="text" placeholder="Perto de onde?" value="{{ form.ponto_referencia.value|default:'' }}" />
-            </div>
-          </div>
+        <div class="form-group">
+          <label for="chamado-bairro" style="display:block; font-size:.875rem; font-weight:600; margin-bottom:6px;">Bairro *</label>
+          <select id="chamado-bairro" name="id_bairro" style="width:100%; padding:10px; border:1px solid #888; border-radius:4px; font-family:inherit;" required>
+            <option value="">Selecione o bairro</option>
+            {% for bairro in bairros %}
+              <option value="{{ bairro.id_bairro }}" {% if form.id_bairro.value|add:0 == bairro.id_bairro %}selected{% endif %}>{{ bairro.nome_bairro }}</option>
+            {% endfor %}
+          </select>
         </div>
         <div class="wizard-nav">
           <button class="br-button secondary" type="button" data-wizard-prev>
@@ -185,10 +163,6 @@
           <div class="summary-row">
             <span class="summary-label">Descrição</span>
             <span id="sum-descricao">—</span>
-          </div>
-          <div class="summary-row">
-            <span class="summary-label">Endereço</span>
-            <span id="sum-endereco">—</span>
           </div>
           <div class="summary-row">
             <span class="summary-label">Bairro</span>
@@ -275,9 +249,7 @@
           const svc = document.querySelector('.selection-card.selected span');
           document.getElementById('sum-servico').textContent = svc ? svc.textContent : '—';
           document.getElementById('sum-descricao').textContent = textarea.value || '—';
-          const rua = document.getElementById('chamado-rua').value;
-          const num = document.getElementById('chamado-numero').value;
-          document.getElementById('sum-endereco').textContent = rua ? (rua + ', ' + num) : '—';
+
           const bairro = document.getElementById('chamado-bairro');
           document.getElementById('sum-bairro').textContent = bairro.selectedIndex > 0 ? bairro.options[bairro.selectedIndex].text : '—';
           document.getElementById('sum-foto').textContent = fileInput.files.length ? fileInput.files[0].name : 'Nenhuma';

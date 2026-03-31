@@ -35,11 +35,12 @@
               <th>E-mail</th>
               <th>CPF</th>
               <th>Status</th>
+              <th class="text-center">Ações</th>
             </tr>
           </thead>
           <tbody>
             {% for colab in lista %}
-              <tr>
+              <tr{% if not colab.ativo %} style="opacity: 0.6;"{% endif %}>
                 <td><strong>{{ colab.nome_completo }}</strong></td>
                 <td>{{ colab.email }}</td>
                 <td>{{ colab.cpf }}</td>
@@ -50,9 +51,23 @@
                     <span class="br-tag danger">Inativo</span>
                   {% endif %}
                 </td>
+                <td class="text-center">
+                  <form action="{% url 'portal:gestao_colaborador_toggle' colab.pk %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    {% if colab.ativo %}
+                      <button class="br-button small danger" type="submit" title="Inativar colaborador">
+                        <i class="fas fa-user-slash mr-1" aria-hidden="true"></i> Inativar
+                      </button>
+                    {% else %}
+                      <button class="br-button small success" type="submit" title="Reativar colaborador">
+                        <i class="fas fa-user-check mr-1" aria-hidden="true"></i> Reativar
+                      </button>
+                    {% endif %}
+                  </form>
+                </td>
               </tr>
             {% empty %}
-              <tr><td colspan="4" class="text-center">Nenhum colaborador cadastrado.</td></tr>
+              <tr><td colspan="5" class="text-center">Nenhum colaborador cadastrado.</td></tr>
             {% endfor %}
           </tbody>
         </table>

@@ -1,0 +1,39 @@
+---
+description: Front-end Gov.br — obrigatório consultar DS no site antes de marcar qualquer componente; fundamentos visuais oficiais
+alwaysApply: true
+---
+
+# Front-end — Padrão Digital Gov.br (regra obrigatória)
+
+## Skill do projeto (fluxo completo modelo → componente)
+
+Para trabalho de front (templates, estáticos, DS), seguir também **`.cursor/skills/vg-smart-frontend-govbr/SKILL.md`** e, se precisar de detalhe, **`reference.md`** na mesma pasta.
+
+## Fontes oficiais (não substituir por achismo)
+
+1. **Modelos de tela** (base, CRUD, dashboard, sessão do usuário, etc.):  
+   **https://www.gov.br/ds/downloads/assets?tab=modelos** — usar como base de layout e fluxo antes de implementar.
+
+2. **Implementação** (código fonte, pacote NPM, assets):  
+   **https://www.gov.br/ds/downloads/assets?tab=implementacao**
+
+3. **UIKits**:  
+   **https://www.gov.br/ds/downloads/assets?tab=uikits**
+
+4. **Componentes** (cabeçalho, rodapé, menu, breadcrumb, botão, input, mensagem, card, modal, abas, etc.):  
+   **https://www.gov.br/ds/components/visao-geral** — abrir a página do **componente específico** e seguir estrutura, classes, comportamento e acessibilidade descritos ali.
+
+5. **Fundamentos visuais** (cores, tipografia, espaçamento, ícones, grid):  
+   **https://www.gov.br/ds/fundamentos-visuais/visao-geral**
+
+6. **Implementação em HTML/CSS/JS** alinhada ao pacote **`@govbr-ds/core`** (ex.: exemplos em `dist/components/<nome>/examples/*.html` do pacote), quando existirem.
+
+## Proibição explícita
+
+- **Não** escrever ou alterar marcação de interface (classes `br-*`, layout de header/menu/formulário, componentes de DS) **sem** ter verificado no site gov.br/ds **como aquele componente deve ser feito** (ou o exemplo oficial equivalente no `@govbr-ds/core`).
+- Se a página do DS não carregar em ferramenta automática, **assumir a obrigação de consulta humana ou abrir o site no navegador**; não inventar padrão visual “parecido”.
+
+## Boas práticas GOV
+
+- HTML semântico, **WCAG**, teclado e ARIA conforme o componente.
+- Conflito com `AGENT.md` ou outro doc do repo: **prevalece** o Padrão Digital (**https://www.gov.br/ds/**).

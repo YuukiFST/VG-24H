@@ -1,17 +1,21 @@
--- Carga inicial: 5 status, 2 categorias, 5 serviços, bairros de Várzea Grande (MT)
+-- Carga inicial: 5 status, 1 secretaria, 2 categorias, 5 serviços, bairros de Várzea Grande (MT)
 
 BEGIN;
 
-INSERT INTO status_chamado (tipo_status, descricao) VALUES
-    ('AB', 'Chamado aberto pelo cidadão'),
-    ('AN', 'Em análise pela equipe responsável'),
-    ('EX', 'Em execução no campo'),
-    ('CO', 'Serviço concluído'),
-    ('CA', 'Chamado cancelado');
+INSERT INTO status_chamado (sigla, descricao) VALUES
+    ('AB', 'Aberto — Chamado aberto pelo cidadão'),
+    ('AN', 'Em Análise — Em análise pela equipe responsável'),
+    ('EX', 'Em Execução — Em execução no campo'),
+    ('CO', 'Concluído — Serviço concluído'),
+    ('CA', 'Cancelado — Chamado cancelado');
 
-INSERT INTO categoria_servico (nome, descricao) VALUES
-    ('Infraestrutura e Via Pública', 'Problemas que afetam a locomoção e segurança imediata.'),
-    ('Mobilidade e Cidadania', 'Serviços de organização, saúde e segurança.');
+-- Secretaria padrão
+INSERT INTO secretaria (nome, gestor_responsavel, cpf, email) VALUES
+    ('Secretaria de Obras e Serviços Urbanos', 'Gestor Padrão', '00000000000', 'obras@varzeagrande.mt.gov.br');
+
+INSERT INTO categoria_servico (nome, descricao, id_secretaria) VALUES
+    ('Infraestrutura e Via Pública', 'Problemas que afetam a locomoção e segurança imediata.', 1),
+    ('Mobilidade e Cidadania', 'Serviços de organização, saúde e segurança.', 1);
 
 INSERT INTO servico (id_categoria, nome, descricao, prazo_amarelo_dias, prazo_vermelho_dias)
 SELECT c.id_categoria, v.nome, v.descricao, 15, 30
@@ -25,7 +29,7 @@ JOIN (VALUES
 ) AS v(cat, nome, descricao) ON c.nome = v.cat;
 
 -- Bairros (nomes públicos; CEPs representativos na faixa de Várzea Grande/MT)
-INSERT INTO bairro_regiao (nome, cep, regiao_administrativa) VALUES
+INSERT INTO bairro (nome_bairro, cep, regiao) VALUES
     ('Centro-Norte', '78110100', 'Central'),
     ('Centro-Sul', '78110150', 'Central'),
     ('Jardim Eldorado', '78128500', 'Norte'),

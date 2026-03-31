@@ -12,14 +12,14 @@ from portal.models import Chamado
 def proximo_protocolo():
     y = timezone.now().year
     prefix = str(y)
-    ultimo = Chamado.objects.filter(protocolo__startswith=prefix).aggregate(
-        m=Max("protocolo")
+    ultimo = Chamado.objects.filter(num_protocolo__startswith=prefix).aggregate(
+        m=Max("num_protocolo")
     )["m"]
     if not ultimo:
         n = 1
     else:
         try:
-            n = int(ultimo[len(prefix) :]) + 1
+            n = int(ultimo[len(prefix):]) + 1
         except ValueError:
             n = 1
     return f"{prefix}{n:06d}"
@@ -44,8 +44,9 @@ def salvar_foto_upload(request, arquivo):
     return request.build_absolute_uri(f"{settings.MEDIA_URL}{caminho}")
 
 
-def tipo_status(chamado):
-    return (chamado.id_status.tipo_status or "").strip()
+def sigla_status(chamado):
+    """Retorna a sigla do status (ex: 'AB', 'CO')."""
+    return (chamado.id_status.sigla or "").strip()
 
 
 def cor_semaforo(chamado):
