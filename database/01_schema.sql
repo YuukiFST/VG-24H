@@ -1,4 +1,4 @@
--- Portal VG 24H — PostgreSQL (Plano de Trabalho v6)
+-- Portal VG 24H — PostgreSQL (Plano de Trabalho v5)
 -- Ordem: 01_schema.sql → 02_seed.sql → 03_functions_triggers.sql → 04_rules.sql → 05_views.sql
 -- Requer PostgreSQL 12+
 
@@ -124,9 +124,9 @@ CREATE TABLE chamado (
     id_chamado             SERIAL PRIMARY KEY,
     num_protocolo          VARCHAR(20) NOT NULL UNIQUE,
     prioridade             INTEGER NOT NULL DEFAULT 0 CHECK (prioridade >= 0 AND prioridade <= 5),
-    descricao              VARCHAR(500) NOT NULL CHECK (char_length(descricao) <= 500),
     ponto_de_referencia    VARCHAR(100),
-    resolucao              VARCHAR(500) CHECK (resolucao IS NULL OR char_length(resolucao) <= 500),
+    descricao              VARCHAR(500) NOT NULL CHECK (char_length(descricao) <= 500),
+    resolucao              VARCHAR(600) CHECK (resolucao IS NULL OR char_length(resolucao) <= 600),
     nota_avaliacao         INTEGER CHECK (
         nota_avaliacao IS NULL OR (nota_avaliacao >= 1 AND nota_avaliacao <= 5)
     ),
