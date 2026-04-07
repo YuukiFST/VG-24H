@@ -17,21 +17,19 @@
   </nav>
 
   <div class="ticket-detail">
-    <!-- Left — Info + Observations -->
-    <!-- Left — Info + Observations wrapped in Accordion -->
-    <div class="br-accordion" id="accordion-equipe" data-behavior="accordion">
+    <!-- ============ LEFT COLUMN ============ -->
+    <div>
 
-      <!-- ITEM 1: Detalhes -->
-      <div class="item">
-        <button class="header" type="button" aria-controls="panel-info" aria-expanded="true">
-          <span class="icon"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
-          <span class="title h6 mb-0 text-bold"><i class="fas fa-info-circle mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Informações do Chamado</span>
-        </button>
-      </div>
-      <div class="content ticket-info-card" id="panel-info" aria-hidden="false">
+      <!-- CARD 1: Informações do Chamado (sempre visível) -->
+      <div class="ticket-info-card mb-3">
+        <h2><i class="fas fa-clipboard-check mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Detalhes do Chamado</h2>
         <div class="info-row">
           <span class="info-label">Cidadão</span>
           <span class="info-value"><strong>{{ ch.id_cidadao.nome_completo }}</strong> ({{ ch.id_cidadao.email }})</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Telefone</span>
+          <span class="info-value">{{ ch.id_cidadao.telefone|default:"Não informado" }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">Protocolo</span>
@@ -39,17 +37,27 @@
         </div>
         <div class="info-row">
           <span class="info-label">Serviço</span>
-          <span class="info-value">{{ ch.id_servico.nome }}</span>
+          <span class="info-value">{{ ch.id_servico.nome }} <small class="text-muted">({{ ch.id_servico.id_categoria.nome }})</small></span>
         </div>
         <div class="info-row">
           <span class="info-label">Status Atual</span>
           <span class="info-value">
-            <span class="br-tag status-{{ sigla_status|lower }}">{{ ch.id_status.descricao }}</span>
+            <span class="br-tag status-{{ sigla_status|lower }}">{{ ch.status_atual.descricao }}</span>
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Prioridade</span>
+          <span class="info-value">
+            {% if ch.prioridade == 0 %}<span class="text-muted">Sem classificação</span>
+            {% elif ch.prioridade <= 2 %}<span style="color: var(--vg-accent);">{{ ch.prioridade }} — Baixa</span>
+            {% elif ch.prioridade == 3 %}<span style="color: var(--vg-orange);">{{ ch.prioridade }} — Média</span>
+            {% else %}<span style="color: var(--vg-danger);">{{ ch.prioridade }} — {% if ch.prioridade == 5 %}Urgente{% else %}Alta{% endif %}</span>
+            {% endif %}
           </span>
         </div>
         <div class="info-row">
           <span class="info-label">Localização</span>
-          <span class="info-value">{{ ch.id_bairro.nome_bairro }}</span>
+          <span class="info-value">{{ ch.id_bairro.nome_bairro }}{% if ch.ponto_de_referencia %} — <em>{{ ch.ponto_de_referencia }}</em>{% endif %}</span>
         </div>
         <div class="info-row">
           <span class="info-label">Abertura</span>
@@ -59,16 +67,28 @@
           <span class="info-label">Descrição</span>
           <span class="info-value">{{ ch.descricao }}</span>
         </div>
+        {% if ch.resolucao %}
+        <div class="info-row mt-3 p-2" style="background:#f0f6ff; border-left: 3px solid var(--vg-primary); border-radius:4px;">
+          <span class="info-label">Resolução Final</span>
+          <span class="info-value"><strong>{{ ch.resolucao }}</strong></span>
+        </div>
+        {% endif %}
+        {% if ch.nota_avaliacao %}
+        <div class="info-row mt-2 p-2" style="background:#fffbeb; border-left: 3px solid var(--vg-warning); border-radius:4px;">
+          <span class="info-label">Avaliação do Cidadão</span>
+          <span class="info-value">
+            {% for i in "12345"|make_list %}
+              <i class="fas fa-star {% if forloop.counter <= ch.nota_avaliacao %}text-warning{% else %}text-muted{% endif %}" style="font-size:0.9rem;"></i>
+            {% endfor %}
+            {% if ch.comentario_avaliacao %}<br><small class="text-muted">{{ ch.comentario_avaliacao }}</small>{% endif %}
+          </span>
+        </div>
+        {% endif %}
       </div>
 
-      <!-- ITEM 2: Observações -->
-      <div class="item">
-        <button class="header" type="button" aria-controls="panel-obs" aria-expanded="false">
-          <span class="icon"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
-          <span class="title h6 mb-0 text-bold"><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Observações</span>
-        </button>
-      </div>
-      <div class="content ticket-info-card" id="panel-obs" aria-hidden="true">
+      <!-- CARD 2: Observações (sempre visível) -->
+      <div class="ticket-info-card mb-3">
+        <h2><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Observações</h2>
         <div class="observations-list">
           {% for obs in observacoes %}
             <div class="obs-bubble {% if obs.id_servidor.perfil == 'CID' %}cidadao{% else %}colaborador{% endif %}">
@@ -96,20 +116,16 @@
         </form>
       </div>
 
-      <!-- ITEM 3: Fotos -->
-      <div class="item">
-        <button class="header" type="button" aria-controls="panel-fotos" aria-expanded="false">
-          <span class="icon"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
-          <span class="title h6 mb-0 text-bold"><i class="fas fa-images mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Galeria de Fotos</span>
-        </button>
-      </div>
-      <div class="content ticket-info-card" id="panel-fotos" aria-hidden="true">
+      <!-- CARD 3: Fotos (sempre visível) -->
+      <div class="ticket-info-card mb-3">
+        <h2><i class="fas fa-images mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Fotos do Chamado</h2>
         <div class="row">
           {% for foto in fotos %}
             <div class="col-sm-4 mb-3">
               <a href="{{ foto.url_foto }}" target="_blank" class="d-block">
                 <img src="{{ foto.url_foto }}" alt="Foto do chamado" class="img-fluid rounded shadow-sm" style="height:120px; width:100%; object-fit:cover;">
               </a>
+              <small class="text-muted d-block text-center mt-1">{{ foto.dt_upload|date:"d/m/Y" }}</small>
             </div>
           {% empty %}
             <div class="col-12 text-center text-muted py-3">Nenhuma foto anexada.</div>
@@ -119,8 +135,8 @@
         <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post" enctype="multipart/form-data" class="mt-2 text-center">
           {% csrf_token %}
           <input type="hidden" name="acao" value="foto">
-          <input type="file" name="foto" id="input-foto" style="display:none;" onchange="this.form.submit()" required>
-          <button class="br-button secondary small" type="button" onclick="document.getElementById('input-foto').click()">
+          <input type="file" name="foto" id="input-foto-equipe" style="display:none;" onchange="this.form.submit()" required>
+          <button class="br-button secondary small" type="button" onclick="document.getElementById('input-foto-equipe').click()">
             <i class="fas fa-camera mr-1"></i> Anexar Nova Foto
           </button>
         </form>
@@ -128,11 +144,11 @@
 
     </div>
 
-    <!-- Right — Internal Actions & Timeline -->
+    <!-- ============ RIGHT COLUMN ============ -->
     <div>
       <!-- Status Management -->
       <div class="ticket-info-card mb-3">
-        <h2 class="h5 mb-4"><i class="fas fa-tasks mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Gestão de Status</h2>
+        <h2><i class="fas fa-tasks mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Gestão de Status</h2>
         
         {% if pode_status %}
           <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post">
@@ -145,7 +161,7 @@
                 <select id="status-select" name="id_status" class="w-100" style="height:40px; border:1px solid #888; border-radius:4px;" required>
                   {% for code, label in form_status.fields.id_status.choices %}
                     {% if code %}
-                      <option value="{{ code }}" {% if ch.id_status_id == code %}selected{% endif %}>{{ label }}</option>
+                      <option value="{{ code }}" {% if ch.status_atual.pk == code %}selected{% endif %}>{{ label }}</option>
                     {% endif %}
                   {% endfor %}
                 </select>
@@ -177,24 +193,32 @@
         {% else %}
           <div class="br-message warning" role="alert">
             <div class="icon"><i class="fas fa-lock" aria-hidden="true"></i></div>
-            <div class="content">Este chamado está concluído ou cancelado e não permite mais alterações de status pela equipe de campo.</div>
+            <div class="content">Este chamado está concluído ou cancelado e não permite mais alterações de status.</div>
           </div>
         {% endif %}
       </div>
 
-      <!-- Internal Timeline -->
+      <!-- Histórico de Status (Timeline) -->
       <div class="ticket-info-card">
-        <h2 class="h5 mb-4"><i class="fas fa-history mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Alterações</h2>
-        <div class="timeline compact">
+        <h2><i class="fas fa-route mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Status</h2>
+        <div class="timeline">
           {% for h in historicos %}
             <div class="timeline-item">
-              <div class="timeline-dot small"></div>
+              <div class="timeline-dot"><i class="fas fa-check" aria-hidden="true"></i></div>
               <div class="timeline-content">
-                <span class="small font-weight-bold">{{ h.sigla }}</span>
-                <p class="small text-muted mb-0">{{ h.dt_alteracao|date:"d/m/Y H:i" }} — {{ h.id_servidor.nome_completo|default:"Sistema" }}</p>
+                <h4>{{ h.id_status.descricao }}</h4>
+                <p>{{ h.dt_alteracao|date:"d/m/Y H:i" }} — {{ h.id_servidor.nome_completo|default:"Sistema" }}</p>
+                {% if h.observacao %}<p class="small text-muted mt-1" style="font-style:italic;">{{ h.observacao|truncatechars:120 }}</p>{% endif %}
               </div>
             </div>
           {% endfor %}
+          <div class="timeline-item active">
+            <div class="timeline-dot"><i class="fas fa-map-marker-alt" aria-hidden="true"></i></div>
+            <div class="timeline-content">
+              <h4>Status Atual: {{ ch.status_atual.descricao }}</h4>
+              <p>Última atualização em {{ ch.atualizado_em|date:"d/m/Y H:i" }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

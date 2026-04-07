@@ -115,7 +115,11 @@
                       <div class="header">
                         <div class="title">{{ request.portal_user.nome_completo|truncatechars:20 }}</div>
                       </div>
-                      <a class="br-item" href="{% url 'portal:cidadao_chamados' %}">Meu Painel</a>
+                      {% if request.portal_user.perfil == 'CID' %}
+                        <a class="br-item" href="{% url 'portal:cidadao_chamados' %}">Meu Painel</a>
+                      {% else %}
+                        <a class="br-item" href="{% url 'portal:equipe_chamados' %}">Meu Painel</a>
+                      {% endif %}
                       <form action="{% url 'portal:logout' %}" method="post" style="display:inline;">
                         {% csrf_token %}
                         <button type="submit" class="br-item w-100 text-left border-0 bg-transparent">Sair</button>
@@ -350,8 +354,7 @@
         </div>
       </footer>
 
-      <!-- Cookiebar -->
-      <div class="br-cookiebar default d-none" tabindex="-1"></div>
+
     </div>
 
     <!-- JS do Design System -->

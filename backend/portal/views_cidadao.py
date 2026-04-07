@@ -37,14 +37,20 @@ def _chamado_do_cidadao(request, pk):
 def cidadao_chamados_lista(request):
     qs = (
         Chamado.objects.filter(id_cidadao=request.portal_user)
-        .select_related("id_status", "id_servico", "id_bairro")
+        .select_related("id_servico", "id_bairro")
+        .prefetch_related("historicos__id_status")
         .order_by("-dt_abertura")
     )
 
     # Filters
     st_filter = request.GET.get("status")
     if st_filter:
-        qs = qs.filter(id_status__sigla=st_filter)
+        from portal.models import HistoricoChamado
+        from django.db.models import Subquery, OuterRef
+        latest_status = HistoricoChamado.objects.filter(
+            id_chamado=OuterRef("pk")
+        ).order_by("-dt_alteracao").values("id_status__sigla")[:1]
+        qs = qs.annotate(_sigla=Subquery(latest_status)).filter(_sigla=st_filter)
 
     dt_filter = request.GET.get("data")
     if dt_filter:
@@ -80,7 +86,11 @@ def cidadao_chamados_lista(request):
 @perfis("CID")
 @require_http_methods(["GET", "POST"])
 def cidadao_chamado_novo(request):
-    categorias = CategoriaServico.objects.filter(ativo=True)
+    from django.db.models import Prefetch
+    from portal.models import Servico
+    categorias = CategoriaServico.objects.filter(ativo=True).prefetch_related(
+        Prefetch("servicos", queryset=Servico.objects.filter(ativo=True).order_by("nome"))
+    )
     bairros = Bairro.objects.filter(ativo=True).order_by("nome_bairro")
 
     if request.method == "POST":
@@ -96,7 +106,6 @@ def cidadao_chamado_novo(request):
                     "portal/cidadao/novo_chamado.html",
                     {"form": form, "categorias": categorias, "bairros": bairros},
                 )
-            ab = StatusChamado.objects.get(sigla="AB")
             now = timezone.now()
             with transaction.atomic():
                 ch = Chamado.objects.create(
@@ -107,7 +116,6 @@ def cidadao_chamado_novo(request):
                     atualizado_em=now,
                     id_cidadao=request.portal_user,
                     id_servico=d["id_servico"],
-                    id_status=ab,
                     id_bairro=d["id_bairro"],
                 )
                 FotoChamado.objects.create(
@@ -136,7 +144,7 @@ def cidadao_chamado_detalhe(request, pk):
     ch = _chamado_do_cidadao(request, pk)
     ts = sigla_status(ch)
     pode_obs_foto = ts not in ("CO", "CA")
-    pode_cancelar = ts in ("AB", "AN")
+    pode_cancelar = ts in ("AB", "EA")
     pode_avaliar = ts == "CO" and ch.nota_avaliacao is None
 
     if request.method == "POST":
@@ -148,7 +156,7 @@ def cidadao_chamado_detalhe(request, pk):
                 HistoricoChamado.objects.create(
                     id_chamado=ch,
                     id_servidor=None,
-                    id_status=ch.id_status,
+                    id_status=ch.status_atual,
                     observacao=form_o.cleaned_data["texto"],
                     dt_alteracao=timezone.now(),
                 )
@@ -173,9 +181,15 @@ def cidadao_chamado_detalhe(request, pk):
             form_c = CancelarChamadoForm(request.POST)
             if form_c.is_valid():
                 ca = StatusChamado.objects.get(sigla="CA")
-                ch.id_status = ca
+                HistoricoChamado.objects.create(
+                    id_chamado=ch,
+                    id_servidor=None,
+                    id_status=ca,
+                    observacao=form_c.cleaned_data["motivo"],
+                    dt_alteracao=timezone.now(),
+                )
                 ch.resolucao = form_c.cleaned_data["motivo"]
-                ch.save()
+                ch.save(update_fields=["resolucao"])
                 messages.success(request, "Chamado cancelado.")
             return redirect("portal:cidadao_chamado", pk=pk)
         if acao == "avaliar" and pode_avaliar:

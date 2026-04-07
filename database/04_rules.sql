@@ -5,47 +5,90 @@
 BEGIN;
 
 -- ============================================================
--- Rule 1 — foto_chamado: impede INSERT se o chamado estiver CO ou CA
+-- Rule 1 → Trigger: foto_chamado: impede INSERT se chamado CO/CA
+-- (Convertido de Rule para Trigger para compatibilidade com
+--  INSERT RETURNING usado pelo Django ORM)
 -- ============================================================
 DROP RULE IF EXISTS r01_foto_chamado_encerrado ON foto_chamado;
-CREATE RULE r01_foto_chamado_encerrado AS ON INSERT TO foto_chamado
-WHERE EXISTS (
-    SELECT 1
-    FROM chamado c
-    JOIN status_chamado s ON s.id_status = c.id_status
-    WHERE c.id_chamado = NEW.id_chamado
-      AND s.sigla IN ('CO', 'CA')
-)
-DO INSTEAD NOTHING;
+
+CREATE OR REPLACE FUNCTION fn_rule_foto_chamado_encerrado()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM historico_chamado hc
+        JOIN status_chamado s ON s.id_status = hc.id_status
+        WHERE hc.id_chamado = NEW.id_chamado
+          AND s.sigla IN ('CO', 'CA')
+          AND hc.dt_alteracao = (
+              SELECT MAX(dt_alteracao) FROM historico_chamado WHERE id_chamado = NEW.id_chamado
+          )
+    ) THEN
+        RAISE EXCEPTION 'Chamado encerrado (CO/CA): não é permitido adicionar fotos.';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_foto_chamado_encerrado ON foto_chamado;
+CREATE TRIGGER trg_foto_chamado_encerrado
+    BEFORE INSERT ON foto_chamado
+    FOR EACH ROW EXECUTE FUNCTION fn_rule_foto_chamado_encerrado();
 
 -- ============================================================
--- Rule 2 — historico_chamado: impede INSERT de observação
+-- Rule 2 → Trigger: historico_chamado: impede INSERT de observação
 -- se o chamado estiver com status CO ou CA
 -- ============================================================
 DROP RULE IF EXISTS r02_historico_observacao_encerrado ON historico_chamado;
-CREATE RULE r02_historico_observacao_encerrado AS ON INSERT TO historico_chamado
-WHERE NEW.observacao IS NOT NULL
-  AND EXISTS (
-    SELECT 1
-    FROM chamado c
-    JOIN status_chamado s ON s.id_status = c.id_status
-    WHERE c.id_chamado = NEW.id_chamado
-      AND s.sigla IN ('CO', 'CA')
-)
-DO INSTEAD NOTHING;
+
+CREATE OR REPLACE FUNCTION fn_rule_historico_obs_encerrado()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    IF NEW.observacao IS NOT NULL AND EXISTS (
+        SELECT 1
+        FROM historico_chamado hc
+        JOIN status_chamado s ON s.id_status = hc.id_status
+        WHERE hc.id_chamado = NEW.id_chamado
+          AND s.sigla IN ('CO', 'CA')
+          AND hc.dt_alteracao = (
+              SELECT MAX(dt_alteracao) FROM historico_chamado WHERE id_chamado = NEW.id_chamado
+          )
+    ) THEN
+        RAISE EXCEPTION 'Chamado encerrado (CO/CA): não é permitido adicionar observações.';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_historico_obs_encerrado ON historico_chamado;
+CREATE TRIGGER trg_historico_obs_encerrado
+    BEFORE INSERT ON historico_chamado
+    FOR EACH ROW EXECUTE FUNCTION fn_rule_historico_obs_encerrado();
 
 -- ============================================================
--- Rule 3 — chamado: impede alterar nota_avaliacao / comentario_avaliacao
--- se já estiverem preenchidos (avaliação uma única vez, não alterável)
+-- Rule 3 → Trigger: chamado: impede alterar avaliação já preenchida
 -- ============================================================
 DROP RULE IF EXISTS r03_chamado_avaliacao_imutavel ON chamado;
-CREATE RULE r03_chamado_avaliacao_imutavel AS ON UPDATE TO chamado
-WHERE OLD.nota_avaliacao IS NOT NULL
-  AND (
-    NEW.nota_avaliacao IS DISTINCT FROM OLD.nota_avaliacao
-    OR NEW.comentario_avaliacao IS DISTINCT FROM OLD.comentario_avaliacao
-  )
-DO INSTEAD NOTHING;
+
+CREATE OR REPLACE FUNCTION fn_rule_avaliacao_imutavel()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    IF OLD.nota_avaliacao IS NOT NULL
+       AND (
+           NEW.nota_avaliacao IS DISTINCT FROM OLD.nota_avaliacao
+           OR NEW.comentario_avaliacao IS DISTINCT FROM OLD.comentario_avaliacao
+       )
+    THEN
+        RAISE EXCEPTION 'A avaliação já foi registrada e não pode ser alterada.';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_avaliacao_imutavel ON chamado;
+CREATE TRIGGER trg_avaliacao_imutavel
+    BEFORE UPDATE ON chamado
+    FOR EACH ROW EXECUTE FUNCTION fn_rule_avaliacao_imutavel();
 
 -- ============================================================
 -- Rule 4 — chamado: restrições de mudança de status por perfil
@@ -53,37 +96,8 @@ DO INSTEAD NOTHING;
 -- COL: não pode alterar status se CO ou CA
 -- GES: sem restrição (isento)
 -- ============================================================
-DROP RULE IF EXISTS r04_chamado_perfil_status ON chamado;
-CREATE RULE r04_chamado_perfil_status AS ON UPDATE TO chamado
-WHERE NEW.id_status IS DISTINCT FROM OLD.id_status
-  AND (
-    (
-      current_setting('portal.perfil', true) = 'COL'
-      AND EXISTS (
-          SELECT 1 FROM status_chamado sc
-          WHERE sc.id_status = OLD.id_status AND sc.sigla IN ('CO', 'CA')
-      )
-    )
-    OR (
-      current_setting('portal.perfil', true) = 'CID'
-      AND EXISTS (
-          SELECT 1 FROM status_chamado sc
-          WHERE sc.id_status = OLD.id_status AND sc.sigla IN ('CO', 'CA')
-      )
-    )
-    OR (
-      current_setting('portal.perfil', true) = 'CID'
-      AND EXISTS (
-          SELECT 1 FROM status_chamado scn
-          WHERE scn.id_status = NEW.id_status AND scn.sigla = 'CA'
-      )
-      AND EXISTS (
-          SELECT 1 FROM status_chamado sco
-          WHERE sco.id_status = OLD.id_status AND sco.sigla = 'EX'
-      )
-    )
-  )
-DO INSTEAD NOTHING;
+-- Rule 4 removida: sem id_status direto em chamado, controle de
+-- perfil será feito na camada de aplicação (Django views).
 
 -- ============================================================
 -- Rule 5 — historico_chamado: impede UPDATE e DELETE em registros
@@ -101,19 +115,8 @@ DO INSTEAD NOTHING;
 -- Rule 6 — chamado: impede UPDATE do status para CO ou CA
 -- se o campo resolução estiver NULL ou vazio
 -- ============================================================
-DROP RULE IF EXISTS r06_chamado_resolucao_encerramento ON chamado;
-CREATE RULE r06_chamado_resolucao_encerramento AS ON UPDATE TO chamado
-WHERE NEW.id_status IS DISTINCT FROM OLD.id_status
-  AND EXISTS (
-    SELECT 1 FROM status_chamado s
-    WHERE s.id_status = NEW.id_status
-      AND s.sigla IN ('CO', 'CA')
-  )
-  AND (
-    NEW.resolucao IS NULL
-    OR btrim(NEW.resolucao) = ''
-  )
-DO INSTEAD NOTHING;
+-- Rule 6 removida: sem id_status direto em chamado, validação de
+-- resolução obrigatória será feita na camada de aplicação (Django views).
 
 -- Extra: impede DELETE em chamado (integridade)
 DROP RULE IF EXISTS rx_chamado_sem_delete ON chamado;

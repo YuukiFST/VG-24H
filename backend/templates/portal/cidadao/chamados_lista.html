@@ -20,7 +20,7 @@
         <tr>
           <td>{{ ch.num_protocolo }}</td>
           <td>{{ ch.id_servico.nome }}</td>
-          <td>{{ ch.id_status.sigla }} — {{ ch.id_status.descricao }}</td>
+          <td>{{ ch.status_atual.sigla }} — {{ ch.status_atual.descricao }}</td>
           <td>{{ ch.dt_abertura|date:"d/m/Y H:i" }}</td>
           <td><a href="{% url 'portal:cidadao_chamado' ch.pk %}">Detalhes</a></td>
         </tr>

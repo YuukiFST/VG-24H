@@ -29,7 +29,7 @@ CREATE TABLE status_chamado (
     id_status   SERIAL PRIMARY KEY,
     descricao   VARCHAR(200),
     sigla       CHAR(2) NOT NULL UNIQUE,
-    CONSTRAINT ck_status_sigla CHECK (sigla IN ('AB', 'AN', 'EX', 'CO', 'CA'))
+    CONSTRAINT ck_status_sigla CHECK (sigla IN ('AB', 'EA', 'EE', 'CO', 'CA'))
 );
 
 -- ============================================================
@@ -77,8 +77,6 @@ CREATE TABLE bairro (
     nome_bairro        VARCHAR(100) NOT NULL,
     cep                CHAR(8) NOT NULL,
     regiao             VARCHAR(200),
-    num_casa           VARCHAR(5),
-    ponto_referencia   VARCHAR(100),
     ativo              BOOLEAN NOT NULL DEFAULT TRUE,
     UNIQUE (nome_bairro)
 );
@@ -124,13 +122,14 @@ CREATE TABLE servidor (
 );
 
 -- ============================================================
--- Entidade 8: chamado (FK → cidadao, servico, status_chamado, bairro)
+-- Entidade 8: chamado (FK → cidadao, servico, bairro)
 -- ============================================================
 CREATE TABLE chamado (
     id_chamado             SERIAL PRIMARY KEY,
     num_protocolo          VARCHAR(20) NOT NULL UNIQUE,
     prioridade             INTEGER NOT NULL DEFAULT 0 CHECK (prioridade >= 0 AND prioridade <= 5),
     descricao              VARCHAR(500) NOT NULL CHECK (char_length(descricao) <= 500),
+    ponto_de_referencia    VARCHAR(100),
     resolucao              VARCHAR(500) CHECK (resolucao IS NULL OR char_length(resolucao) <= 500),
     nota_avaliacao         INTEGER CHECK (
         nota_avaliacao IS NULL OR (nota_avaliacao >= 1 AND nota_avaliacao <= 5)
@@ -144,8 +143,7 @@ CREATE TABLE chamado (
     atualizado_em          TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     id_servico             INTEGER NOT NULL REFERENCES servico (id_servico),
     id_bairro              INTEGER NOT NULL REFERENCES bairro (id_bairro),
-    id_cidadao             INTEGER NOT NULL REFERENCES cidadao (id_cidadao),
-    id_status              INTEGER NOT NULL REFERENCES status_chamado (id_status)
+    id_cidadao             INTEGER NOT NULL REFERENCES cidadao (id_cidadao)
 );
 
 -- ============================================================
@@ -187,7 +185,6 @@ CREATE TABLE notificacao (
 -- Índices
 -- ============================================================
 CREATE INDEX ix_chamado_cidadao   ON chamado (id_cidadao);
-CREATE INDEX ix_chamado_status    ON chamado (id_status);
 CREATE INDEX ix_chamado_bairro    ON chamado (id_bairro);
 CREATE INDEX ix_chamado_servico   ON chamado (id_servico);
 CREATE INDEX ix_foto_chamado      ON foto_chamado (id_chamado);
@@ -202,8 +199,8 @@ BEGIN;
 
 INSERT INTO status_chamado (sigla, descricao) VALUES
     ('AB', 'Aberto — Chamado aberto pelo cidadão'),
-    ('AN', 'Em Análise — Em análise pela equipe responsável'),
-    ('EX', 'Em Execução — Em execução no campo'),
+    ('EA', 'Em Atendimento — Em atendimento pela equipe responsável'),
+    ('EE', 'Em Execução — Em execução no campo'),
     ('CO', 'Concluído — Serviço concluído'),
     ('CA', 'Cancelado — Chamado cancelado');
 
@@ -288,28 +285,14 @@ CREATE TRIGGER trg_chamado_after_insert_historico_ab
 
 -- ============================================================
 -- Trigger 2 part A — BEFORE UPDATE em chamado:
--- Quando id_status é alterado, atualiza metadados:
---   1. Preenche dt_conclusao se novo status é CO
---   2. Atualiza atualizado_em
+-- Atualiza atualizado_em a cada UPDATE
 -- ============================================================
 CREATE OR REPLACE FUNCTION fn_chamado_before_update_metadados()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
-DECLARE
-    nova_sigla CHAR(2);
 BEGIN
     NEW.atualizado_em := CURRENT_TIMESTAMP;
-
-    IF NEW.id_status IS DISTINCT FROM OLD.id_status THEN
-        SELECT sigla INTO nova_sigla FROM status_chamado WHERE id_status = NEW.id_status;
-        IF nova_sigla IN ('CO', 'CA') THEN
-            NEW.dt_conclusao := COALESCE(NEW.dt_conclusao, CURRENT_TIMESTAMP);
-        ELSIF nova_sigla IN ('AB', 'AN', 'EX') THEN
-            NEW.dt_conclusao := NULL;
-        END IF;
-    END IF;
-
     RETURN NEW;
 END;
 $$;
@@ -321,43 +304,39 @@ CREATE TRIGGER trg_chamado_before_update_metadados
     EXECUTE PROCEDURE fn_chamado_before_update_metadados();
 
 -- ============================================================
--- Trigger 2 part B — AFTER UPDATE em chamado:
--- Quando id_status é alterado, executa:
---   1. Insere registro em historico_chamado
+-- Trigger 2 part B — AFTER INSERT em historico_chamado:
+-- Quando um novo registro de histórico é inserido:
+--   1. Atualiza dt_conclusao no chamado se status for CO/CA
 --   2. Insere aviso em notificacao para o cidadão dono do chamado
 -- ============================================================
-CREATE OR REPLACE FUNCTION fn_chamado_after_update_status()
+CREATE OR REPLACE FUNCTION fn_historico_after_insert_status()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 DECLARE
     nova_sigla  CHAR(2);
     desc_nova   VARCHAR(200);
-    uid_acao    INTEGER;
+    v_protocolo VARCHAR(20);
     msg         VARCHAR(200);
 BEGIN
-    IF NEW.id_status IS NOT DISTINCT FROM OLD.id_status THEN
-        RETURN NEW;
+    SELECT sigla, descricao INTO nova_sigla, desc_nova
+    FROM status_chamado WHERE id_status = NEW.id_status;
+
+    SELECT num_protocolo INTO v_protocolo
+    FROM chamado WHERE id_chamado = NEW.id_chamado;
+
+    -- Atualiza dt_conclusao conforme status
+    IF nova_sigla IN ('CO', 'CA') THEN
+        UPDATE chamado SET dt_conclusao = COALESCE(dt_conclusao, CURRENT_TIMESTAMP)
+        WHERE id_chamado = NEW.id_chamado;
+    ELSIF nova_sigla IN ('AB', 'EA', 'EE') THEN
+        UPDATE chamado SET dt_conclusao = NULL
+        WHERE id_chamado = NEW.id_chamado;
     END IF;
 
-    SELECT sigla INTO nova_sigla FROM status_chamado WHERE id_status = NEW.id_status;
-    SELECT descricao INTO desc_nova FROM status_chamado WHERE id_status = NEW.id_status;
-
-    -- Recuperar id do servidor que fez a ação (sessão Django)
-    BEGIN
-        uid_acao := NULLIF(current_setting('portal.id_usuario_acao', true), '')::INTEGER;
-    EXCEPTION
-        WHEN invalid_text_representation THEN
-            uid_acao := NULL;
-    END;
-
-    -- 1. Histórico
-    INSERT INTO historico_chamado (id_chamado, id_servidor, id_status, observacao)
-    VALUES (NEW.id_chamado, uid_acao, NEW.id_status, NULL);
-
-    -- 2. Notificação
+    -- Notificação
     msg := left(
-        'Chamado ' || NEW.num_protocolo || ': status alterado para ' || COALESCE(desc_nova, nova_sigla),
+        'Chamado ' || v_protocolo || ': status alterado para ' || COALESCE(desc_nova, nova_sigla),
         200
     );
 
@@ -368,11 +347,11 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS trg_chamado_after_update_status ON chamado;
-CREATE TRIGGER trg_chamado_after_update_status
-    AFTER UPDATE ON chamado
+DROP TRIGGER IF EXISTS trg_historico_after_insert_status ON historico_chamado;
+CREATE TRIGGER trg_historico_after_insert_status
+    AFTER INSERT ON historico_chamado
     FOR EACH ROW
-    EXECUTE PROCEDURE fn_chamado_after_update_status();
+    EXECUTE PROCEDURE fn_historico_after_insert_status();
 
 COMMIT;
 
@@ -383,47 +362,88 @@ COMMIT;
 BEGIN;
 
 -- ============================================================
--- Rule 1 — foto_chamado: impede INSERT se o chamado estiver CO ou CA
+-- Rule 1 → Trigger: foto_chamado: impede INSERT se chamado CO/CA
 -- ============================================================
 DROP RULE IF EXISTS r01_foto_chamado_encerrado ON foto_chamado;
-CREATE RULE r01_foto_chamado_encerrado AS ON INSERT TO foto_chamado
-WHERE EXISTS (
-    SELECT 1
-    FROM chamado c
-    JOIN status_chamado s ON s.id_status = c.id_status
-    WHERE c.id_chamado = NEW.id_chamado
-      AND s.sigla IN ('CO', 'CA')
-)
-DO INSTEAD NOTHING;
+
+CREATE OR REPLACE FUNCTION fn_rule_foto_chamado_encerrado()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM historico_chamado hc
+        JOIN status_chamado s ON s.id_status = hc.id_status
+        WHERE hc.id_chamado = NEW.id_chamado
+          AND s.sigla IN ('CO', 'CA')
+          AND hc.dt_alteracao = (
+              SELECT MAX(dt_alteracao) FROM historico_chamado WHERE id_chamado = NEW.id_chamado
+          )
+    ) THEN
+        RAISE EXCEPTION 'Chamado encerrado (CO/CA): não é permitido adicionar fotos.';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_foto_chamado_encerrado ON foto_chamado;
+CREATE TRIGGER trg_foto_chamado_encerrado
+    BEFORE INSERT ON foto_chamado
+    FOR EACH ROW EXECUTE FUNCTION fn_rule_foto_chamado_encerrado();
 
 -- ============================================================
--- Rule 2 — historico_chamado: impede INSERT de observação
+-- Rule 2 → Trigger: historico_chamado: impede INSERT de observação
 -- se o chamado estiver com status CO ou CA
 -- ============================================================
 DROP RULE IF EXISTS r02_historico_observacao_encerrado ON historico_chamado;
-CREATE RULE r02_historico_observacao_encerrado AS ON INSERT TO historico_chamado
-WHERE NEW.observacao IS NOT NULL
-  AND EXISTS (
-    SELECT 1
-    FROM chamado c
-    JOIN status_chamado s ON s.id_status = c.id_status
-    WHERE c.id_chamado = NEW.id_chamado
-      AND s.sigla IN ('CO', 'CA')
-)
-DO INSTEAD NOTHING;
+
+CREATE OR REPLACE FUNCTION fn_rule_historico_obs_encerrado()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    IF NEW.observacao IS NOT NULL AND EXISTS (
+        SELECT 1
+        FROM historico_chamado hc
+        JOIN status_chamado s ON s.id_status = hc.id_status
+        WHERE hc.id_chamado = NEW.id_chamado
+          AND s.sigla IN ('CO', 'CA')
+          AND hc.dt_alteracao = (
+              SELECT MAX(dt_alteracao) FROM historico_chamado WHERE id_chamado = NEW.id_chamado
+          )
+    ) THEN
+        RAISE EXCEPTION 'Chamado encerrado (CO/CA): não é permitido adicionar observações.';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_historico_obs_encerrado ON historico_chamado;
+CREATE TRIGGER trg_historico_obs_encerrado
+    BEFORE INSERT ON historico_chamado
+    FOR EACH ROW EXECUTE FUNCTION fn_rule_historico_obs_encerrado();
 
 -- ============================================================
--- Rule 3 — chamado: impede alterar nota_avaliacao / comentario_avaliacao
--- se já estiverem preenchidos (avaliação uma única vez, não alterável)
+-- Rule 3 → Trigger: chamado: impede alterar avaliação já preenchida
 -- ============================================================
 DROP RULE IF EXISTS r03_chamado_avaliacao_imutavel ON chamado;
-CREATE RULE r03_chamado_avaliacao_imutavel AS ON UPDATE TO chamado
-WHERE OLD.nota_avaliacao IS NOT NULL
-  AND (
-    NEW.nota_avaliacao IS DISTINCT FROM OLD.nota_avaliacao
-    OR NEW.comentario_avaliacao IS DISTINCT FROM OLD.comentario_avaliacao
-  )
-DO INSTEAD NOTHING;
+
+CREATE OR REPLACE FUNCTION fn_rule_avaliacao_imutavel()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    IF OLD.nota_avaliacao IS NOT NULL
+       AND (
+           NEW.nota_avaliacao IS DISTINCT FROM OLD.nota_avaliacao
+           OR NEW.comentario_avaliacao IS DISTINCT FROM OLD.comentario_avaliacao
+       )
+    THEN
+        RAISE EXCEPTION 'A avaliação já foi registrada e não pode ser alterada.';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_avaliacao_imutavel ON chamado;
+CREATE TRIGGER trg_avaliacao_imutavel
+    BEFORE UPDATE ON chamado
+    FOR EACH ROW EXECUTE FUNCTION fn_rule_avaliacao_imutavel();
 
 -- ============================================================
 -- Rule 4 — chamado: restrições de mudança de status por perfil
@@ -431,37 +451,8 @@ DO INSTEAD NOTHING;
 -- COL: não pode alterar status se CO ou CA
 -- GES: sem restrição (isento)
 -- ============================================================
-DROP RULE IF EXISTS r04_chamado_perfil_status ON chamado;
-CREATE RULE r04_chamado_perfil_status AS ON UPDATE TO chamado
-WHERE NEW.id_status IS DISTINCT FROM OLD.id_status
-  AND (
-    (
-      current_setting('portal.perfil', true) = 'COL'
-      AND EXISTS (
-          SELECT 1 FROM status_chamado sc
-          WHERE sc.id_status = OLD.id_status AND sc.sigla IN ('CO', 'CA')
-      )
-    )
-    OR (
-      current_setting('portal.perfil', true) = 'CID'
-      AND EXISTS (
-          SELECT 1 FROM status_chamado sc
-          WHERE sc.id_status = OLD.id_status AND sc.sigla IN ('CO', 'CA')
-      )
-    )
-    OR (
-      current_setting('portal.perfil', true) = 'CID'
-      AND EXISTS (
-          SELECT 1 FROM status_chamado scn
-          WHERE scn.id_status = NEW.id_status AND scn.sigla = 'CA'
-      )
-      AND EXISTS (
-          SELECT 1 FROM status_chamado sco
-          WHERE sco.id_status = OLD.id_status AND sco.sigla = 'EX'
-      )
-    )
-  )
-DO INSTEAD NOTHING;
+-- Rule 4 removida: sem id_status direto em chamado, controle de
+-- perfil será feito na camada de aplicação (Django views).
 
 -- ============================================================
 -- Rule 5 — historico_chamado: impede UPDATE e DELETE em registros
@@ -479,19 +470,8 @@ DO INSTEAD NOTHING;
 -- Rule 6 — chamado: impede UPDATE do status para CO ou CA
 -- se o campo resolução estiver NULL ou vazio
 -- ============================================================
-DROP RULE IF EXISTS r06_chamado_resolucao_encerramento ON chamado;
-CREATE RULE r06_chamado_resolucao_encerramento AS ON UPDATE TO chamado
-WHERE NEW.id_status IS DISTINCT FROM OLD.id_status
-  AND EXISTS (
-    SELECT 1 FROM status_chamado s
-    WHERE s.id_status = NEW.id_status
-      AND s.sigla IN ('CO', 'CA')
-  )
-  AND (
-    NEW.resolucao IS NULL
-    OR btrim(NEW.resolucao) = ''
-  )
-DO INSTEAD NOTHING;
+-- Rule 6 removida: sem id_status direto em chamado, validação de
+-- resolução obrigatória será feita na camada de aplicação (Django views).
 
 -- Extra: impede DELETE em chamado (integridade)
 DROP RULE IF EXISTS rx_chamado_sem_delete ON chamado;
@@ -516,7 +496,12 @@ FROM chamado ch
 JOIN servico srv     ON srv.id_servico  = ch.id_servico
 JOIN categoria_servico cat ON cat.id_categoria = srv.id_categoria
 JOIN bairro b        ON b.id_bairro     = ch.id_bairro
-JOIN status_chamado s ON s.id_status    = ch.id_status
+JOIN LATERAL (
+    SELECT id_status FROM historico_chamado
+    WHERE id_chamado = ch.id_chamado
+    ORDER BY dt_alteracao DESC LIMIT 1
+) ultimo_h ON TRUE
+JOIN status_chamado s ON s.id_status = ultimo_h.id_status
 WHERE cat.ativo
   AND srv.ativo
   AND b.ativo

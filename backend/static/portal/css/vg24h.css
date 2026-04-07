@@ -698,11 +698,11 @@ img {
   background: #d4e5ff;
   color: #0c326f;
 }
-.status-tag.an {
+.status-tag.ea {
   background: #fff5c2;
   color: #5c4809;
 }
-.status-tag.ex {
+.status-tag.ee {
   background: #fce2c5;
   color: #5f3617;
 }
@@ -713,6 +713,38 @@ img {
 .status-tag.ca {
   background: #fde0db;
   color: #5c1111;
+}
+
+/* br-tag status variants (used in dashboards) */
+.br-tag.status-ab { background: #d4e5ff; color: #0c326f; }
+.br-tag.status-ea { background: #fff5c2; color: #5c4809; }
+.br-tag.status-ee { background: #fce2c5; color: #5f3617; }
+.br-tag.status-co { background: #e3f5e1; color: #154c21; }
+.br-tag.status-ca { background: #fde0db; color: #5c1111; }
+
+/* ===================================================================
+   HEADER AVATAR DROPDOWN FIX
+   =================================================================== */
+.header-avatar {
+  position: relative;
+}
+
+.header-avatar > .br-list {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 3000;
+  min-width: 180px;
+  background: #fff;
+  box-shadow: var(--vg-shadow-lg);
+  border-radius: var(--vg-radius);
+  border: 1px solid var(--gray-10, #e6e6e6);
+  display: none;
+}
+
+.header-avatar:hover > .br-list,
+.header-avatar > .br-list:hover {
+  display: block;
 }
 
 /* ===================================================================
@@ -914,6 +946,7 @@ img {
 }
 
 .rating-stars .star.active,
+.rating-stars .star.selected,
 .rating-stars .star:hover {
   color: var(--vg-warning);
 }

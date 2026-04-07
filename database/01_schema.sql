@@ -25,7 +25,7 @@ CREATE TABLE status_chamado (
     id_status   SERIAL PRIMARY KEY,
     descricao   VARCHAR(200),
     sigla       CHAR(2) NOT NULL UNIQUE,
-    CONSTRAINT ck_status_sigla CHECK (sigla IN ('AB', 'AN', 'EX', 'CO', 'CA'))
+    CONSTRAINT ck_status_sigla CHECK (sigla IN ('AB', 'EA', 'EE', 'CO', 'CA'))
 );
 
 -- ============================================================
@@ -73,8 +73,6 @@ CREATE TABLE bairro (
     nome_bairro        VARCHAR(100) NOT NULL,
     cep                CHAR(8) NOT NULL,
     regiao             VARCHAR(200),
-    num_casa           VARCHAR(5),
-    ponto_referencia   VARCHAR(100),
     ativo              BOOLEAN NOT NULL DEFAULT TRUE,
     UNIQUE (nome_bairro)
 );
@@ -127,6 +125,7 @@ CREATE TABLE chamado (
     num_protocolo          VARCHAR(20) NOT NULL UNIQUE,
     prioridade             INTEGER NOT NULL DEFAULT 0 CHECK (prioridade >= 0 AND prioridade <= 5),
     descricao              VARCHAR(500) NOT NULL CHECK (char_length(descricao) <= 500),
+    ponto_de_referencia    VARCHAR(100),
     resolucao              VARCHAR(500) CHECK (resolucao IS NULL OR char_length(resolucao) <= 500),
     nota_avaliacao         INTEGER CHECK (
         nota_avaliacao IS NULL OR (nota_avaliacao >= 1 AND nota_avaliacao <= 5)
@@ -140,8 +139,7 @@ CREATE TABLE chamado (
     atualizado_em          TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     id_servico             INTEGER NOT NULL REFERENCES servico (id_servico),
     id_bairro              INTEGER NOT NULL REFERENCES bairro (id_bairro),
-    id_cidadao             INTEGER NOT NULL REFERENCES cidadao (id_cidadao),
-    id_status              INTEGER NOT NULL REFERENCES status_chamado (id_status)
+    id_cidadao             INTEGER NOT NULL REFERENCES cidadao (id_cidadao)
 );
 
 -- ============================================================
@@ -183,7 +181,6 @@ CREATE TABLE notificacao (
 -- Índices
 -- ============================================================
 CREATE INDEX ix_chamado_cidadao   ON chamado (id_cidadao);
-CREATE INDEX ix_chamado_status    ON chamado (id_status);
 CREATE INDEX ix_chamado_bairro    ON chamado (id_bairro);
 CREATE INDEX ix_chamado_servico   ON chamado (id_servico);
 CREATE INDEX ix_foto_chamado      ON foto_chamado (id_chamado);

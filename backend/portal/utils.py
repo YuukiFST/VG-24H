@@ -46,7 +46,7 @@ def salvar_foto_upload(request, arquivo):
 
 def sigla_status(chamado):
     """Retorna a sigla do status (ex: 'AB', 'CO')."""
-    return (chamado.id_status.sigla or "").strip()
+    return chamado.sigla_status
 
 
 def cor_semaforo(chamado):

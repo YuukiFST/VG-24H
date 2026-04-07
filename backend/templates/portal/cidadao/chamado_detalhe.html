@@ -17,18 +17,12 @@
   </nav>
 
   <div class="ticket-detail">
-    <!-- Left — Info + Observations -->
-    <!-- Left — Info + Observations wrapped in Accordion -->
-    <div class="br-accordion" id="accordion-cidadao" data-behavior="accordion">
-      
-      <!-- ITEM 1: Detalhes -->
-      <div class="item">
-        <button class="header" type="button" aria-controls="panel-info" aria-expanded="true">
-          <span class="icon"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
-          <span class="title h6 mb-0 text-bold"><i class="fas fa-clipboard-check mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Detalhes do Chamado</span>
-        </button>
-      </div>
-      <div class="content ticket-info-card" id="panel-info" aria-hidden="false">
+    <!-- ============ LEFT COLUMN ============ -->
+    <div>
+
+      <!-- CARD 1: Detalhes do Chamado -->
+      <div class="ticket-info-card mb-3">
+        <h2><i class="fas fa-clipboard-check mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Detalhes do Chamado</h2>
         <div class="info-row">
           <span class="info-label">Protocolo</span>
           <span class="info-value"><strong>{{ ch.num_protocolo }}</strong></span>
@@ -40,7 +34,7 @@
         <div class="info-row">
           <span class="info-label">Status</span>
           <span class="info-value">
-            <span class="br-tag status-{{ sigla_status|lower }}">{{ ch.id_status.descricao }}</span>
+            <span class="br-tag status-{{ sigla_status|lower }}">{{ ch.status_atual.descricao }}</span>
           </span>
         </div>
         <div class="info-row">
@@ -49,28 +43,23 @@
         </div>
         <div class="info-row">
           <span class="info-label">Localização</span>
-          <span class="info-value">{{ ch.id_bairro.nome_bairro }}</span>
+          <span class="info-value">{{ ch.id_bairro.nome_bairro }}{% if ch.ponto_de_referencia %} — <em>{{ ch.ponto_de_referencia }}</em>{% endif %}</span>
         </div>
         <div class="info-row">
           <span class="info-label">Descrição</span>
           <span class="info-value">{{ ch.descricao }}</span>
         </div>
         {% if ch.resolucao %}
-        <div class="info-row mt-3 p-2 bg-light border-left border-primary">
+        <div class="info-row mt-3 p-2" style="background:#f0f6ff; border-left: 3px solid var(--vg-primary); border-radius:4px;">
           <span class="info-label">Resolução Final</span>
           <span class="info-value"><strong>{{ ch.resolucao }}</strong></span>
         </div>
         {% endif %}
       </div>
 
-      <!-- ITEM 2: Observações -->
-      <div class="item">
-        <button class="header" type="button" aria-controls="panel-obs" aria-expanded="false">
-          <span class="icon"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
-          <span class="title h6 mb-0 text-bold"><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Observações</span>
-        </button>
-      </div>
-      <div class="content ticket-info-card" id="panel-obs" aria-hidden="true">
+      <!-- CARD 2: Observações -->
+      <div class="ticket-info-card mb-3">
+        <h2><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Observações</h2>
         <div class="observations-list">
           {% for obs in observacoes %}
             <div class="obs-bubble {% if obs.id_servidor.perfil == 'CID' %}cidadao{% else %}colaborador{% endif %}">
@@ -102,14 +91,9 @@
         {% endif %}
       </div>
 
-      <!-- ITEM 3: Fotos -->
-      <div class="item">
-        <button class="header" type="button" aria-controls="panel-fotos" aria-expanded="false">
-          <span class="icon"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
-          <span class="title h6 mb-0 text-bold"><i class="fas fa-images mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Fotos do Chamado</span>
-        </button>
-      </div>
-      <div class="content ticket-info-card" id="panel-fotos" aria-hidden="true">
+      <!-- CARD 3: Fotos do Chamado -->
+      <div class="ticket-info-card mb-3">
+        <h2><i class="fas fa-images mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Fotos do Chamado</h2>
         <div class="row">
           {% for foto in fotos %}
             <div class="col-sm-4 mb-3">
@@ -135,11 +119,11 @@
 
     </div>
 
-    <!-- Right — Timeline + Rating + Actions -->
+    <!-- ============ RIGHT COLUMN ============ -->
     <div>
       <!-- Status Timeline -->
       <div class="ticket-info-card mb-3">
-        <h2 class="h5 mb-4"><i class="fas fa-route mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Status</h2>
+        <h2><i class="fas fa-route mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Status</h2>
         <div class="timeline">
           {% for h in historicos %}
             <div class="timeline-item">
@@ -153,7 +137,7 @@
           <div class="timeline-item active">
             <div class="timeline-dot"><i class="fas fa-map-marker-alt" aria-hidden="true"></i></div>
             <div class="timeline-content">
-              <h4>Status Atual: {{ ch.id_status.descricao }}</h4>
+              <h4>Status Atual: {{ ch.status_atual.descricao }}</h4>
               <p>Última atualização em {{ ch.atualizado_em|date:"d/m/Y H:i" }}</p>
             </div>
           </div>
@@ -172,7 +156,7 @@
       <!-- Rating (CO Only) -->
       {% if sigla_status == 'CO' %}
       <div class="ticket-info-card">
-        <h2 class="h5 mb-4"><i class="fas fa-star mr-2" style="color:var(--vg-warning);" aria-hidden="true"></i> Sua Avaliação</h2>
+        <h2><i class="fas fa-star mr-2" style="color:var(--vg-warning);" aria-hidden="true"></i> Sua Avaliação</h2>
         
         {% if ch.nota_avaliacao %}
           <div class="rating-display mb-3">

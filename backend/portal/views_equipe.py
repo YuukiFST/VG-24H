@@ -27,8 +27,8 @@ def _int_none(v):
 @perfis("COL", "GES")
 def equipe_chamados_lista(request):
     qs = Chamado.objects.select_related(
-        "id_status", "id_servico", "id_bairro", "id_cidadao"
-    ).order_by("-dt_abertura")
+        "id_servico", "id_bairro", "id_cidadao"
+    ).prefetch_related("historicos__id_status").order_by("-dt_abertura")
 
     # Calculate global stats (Semáforo) before filtering
     stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
@@ -52,7 +52,12 @@ def equipe_chamados_lista(request):
     if bairro:
         qs = qs.filter(id_bairro_id=bairro)
     if st:
-        qs = qs.filter(id_status_id=st)
+        from portal.models import HistoricoChamado
+        from django.db.models import Subquery, OuterRef
+        latest_status = HistoricoChamado.objects.filter(
+            id_chamado=OuterRef("pk")
+        ).order_by("-dt_alteracao").values("id_status_id")[:1]
+        qs = qs.annotate(_st_id=Subquery(latest_status)).filter(_st_id=st)
     if d0:
         qs = qs.filter(dt_abertura__date__gte=d0)
     if d1:
@@ -83,7 +88,9 @@ def equipe_chamados_lista(request):
 @require_http_methods(["GET", "POST"])
 def equipe_chamado_detalhe(request, pk):
     ch = get_object_or_404(
-        Chamado.objects.select_related("id_status", "id_servico", "id_cidadao"),
+        Chamado.objects.select_related(
+            "id_servico", "id_servico__id_categoria", "id_cidadao", "id_bairro"
+        ).prefetch_related("historicos__id_status"),
         pk=pk,
     )
     p = perfil_codigo(request.portal_user)
@@ -98,7 +105,13 @@ def equipe_chamado_detalhe(request, pk):
             form_s = EquipeStatusForm(request.POST)
             if form_s.is_valid():
                 novo = form_s.cleaned_data["id_status"]
-                ch.id_status = novo
+                # Insert historico for status change
+                HistoricoChamado.objects.create(
+                    id_chamado=ch,
+                    id_servidor=request.portal_user,
+                    id_status=novo,
+                    dt_alteracao=timezone.now(),
+                )
                 ch.resolucao = form_s.cleaned_data.get("resolucao") or None
                 # Priority
                 pri = request.POST.get("prioridade")
@@ -120,7 +133,7 @@ def equipe_chamado_detalhe(request, pk):
                 HistoricoChamado.objects.create(
                     id_chamado=ch,
                     id_servidor=request.portal_user,
-                    id_status=ch.id_status,
+                    id_status=ch.status_atual,
                     observacao=form_o.cleaned_data["texto"],
                     dt_alteracao=timezone.now(),
                 )
@@ -160,7 +173,7 @@ def equipe_chamado_detalhe(request, pk):
     else:
         form_status = EquipeStatusForm(
             initial={
-                "id_status": ch.id_status,
+                "id_status": ch.status_atual,
                 "resolucao": ch.resolucao or "",
             }
         )
