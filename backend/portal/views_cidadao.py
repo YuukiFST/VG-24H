@@ -102,6 +102,7 @@ def cidadao_chamado_novo(request):
                 ch = Chamado.objects.create(
                     num_protocolo=proximo_protocolo(),
                     prioridade=0,
+                    ponto_de_referencia=d.get("ponto_de_referencia") or None,
                     descricao=d["descricao"],
                     dt_abertura=now,
                     atualizado_em=now,

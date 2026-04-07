@@ -75,8 +75,6 @@ class Bairro(models.Model):
     nome_bairro = models.CharField(max_length=100, unique=True)
     cep = models.CharField(max_length=8)
     regiao = models.CharField(max_length=200, blank=True, null=True)
-    num_casa = models.CharField(max_length=5, blank=True, null=True)
-    ponto_referencia = models.CharField(max_length=100, blank=True, null=True)
     ativo = models.BooleanField(default=True)
 
     class Meta:
@@ -143,8 +141,9 @@ class Chamado(models.Model):
     id_chamado = models.AutoField(primary_key=True)
     num_protocolo = models.CharField(max_length=20, unique=True)
     prioridade = models.IntegerField(default=0)
+    ponto_de_referencia = models.CharField(max_length=100, blank=True, null=True)
     descricao = models.CharField(max_length=500)
-    resolucao = models.CharField(max_length=500, blank=True, null=True)
+    resolucao = models.CharField(max_length=600, blank=True, null=True)
     nota_avaliacao = models.IntegerField(blank=True, null=True)
     comentario_avaliacao = models.CharField(max_length=500, blank=True, null=True)
     dt_abertura = models.DateTimeField()
