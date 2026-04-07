@@ -60,6 +60,7 @@ class Servico(models.Model):
         CategoriaServico,
         models.DO_NOTHING,
         db_column="id_categoria",
+        related_name="servicos",
     )
 
     class Meta:
@@ -75,8 +76,6 @@ class Bairro(models.Model):
     nome_bairro = models.CharField(max_length=100, unique=True)
     cep = models.CharField(max_length=8)
     regiao = models.CharField(max_length=200, blank=True, null=True)
-    num_casa = models.CharField(max_length=5, blank=True, null=True)
-    ponto_referencia = models.CharField(max_length=100, blank=True, null=True)
     ativo = models.BooleanField(default=True)
 
     class Meta:
@@ -144,6 +143,7 @@ class Chamado(models.Model):
     num_protocolo = models.CharField(max_length=20, unique=True)
     prioridade = models.IntegerField(default=0)
     descricao = models.CharField(max_length=500)
+    ponto_de_referencia = models.CharField(max_length=100, blank=True, null=True)
     resolucao = models.CharField(max_length=500, blank=True, null=True)
     nota_avaliacao = models.IntegerField(blank=True, null=True)
     comentario_avaliacao = models.CharField(max_length=500, blank=True, null=True)
@@ -167,15 +167,32 @@ class Chamado(models.Model):
         db_column="id_cidadao",
         related_name="chamados",
     )
-    id_status = models.ForeignKey(
-        StatusChamado,
-        models.DO_NOTHING,
-        db_column="id_status",
-    )
 
     class Meta:
         managed = False
         db_table = "chamado"
+
+    @property
+    def status_atual(self):
+        """Retorna o StatusChamado atual (último histórico)."""
+        ultimo = (
+            self.historicos.select_related("id_status")
+            .order_by("-dt_alteracao")
+            .first()
+        )
+        return ultimo.id_status if ultimo else None
+
+    @property
+    def sigla_status(self):
+        """Retorna a sigla do status atual (ex: 'AB', 'CO')."""
+        st = self.status_atual
+        return (st.sigla or "").strip() if st else ""
+
+    @property
+    def atualizado_em(self):
+        """Retorna a data/hora da última alteração de status."""
+        ultimo = self.historicos.order_by("-dt_alteracao").first()
+        return ultimo.dt_alteracao if ultimo else self.dt_abertura
 
 
 class FotoChamado(models.Model):
@@ -201,6 +218,7 @@ class HistoricoChamado(models.Model):
         Chamado,
         models.DO_NOTHING,
         db_column="id_chamado",
+        related_name="historicos",
     )
     id_servidor = models.ForeignKey(
         Servidor,

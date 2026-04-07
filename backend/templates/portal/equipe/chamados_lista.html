@@ -60,7 +60,7 @@
           <td>{{ ch.num_protocolo }}</td>
           <td>{{ ch.id_cidadao.nome_completo }}</td>
           <td>{{ ch.id_bairro.nome_bairro }}</td>
-          <td>{{ ch.id_status.sigla }}</td>
+          <td>{{ ch.status_atual.sigla }}</td>
           <td>{{ ch.dt_abertura|date:"d/m/Y" }}</td>
           <td><a href="{% url 'portal:equipe_chamado' ch.pk %}">Abrir</a></td>
         </tr>

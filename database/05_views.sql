@@ -15,7 +15,12 @@ FROM chamado ch
 JOIN servico srv     ON srv.id_servico  = ch.id_servico
 JOIN categoria_servico cat ON cat.id_categoria = srv.id_categoria
 JOIN bairro b        ON b.id_bairro     = ch.id_bairro
-JOIN status_chamado s ON s.id_status    = ch.id_status
+JOIN LATERAL (
+    SELECT id_status FROM historico_chamado
+    WHERE id_chamado = ch.id_chamado
+    ORDER BY dt_alteracao DESC LIMIT 1
+) ultimo_h ON TRUE
+JOIN status_chamado s ON s.id_status = ultimo_h.id_status
 WHERE cat.ativo
   AND srv.ativo
   AND b.ativo

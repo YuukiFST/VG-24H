@@ -4,8 +4,8 @@ BEGIN;
 
 INSERT INTO status_chamado (sigla, descricao) VALUES
     ('AB', 'Aberto — Chamado aberto pelo cidadão'),
-    ('AN', 'Em Análise — Em análise pela equipe responsável'),
-    ('EX', 'Em Execução — Em execução no campo'),
+    ('EA', 'Em Atendimento — Em atendimento pela equipe responsável'),
+    ('EE', 'Em Execução — Em execução no campo'),
     ('CO', 'Concluído — Serviço concluído'),
     ('CA', 'Cancelado — Chamado cancelado');
 

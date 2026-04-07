@@ -35,28 +35,14 @@ CREATE TRIGGER trg_chamado_after_insert_historico_ab
 
 -- ============================================================
 -- Trigger 2 part A — BEFORE UPDATE em chamado:
--- Quando id_status é alterado, atualiza metadados:
---   1. Preenche dt_conclusao se novo status é CO
---   2. Atualiza atualizado_em
+-- Atualiza atualizado_em a cada UPDATE
 -- ============================================================
 CREATE OR REPLACE FUNCTION fn_chamado_before_update_metadados()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
-DECLARE
-    nova_sigla CHAR(2);
 BEGIN
     NEW.atualizado_em := CURRENT_TIMESTAMP;
-
-    IF NEW.id_status IS DISTINCT FROM OLD.id_status THEN
-        SELECT sigla INTO nova_sigla FROM status_chamado WHERE id_status = NEW.id_status;
-        IF nova_sigla IN ('CO', 'CA') THEN
-            NEW.dt_conclusao := COALESCE(NEW.dt_conclusao, CURRENT_TIMESTAMP);
-        ELSIF nova_sigla IN ('AB', 'AN', 'EX') THEN
-            NEW.dt_conclusao := NULL;
-        END IF;
-    END IF;
-
     RETURN NEW;
 END;
 $$;
@@ -68,43 +54,39 @@ CREATE TRIGGER trg_chamado_before_update_metadados
     EXECUTE PROCEDURE fn_chamado_before_update_metadados();
 
 -- ============================================================
--- Trigger 2 part B — AFTER UPDATE em chamado:
--- Quando id_status é alterado, executa:
---   1. Insere registro em historico_chamado
+-- Trigger 2 part B — AFTER INSERT em historico_chamado:
+-- Quando um novo registro de histórico é inserido:
+--   1. Atualiza dt_conclusao no chamado se status for CO/CA
 --   2. Insere aviso em notificacao para o cidadão dono do chamado
 -- ============================================================
-CREATE OR REPLACE FUNCTION fn_chamado_after_update_status()
+CREATE OR REPLACE FUNCTION fn_historico_after_insert_status()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 DECLARE
     nova_sigla  CHAR(2);
     desc_nova   VARCHAR(200);
-    uid_acao    INTEGER;
+    v_protocolo VARCHAR(20);
     msg         VARCHAR(200);
 BEGIN
-    IF NEW.id_status IS NOT DISTINCT FROM OLD.id_status THEN
-        RETURN NEW;
+    SELECT sigla, descricao INTO nova_sigla, desc_nova
+    FROM status_chamado WHERE id_status = NEW.id_status;
+
+    SELECT num_protocolo INTO v_protocolo
+    FROM chamado WHERE id_chamado = NEW.id_chamado;
+
+    -- Atualiza dt_conclusao conforme status
+    IF nova_sigla IN ('CO', 'CA') THEN
+        UPDATE chamado SET dt_conclusao = COALESCE(dt_conclusao, CURRENT_TIMESTAMP)
+        WHERE id_chamado = NEW.id_chamado;
+    ELSIF nova_sigla IN ('AB', 'EA', 'EE') THEN
+        UPDATE chamado SET dt_conclusao = NULL
+        WHERE id_chamado = NEW.id_chamado;
     END IF;
 
-    SELECT sigla INTO nova_sigla FROM status_chamado WHERE id_status = NEW.id_status;
-    SELECT descricao INTO desc_nova FROM status_chamado WHERE id_status = NEW.id_status;
-
-    -- Recuperar id do servidor que fez a ação (sessão Django)
-    BEGIN
-        uid_acao := NULLIF(current_setting('portal.id_usuario_acao', true), '')::INTEGER;
-    EXCEPTION
-        WHEN invalid_text_representation THEN
-            uid_acao := NULL;
-    END;
-
-    -- 1. Histórico
-    INSERT INTO historico_chamado (id_chamado, id_servidor, id_status, observacao)
-    VALUES (NEW.id_chamado, uid_acao, NEW.id_status, NULL);
-
-    -- 2. Notificação
+    -- Notificação
     msg := left(
-        'Chamado ' || NEW.num_protocolo || ': status alterado para ' || COALESCE(desc_nova, nova_sigla),
+        'Chamado ' || v_protocolo || ': status alterado para ' || COALESCE(desc_nova, nova_sigla),
         200
     );
 
@@ -115,10 +97,10 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS trg_chamado_after_update_status ON chamado;
-CREATE TRIGGER trg_chamado_after_update_status
-    AFTER UPDATE ON chamado
+DROP TRIGGER IF EXISTS trg_historico_after_insert_status ON historico_chamado;
+CREATE TRIGGER trg_historico_after_insert_status
+    AFTER INSERT ON historico_chamado
     FOR EACH ROW
-    EXECUTE PROCEDURE fn_chamado_after_update_status();
+    EXECUTE PROCEDURE fn_historico_after_insert_status();
 
 COMMIT;

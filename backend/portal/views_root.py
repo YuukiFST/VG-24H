@@ -42,9 +42,17 @@ def root_view(request):
     from portal.models import Bairro, Chamado
 
     try:
+        from portal.models import HistoricoChamado
+        from django.db.models import Subquery, OuterRef
         servicos = Servico.objects.filter(ativo=True).order_by("nome")[:5]
+        latest_sigla = HistoricoChamado.objects.filter(
+            id_chamado=OuterRef("pk")
+        ).order_by("-dt_alteracao").values("id_status__sigla")[:1]
+        total_resolvidos = Chamado.objects.annotate(
+            _sigla=Subquery(latest_sigla)
+        ).filter(_sigla="CO").count()
         stats = {
-            "total_resolvidos": Chamado.objects.filter(id_status__sigla="CO").count(),
+            "total_resolvidos": total_resolvidos,
             "total_bairros": Bairro.objects.filter(ativo=True).count(),
             "total_servicos": Servico.objects.filter(ativo=True).count(),
         }
