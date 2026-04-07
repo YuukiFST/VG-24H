@@ -6,16 +6,16 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
-
-# Banco de dados local (NUNCA subir para o Git)
 db.sqlite3
 db.sqlite3-journal
 
-# Uploads de mídia (Fotos que os usuários sobem no painel)
+# =========================
+# Uploads de mídia
+# =========================
 media/
 
 # =========================
-# Ambientes Virtuais (uv, venv, etc)
+# Ambientes Virtuais
 # =========================
 .venv/
 venv/
@@ -28,19 +28,22 @@ ENV/
 .env
 .env.local
 .env.*
+!.env.example
 
 # =========================
-# IDEs e Sistema Operacional
+# IDEs e Ferramentas
 # =========================
 .vscode/
+.cursor/
+.gemini/
+.idea/
 __MACOSX/
 .DS_Store
 Thumbs.db
 
 # =========================
-# Configurações Específicas do Projeto
+# Backend (paths específicos)
 # =========================
-GOV/
 backend/.env
 backend/.venv/
 backend/**/__pycache__/

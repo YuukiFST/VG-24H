@@ -107,6 +107,19 @@
             {% endfor %}
           </select>
         </div>
+        <div class="form-group mt-3">
+          <div class="br-input">
+            <label for="chamado-ponto-ref">Ponto de referência (opcional)</label>
+            <input
+              type="text"
+              id="chamado-ponto-ref"
+              name="ponto_de_referencia"
+              maxlength="100"
+              placeholder="Ex: Próximo à padaria do João, esquina com Av. Brasil"
+              value="{{ form.ponto_de_referencia.value|default:'' }}"
+            />
+          </div>
+        </div>
         <div class="wizard-nav">
           <button class="br-button secondary" type="button" data-wizard-prev>
             <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
@@ -167,6 +180,10 @@
           <div class="summary-row">
             <span class="summary-label">Bairro</span>
             <span id="sum-bairro">—</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Ponto de referência</span>
+            <span id="sum-ponto-ref">—</span>
           </div>
           <div class="summary-row">
             <span class="summary-label">Foto</span>
@@ -252,6 +269,8 @@
 
           const bairro = document.getElementById('chamado-bairro');
           document.getElementById('sum-bairro').textContent = bairro.selectedIndex > 0 ? bairro.options[bairro.selectedIndex].text : '—';
+          const pontoRef = document.getElementById('chamado-ponto-ref');
+          document.getElementById('sum-ponto-ref').textContent = pontoRef && pontoRef.value ? pontoRef.value : '—';
           document.getElementById('sum-foto').textContent = fileInput.files.length ? fileInput.files[0].name : 'Nenhuma';
         }, 100);
       });
