@@ -64,6 +64,11 @@ class ChamadoNovoForm(forms.Form):
         widget=forms.Textarea(attrs={"rows": 4}),
         label="Descrição do problema",
     )
+    ponto_de_referencia = forms.CharField(
+        max_length=100,
+        required=False,
+        label="Ponto de referência",
+    )
     foto = forms.ImageField(label="Foto (obrigatória)")
 
 
