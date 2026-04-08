@@ -45,7 +45,7 @@ else:
 
 > **Arquivo:** `backend/portal/views_auth.py` (função `login_view`)
 
-Se o usuário é achado e `check_password(senha, user.senha_hash)` retornou verdadeiro, ocorre a gravação na Sessão do navegador (Cookies/banco de sessões do Django):
+Se o usuário é achado e `check_password(senha, user.senha_hash)` retornou verdadeiro, ocorre a gravação no banco de sessões do Django (armazenamento back-end):
 
 ```python
 elif check_password(senha, user.senha_hash):
