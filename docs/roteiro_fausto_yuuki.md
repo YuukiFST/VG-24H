@@ -2,7 +2,7 @@
 
 ## 🎯 Responsabilidade: Módulo Colaborador, Módulo Gestor e Frontend (Gov.br DS)
 
-Fausto é responsável pelos **módulos administrativos** (Colaborador e Gestor) e pela **arquitetura visual** do portal, incluindo o template base e a conformidade com o Design System Gov.br.
+Fausto é responsável pelos **módulos administrativos** (Colaborador e Gestor) e pela **arquitetura visual** do portal — template base, CSS, JS e conformidade com o Design System Gov.br.
 
 ---
 
@@ -10,160 +10,163 @@ Fausto é responsável pelos **módulos administrativos** (Colaborador e Gestor)
 
 ### 1. Frontend e Design System Gov.br (Plano §4 — Interface visual)
 
-- **Template Base** (`base.html`): estrutura master que todas as páginas herdam
-  - Header com logo da Prefeitura, barra de busca, menu de acesso rápido, avatar do usuário
-  - Sidebar/menu de navegação dinâmico por perfil (CID, COL, GES)
-  - Footer com logo e links institucionais
-  - Skip links para acessibilidade
-  - Cookie bar (LGPD)
-- **CSS customizado** (`vg24h.css`): variáveis CSS, tokens de design, estilos das seções (hero, cards, steps, stats, CTA, dashboard, etc.)
-- **Conformidade Gov.br**: uso da fonte Rawline, componentes `br-button`, `br-input`, `br-table`, `br-tag`, etc.
-- **Responsividade**: como o layout se adapta em telas menores
+- **Template Base** — `base.html` (17 KB):
+  - Header, sidebar dinâmico por perfil (CID/COL/GES via `nav_perfil`), footer, skip links, cookie bar
+  - Bloco `{% block content %}` que todas as páginas herdam
+
+- **CSS customizado** — `vg24h.css` (24 KB):
+  - Variáveis CSS, tokens Gov.br, estilos de dashboard, semáforo, tabelas, forms
+
+- **JavaScript** — `vg24h.js` (7 KB):
+  - Carousel, interações de menu, formulários dinâmicos
+
+- **Conformidade Gov.br**: fonte Rawline, componentes `br-button`, `br-input`, `br-table`, `br-tag`
 
 ### 2. Módulo do Colaborador — COL (Plano §3.1 — Módulo do Colaborador)
 
-- **Dashboard Semáforo** (`views_equipe.py` → `equipe_dashboard`): cards coloridos (verde/amarelo/vermelho) contando chamados por faixa de prazo
-- **Lista de Chamados** (`views_equipe.py` → `equipe_chamados`): tabela com filtros por bairro, status e data
-- **Detalhe do Chamado** (`views_equipe.py` → `equipe_chamado_detalhe`):
-  - Alteração de status (livre, exceto reabrir CO/CA)
-  - Preenchimento obrigatório do campo resolução para fechar (CO/CA)
-  - Adição de observação no histórico (visível ao cidadão)
-  - Upload de fotos como comprovação
+> **Mudança arquitetural importante**: O status do chamado **NÃO é um campo direto** em `chamado`. O status atual vem do **último registro de `historico_chamado`** via `ch.status_atual` / `ch.sigla_status`. Mudar status = **inserir novo registro em `historico_chamado`**.
 
-### 3. Módulo do Gestor — GES (Plano §3.1 — Módulo do Gestor)
+**Siglas de status:** `AB` = Aberto, `EA` = Em Análise, `EE` = Em Execução, `CO` = Concluído, `CA` = Cancelado
 
-- **Todas as funcionalidades do Colaborador** + as exclusivas:
-- **Gerenciamento de Colaboradores** (`views_gestao.py` → `gestao_colaboradores`): criação de contas com senha temporária
-- **Gerenciamento de Categorias** (`views_gestao.py` → `gestao_categorias`, `gestao_categoria_nova`, `gestao_categoria_editar`): CRUD completo
-- **Gerenciamento de Serviços** (`views_gestao.py` → `gestao_servicos`, `gestao_servico_novo`, `gestao_servico_editar`): CRUD com definição de prazos (semáforo amarelo/vermelho)
-- **Gerenciamento de Bairros** (`views_gestao.py` → `gestao_bairros`, `gestao_bairro_novo`, `gestao_bairro_editar`): CRUD
-- **Gerenciamento de Banners** (`views_gestao.py` → `gestao_banners`, `gestao_banner_novo`, `gestao_banner_editar`, `gestao_banner_excluir`): CRUD para o carousel da homepage
-- **Painel de Estatísticas** (`views_gestao.py` → `gestao_estatisticas`): dados consolidados por categoria, bairro e status (utiliza a View SQL)
-- **Poder total** sobre status: pode alterar qualquer chamado, incluindo reabrir CO e CA
+- **Dashboard Semáforo + Lista** — função `equipe_chamados_lista` em `views_equipe.py`:
+  - Carrega TODOS os chamados com `prefetch_related("historicos__id_status")`
+  - Semáforo: verde/amarelo/vermelho via `cor_semaforo()` (compara `prazo_amarelo_dias` / `prazo_vermelho_dias`)
+  - Filtro de status usa `Subquery` no último `historico_chamado`
+  - Renderiza `equipe/dashboard.html`
 
-### 4. Sistema de Banners
+- **Detalhe do Chamado** — função `equipe_chamado_detalhe`:
+  - Status via `sigla_status(ch)` → property `ch.sigla_status`
+  - Bloqueio: COL com CO/CA → `pode_status = False`; GES sempre pode
+  - **3 ações POST** (campo `acao`):
+    - `"status"` → **insere `HistoricoChamado` com novo status** + salva resolução e prioridade no chamado
+    - `"obs"` → insere em `historico_chamado` com `id_status=ch.status_atual`
+    - `"foto"` → upload via `salvar_foto_upload()` → cria `FotoChamado`
+  - Renderiza `equipe/chamado_detalhe.html`
 
-- Model `BannerPublicacao` (criado em `models.py`)
-- CRUD de banners no painel de gestão
-- Carousel dinâmico na homepage (`root.html`) — auto-advance, dots, prev/next
+### 3. Módulo do Gestor — GES (Plano §3.1 — Módulo do Administrador)
 
-### 5. Rotas Administrativas
+> `@perfis("GES")` — exclusivo do Gestor. O perfil `GES` no código = "Administrador" no Plano.
 
-- Explicar as rotas em `urls.py` referentes às funcionalidades do Colaborador e Gestor
+- **Categorias** — `gestao_categorias`, `gestao_categoria_edit`: lista + CRUD via `CategoriaForm`
+- **Serviços** — `gestao_servicos`, `gestao_servico_edit`, `gestao_servico_desativar`: CRUD via `ServicoForm` (com prazos amarelo/vermelho)
+- **Bairros** — `gestao_bairros`, `gestao_bairro_edit`, `gestao_bairro_desativar`: CRUD via `BairroForm`
+- **Colaboradores** — `gestao_colaboradores`, `gestao_colaborador_toggle`: cria na tabela `servidor` com `perfil='COL'`, `senha_temporaria="1"`
+- **Banners** — `gestao_banners`, `gestao_banner_novo`, `gestao_banner_editar`, `gestao_banner_excluir`: CRUD de `banner_publicacao`
+- **Estatísticas** — `gestao_estatisticas`: executa `SELECT * FROM vw_estatisticas_chamados` (View SQL com JOIN LATERAL no último histórico)
 
 ---
 
-## 📁 Arquivos que você deve saber explicar
+## 📁 Arquivos que você DEVE saber explicar
 
 ### Python (Backend)
 
-| Arquivo                                                                                         | Conteúdo                                                                           |
-| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [views_equipe.py](file:///e:/Projects/PersonalProjects/VG_Smart/backend/portal/views_equipe.py) | Dashboard semáforo, lista e detalhe de chamados (COL)                              |
-| [views_gestao.py](file:///e:/Projects/PersonalProjects/VG_Smart/backend/portal/views_gestao.py) | CRUD de colaboradores, categorias, serviços, bairros, banners e estatísticas (GES) |
-| [urls.py](file:///e:/Projects/PersonalProjects/VG_Smart/backend/portal/urls.py)                 | Rotas de equipe e gestão (sua metade)                                              |
+| Arquivo | Caminho | Conteúdo |
+|---|---|---|
+| `views_equipe.py` | `backend/portal/views_equipe.py` | Dashboard semáforo, detalhe (COL + GES) |
+| `views_gestao.py` | `backend/portal/views_gestao.py` | CRUD categorias, serviços, bairros, colaboradores, banners, estatísticas |
+| `forms.py` | `backend/portal/forms.py` | `EquipeStatusForm`, `CategoriaForm`, `ServicoForm`, etc. |
+| `urls.py` | `backend/portal/urls.py` | Rotas `equipe/*` e `gestao/*` |
 
 ### Templates — Colaborador (COL)
 
-| Arquivo                                                                                                                           | Conteúdo                                                |
-| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| [equipe/dashboard.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/equipe/dashboard.html)             | Dashboard semáforo com cards verde/amarelo/vermelho     |
-| [equipe/chamados_lista.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/equipe/chamados_lista.html)   | Tabela de chamados filtráveis                           |
-| [equipe/chamado_detalhe.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/equipe/chamado_detalhe.html) | Detalhe do chamado com ações (status, observação, foto) |
+| Arquivo | Caminho |
+|---|---|
+| `dashboard.html` | `backend/templates/portal/equipe/dashboard.html` |
+| `chamados_lista.html` | `backend/templates/portal/equipe/chamados_lista.html` |
+| `chamado_detalhe.html` | `backend/templates/portal/equipe/chamado_detalhe.html` |
 
 ### Templates — Gestor (GES)
 
-| Arquivo                                                                                                                         | Conteúdo                             |
-| ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| [gestao/colaboradores.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/gestao/colaboradores.html)   | Lista e criação de colaboradores     |
-| [gestao/categorias.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/gestao/categorias.html)         | Lista de categorias                  |
-| [gestao/categoria_form.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/gestao/categoria_form.html) | Formulário de criar/editar categoria |
-| [gestao/servicos.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/gestao/servicos.html)             | Lista de serviços                    |
-| [gestao/servico_form.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/gestao/servico_form.html)     | Formulário de criar/editar serviço   |
-| [gestao/bairros.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/gestao/bairros.html)               | Lista de bairros                     |
-| [gestao/bairro_form.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/gestao/bairro_form.html)       | Formulário de criar/editar bairro    |
-| [gestao/banners.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/gestao/banners.html)               | Lista de banners                     |
-| [gestao/banner_form.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/gestao/banner_form.html)       | Formulário de criar/editar banner    |
-| [gestao/estatisticas.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/gestao/estatisticas.html)     | Painel de estatísticas consolidadas  |
+| Arquivo | Caminho |
+|---|---|
+| `categorias.html` + `categoria_form.html` | `backend/templates/portal/gestao/` |
+| `servicos.html` + `servico_form.html` | `backend/templates/portal/gestao/` |
+| `bairros.html` + `bairro_form.html` | `backend/templates/portal/gestao/` |
+| `colaboradores.html` | `backend/templates/portal/gestao/` |
+| `banners.html` + `banner_form.html` | `backend/templates/portal/gestao/` |
+| `estatisticas.html` | `backend/templates/portal/gestao/` |
 
-### Frontend — Template Base e CSS
+### Frontend
 
-| Arquivo                                                                                        | Conteúdo                                                         |
-| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| [base.html](file:///e:/Projects/PersonalProjects/VG_Smart/backend/templates/portal/base.html)  | Template master: header, sidebar, footer, skip links, cookie bar |
-| [vg24h.css](file:///e:/Projects/PersonalProjects/VG_Smart/backend/static/portal/css/vg24h.css) | CSS customizado: variáveis, tokens, todos os estilos do portal   |
+| Arquivo | Caminho |
+|---|---|
+| `base.html` | `backend/templates/portal/base.html` |
+| `vg24h.css` | `backend/static/portal/css/vg24h.css` |
+| `vg24h.js` | `backend/static/portal/js/vg24h.js` |
+
+### Suas rotas em `urls.py`
+
+| Rota | View | Name |
+|---|---|---|
+| `equipe/chamados/` | `equipe_chamados_lista` | `equipe_chamados` |
+| `equipe/chamados/<pk>/` | `equipe_chamado_detalhe` | `equipe_chamado` |
+| `gestao/estatisticas/` | `gestao_estatisticas` | `gestao_estatisticas` |
+| `gestao/categorias/` | `gestao_categorias` | `gestao_categorias` |
+| `gestao/categorias/<pk>/editar/` | `gestao_categoria_edit` | `gestao_categoria_editar` |
+| `gestao/servicos/` | `gestao_servicos` | `gestao_servicos` |
+| `gestao/servicos/<pk>/editar/` | `gestao_servico_edit` | `gestao_servico_editar` |
+| `gestao/servicos/<pk>/desativar/` | `gestao_servico_desativar` | `gestao_servico_desativar` |
+| `gestao/bairros/` | `gestao_bairros` | `gestao_bairros` |
+| `gestao/bairros/<pk>/editar/` | `gestao_bairro_edit` | `gestao_bairro_editar` |
+| `gestao/bairros/<pk>/desativar/` | `gestao_bairro_desativar` | `gestao_bairro_desativar` |
+| `gestao/colaboradores/` | `gestao_colaboradores` | `gestao_colaboradores` |
+| `gestao/colaboradores/<pk>/toggle/` | `gestao_colaborador_toggle` | `gestao_colaborador_toggle` |
+| `gestao/banners/` | `gestao_banners` | `gestao_banners` |
+| `gestao/banners/novo/` | `gestao_banner_novo` | `gestao_banner_novo` |
+| `gestao/banners/<pk>/editar/` | `gestao_banner_editar` | `gestao_banner_editar` |
+| `gestao/banners/<pk>/excluir/` | `gestao_banner_excluir` | `gestao_banner_excluir` |
 
 ---
 
 ## 🗣️ Pontos-chave para a apresentação
 
-1. **Mostre o `base.html`** e explique como todas as páginas herdam a estrutura (header + sidebar + footer)
-2. **Abra o painel do Gestor** e faça operações ao vivo:
-   - Crie um novo colaborador e mostre a senha temporária gerada
-   - Crie um novo serviço com prazos de semáforo customizados
-   - Adicione/edite um banner e mostre ele aparecendo no carousel da homepage
-3. **Mostre o Dashboard Semáforo** do Colaborador e explique as cores (verde = dentro do prazo, amarelo = atenção, vermelho = atrasado)
-4. **Altere o status de um chamado** no painel do Colaborador:
-   - Mude para AN (Em análise) → mostre a notificação gerada ao cidadão
-   - Tente fechar (CO) sem preencher resolução → mostre o erro
-   - Feche o chamado com resolução preenchida → sucesso
-5. **Demonstre o controle de acesso**: mostre que um COL não consegue acessar a rota `/gestao/` (retorna erro 403/redirect)
-6. **Mostre a responsividade**: redimensione a tela e mostre o layout adaptando (sidebar colapsando, cards empilhando)
-7. **Destaque o CSS** (`vg24h.css`): mostre as variáveis CSS customizadas, o sistema de tokens de cor do Gov.br, e como os componentes `br-*` são estilizados
+1. **Mostre `base.html`** — herança de templates, menu dinâmico por perfil
+2. **Explique a mudança arquitetural**: status não é campo direto, vem do último `historico_chamado`. Mudar status = INSERT em `historico_chamado`
+3. **Painel do Gestor ao vivo**: crie colaborador, serviço com prazos, banner
+4. **Dashboard Semáforo**: explique verde/amarelo/vermelho e `cor_semaforo()`
+5. **Altere status de um chamado**: insere em historico → Trigger 2B gera notificação + `dt_conclusao`
+6. **Tente fechar sem resolução**: `EquipeStatusForm.clean()` impede
+7. **COL vs GES**: COL bloqueado em CO/CA, GES livre
+8. **Controle de acesso**: COL acessando `/gestao/` → "Sem permissão"
+9. **Responsividade** e **CSS** (`vg24h.css`)
 
 ---
 
 ## 📚 Mapeamento por Etapa da Disciplina
 
-A professora avalia o projeto por etapas. Abaixo está o que você é responsável em cada uma:
-
-| Etapa                                            | O que Fausto apresenta                                                                                                                                                                                            |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Etapa 1** (Plano de Trabalho)                  | Seções 3.1 (Módulo COL e GES), 4 (Restrições) e 7 (Ferramentas)                                                                                                                                                   |
-| **Etapa 2** (Modelagem + Criação BD)             | Entidades `servidor`, `secretaria`, `categoria_servico`, `servico`, `bairro`, `historico_chamado` — explicar campos e constraints                                                                                 |
-| **Etapa 3** (Layout das telas)                   | Print do layout das telas: Dashboard Semáforo (COL), Lista de Chamados da Equipe, Detalhe do Chamado (COL/GES), Painel de Gestão (categorias, serviços, bairros, colaboradores, banners), Estatísticas            |
-| **Etapa 4** (Conexão + Login)                    | Mostrar o `base.html` como template master e a integração com o Design System Gov.br (CDN)                                                                                                                        |
-| **Etapa 5** (Cadastro piloto + Recurso avançado) | CRUD de Categorias de Serviço como tela piloto — demonstrar INSERT (nova categoria), SELECT (listar), UPDATE (editar), DELETE (inativar)                                                                          |
-| **Etapa 6** (Demais telas)                       | **Telas que Fausto desenvolveu:** Dashboard Semáforo, Lista de Chamados (equipe), Detalhe do Chamado (equipe), Gestão de Colaboradores, Categorias, Serviços, Bairros, Banners, Estatísticas, Template Base e CSS |
-
-### ⚠️ Ponto Crítico — Etapa 5
-
-A professora quer ver **uma tela de cadastro piloto** com as **4 operações (SELECT, INSERT, UPDATE, DELETE)**. Fausto deve:
-
-1. Mostrar a lista de Categorias (SELECT) na tela `categorias.html`
-2. Criar uma nova Categoria (INSERT) via `categoria_form.html`
-3. Editar a categoria criada (UPDATE)
-4. Inativar a categoria (DELETE lógico — campo `ativo = FALSE`)
+| Etapa | O que Fausto apresenta |
+|---|---|
+| **Etapa 1** (Plano de Trabalho) | Seções 3.1 (Módulo COL e GES), 4 (Restrições), 7 (Ferramentas) |
+| **Etapa 2** (Modelagem + Criação BD) | Entidades `secretaria`, `servidor`, `categoria_servico`, `servico`, `bairro`, `historico_chamado` |
+| **Etapa 3** (Layout das telas) | Print de todas as telas de equipe e gestão |
+| **Etapa 4** (Conexão + Login) | `base.html` como template master + Gov.br DS |
+| **Etapa 5** (Cadastro piloto) | CRUD de Categorias: INSERT, SELECT, UPDATE, DELETE lógico |
+| **Etapa 6** (Demais telas) | Todas as telas listadas |
 
 ### ⚠️ Ponto Crítico — Etapa 6
 
-A professora exige que **cada aluno relate quais telas foram eleitas para desenvolvimento**. Fausto deve listar:
-
 > **Telas desenvolvidas por Fausto Yuuki:**
 >
-> 1. Template Base (`base.html`) — header, sidebar, footer, cookie bar
-> 2. CSS Global (`vg24h.css`) — design system, variáveis, responsividade
-> 3. Dashboard Semáforo do Colaborador (`equipe/dashboard.html`)
-> 4. Lista de Chamados da Equipe (`equipe/chamados_lista.html`)
-> 5. Detalhe do Chamado — visão Equipe (`equipe/chamado_detalhe.html`)
-> 6. Gestão de Colaboradores (`gestao/colaboradores.html`)
-> 7. Gestão de Categorias (`gestao/categorias.html` + `gestao/categoria_form.html`)
-> 8. Gestão de Serviços (`gestao/servicos.html` + `gestao/servico_form.html`)
-> 9. Gestão de Bairros (`gestao/bairros.html` + `gestao/bairro_form.html`)
-> 10. Gestão de Banners (`gestao/banners.html` + `gestao/banner_form.html`)
-> 11. Painel de Estatísticas (`gestao/estatisticas.html`)
+> 1. Template Base (`base.html`) + CSS (`vg24h.css`) + JS (`vg24h.js`)
+> 2. Dashboard Semáforo (`equipe/dashboard.html`)
+> 3. Lista Chamados Equipe (`equipe/chamados_lista.html`)
+> 4. Detalhe Chamado Equipe (`equipe/chamado_detalhe.html`)
+> 5. Gestão de Colaboradores (`gestao/colaboradores.html`)
+> 6. Gestão de Categorias (`gestao/categorias.html` + `categoria_form.html`)
+> 7. Gestão de Serviços (`gestao/servicos.html` + `servico_form.html`)
+> 8. Gestão de Bairros (`gestao/bairros.html` + `bairro_form.html`)
+> 9. Gestão de Banners (`gestao/banners.html` + `banner_form.html`)
+> 10. Painel de Estatísticas (`gestao/estatisticas.html`)
 
 ### 📄 Checklist para o Seminário Final
 
-- [ ] Print do código `views_equipe.py` — dashboard e detalhe de chamado
-- [ ] Print do código `views_gestao.py` — CRUD de categorias, serviços, bairros, colaboradores
-- [ ] Print do `base.html` — explicar a estrutura master herdada por todas as páginas
-- [ ] Print do `vg24h.css` — variáveis CSS e tokens do Gov.br
-- [ ] Print do Dashboard Semáforo em execução (cards verde/amarelo/vermelho)
-- [ ] Print da lista de chamados com filtros em execução
-- [ ] Print do CRUD completo de Categorias (listar → criar → editar → inativar)
-- [ ] Print do CRUD de Serviços com prazos de semáforo (amarelo/vermelho)
-- [ ] Print da criação de Colaborador com senha temporária
-- [ ] Print do Painel de Estatísticas consolidadas
-- [ ] Print da gestão de Banners + carousel na homepage
-- [ ] Demonstração ao vivo: login como GES → CRUD → alterar status de chamado → ver impacto no dashboard
+- [ ] Print do `views_equipe.py` — dashboard e detalhe
+- [ ] Print do `views_gestao.py` — CRUDs
+- [ ] Print do `base.html` e `vg24h.css`
+- [ ] Print do Dashboard Semáforo (cards verde/amarelo/vermelho)
+- [ ] Print do CRUD de Categorias completo
+- [ ] Print do CRUD de Serviços com prazos
+- [ ] Print da criação de Colaborador
+- [ ] Print do Painel de Estatísticas
+- [ ] Print dos Banners + carousel
+- [ ] Demonstração ao vivo: login GES → CRUD → alterar status → dashboard
