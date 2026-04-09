@@ -1,7 +1,23 @@
+"""
+views_auth.py — Autenticação do Portal VG 24H
+
+Este módulo gerencia todo o fluxo de autenticação do sistema:
+- Login / Logout (cidadãos e servidores)
+- Cadastro de novos cidadãos
+- Recuperação e redefinição de senha
+- Troca de senha obrigatória (primeiro acesso de servidores)
+
+NOTA: NÃO usamos o django.contrib.auth padrão.
+Usamos um sistema próprio com as tabelas 'cidadao' e 'servidor' do banco.
+As senhas são armazenadas com hash bcrypt via django.contrib.auth.hashers.
+"""
+
 from django.conf import settings
 from django.contrib import messages
+# check_password: compara senha digitada com o hash salvo no banco
+# make_password: gera hash bcrypt da senha ao cadastrar/alterar
 from django.contrib.auth.hashers import check_password, make_password
-from django.core import signing
+from django.core import signing  # Gera tokens seguros para recuperação de senha
 from django.core.mail import send_mail
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -15,11 +31,16 @@ from portal.forms import (
     RedefinirSenhaForm,
     TrocaSenhaObrigatoriaForm,
 )
+# Cidadao e Servidor: as duas tabelas de usuários do sistema
+# O sistema verifica em qual tabela o email existe para determinar o tipo
 from portal.models import Bairro, Cidadao, Servidor
 
 
+# LOGIN — Rota: /accounts/login/
+# Fluxo: Recebe email + senha → busca no BD → compara hash → cria sessão
 @require_http_methods(["GET", "POST"])
 def login_view(request):
+    # Se já está logado (middleware já carregou o user), redireciona para home
     if request.portal_user:
         return redirect("portal:root")
 
@@ -30,6 +51,7 @@ def login_view(request):
         user = None
         tipo = None
 
+        # Verificação de login se existe no BD
         # Buscar primeiro em Cidadao, depois em Servidor
         try:
             user = Cidadao.objects.get(email__iexact=email, ativo=True)
@@ -42,23 +64,30 @@ def login_view(request):
                 pass
 
         if user is None:
+            # A conta simplesmente não existe
             messages.error(request, "E-mail ou senha incorretos.")
         elif check_password(senha, user.senha_hash):
+            # Sistema memoriza a ID local e se a conta é Cidadão ou Servidor
             request.session["usuario_id"] = user.pk
             request.session["usuario_tipo"] = tipo
+            # Se o servidor tem senha temporária (primeiro acesso),
+            # força a troca antes de usar o sistema
             if (user.senha_temporaria or "").strip():
                 request.session["forcar_troca_senha"] = True
                 return redirect("portal:troca_senha_obrigatoria")
             messages.success(request, f"Olá, {user.nome_completo}.")
             return redirect("portal:root")
         else:
+            # A conta existe, mas a senha falhou
             messages.error(request, "E-mail ou senha incorretos.")
 
     return render(request, "portal/auth/login.html")
 
-
+# Logout — /accounts/logout/
+# Apaga toda a sessão do navegador (cookie), deslogando o usuário
 @require_http_methods(["POST"])
 def logout_view(request):
+    #apaga o cookie de sessão e usuario_id e usuario_tipo somem
     request.session.flush()
     messages.info(request, "Sessão encerrada.")
     return redirect("portal:login")
@@ -70,7 +99,6 @@ def cadastro_view(request):
     try:
         bairros = list(Bairro.objects.filter(ativo=True).order_by("nome_bairro"))
     except Exception:
-        # Mock data if DB tables are not ready
         class MockBairro:
             def __init__(self, id, n):
                 self.pk = id
@@ -81,11 +109,13 @@ def cadastro_view(request):
         form = CadastroCidadaoForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
+            # Verifica duplicidade: email ou CPF já existente no banco
             if Cidadao.objects.filter(
                 email__iexact=d["email"].lower()
             ).exists() or Cidadao.objects.filter(cpf=d["cpf"]).exists():
                 messages.error(request, "E-mail ou CPF já cadastrado.")
             else:
+                # insert into cidadao - cira registro com senha hash
                 Cidadao.objects.create(
                     nome_completo=d["nome_completo"],
                     cpf=d["cpf"],
