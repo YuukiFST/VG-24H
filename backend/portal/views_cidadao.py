@@ -1,3 +1,17 @@
+"""
+views_cidadao.py — Views do Cidadão (Portal VG 24H)
+
+Este módulo contém todas as views acessíveis apenas por cidadãos.
+O decorador @perfis("CID") garante que APENAS usuários com perfil 'CID'
+podem acessar estas rotas. Gestores e colaboradores são bloqueados.
+
+Operações CRUD realizadas:
+  - READ:   Listar chamados do cidadão (SELECT com filtros)
+  - CREATE: Abrir novo chamado (INSERT em chamado + historico + foto)
+  - READ:   Ver detalhes de um chamado (SELECT com JOINs)
+  - UPDATE: Cancelar chamado, avaliar, adicionar observação
+"""
+
 from django.contrib import messages
 from django.db import transaction
 from django.http import Http404
@@ -25,16 +39,34 @@ from portal.models import (
 from portal.utils import proximo_protocolo, salvar_foto_upload, sigla_status
 
 
+# FUNÇÃO AUXILIAR DE SEGURANÇA:
+# Verifica se o chamado pertence ao cidadão logado.
+# Impede que um cidadão acesse chamados de outros cidadãos pela URL.
+# Ex: cidadão A não pode acessar /cidadao/chamados/5/ se o chamado 5 é do cidadão B.
 def _chamado_do_cidadao(request, pk):
+    # SQL: SELECT * FROM chamado WHERE id_chamado = pk
     ch = get_object_or_404(Chamado, pk=pk)
+    # Compara o id_cidadao do chamado com o usuário logado
     if ch.id_cidadao_id != request.portal_user.pk:
-        raise Http404()
+        raise Http404()  # Retorna 404 (não revela que o chamado existe)
     return ch
 
 
+# LISTAR CHAMADOS DO CIDADÃO — Rota: /cidadao/chamados/
+# @perfis("CID") = SÓ cidadãos podem acessar (ver decorators.py)
+# Se um gestor tentar acessar, recebe "Sem permissão para acessar esta área."
 @autenticado
 @perfis("CID")
 def cidadao_chamados_lista(request):
+    # SELECT chamado.*, servico.nome, bairro.nome_bairro
+    # FROM chamado
+    # JOIN servico ON chamado.id_servico = servico.id_servico
+    # JOIN bairro ON chamado.id_bairro = bairro.id_bairro
+    # WHERE chamado.id_cidadao = <usuario_logado>
+    # ORDER BY dt_abertura DESC
+    #
+    # select_related() = faz JOINs no SQL (evita consultas extras)
+    # prefetch_related() = busca históricos em consulta separada (otimização)
     qs = (
         Chamado.objects.filter(id_cidadao=request.portal_user)
         .select_related("id_servico", "id_bairro")
