@@ -1,3 +1,16 @@
+"""
+views_equipe.py — Views da Equipe (Gestores e Colaboradores)
+
+Este módulo contém as views acessíveis apenas por servidores.
+O decorador @perfis("COL", "GES") garante que APENAS usuários com perfil
+'COL' (Colaborador) ou 'GES' (Gestor) podem acessar estas rotas.
+Cidadãos são automaticamente bloqueados.
+
+Diferença chave em relação ao views_cidadao.py:
+  - Cidadão vê apenas SEUS próprios chamados (filter id_cidadao=request.portal_user)
+  - Equipe vê TODOS os chamados do sistema (sem filtro de cidadão)
+"""
+
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -24,8 +37,19 @@ def _int_none(v):
         return None
 
 
+# LISTAR TODOS OS CHAMADOS — Rota: /equipe/chamados/
+# @perfis("COL", "GES") = SÓ colaboradores e gestores podem acessar
+# Diferença do cidadão: aqui NÃO filtra por id_cidadao (vê TODOS os chamados)
 @perfis("COL", "GES")
 def equipe_chamados_lista(request):
+    # SELECT chamado.*, servico.*, bairro.*, cidadao.*
+    # FROM chamado
+    # JOIN servico ON chamado.id_servico = servico.id_servico
+    # JOIN bairro ON chamado.id_bairro = bairro.id_bairro
+    # JOIN cidadao ON chamado.id_cidadao = cidadao.id_cidadao
+    # ORDER BY dt_abertura DESC
+    #
+    # Nota: não tem WHERE id_cidadao = X (mostra TODOS)
     qs = Chamado.objects.select_related(
         "id_servico", "id_bairro", "id_cidadao"
     ).prefetch_related("historicos__id_status").order_by("-dt_abertura")

@@ -51,25 +51,45 @@ def login_view(request):
         user = None
         tipo = None
 
-        # Verificação de login se existe no BD
-        # Buscar primeiro em Cidadao, depois em Servidor
+        # Verificação de login: busca o e-mail no banco de dados
+        # O ORM (Object-Relational Mapping) do Django traduz o código Python
+        # em consultas SQL automaticamente.
+        #
+        # Primeiro busca na tabela 'cidadao', depois na tabela 'servidor'.
+        # Isso define se o usuário é cidadão ou colaborador.
         try:
+            # SQL equivalente: SELECT * FROM cidadao
+            #                  WHERE LOWER(email) = 'email_digitado' AND ativo = true
+            #                  LIMIT 1
             user = Cidadao.objects.get(email__iexact=email, ativo=True)
             tipo = "cidadao"
         except Cidadao.DoesNotExist:
+            # Não encontrou na tabela cidadao, tenta na tabela servidor
             try:
+                # SQL equivalente: SELECT * FROM servidor
+                #                  WHERE LOWER(email) = 'email_digitado' AND ativo = true
+                #                  LIMIT 1
                 user = Servidor.objects.get(email__iexact=email, ativo=True)
                 tipo = "servidor"
             except Servidor.DoesNotExist:
+                # E-mail não existe em nenhuma das duas tabelas
                 pass
 
         if user is None:
             # A conta simplesmente não existe
             messages.error(request, "E-mail ou senha incorretos.")
         elif check_password(senha, user.senha_hash):
-            # Sistema memoriza a ID local e se a conta é Cidadão ou Servidor
-            request.session["usuario_id"] = user.pk
-            request.session["usuario_tipo"] = tipo
+            # SEGURANÇA: check_password() compara a senha digitada com o hash
+            # armazenado no campo 'senha_hash' do banco. A senha NUNCA é salva
+            # em texto puro — apenas o hash bcrypt é armazenado.
+            # Exemplo de hash no banco: 'pbkdf2_sha256$720000$...'
+            #
+            # SESSÃO: Salvamos o ID e o tipo do usuário no cookie de sessão.
+            # O Django armazena a sessão de forma segura no servidor.
+            # Na próxima requisição, o middleware (middleware.py) lê esses
+            # dados e carrega o usuário em request.portal_user.
+            request.session["usuario_id"] = user.pk     # ex: 5
+            request.session["usuario_tipo"] = tipo       # 'cidadao' ou 'servidor'
             # Se o servidor tem senha temporária (primeiro acesso),
             # força a troca antes de usar o sistema
             if (user.senha_temporaria or "").strip():
@@ -93,9 +113,14 @@ def logout_view(request):
     return redirect("portal:login")
 
 
+# CADASTRO — Rota: /accounts/cadastro/
+# Apenas cidadãos se cadastram pelo site. Servidores são criados por gestores.
+# @anonimo = decorador que impede acesso de quem já está logado (ver decorators.py)
 @anonimo
 @require_http_methods(["GET", "POST"])
 def cadastro_view(request):
+    # SELECT * FROM bairro WHERE ativo = true ORDER BY nome_bairro
+    # Carrega os bairros para o formulário de endereço
     try:
         bairros = list(Bairro.objects.filter(ativo=True).order_by("nome_bairro"))
     except Exception:
@@ -109,13 +134,24 @@ def cadastro_view(request):
         form = CadastroCidadaoForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-            # Verifica duplicidade: email ou CPF já existente no banco
+            # VALIDAÇÃO DE DUPLICIDADE no banco antes de inserir:
+            # SQL: SELECT 1 FROM cidadao WHERE LOWER(email) = '...' LIMIT 1
+            # SQL: SELECT 1 FROM cidadao WHERE cpf = '...' LIMIT 1
+            # .exists() retorna True/False SEM carregar o registro inteiro (mais eficiente)
             if Cidadao.objects.filter(
                 email__iexact=d["email"].lower()
             ).exists() or Cidadao.objects.filter(cpf=d["cpf"]).exists():
                 messages.error(request, "E-mail ou CPF já cadastrado.")
             else:
-                # insert into cidadao - cira registro com senha hash
+                # INSERÇÃO DO NOVO CIDADÃO NO BANCO DE DADOS
+                # SQL equivalente:
+                # INSERT INTO cidadao (nome_completo, cpf, dt_nascimento, telefone,
+                #   email, senha_hash, rua, perfil, ativo, dt_cadastro)
+                # VALUES ('João Silva', '12345678901', '1990-01-15', '65999990000',
+                #   'joao@email.com', 'pbkdf2_sha256$720000$...', 'Rua A', 'CID', true, NOW())
+                #
+                # make_password(senha) transforma 'minhasenha123' em hash bcrypt
+                # para nunca armazenar a senha real no banco (segurança)
                 Cidadao.objects.create(
                     nome_completo=d["nome_completo"],
                     cpf=d["cpf"],
@@ -143,6 +179,9 @@ def cadastro_view(request):
     )
 
 
+# RECUPERAÇÃO DE SENHA — Rota: /accounts/recuperar-senha/
+# Gera um token criptografado com o ID do usuário e envia por email.
+# O token expira em 3 dias (86400 * 3 segundos).
 @anonimo
 @require_http_methods(["GET", "POST"])
 def recuperar_senha_view(request):
@@ -151,6 +190,7 @@ def recuperar_senha_view(request):
         if form.is_valid():
             email = form.cleaned_data["email"].lower()
             try:
+                # SELECT * FROM cidadao WHERE LOWER(email) = '...' AND ativo = true
                 u = Cidadao.objects.get(email__iexact=email, ativo=True)
             except Cidadao.DoesNotExist:
                 messages.info(
@@ -158,6 +198,7 @@ def recuperar_senha_view(request):
                     "Se o e-mail existir, você receberá instruções em instantes.",
                 )
                 return redirect("portal:login")
+            # signing.dumps() gera um token criptografado com o ID do cidadão
             token = signing.dumps({"id": u.pk}, salt="vg.pwreset")
             link = request.build_absolute_uri(
                 reverse("portal:redefinir_senha", args=[token])
@@ -180,21 +221,26 @@ def recuperar_senha_view(request):
     return render(request, "portal/auth/recuperar_senha.html", {"form": form})
 
 
+# REDEFINIÇÃO DE SENHA — Rota: /accounts/redefinir-senha/<token>/
+# Valida o token e permite definir nova senha.
 @anonimo
 @require_http_methods(["GET", "POST"])
 def redefinir_senha_view(request, token):
     try:
+        # signing.loads() descriptografa o token e verifica se não expirou
         data = signing.loads(token, salt="vg.pwreset", max_age=86400 * 3)
     except signing.BadSignature:
         messages.error(request, "Link inválido ou expirado.")
         return redirect("portal:login")
     try:
+        # SELECT * FROM cidadao WHERE id_cidadao = X AND ativo = true
         u = Cidadao.objects.get(pk=data["id"], ativo=True)
     except Cidadao.DoesNotExist:
         return redirect("portal:login")
     if request.method == "POST":
         form = RedefinirSenhaForm(request.POST)
         if form.is_valid():
+            # UPDATE cidadao SET senha_hash = 'novo_hash' WHERE id_cidadao = X
             u.senha_hash = make_password(form.cleaned_data["senha"])
             u.save(update_fields=["senha_hash"])
             messages.success(request, "Senha atualizada. Entre com a nova senha.")
@@ -204,6 +250,9 @@ def redefinir_senha_view(request, token):
     return render(request, "portal/auth/redefinir_senha.html", {"form": form})
 
 
+# TROCA DE SENHA OBRIGATÓRIA — Rota: /accounts/trocar-senha/
+# Usado quando um servidor recebe senha temporária no primeiro acesso.
+# O sistema obriga a trocar antes de usar qualquer funcionalidade.
 @autenticado
 @require_http_methods(["GET", "POST"])
 def troca_senha_obrigatoria_view(request):
@@ -213,6 +262,8 @@ def troca_senha_obrigatoria_view(request):
         form = TrocaSenhaObrigatoriaForm(request.POST)
         if form.is_valid():
             u = request.portal_user
+            # UPDATE servidor SET senha_hash = 'novo_hash', senha_temporaria = NULL
+            # WHERE id_servidor = X
             u.senha_hash = make_password(form.cleaned_data["senha"])
             u.senha_temporaria = None
             u.save(update_fields=["senha_hash", "senha_temporaria"])
