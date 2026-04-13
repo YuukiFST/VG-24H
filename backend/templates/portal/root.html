@@ -108,6 +108,8 @@
     .banner-wrapper { padding: 16px; }
   }
 </style>
+<link rel="stylesheet" href="{% static 'portal/css/govbr-carousel-custom.css' %}">
+<link rel="stylesheet" href="{% static 'portal/css/govbr-category-cards.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -137,10 +139,46 @@
           {% endif %}
         </div>
         {% else %}
-        <div class="banner-carousel" style="display:flex;align-items:center;justify-content:center;height:240px;background:var(--blue-warm-vivid-90,#071D41);">
-          <div style="text-align:center;color:#fff;">
-            <h2 style="margin:0 0 8px;font-size:1.25rem;">Portal VG 24H</h2>
-            <p style="opacity:.8;margin:0;font-size:.875rem;">Serviços Públicos da Prefeitura de Várzea Grande</p>
+        <div class="row">
+          <div class="col-sm-12 col-md-12">
+            <div class="br-carousel" aria-label="Carrossel de Exemplo" aria-roledescription="carousel">
+              <div class="carousel-button">
+                <button class="br-button carousel-btn-prev terciary circle" type="button" aria-label="Anterior">
+                  <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="carousel-stage">
+                <div class="carousel-page" active="active" role="group" aria-roledescription="slide" aria-live="polite">
+                  <div class="carousel-content">
+                    <img src="https://placehold.co/1120x240/071D41/FFF?text=Banner+01" alt="Página 1" style="width: 100%; height: 240px; object-fit: cover;" />
+                  </div>
+                </div>
+                <div class="carousel-page" role="group" aria-roledescription="slide" aria-live="polite">
+                  <div class="carousel-content">
+                    <img src="https://placehold.co/1120x240/0C326F/FFF?text=Banner+02" alt="Página 2" style="width: 100%; height: 240px; object-fit: cover;" />
+                  </div>
+                </div>
+                <div class="carousel-page" role="group" aria-roledescription="slide" aria-live="polite">
+                  <div class="carousel-content">
+                    <img src="https://placehold.co/1120x240/1351b4/FFF?text=Banner+03" alt="Página 3" style="width: 100%; height: 240px; object-fit: cover;" />
+                  </div>
+                </div>
+              </div>
+              <div class="carousel-button">
+                <button class="br-button carousel-btn-next terciary circle" type="button" aria-label="Próximo">
+                  <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="carousel-step">
+                <nav class="br-step" data-initial="1" data-type="simple" role="none">
+                  <div class="step-progress" role="listbox" aria-orientation="horizontal" aria-label="Lista de Opções">
+                    <button class="step-progress-btn" role="option" aria-posinset="1" aria-setsize="3" type="button"><span class="step-info">Página 1</span></button>
+                    <button class="step-progress-btn" role="option" aria-posinset="2" aria-setsize="3" type="button"><span class="step-info">Página 2</span></button>
+                    <button class="step-progress-btn" role="option" aria-posinset="3" aria-setsize="3" type="button"><span class="step-info">Página 3</span></button>
+                  </div>
+                </nav>
+              </div>
+            </div>
           </div>
         </div>
         {% endif %}
@@ -210,41 +248,27 @@
           <p class="section-subtitle text-center" style="color: var(--gray-60, #636363); margin-bottom: 32px; font-size: var(--font-size-scale-up-01, 16.8px);">
             Encontre o serviço ou a informação desejada pelas opções abaixo:
           </p>
-          <div class="row">
+          <div class="grid-cards">
             {% for bloco in categorias %}
               {% with cat=bloco.categoria svcs=bloco.servicos %}
-              <div class="col-6 col-sm-6 col-md-4 col-lg-3 mb-3">
-                <div class="cat-card-wrapper" id="card-cat-{{ cat.pk }}">
-                  <div class="br-card">
-                    <div class="card-content">
-                      <div style="margin-bottom: 8px; color: var(--interactive, #1351b4); font-size: 24px;">
-                        <i class="fas {% if 'Infraestrutura' in cat.nome or 'Pavimenta' in cat.nome %}fa-road{% elif 'Saúde' in cat.nome or 'Saude' in cat.nome %}fa-heartbeat{% elif 'Segurança' in cat.nome %}fa-shield-alt{% elif 'Educação' in cat.nome %}fa-graduation-cap{% elif 'Meio Ambiente' in cat.nome %}fa-leaf{% elif 'Assistência Social' in cat.nome %}fa-hands-helping{% elif 'Agricultura' in cat.nome %}fa-tractor{% elif 'Ciência' in cat.nome %}fa-microscope{% elif 'Comunicações' in cat.nome %}fa-broadcast-tower{% elif 'Cultura' in cat.nome %}fa-theater-masks{% elif 'Defesa' in cat.nome %}fa-hands{% elif 'Empresa' in cat.nome %}fa-store{% elif 'Mobilidade' in cat.nome %}fa-bus{% elif 'Energia' in cat.nome %}fa-bolt{% elif 'Justiça' in cat.nome %}fa-balance-scale{% else %}fa-city{% endif %}" aria-hidden="true"></i>
-                      </div>
-                      <div class="text-weight-semi-bold text-uppercase" style="font-size: var(--font-size-scale-down-01, 11.66px); letter-spacing: 0.5px;">
-                        {{ cat.nome }}
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Overlay no hover: descrição dos serviços -->
-                  <div class="card-hover-overlay">
-                    {% if cat.descricao %}
-                      {{ cat.descricao }}
-                    {% elif svcs %}
-                      Serviços relacionados a {{ svcs|join:", " | truncatewords:20 }}.
-                    {% else %}
-                      Serviços relacionados a {{ cat.nome|lower }}.
-                    {% endif %}
-                  </div>
+              <a href="{% url 'portal:catalogo_servicos' %}?cat={{ cat.pk }}" class="card list-item" aria-label="{{ cat.nome }} Serviços relacionados">
+                <span class="fas {% if 'Infraestrutura' in cat.nome or 'Pavimenta' in cat.nome %}fa-road{% elif 'Mobilidade' in cat.nome %}fa-bus{% else %}fa-city{% endif %}"></span>
+                <span class="titulo">{{ cat.nome|upper }}</span>
+                <div class="card-overlay">
+                  {% if cat.descricao %}
+                    {{ cat.descricao }}
+                  {% elif svcs %}
+                    Serviços relacionados a {{ svcs|join:", " | truncatewords:20 }}.
+                  {% else %}
+                    Serviços relacionados a {{ cat.nome|lower }}.
+                  {% endif %}
                 </div>
-              </div>
+              </a>
               {% endwith %}
             {% empty %}
-              <div class="col-12">
-                <div class="br-card">
-                  <div class="card-content text-center">
-                    <p><i class="fas fa-info-circle"></i> Os serviços estarão disponíveis em breve.</p>
-                  </div>
-                </div>
+              <div class="card">
+                <i class="fas fa-info-circle"></i>
+                <h3>OS SERVIÇOS ESTARÃO DISPONÍVEIS EM BREVE</h3>
               </div>
             {% endfor %}
           </div>
@@ -280,18 +304,20 @@
 
       <!-- ====== STATS ====== -->
       <section class="stats-section" aria-label="Estatísticas do portal">
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-value" data-counter="{{ stats.total_resolvidos|default:0 }}">0</div>
-            <div class="stat-label">Chamados resolvidos</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" data-counter="{{ stats.total_bairros|default:0 }}">0</div>
-            <div class="stat-label">Bairros atendidos</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" data-counter="{{ stats.total_servicos|default:0 }}">0</div>
-            <div class="stat-label">Serviços disponíveis</div>
+        <div class="container-custom">
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value" data-counter="{{ stats.total_resolvidos|default:0 }}">0</div>
+              <div class="stat-label">Chamados resolvidos</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" data-counter="{{ stats.total_bairros|default:0 }}">0</div>
+              <div class="stat-label">Bairros atendidos</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" data-counter="{{ stats.total_servicos|default:0 }}">0</div>
+              <div class="stat-label">Serviços disponíveis</div>
+            </div>
           </div>
         </div>
       </section>

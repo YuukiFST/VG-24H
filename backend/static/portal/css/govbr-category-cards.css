@@ -1,0 +1,91 @@
+/* GRID */
+.grid-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* CARD */
+.grid-cards a.card.list-item {
+    background-color: #FFFFFF;
+    padding: 30px 20px;
+    margin: 22px;
+    width: 240px;
+    height: 240px;
+    border-radius: 8px;
+    
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    
+    /* Centralização extra para garantir alinhamento perfeito do conteúdo */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    
+    /* Configurações para comportar o overlay de hover */
+    position: relative;
+    overflow: hidden;
+}
+
+/* OVERLAY DE HOVER (DESCRIÇÃO) */
+.grid-cards a.card.list-item .card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #555555; /* Fundo cinza escuro conforme modelo gov.br */
+    color: #FFFFFF;
+    padding: 30px 20px;
+    font-family: rawline, helvetica, arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400; 
+    text-align: left; /* Alinhado à esquerda conforme imagem */
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 10;
+}
+
+.grid-cards a.card.list-item:hover .card-overlay {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* HOVER DO CARTÃO (MANTÉM APENAS OVERLAY, REMOVE O PULO FÍSICO) */
+.grid-cards a.card.list-item:hover {
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* ÍCONE */
+.grid-cards a.card.list-item span.fas {
+    font-size: 50px;
+    color: #2d6cdf;
+    margin: 0 0 20px 0; /* Zera margens laterais que podem ter vazado do CSS global */
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+/* TEXTO */
+.grid-cards a.card.list-item span.titulo {
+    font-family: rawline, helvetica, arial, sans-serif;
+    font-size: 20px;
+    color: #0C326F;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.4;
+    text-transform: uppercase;
+}
