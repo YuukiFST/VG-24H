@@ -283,13 +283,52 @@
         {% if messages %}
           <div class="container-lg mt-3">
             {% for message in messages %}
-              <div class="br-message {{ message.tags }}" role="alert">
-                <div class="icon"><i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-times-circle{% else %}fa-info-circle{% endif %}" aria-hidden="true"></i></div>
-                <div class="content">{{ message }}</div>
+              {# Django envia 'error' mas GOV.br espera 'danger' #}
+              {% if message.tags == 'error' %}
+              <div class="br-message danger" role="alert">
+                <div class="icon"><i class="fas fa-times-circle fa-lg" aria-hidden="true"></i></div>
+                <div class="content" aria-label="{{ message }}">
+                  <span class="message-title">Erro.</span>
+                  <span class="message-body"> {{ message }}</span>
+                </div>
                 <div class="close">
-                  <button class="br-button circle small" type="button" aria-label="Fechar"><i class="fas fa-times" aria-hidden="true"></i></button>
+                  <button class="br-button circle small" type="button" aria-label="Fechar a mensagem alerta"><i class="fas fa-times" aria-hidden="true"></i></button>
                 </div>
               </div>
+              {% elif message.tags == 'success' %}
+              <div class="br-message success" role="alert">
+                <div class="icon"><i class="fas fa-check-circle fa-lg" aria-hidden="true"></i></div>
+                <div class="content" aria-label="{{ message }}">
+                  <span class="message-title">Sucesso.</span>
+                  <span class="message-body"> {{ message }}</span>
+                </div>
+                <div class="close">
+                  <button class="br-button circle small" type="button" aria-label="Fechar a mensagem alerta"><i class="fas fa-times" aria-hidden="true"></i></button>
+                </div>
+              </div>
+              {% elif message.tags == 'warning' %}
+              <div class="br-message warning" role="alert">
+                <div class="icon"><i class="fas fa-exclamation-triangle fa-lg" aria-hidden="true"></i></div>
+                <div class="content" aria-label="{{ message }}">
+                  <span class="message-title">Atenção.</span>
+                  <span class="message-body"> {{ message }}</span>
+                </div>
+                <div class="close">
+                  <button class="br-button circle small" type="button" aria-label="Fechar a mensagem alerta"><i class="fas fa-times" aria-hidden="true"></i></button>
+                </div>
+              </div>
+              {% else %}
+              <div class="br-message info" role="alert">
+                <div class="icon"><i class="fas fa-info-circle fa-lg" aria-hidden="true"></i></div>
+                <div class="content" aria-label="{{ message }}">
+                  <span class="message-title">Informação.</span>
+                  <span class="message-body"> {{ message }}</span>
+                </div>
+                <div class="close">
+                  <button class="br-button circle small" type="button" aria-label="Fechar a mensagem alerta"><i class="fas fa-times" aria-hidden="true"></i></button>
+                </div>
+              </div>
+              {% endif %}
             {% endfor %}
           </div>
         {% endif %}
@@ -297,69 +336,85 @@
         {% block content %}{% endblock %}
       </main>
 
-      <!-- ====== FOOTER ====== -->
-      <footer class="br-footer inverted pt-3" id="footer">
+      <!-- ====== FOOTER (Padrão oficial GOV.br — Tema 1: fundo escuro) ====== -->
+      <footer class="br-footer" id="footer">
         <div class="container-lg">
-          <div class="logo">
-            <img
-              src="{% static 'img/logo.png' %}"
-              alt="Prefeitura de Várzea Grande"
-              style="max-height:48px;"
-            />
-          </div>
+          <div class="logo"><img src="{% static 'img/logo.png' %}" alt="Prefeitura de Várzea Grande" /></div>
           <div class="br-list horizontal" data-toggle="data-toggle" data-sub="data-sub">
-            <div class="col-2">
-              <a class="br-item header" href="javascript:void(0)">
-                <div class="content text-down-01 text-bold text-uppercase">Serviços</div>
-                <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div>
-              </a>
-              <div class="br-list">
+            <div class="col-2"><a class="br-item header" href="javascript:void(0)">
+                <div class="content text-down-01 text-bold text-uppercase">Categorias</div>
+                <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div></a>
+              <div class="br-list"><span class="br-divider d-md-none"></span>
+                <a class="br-item" href="{% url 'portal:catalogo_servicos' %}"><div class="content">Catálogo de Serviços</div></a>
                 <span class="br-divider d-md-none"></span>
-                <a class="br-item" href="javascript:void(0)"><div class="content">Iluminação Pública</div></a>
-                <a class="br-item" href="javascript:void(0)"><div class="content">Pavimentação e Vias</div></a>
-                <a class="br-item" href="javascript:void(0)"><div class="content">Saneamento e Drenagem</div></a>
               </div>
             </div>
-            <div class="col-2">
-              <a class="br-item header" href="javascript:void(0)">
-                <div class="content text-down-01 text-bold text-uppercase">Sobre</div>
-                <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div>
-              </a>
-              <div class="br-list">
-                <span class="br-divider d-md-none"></span>
+            <div class="col-2"><a class="br-item header" href="javascript:void(0)">
+                <div class="content text-down-01 text-bold text-uppercase">Institucional</div>
+                <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div></a>
+              <div class="br-list"><span class="br-divider d-md-none"></span>
                 <a class="br-item" href="javascript:void(0)"><div class="content">Sobre o VG 24H</div></a>
                 <a class="br-item" href="javascript:void(0)"><div class="content">Política de Privacidade</div></a>
+                <a class="br-item" href="javascript:void(0)"><div class="content">Termos de Uso</div></a>
+                <span class="br-divider d-md-none"></span>
+              </div>
+            </div>
+            <div class="col-2"><a class="br-item header" href="javascript:void(0)">
+                <div class="content text-down-01 text-bold text-uppercase">Navegação</div>
+                <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div></a>
+              <div class="br-list"><span class="br-divider d-md-none"></span>
+                <a class="br-item" href="{% url 'portal:root' %}"><div class="content">Página Inicial</div></a>
+                <a class="br-item" href="{% url 'portal:login' %}"><div class="content">Entrar</div></a>
+                <a class="br-item" href="{% url 'portal:cadastro' %}"><div class="content">Criar Conta</div></a>
+                <span class="br-divider d-md-none"></span>
               </div>
             </div>
           </div>
-
-
+          <div class="d-none d-sm-block">
+            <div class="row align-items-end justify-content-between py-5">
+              <div class="col">
+                <div class="social-network">
+                  <div class="social-network-title">Redes Sociais</div>
+                  <div class="d-flex">
+                    <a class="br-button circle" href="https://facebook.com" target="_blank" rel="noopener" aria-label="Compartilhar por Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
+                    <a class="br-button circle" href="https://twitter.com" target="_blank" rel="noopener" aria-label="Compartilhar por Twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+                    <a class="br-button circle" href="https://instagram.com" target="_blank" rel="noopener" aria-label="Compartilhar por Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+                    <a class="br-button circle" href="https://wa.me/" target="_blank" rel="noopener" aria-label="Compartilhar por Whatsapp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+                  </div>
+                </div>
+              </div>
+              <div class="col assigns text-right">
+                <img class="ml-4" src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-assign-negative.png" alt="Acesso à Informação" />
+              </div>
+            </div>
+          </div>
         </div>
         <span class="br-divider my-3"></span>
         <div class="container-lg">
-          <!-- Assign / Acesso à Informação -->
-          <div class="assign text-center py-2">
-            <img
-              src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-assign-negative.png"
-              alt="Acesso à Informação"
-              style="max-height: 48px;"
-            />
-          </div>
-          <div class="info text-center pb-3">
-            <div class="text-down-01 text-medium">
+          <div class="info">
+            <div class="text-down-01 text-medium pb-3">
               Todo o conteúdo deste site está publicado sob a licença
-              <strong>Creative Commons Atribuição-SemDerivações 3.0</strong>.
+              <strong>Creative Commons Atribuição-SemDerivações 3.0.</strong>
             </div>
           </div>
         </div>
       </footer>
 
+      {% block extra_js %}{% endblock %}
 
     </div>
 
     <!-- JS do Design System -->
     <script src="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core-init.min.js"></script>
     <script src="{% static 'portal/js/vg24h.js' %}"></script>
-    {% block extra_js %}{% endblock %}
+
+    <!-- Instanciação do br-footer (accordion dos links no mobile) -->
+    <script>
+      if (typeof core !== 'undefined' && core.BRFooter) {
+        document.querySelectorAll('.br-footer').forEach(function(el) {
+          new core.BRFooter('br-footer', el);
+        });
+      }
+    </script>
   </body>
 </html>

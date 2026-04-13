@@ -228,3 +228,52 @@ def equipe_chamado_detalhe(request, pk):
             "prioridades": PRIORIDADES,
         },
     )
+
+
+# ═══════════════════════════════════════════════════════════════
+# EXCLUSÃO DE CHAMADO (somente GES — Gestor/Administrador)
+# ═══════════════════════════════════════════════════════════════
+# O gestor pode excluir um chamado, mas DEVE informar uma
+# justificativa. Antes de apagar, o sistema grava um registro
+# no historico_chamado como LOG de auditoria.
+# ═══════════════════════════════════════════════════════════════
+@perfis("GES")
+@require_http_methods(["POST"])
+def gestao_chamado_excluir(request, pk):
+    from django.db import connection
+
+    ch = get_object_or_404(Chamado, pk=pk)
+    justificativa = (request.POST.get("justificativa") or "").strip()
+
+    if not justificativa:
+        messages.error(request, "É obrigatório informar uma justificativa para excluir o chamado.")
+        return redirect("portal:equipe_chamado", pk=pk)
+
+    # ┌─────────────────────────────────────────────────────────┐
+    # │  LOG DE AUDITORIA — Registra no histórico ANTES de     │
+    # │  apagar, para que fique documentado quem excluiu,      │
+    # │  quando e por quê.                                     │
+    # └─────────────────────────────────────────────────────────┘
+    HistoricoChamado.objects.create(
+        id_chamado=ch,
+        id_servidor=request.portal_user,
+        id_status=ch.status_atual,
+        observacao=f"[EXCLUSÃO] Chamado excluído. Justificativa: {justificativa}",
+        dt_alteracao=timezone.now(),
+    )
+
+    # ┌─────────────────────────────────────────────────────────┐
+    # │  DELETE via SQL direto — a Rule rx_chamado_sem_delete   │
+    # │  será removida do banco para permitir esta operação.    │
+    # │  Apaga primeiro os registros filhos (fotos, histórico,  │
+    # │  notificações), depois o chamado em si.                 │
+    # └─────────────────────────────────────────────────────────┘
+    protocolo = ch.num_protocolo
+    with connection.cursor() as cursor:
+        cursor.execute("DELETE FROM foto_chamado WHERE id_chamado = %s", [pk])
+        cursor.execute("DELETE FROM historico_chamado WHERE id_chamado = %s", [pk])
+        cursor.execute("DELETE FROM notificacao WHERE id_chamado = %s", [pk])
+        cursor.execute("DELETE FROM chamado WHERE id_chamado = %s", [pk])
+
+    messages.success(request, f"Chamado {protocolo} excluído com sucesso.")
+    return redirect("portal:equipe_chamados")

@@ -10,7 +10,7 @@ from portal.models import (
 
 class CadastroCidadaoForm(forms.Form):
     nome_completo = forms.CharField(max_length=200, label="Nome completo")
-    cpf = forms.CharField(max_length=11, label="CPF")
+    cpf = forms.CharField(max_length=14, label="CPF")
     dt_nascimento = forms.DateField(label="Data de nascimento")
     telefone = forms.CharField(max_length=20, label="Telefone")
     email = forms.EmailField(max_length=255, label="E-mail")
@@ -22,11 +22,16 @@ class CadastroCidadaoForm(forms.Form):
     num_endereco = forms.CharField(max_length=10, required=False)
     complemento_endereco = forms.CharField(max_length=200, required=False)
     bairro_endereco = forms.CharField(max_length=200, required=False)
-    cep_endereco = forms.CharField(max_length=8, required=False)
+    cep_endereco = forms.CharField(max_length=10, required=False)
+
+    def clean_cpf(self):
+        # Allow frontend to send masked CPF, keep only digits for the backend log/DB
+        cpf = self.cleaned_data.get("cpf", "")
+        return "".join(filter(str.isdigit, cpf))
 
     def clean(self):
         d = super().clean()
-        if d.get("senha") != d.get("senha2"):
+        if d.get("senha") and d.get("senha2") and d.get("senha") != d.get("senha2"):
             raise forms.ValidationError("As senhas não coincidem.")
         return d
 

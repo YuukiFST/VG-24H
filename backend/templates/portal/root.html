@@ -158,27 +158,93 @@
         </div>
       </section>
 
-      <!-- ====== SERVICE CARDS ====== -->
-      <section class="services-section" id="servicos" aria-labelledby="servicos-titulo">
-        <div class="container-custom">
-          <h2 class="section-title" id="servicos-titulo">Serviços disponíveis</h2>
-          <p class="section-subtitle">
-            Selecione a categoria do problema que deseja reportar à prefeitura.
+      <!-- ====== CATEGORY CARDS (GOV.br br-card oficial com hover overlay) ====== -->
+      <style>
+        /* Wrapper para posicionar o overlay sobre o br-card */
+        .cat-card-wrapper {
+          position: relative;
+          cursor: pointer;
+        }
+        .cat-card-wrapper .br-card {
+          text-align: center;
+          margin-bottom: 0; /* O gap do row já controla espaçamento */
+        }
+        .cat-card-wrapper .br-card .card-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 100px;
+        }
+        /* Overlay no hover */
+        .cat-card-wrapper .card-hover-overlay {
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: var(--gray-70, #555);
+          color: var(--pure-0, #fff);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: var(--spacing-scale-2x, 16px);
+          opacity: 0;
+          transition: opacity 0.3s ease;
+          font-size: var(--font-size-scale-base, 14px);
+          line-height: var(--font-line-height-medium, 1.45);
+          text-align: center;
+          z-index: 2;
+          border-radius: 0;
+        }
+        .cat-card-wrapper:hover .card-hover-overlay {
+          opacity: 1;
+        }
+        .cat-card-wrapper:hover .br-card {
+          box-shadow: var(--surface-shadow-md, 0 3px 6px rgba(0,0,0,0.16));
+        }
+      </style>
+
+      <section class="services-section" id="servicos" aria-labelledby="servicos-titulo" style="background: var(--gray-2, #f8f8f8); padding: 40px 0;">
+        <div class="container-lg">
+          <h2 class="section-title text-center text-up-03" id="servicos-titulo" style="color: var(--blue-warm-vivid-90, #071D41); font-weight: 600; margin-bottom: 8px;">
+            Navegue por categoria
+          </h2>
+          <p class="section-subtitle text-center" style="color: var(--gray-60, #636363); margin-bottom: 32px; font-size: var(--font-size-scale-up-01, 16.8px);">
+            Encontre o serviço ou a informação desejada pelas opções abaixo:
           </p>
-          <div class="services-grid">
-            {% for servico in servicos %}
-              <div class="service-card" id="card-{{ servico.id_servico }}">
-                <div class="service-card-icon">
-                  <i class="fas {% if 'Iluminação' in servico.nome %}fa-lightbulb{% elif 'Pavimentação' in servico.nome %}fa-road{% elif 'Saneamento' in servico.nome %}fa-water{% elif 'Trânsito' in servico.nome %}fa-traffic-light{% else %}fa-heartbeat{% endif %}" aria-hidden="true"></i>
+          <div class="row">
+            {% for bloco in categorias %}
+              {% with cat=bloco.categoria svcs=bloco.servicos %}
+              <div class="col-6 col-sm-6 col-md-4 col-lg-3 mb-3">
+                <div class="cat-card-wrapper" id="card-cat-{{ cat.pk }}">
+                  <div class="br-card">
+                    <div class="card-content">
+                      <div style="margin-bottom: 8px; color: var(--interactive, #1351b4); font-size: 24px;">
+                        <i class="fas {% if 'Infraestrutura' in cat.nome or 'Pavimenta' in cat.nome %}fa-road{% elif 'Saúde' in cat.nome or 'Saude' in cat.nome %}fa-heartbeat{% elif 'Segurança' in cat.nome %}fa-shield-alt{% elif 'Educação' in cat.nome %}fa-graduation-cap{% elif 'Meio Ambiente' in cat.nome %}fa-leaf{% elif 'Assistência Social' in cat.nome %}fa-hands-helping{% elif 'Agricultura' in cat.nome %}fa-tractor{% elif 'Ciência' in cat.nome %}fa-microscope{% elif 'Comunicações' in cat.nome %}fa-broadcast-tower{% elif 'Cultura' in cat.nome %}fa-theater-masks{% elif 'Defesa' in cat.nome %}fa-hands{% elif 'Empresa' in cat.nome %}fa-store{% elif 'Mobilidade' in cat.nome %}fa-bus{% elif 'Energia' in cat.nome %}fa-bolt{% elif 'Justiça' in cat.nome %}fa-balance-scale{% else %}fa-city{% endif %}" aria-hidden="true"></i>
+                      </div>
+                      <div class="text-weight-semi-bold text-uppercase" style="font-size: var(--font-size-scale-down-01, 11.66px); letter-spacing: 0.5px;">
+                        {{ cat.nome }}
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Overlay no hover: descrição dos serviços -->
+                  <div class="card-hover-overlay">
+                    {% if cat.descricao %}
+                      {{ cat.descricao }}
+                    {% elif svcs %}
+                      Serviços relacionados a {{ svcs|join:", " | truncatewords:20 }}.
+                    {% else %}
+                      Serviços relacionados a {{ cat.nome|lower }}.
+                    {% endif %}
+                  </div>
                 </div>
-                <h3>{{ servico.nome }}</h3>
-                <p>{{ servico.descricao }}</p>
               </div>
+              {% endwith %}
             {% empty %}
-              <div class="service-card">
-                <div class="service-card-icon"><i class="fas fa-info-circle"></i></div>
-                <h3>Carregando...</h3>
-                <p>Os serviços estarão disponíveis em breve.</p>
+              <div class="col-12">
+                <div class="br-card">
+                  <div class="card-content text-center">
+                    <p><i class="fas fa-info-circle"></i> Os serviços estarão disponíveis em breve.</p>
+                  </div>
+                </div>
               </div>
             {% endfor %}
           </div>

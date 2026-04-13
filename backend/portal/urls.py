@@ -135,4 +135,10 @@ urlpatterns = [
         views_gestao.gestao_banner_excluir,
         name="gestao_banner_excluir",
     ),
+    # ─── Exclusão de Chamado (GES) ───
+    path(
+        "equipe/chamados/<int:pk>/excluir/",
+        views_equipe.gestao_chamado_excluir,
+        name="gestao_chamado_excluir",
+    ),
 ]
