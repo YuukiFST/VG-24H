@@ -17,7 +17,7 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
       <h1 class="h3 mb-0">Gestão de Chamados</h1>
-      <p class="text-muted mb-0">Bem-vindo(a), <strong>{{ request.portal_user.nome_completo }}</strong>.</p>
+      <p class="text-muted mb-0">Boas-vindas, <strong>{{ request.portal_user.nome_completo }}</strong>.</p>
     </div>
   </div>
 
@@ -123,7 +123,7 @@
               {% endwith %}
             </td>
             <td data-th="Ações">
-              <a href="{% url 'portal:equipe_chamado' linha.ch.pk %}" class="br-button circle small" title="Ver Detalhes">
+              <a href="{% url 'portal:equipe_chamado' linha.ch.pk %}" class="br-button circle small" title="Visualizar Detalhes">
                 <i class="fas fa-eye" aria-hidden="true"></i>
               </a>
             </td>

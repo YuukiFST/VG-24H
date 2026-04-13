@@ -44,7 +44,13 @@ def root_view(request):
     try:
         from portal.models import HistoricoChamado
         from django.db.models import Subquery, OuterRef
-        servicos = Servico.objects.filter(ativo=True).order_by("nome")[:5]
+
+        # Categorias com seus serviços agrupados (para os cards GOV.br)
+        categorias = []
+        for cat in CategoriaServico.objects.filter(ativo=True).order_by("nome"):
+            svcs = list(Servico.objects.filter(id_categoria=cat, ativo=True).order_by("nome"))
+            categorias.append({"categoria": cat, "servicos": svcs})
+
         latest_sigla = HistoricoChamado.objects.filter(
             id_chamado=OuterRef("pk")
         ).order_by("-dt_alteracao").values("id_status__sigla")[:1]
@@ -57,7 +63,7 @@ def root_view(request):
             "total_servicos": Servico.objects.filter(ativo=True).count(),
         }
     except Exception:
-        servicos = []
+        categorias = []
         stats = {
             "total_resolvidos": 0,
             "total_bairros": 0,
@@ -72,5 +78,5 @@ def root_view(request):
     return render(
         request,
         "portal/root.html",
-        {"servicos": servicos, "stats": stats, "banners": banners},
+        {"categorias": categorias, "stats": stats, "banners": banners},
     )

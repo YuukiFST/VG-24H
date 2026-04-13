@@ -192,8 +192,14 @@
           </form>
         {% else %}
           <div class="br-message warning" role="alert">
-            <div class="icon"><i class="fas fa-lock" aria-hidden="true"></i></div>
-            <div class="content">Este chamado está concluído ou cancelado e não permite mais alterações de status.</div>
+            <div class="icon"><i class="fas fa-exclamation-triangle fa-lg" aria-hidden="true"></i></div>
+            <div class="content" aria-label="Chamado finalizado">
+              <span class="message-title">Atenção.</span>
+              <span class="message-body"> Este chamado está concluído ou cancelado e não permite mais alterações de status.</span>
+            </div>
+            <div class="close">
+              <button class="br-button circle small" type="button" aria-label="Fechar a mensagem alerta"><i class="fas fa-times" aria-hidden="true"></i></button>
+            </div>
           </div>
         {% endif %}
       </div>

@@ -83,15 +83,26 @@
 
 {% block extra_js %}
 <script>
+  // ┌─────────────────────────────────────────────────────────┐
+  // │ TOGGLE EXIBIR/ESCONDER SENHA                           │
+  // │ Quando o usuário clica no ícone do olho ao lado da     │
+  // │ senha, alterna entre mostrar e esconder o texto.       │
+  // │ Usa closest() para navegar até o container e achar     │
+  // │ o input correto, independente da estrutura HTML.       │
+  // └─────────────────────────────────────────────────────────┘
   function togglePassword(btn) {
-    const input = btn.parentElement.querySelector('input');
+    const group = btn.closest('.input-group');
+    const input = group.querySelector('input[type="password"], input[type="text"]');
     const icon = btn.querySelector('i');
+    if (!input || !icon) return;
     if (input.type === 'password') {
       input.type = 'text';
       icon.classList.replace('fa-eye', 'fa-eye-slash');
+      btn.setAttribute('aria-label', 'Esconder senha');
     } else {
       input.type = 'password';
       icon.classList.replace('fa-eye-slash', 'fa-eye');
+      btn.setAttribute('aria-label', 'Mostrar senha');
     }
   }
 </script>

@@ -76,7 +76,7 @@
       </div>
       <div class="col-md-4 mb-2 mb-md-0">
         <div class="br-input">
-          <label for="filter-search">Buscar Protocolo</label>
+          <label for="filter-search">Pesquisar Protocolo</label>
           <input id="filter-search" name="q" type="text" placeholder="Ex: 20260001" value="{{ request.GET.q }}" />
         </div>
       </div>
@@ -117,7 +117,7 @@
               {% endwith %}
             </td>
             <td data-th="Ações">
-              <a href="{% url 'portal:cidadao_chamado' ch.pk %}" class="br-button circle small" title="Ver Detalhes">
+              <a href="{% url 'portal:cidadao_chamado' ch.pk %}" class="br-button circle small" title="Visualizar Detalhes">
                 <i class="fas fa-eye" aria-hidden="true"></i>
               </a>
               {% if ch.status_atual.sigla == 'AB' or ch.status_atual.sigla == 'EA' %}

@@ -36,8 +36,17 @@ from portal.forms import (
 from portal.models import Bairro, Cidadao, Servidor
 
 
+# ═══════════════════════════════════════════════════════════════
 # LOGIN — Rota: /accounts/login/
-# Fluxo: Recebe email + senha → busca no BD → compara hash → cria sessão
+# ═══════════════════════════════════════════════════════════════
+# FLUXO COMPLETO:
+#   1. Usuário digita email + senha no formulário e clica "Entrar"
+#   2. O formulário envia um POST para esta view (/accounts/login/)
+#   3. A view faz um SELECT no banco para buscar o usuário pelo email
+#   4. Se encontrou, compara a senha digitada com o hash salvo
+#   5. Se a senha bate, cria a sessão e redireciona para a home
+#   6. Se não bate ou não encontrou, mostra mensagem de erro
+# ═══════════════════════════════════════════════════════════════
 @require_http_methods(["GET", "POST"])
 def login_view(request):
     # Se já está logado (middleware já carregou o user), redireciona para home
@@ -51,54 +60,92 @@ def login_view(request):
         user = None
         tipo = None
 
-        # Verificação de login: busca o e-mail no banco de dados
-        # O ORM (Object-Relational Mapping) do Django traduz o código Python
-        # em consultas SQL automaticamente.
-        #
-        # Primeiro busca na tabela 'cidadao', depois na tabela 'servidor'.
-        # Isso define se o usuário é cidadão ou colaborador.
-        try:
-            # SQL equivalente: SELECT * FROM cidadao
-            #                  WHERE LOWER(email) = 'email_digitado' AND ativo = true
-            #                  LIMIT 1
-            user = Cidadao.objects.get(email__iexact=email, ativo=True)
-            tipo = "cidadao"
-        except Cidadao.DoesNotExist:
-            # Não encontrou na tabela cidadao, tenta na tabela servidor
-            try:
-                # SQL equivalente: SELECT * FROM servidor
-                #                  WHERE LOWER(email) = 'email_digitado' AND ativo = true
-                #                  LIMIT 1
-                user = Servidor.objects.get(email__iexact=email, ativo=True)
-                tipo = "servidor"
-            except Servidor.DoesNotExist:
-                # E-mail não existe em nenhuma das duas tabelas
-                pass
+        # ┌─────────────────────────────────────────────────────┐
+        # │  BUSCA NO BANCO DE DADOS (SELECT)                  │
+        # │  Aqui é onde o sistema consulta o PostgreSQL/Neon   │
+        # │  para verificar se o email existe nas tabelas.      │
+        # │                                                     │
+        # │  Primeiro tenta na tabela 'cidadao',                │
+        # │  se não encontrar, tenta na tabela 'servidor'.      │
+        # └─────────────────────────────────────────────────────┘
+        from django.db import connection
+        with connection.cursor() as cursor:
+            # SELECT na tabela 'cidadao' — busca pelo email informado
+            cursor.execute(
+                "SELECT id_cidadao, nome_completo, senha_hash, perfil, senha_temporaria "
+                "FROM cidadao "
+                "WHERE LOWER(email) = %s AND ativo = TRUE",
+                [email],
+            )
+            row = cursor.fetchone()
 
+            if row:
+                # Encontrou na tabela cidadao → monta o objeto manualmente
+                user = Cidadao.objects.get(pk=row[0])
+                tipo = "cidadao"
+            else:
+                # Não encontrou em cidadao → tenta SELECT na tabela 'servidor'
+                cursor.execute(
+                    "SELECT id_servidor, nome_completo, senha_hash, perfil, senha_temporaria "
+                    "FROM servidor "
+                    "WHERE LOWER(email) = %s AND ativo = TRUE",
+                    [email],
+                )
+                row = cursor.fetchone()
+                if row:
+                    # Encontrou na tabela servidor
+                    user = Servidor.objects.get(pk=row[0])
+                    tipo = "servidor"
+
+        # ┌─────────────────────────────────────────────────────┐
+        # │  TRATAMENTO DE ERRO — Usuário NÃO encontrado       │
+        # │  Se user é None, o email não existe em nenhuma      │
+        # │  das duas tabelas (cidadao/servidor).               │
+        # └─────────────────────────────────────────────────────┘
         if user is None:
-            # A conta simplesmente não existe
             messages.error(request, "E-mail ou senha incorretos.")
+
+        # ┌─────────────────────────────────────────────────────┐
+        # │  VERIFICAÇÃO DA SENHA                               │
+        # │  check_password() compara a senha digitada com o    │
+        # │  hash bcrypt salvo no campo 'senha_hash' do banco.  │
+        # │  Retorna True se a senha está correta.              │
+        # └─────────────────────────────────────────────────────┘
         elif check_password(senha, user.senha_hash):
-            # SEGURANÇA: check_password() compara a senha digitada com o hash
-            # armazenado no campo 'senha_hash' do banco. A senha NUNCA é salva
-            # em texto puro — apenas o hash bcrypt é armazenado.
-            # Exemplo de hash no banco: 'pbkdf2_sha256$720000$...'
-            #
-            # SESSÃO: Salvamos o ID e o tipo do usuário no cookie de sessão.
-            # O Django armazena a sessão de forma segura no servidor.
-            # Na próxima requisição, o middleware (middleware.py) lê esses
-            # dados e carrega o usuário em request.portal_user.
-            request.session["usuario_id"] = user.pk     # ex: 5
-            request.session["usuario_tipo"] = tipo       # 'cidadao' ou 'servidor'
+            # ┌─────────────────────────────────────────────────┐
+            # │  LOGIN BEM-SUCEDIDO                             │
+            # │  Salva na sessão (cookie) o ID e o tipo do      │
+            # │  usuário. O middleware.py lê esses valores em   │
+            # │  TODA requisição seguinte para saber quem está  │
+            # │  logado e qual perfil ele tem (CID/COL/GES).    │
+            # └─────────────────────────────────────────────────┘
+            request.session["usuario_id"] = user.pk       # ID no banco
+            request.session["usuario_tipo"] = tipo        # 'cidadao' ou 'servidor'
             # Se o servidor tem senha temporária (primeiro acesso),
             # força a troca antes de usar o sistema
             if (user.senha_temporaria or "").strip():
                 request.session["forcar_troca_senha"] = True
                 return redirect("portal:troca_senha_obrigatoria")
+
             messages.success(request, f"Olá, {user.nome_completo}.")
+
+            # ┌─────────────────────────────────────────────────┐
+            # │  REDIRECIONAMENTO POR PERFIL                    │
+            # │  Após o login, o middleware carrega o usuário    │
+            # │  e cada view usa @perfis() para controlar quem  │
+            # │  pode acessar. Veja decorators.py para detalhes.│
+            # │                                                 │
+            # │  CID → /cidadao/chamados/ (meus chamados)       │
+            # │  COL → /equipe/chamados/ (dashboard equipe)     │
+            # │  GES → /equipe/chamados/ + /gestao/ (admin)     │
+            # └─────────────────────────────────────────────────┘
             return redirect("portal:root")
         else:
-            # A conta existe, mas a senha falhou
+            # ┌─────────────────────────────────────────────────┐
+            # │  SENHA INCORRETA                                │
+            # │  A conta existe no banco, mas a senha digitada  │
+            # │  não confere com o hash armazenado.             │
+            # └─────────────────────────────────────────────────┘
             messages.error(request, "E-mail ou senha incorretos.")
 
     return render(request, "portal/auth/login.html")
