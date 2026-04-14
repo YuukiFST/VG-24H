@@ -255,7 +255,7 @@ class Chamado(models.Model):
         return (st.sigla or "").strip() if st else ""
 
     @property
-    def atualizado_em(self):
+    def ultima_atualizacao(self):
         """Retorna a data/hora da última alteração de status."""
         ultimo = self.historicos.order_by("-dt_alteracao").first()
         return ultimo.dt_alteracao if ultimo else self.dt_abertura
