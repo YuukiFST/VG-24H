@@ -1109,6 +1109,18 @@ img {
 .page-breadcrumb {
   margin-bottom: 24px;
 }
+.br-breadcrumb .br-breadcrumb-list,
+.br-breadcrumb .crumb-list {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.br-breadcrumb .crumb {
+  display: inline-flex;
+  align-items: center;
+}
 
 /* ===================================================================
    UPLOAD AREA

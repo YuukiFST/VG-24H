@@ -12,46 +12,6 @@
     </a>
   </div>
 
-  <!-- ====== SUMMARY CARDS (Semáforo) ====== -->
-  <div class="row mb-4">
-    <div class="col-sm-6 col-lg-3 mb-3">
-      <div class="stats-card card-total">
-        <div class="stats-icon"><i class="fas fa-list-ul"></i></div>
-        <div class="stats-info">
-          <span class="stats-value">{{ lista.count }}</span>
-          <span class="stats-label">Total de Chamados</span>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-lg-3 mb-3">
-      <div class="stats-card card-prazo">
-        <div class="stats-icon"><i class="fas fa-check-circle"></i></div>
-        <div class="stats-info">
-          <span class="stats-value">{{ stats.no_prazo|default:0 }}</span>
-          <span class="stats-label">No Prazo (Verde)</span>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-lg-3 mb-3">
-      <div class="stats-card card-atencao">
-        <div class="stats-icon"><i class="fas fa-exclamation-triangle"></i></div>
-        <div class="stats-info">
-          <span class="stats-value">{{ stats.atencao|default:0 }}</span>
-          <span class="stats-label">Atenção (Amarelo)</span>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-lg-3 mb-3">
-      <div class="stats-card card-critico">
-        <div class="stats-icon"><i class="fas fa-clock"></i></div>
-        <div class="stats-info">
-          <span class="stats-value">{{ stats.critico|default:0 }}</span>
-          <span class="stats-label">Crítico (Vermelho)</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ====== FILTER BAR ====== -->
   <div class="br-card p-3 mb-4">
     <form method="get" class="row align-items-end">
@@ -92,7 +52,7 @@
   <div class="br-table">
     <div class="table-header">
       <div class="top-bar">
-        <div class="table-title">Meus Chamados Recentes</div>
+        <div class="table-title">Meus Chamados Recentes <span class="br-tag" style="background:#1351b4;color:#fff;margin-left:8px;font-size:0.85rem;">{{ total_count }} total</span></div>
       </div>
     </div>
     <table>
@@ -120,11 +80,6 @@
               <a href="{% url 'portal:cidadao_chamado' ch.pk %}" class="br-button circle small" title="Visualizar Detalhes">
                 <i class="fas fa-eye" aria-hidden="true"></i>
               </a>
-              {% if ch.status_atual.sigla == 'AB' or ch.status_atual.sigla == 'EA' %}
-                <button class="br-button circle small" type="button" title="Cancelar Chamado" data-toggle="modal" data-target="#modal-cancel-{{ ch.pk }}">
-                  <i class="fas fa-times text-danger" aria-hidden="true"></i>
-                </button>
-              {% endif %}
             </td>
           </tr>
         {% empty %}
@@ -134,47 +89,32 @@
         {% endfor %}
       </tbody>
     </table>
-    <!-- Paginação -->
+    <!-- Paginação (só aparece se tiver mais de 1 página) -->
+    {% if page_obj.paginator.num_pages > 1 %}
     <div class="table-footer d-flex justify-content-center pt-3 pb-2 border-top">
       <nav class="br-pagination" aria-label="Paginação de resultados">
         <ul class="pagination d-flex align-items-center mb-0" style="list-style: none; padding: 0; gap: 4px;">
-          <li><button class="br-button circle small" type="button" aria-label="Voltar página" disabled><i class="fas fa-angle-left" aria-hidden="true"></i></button></li>
-          <li><button class="br-button circle small primary" type="button">1</button></li>
-          <li><button class="br-button circle small" type="button">2</button></li>
-          <li><button class="br-button circle small" type="button">3</button></li>
-          <li><button class="br-button circle small" type="button" aria-label="Avançar página"><i class="fas fa-angle-right" aria-hidden="true"></i></button></li>
+          {% if page_obj.has_previous %}
+            <li><a href="?pagina={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.data %}&data={{ request.GET.data }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="br-button circle small" aria-label="Voltar página"><i class="fas fa-angle-left" aria-hidden="true"></i></a></li>
+          {% else %}
+            <li><button class="br-button circle small" type="button" disabled aria-label="Voltar página"><i class="fas fa-angle-left" aria-hidden="true"></i></button></li>
+          {% endif %}
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <li><button class="br-button circle small primary" type="button">{{ num }}</button></li>
+            {% else %}
+              <li><a href="?pagina={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.data %}&data={{ request.GET.data }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="br-button circle small">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}
+            <li><a href="?pagina={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.data %}&data={{ request.GET.data }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="br-button circle small" aria-label="Avançar página"><i class="fas fa-angle-right" aria-hidden="true"></i></a></li>
+          {% else %}
+            <li><button class="br-button circle small" type="button" disabled aria-label="Avançar página"><i class="fas fa-angle-right" aria-hidden="true"></i></button></li>
+          {% endif %}
         </ul>
       </nav>
     </div>
+    {% endif %}
   </div>
 </div>
-
-{% for ch in lista %}
-  {% if ch.status_atual.sigla == 'AB' or ch.status_atual.sigla == 'EA' %}
-    <!-- Modal Cancelamento -->
-    <div class="br-modal" id="modal-cancel-{{ ch.pk }}">
-      <div class="container-fluid p-1 p-sm-4">
-        <div class="br-modal-body">
-          <div class="br-modal-header">
-            <div class="br-modal-title" title="Confirmar Cancelamento">Cancelar Chamado {{ ch.num_protocolo }}</div>
-            <button class="br-button circle small" type="button" data-dismiss="modal" aria-label="Fechar"><i class="fas fa-times" aria-hidden="true"></i></button>
-          </div>
-          <p>Você tem certeza que deseja cancelar este chamado? Esta ação não pode ser desfeita.</p>
-          <form action="{% url 'portal:cidadao_chamado' ch.pk %}" method="post">
-            {% csrf_token %}
-            <input type="hidden" name="acao" value="cancelar">
-            <div class="br-input mt-3">
-              <label for="motivo-{{ ch.pk }}">Motivo do cancelamento (opcional)</label>
-              <textarea id="motivo-{{ ch.pk }}" name="motivo" rows="3" placeholder="Por que deseja cancelar?"></textarea>
-            </div>
-            <div class="br-modal-footer justify-content-end mt-4">
-              <button class="br-button secondary mr-2" type="button" data-dismiss="modal">Desistir</button>
-              <button class="br-button primary" type="submit">Confirmar Cancelamento</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  {% endif %}
-{% endfor %}
 {% endblock %}
