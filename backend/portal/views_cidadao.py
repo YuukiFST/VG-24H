@@ -92,25 +92,17 @@ def cidadao_chamados_lista(request):
     if q_filter:
         qs = qs.filter(num_protocolo__icontains=q_filter)
 
-    # Stats (Semáforo)
-    base_qs = Chamado.objects.filter(id_cidadao=request.portal_user)
-    stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
-    now = timezone.now()
-
-    for ch in base_qs.select_related("id_servico"):
-        dias = (now - ch.dt_abertura).days
-        s = ch.id_servico
-        if dias >= s.prazo_vermelho_dias:
-            stats["critico"] += 1
-        elif dias >= s.prazo_amarelo_dias:
-            stats["atencao"] += 1
-        else:
-            stats["no_prazo"] += 1
+    # Paginação: 15 chamados por página
+    from django.core.paginator import Paginator
+    total_count = qs.count()
+    paginator = Paginator(qs, 15)
+    page_number = request.GET.get("pagina", 1)
+    page_obj = paginator.get_page(page_number)
 
     return render(
         request,
         "portal/cidadao/dashboard.html",
-        {"lista": qs, "stats": stats},
+        {"lista": page_obj, "total_count": total_count, "page_obj": page_obj},
     )
 
 
