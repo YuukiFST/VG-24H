@@ -60,14 +60,10 @@ def login_view(request):
         user = None
         tipo = None
 
-        # ┌─────────────────────────────────────────────────────┐
-        # │  BUSCA NO BANCO DE DADOS (SELECT)                  │
-        # │  Aqui é onde o sistema consulta o PostgreSQL/Neon   │
-        # │  para verificar se o email existe nas tabelas.      │
-        # │                                                     │
-        # │  Primeiro tenta na tabela 'cidadao',                │
-        # │  se não encontrar, tenta na tabela 'servidor'.      │
-        # └─────────────────────────────────────────────────────┘
+        # BUSCA NO BANCO DE DADOS (SELECT)                  
+        # Aqui é onde o sistema consulta o PostgreSQL/Neon
+        # para verificar se o email existe nas tabelas.
+        # Primeiro tenta na tabela 'cidadao', se não encontrar, tenta na tabela 'servidor'.
         from django.db import connection
         with connection.cursor() as cursor:
             # SELECT na tabela 'cidadao' — busca pelo email informado
@@ -119,6 +115,7 @@ def login_view(request):
             # │  TODA requisição seguinte para saber quem está  │
             # │  logado e qual perfil ele tem (CID/COL/GES).    │
             # └─────────────────────────────────────────────────┘
+            request.session.cycle_key()                    # Novo sessionid (anti Session Fixation)
             request.session["usuario_id"] = user.pk       # ID no banco
             request.session["usuario_tipo"] = tipo        # 'cidadao' ou 'servidor'
             # Se o servidor tem senha temporária (primeiro acesso),
@@ -131,7 +128,7 @@ def login_view(request):
 
             # ┌─────────────────────────────────────────────────┐
             # │  REDIRECIONAMENTO POR PERFIL                    │
-            # │  Após o login, o middleware carrega o usuário    │
+            # │  Após o login, o middleware carrega o usuário   │
             # │  e cada view usa @perfis() para controlar quem  │
             # │  pode acessar. Veja decorators.py para detalhes.│
             # │                                                 │
