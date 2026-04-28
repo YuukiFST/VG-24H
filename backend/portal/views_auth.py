@@ -19,6 +19,7 @@ from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
 from django.core import signing  # Gera tokens seguros para recuperação de senha
 from django.core.mail import send_mail
+from django.db import connection
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -64,7 +65,6 @@ def login_view(request):
         # Aqui é onde o sistema consulta o PostgreSQL/Neon
         # para verificar se o email existe nas tabelas.
         # Primeiro tenta na tabela 'cidadao', se não encontrar, tenta na tabela 'servidor'.
-        from django.db import connection
         with connection.cursor() as cursor:
             # SELECT na tabela 'cidadao' — busca pelo email informado
             cursor.execute(
@@ -77,7 +77,13 @@ def login_view(request):
 
             if row:
                 # Encontrou na tabela cidadao → monta o objeto manualmente
-                user = Cidadao.objects.get(pk=row[0])
+                user = Cidadao()
+                user.id_cidadao = row[0]
+                user.nome_completo = row[1]
+                user.senha_hash = row[2]
+                user.perfil = row[3]
+                user.senha_temporaria = row[4]
+                user._state.adding = False
                 tipo = "cidadao"
             else:
                 # Não encontrou em cidadao → tenta SELECT na tabela 'servidor'
@@ -90,7 +96,13 @@ def login_view(request):
                 row = cursor.fetchone()
                 if row:
                     # Encontrou na tabela servidor
-                    user = Servidor.objects.get(pk=row[0])
+                    user = Servidor()
+                    user.id_servidor = row[0]
+                    user.nome_completo = row[1]
+                    user.senha_hash = row[2]
+                    user.perfil = row[3]
+                    user.senha_temporaria = row[4]
+                    user._state.adding = False
                     tipo = "servidor"
 
         # ┌─────────────────────────────────────────────────────┐
@@ -163,10 +175,26 @@ def logout_view(request):
 @anonimo
 @require_http_methods(["GET", "POST"])
 def cadastro_view(request):
-    # SELECT * FROM bairro WHERE ativo = true ORDER BY nome_bairro
+    # SQL puro: SELECT * FROM bairro WHERE ativo = true ORDER BY nome_bairro
     # Carrega os bairros para o formulário de endereço
+    bairros = []
     try:
-        bairros = list(Bairro.objects.filter(ativo=True).order_by("nome_bairro"))
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
+                "FROM bairro "
+                "WHERE ativo = TRUE "
+                "ORDER BY nome_bairro"
+            )
+            for row in cursor.fetchall():
+                b = Bairro()
+                b.id_bairro = row[0]
+                b.nome_bairro = row[1]
+                b.cep = row[2]
+                b.regiao = row[3]
+                b.ativo = row[4]
+                b._state.adding = False
+                bairros.append(b)
     except Exception:
         class MockBairro:
             def __init__(self, id, n):
@@ -179,39 +207,50 @@ def cadastro_view(request):
         if form.is_valid():
             d = form.cleaned_data
             # VALIDAÇÃO DE DUPLICIDADE no banco antes de inserir:
-            # SQL: SELECT 1 FROM cidadao WHERE LOWER(email) = '...' LIMIT 1
-            # SQL: SELECT 1 FROM cidadao WHERE cpf = '...' LIMIT 1
-            # .exists() retorna True/False SEM carregar o registro inteiro (mais eficiente)
-            if Cidadao.objects.filter(
-                email__iexact=d["email"].lower()
-            ).exists() or Cidadao.objects.filter(cpf=d["cpf"]).exists():
+            # SQL puro: SELECT EXISTS(SELECT 1 FROM cidadao WHERE ...)
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT EXISTS("
+                    "  SELECT 1 FROM cidadao WHERE LOWER(email) = %s"
+                    ") OR EXISTS("
+                    "  SELECT 1 FROM cidadao WHERE cpf = %s"
+                    ")",
+                    [d["email"].lower(), d["cpf"]],
+                )
+                ja_existe = cursor.fetchone()[0]
+
+            if ja_existe:
                 messages.error(request, "E-mail ou CPF já cadastrado.")
             else:
                 # INSERÇÃO DO NOVO CIDADÃO NO BANCO DE DADOS
-                # SQL equivalente:
-                # INSERT INTO cidadao (nome_completo, cpf, dt_nascimento, telefone,
-                #   email, senha_hash, rua, perfil, ativo, dt_cadastro)
-                # VALUES ('João Silva', '12345678901', '1990-01-15', '65999990000',
-                #   'joao@email.com', 'pbkdf2_sha256$720000$...', 'Rua A', 'CID', true, NOW())
+                # SQL puro: INSERT INTO cidadao (...) VALUES (...)
                 #
                 # make_password(senha) transforma 'minhasenha123' em hash bcrypt
                 # para nunca armazenar a senha real no banco (segurança)
-                Cidadao.objects.create(
-                    nome_completo=d["nome_completo"],
-                    cpf=d["cpf"],
-                    dt_nascimento=d["dt_nascimento"],
-                    telefone=d["telefone"],
-                    email=d["email"].lower(),
-                    senha_hash=make_password(d["senha"]),
-                    rua=d.get("rua"),
-                    num_endereco=d.get("num_endereco"),
-                    complemento_endereco=d.get("complemento_endereco"),
-                    bairro_endereco=d.get("bairro_endereco"),
-                    cep_endereco=d.get("cep_endereco"),
-                    perfil="CID",
-                    ativo=True,
-                    dt_cadastro=timezone.now(),
-                )
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO cidadao "
+                        "(nome_completo, cpf, dt_nascimento, telefone, email, "
+                        "senha_hash, rua, num_endereco, complemento_endereco, "
+                        "bairro_endereco, cep_endereco, perfil, ativo, dt_cadastro) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                        [
+                            d["nome_completo"],
+                            d["cpf"],
+                            d["dt_nascimento"],
+                            d["telefone"],
+                            d["email"].lower(),
+                            make_password(d["senha"]),
+                            d.get("rua"),
+                            d.get("num_endereco"),
+                            d.get("complemento_endereco"),
+                            d.get("bairro_endereco"),
+                            d.get("cep_endereco"),
+                            "CID",
+                            True,
+                            timezone.now(),
+                        ],
+                    )
                 messages.success(request, "Cadastro concluído. Faça login.")
                 return redirect("portal:login")
     else:
@@ -233,17 +272,25 @@ def recuperar_senha_view(request):
         form = RecuperarSenhaForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"].lower()
-            try:
-                # SELECT * FROM cidadao WHERE LOWER(email) = '...' AND ativo = true
-                u = Cidadao.objects.get(email__iexact=email, ativo=True)
-            except Cidadao.DoesNotExist:
+            # SQL puro: SELECT id_cidadao, email FROM cidadao WHERE ...
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT id_cidadao, email "
+                    "FROM cidadao "
+                    "WHERE LOWER(email) = %s AND ativo = TRUE",
+                    [email],
+                )
+                row = cursor.fetchone()
+            if not row:
                 messages.info(
                     request,
                     "Se o e-mail existir, você receberá instruções em instantes.",
                 )
                 return redirect("portal:login")
+            uid = row[0]
+            user_email = row[1]
             # signing.dumps() gera um token criptografado com o ID do cidadão
-            token = signing.dumps({"id": u.pk}, salt="vg.pwreset")
+            token = signing.dumps({"id": uid}, salt="vg.pwreset")
             link = request.build_absolute_uri(
                 reverse("portal:redefinir_senha", args=[token])
             )
@@ -252,7 +299,7 @@ def recuperar_senha_view(request):
                 "VG 24H — redefinição de senha",
                 body,
                 settings.DEFAULT_FROM_EMAIL,
-                [u.email],
+                [user_email],
                 fail_silently=True,
             )
             messages.info(
@@ -276,17 +323,27 @@ def redefinir_senha_view(request, token):
     except signing.BadSignature:
         messages.error(request, "Link inválido ou expirado.")
         return redirect("portal:login")
-    try:
-        # SELECT * FROM cidadao WHERE id_cidadao = X AND ativo = true
-        u = Cidadao.objects.get(pk=data["id"], ativo=True)
-    except Cidadao.DoesNotExist:
+    # SQL puro: SELECT id_cidadao FROM cidadao WHERE id_cidadao = X AND ativo = true
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT id_cidadao FROM cidadao "
+            "WHERE id_cidadao = %s AND ativo = TRUE",
+            [data["id"]],
+        )
+        row = cursor.fetchone()
+    if not row:
         return redirect("portal:login")
+    uid = row[0]
     if request.method == "POST":
         form = RedefinirSenhaForm(request.POST)
         if form.is_valid():
-            # UPDATE cidadao SET senha_hash = 'novo_hash' WHERE id_cidadao = X
-            u.senha_hash = make_password(form.cleaned_data["senha"])
-            u.save(update_fields=["senha_hash"])
+            # SQL puro: UPDATE cidadao SET senha_hash = 'novo_hash' WHERE id_cidadao = X
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE cidadao SET senha_hash = %s "
+                    "WHERE id_cidadao = %s",
+                    [make_password(form.cleaned_data["senha"]), uid],
+                )
             messages.success(request, "Senha atualizada. Entre com a nova senha.")
             return redirect("portal:login")
     else:
@@ -306,11 +363,14 @@ def troca_senha_obrigatoria_view(request):
         form = TrocaSenhaObrigatoriaForm(request.POST)
         if form.is_valid():
             u = request.portal_user
-            # UPDATE servidor SET senha_hash = 'novo_hash', senha_temporaria = NULL
+            # SQL puro: UPDATE servidor SET senha_hash = 'novo_hash', senha_temporaria = NULL
             # WHERE id_servidor = X
-            u.senha_hash = make_password(form.cleaned_data["senha"])
-            u.senha_temporaria = None
-            u.save(update_fields=["senha_hash", "senha_temporaria"])
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE servidor SET senha_hash = %s, senha_temporaria = NULL "
+                    "WHERE id_servidor = %s",
+                    [make_password(form.cleaned_data["senha"]), u.pk],
+                )
             del request.session["forcar_troca_senha"]
             messages.success(request, "Senha alterada.")
             return redirect("portal:root")

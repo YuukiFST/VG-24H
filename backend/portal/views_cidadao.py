@@ -12,11 +12,12 @@ Operações CRUD realizadas:
   - UPDATE: Cancelar chamado, avaliar, adicionar observação
 """
 
+from types import SimpleNamespace
+
 from django.contrib import messages
-from django.db import transaction
-from django.db.models import OuterRef, Prefetch, Subquery
+from django.db import connection
 from django.http import Http404
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
@@ -28,80 +29,221 @@ from portal.forms import (
     FotoForm,
     ObservacaoForm,
 )
-from portal.models import (
-    Bairro,
-    CategoriaServico,
-    Chamado,
-    FotoChamado,
-    HistoricoChamado,
-    Notificacao,
-    Servico,
-    StatusChamado,
-)
 from portal.utils import proximo_protocolo, salvar_foto_upload
+
+
+# ─── Helpers SQL ─────────────────────────────────────────────
+def _buscar_chamado_por_pk(pk):
+    """SQL puro: busca um chamado pelo ID com dados do serviço e bairro (JOIN)."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT c.id_chamado, c.num_protocolo, c.prioridade, "
+            "c.ponto_de_referencia, c.descricao, c.resolucao, "
+            "c.nota_avaliacao, c.comentario_avaliacao, "
+            "c.dt_abertura, c.dt_conclusao, c.dt_avaliacao, c.atualizado_em, "
+            "c.id_servico, c.id_bairro, c.id_cidadao, "
+            "s.nome AS servico_nome, s.descricao AS servico_descricao, "
+            "s.prazo_amarelo_dias, s.prazo_vermelho_dias, "
+            "b.nome_bairro "
+            "FROM chamado c "
+            "JOIN servico s ON c.id_servico = s.id_servico "
+            "JOIN bairro b ON c.id_bairro = b.id_bairro "
+            "WHERE c.id_chamado = %s",
+            [pk],
+        )
+        row = cursor.fetchone()
+    if not row:
+        return None
+    ch = SimpleNamespace(
+        id_chamado=row[0], pk=row[0], num_protocolo=row[1], prioridade=row[2],
+        ponto_de_referencia=row[3], descricao=row[4], resolucao=row[5],
+        nota_avaliacao=row[6], comentario_avaliacao=row[7],
+        dt_abertura=row[8], dt_conclusao=row[9], dt_avaliacao=row[10],
+        atualizado_em=row[11], id_cidadao_id=row[14],
+        id_servico=SimpleNamespace(
+            id_servico=row[12], pk=row[12], nome=row[15],
+            descricao=row[16], prazo_amarelo_dias=row[17],
+            prazo_vermelho_dias=row[18],
+        ),
+        id_bairro=SimpleNamespace(id_bairro=row[13], pk=row[13], nome_bairro=row[19]),
+    )
+    # Calcula status atual e cor do semáforo
+    _popular_status(ch)
+    return ch
+
+
+def _popular_status(ch):
+    """SQL puro: busca o status atual do chamado (último histórico)."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT sc.id_status, sc.sigla, sc.descricao "
+            "FROM historico_chamado hc "
+            "JOIN status_chamado sc ON hc.id_status = sc.id_status "
+            "WHERE hc.id_chamado = %s "
+            "ORDER BY hc.dt_alteracao DESC LIMIT 1",
+            [ch.pk],
+        )
+        row = cursor.fetchone()
+    if row:
+        ch.status_atual = SimpleNamespace(id_status=row[0], pk=row[0], sigla=row[1], descricao=row[2])
+        ch.sigla_status = (row[1] or "").strip()
+    else:
+        ch.status_atual = None
+        ch.sigla_status = ""
+    # Semáforo
+    dias = (timezone.now() - ch.dt_abertura).days
+    if dias >= ch.id_servico.prazo_vermelho_dias:
+        ch.cor_semaforo = "vermelho"
+    elif dias >= ch.id_servico.prazo_amarelo_dias:
+        ch.cor_semaforo = "amarelo"
+    else:
+        ch.cor_semaforo = "verde"
 
 
 # FUNÇÃO AUXILIAR DE SEGURANÇA:
 # Verifica se o chamado pertence ao cidadão logado.
 # Impede que um cidadão acesse chamados de outros cidadãos pela URL.
-# Ex: cidadão A não pode acessar /cidadao/chamados/5/ se o chamado 5 é do cidadão B.
 def _chamado_do_cidadao(request, pk):
-    # SQL: SELECT * FROM chamado WHERE id_chamado = pk
-    ch = get_object_or_404(Chamado, pk=pk)
+    ch = _buscar_chamado_por_pk(pk)
+    if not ch:
+        raise Http404()
     # Compara o id_cidadao do chamado com o usuário logado
     if ch.id_cidadao_id != request.portal_user.pk:
         raise Http404()  # Retorna 404 (não revela que o chamado existe)
     return ch
 
 
+def _calcular_stats_sql(cidadao_id=None):
+    """SQL puro: calcula estatísticas do semáforo (no_prazo, atencao, critico)."""
+    where = ""
+    params = []
+    if cidadao_id:
+        where = "WHERE c.id_cidadao = %s"
+        params = [cidadao_id]
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"SELECT c.id_chamado, c.dt_abertura, "
+            f"s.prazo_amarelo_dias, s.prazo_vermelho_dias "
+            f"FROM chamado c "
+            f"JOIN servico s ON c.id_servico = s.id_servico "
+            f"{where}",
+            params,
+        )
+        stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
+        now = timezone.now()
+        for row in cursor.fetchall():
+            dias = (now - row[1]).days
+            if dias >= row[3]:
+                stats["critico"] += 1
+            elif dias >= row[2]:
+                stats["atencao"] += 1
+            else:
+                stats["no_prazo"] += 1
+    return stats
+
+
 # LISTAR CHAMADOS DO CIDADÃO — Rota: /cidadao/chamados/
-# @perfis("CID") = SÓ cidadãos podem acessar (ver decorators.py)
-# Se um gestor tentar acessar, recebe "Sem permissão para acessar esta área."
 @autenticado
 @perfis("CID")
 def cidadao_chamados_lista(request):
-    # SELECT chamado.*, servico.nome, bairro.nome_bairro
-    # FROM chamado
-    # JOIN servico ON chamado.id_servico = servico.id_servico
-    # JOIN bairro ON chamado.id_bairro = bairro.id_bairro
-    # WHERE chamado.id_cidadao = <usuario_logado>
-    # ORDER BY dt_abertura DESC
-    #
-    # select_related() = faz JOINs no SQL (evita consultas extras)
-    # prefetch_related() = busca históricos em consulta separada (otimização)
-    qs = (
-        Chamado.objects.filter(id_cidadao=request.portal_user)
-        .select_related("id_servico", "id_bairro")
-        .prefetch_related("historicos__id_status")
-        .order_by("-dt_abertura")
-    )
+    uid = request.portal_user.pk
 
-    # Filters
+    # SQL puro: SELECT chamados do cidadão com JOIN em serviço e bairro
+    sql = (
+        "SELECT c.id_chamado, c.num_protocolo, c.prioridade, "
+        "c.descricao, c.dt_abertura, c.atualizado_em, "
+        "c.id_servico, c.id_bairro, "
+        "s.nome AS servico_nome, s.prazo_amarelo_dias, s.prazo_vermelho_dias, "
+        "b.nome_bairro, "
+        "("
+        "  SELECT sc.sigla FROM historico_chamado hc "
+        "  JOIN status_chamado sc ON hc.id_status = sc.id_status "
+        "  WHERE hc.id_chamado = c.id_chamado "
+        "  ORDER BY hc.dt_alteracao DESC LIMIT 1"
+        ") AS sigla_status "
+        "FROM chamado c "
+        "JOIN servico s ON c.id_servico = s.id_servico "
+        "JOIN bairro b ON c.id_bairro = b.id_bairro "
+        "WHERE c.id_cidadao = %s "
+    )
+    params = [uid]
+
+    # Filtros
     st_filter = request.GET.get("status")
     if st_filter:
-        latest_status = HistoricoChamado.objects.filter(
-            id_chamado=OuterRef("pk")
-        ).order_by("-dt_alteracao").values("id_status__sigla")[:1]
-        qs = qs.annotate(_sigla=Subquery(latest_status)).filter(_sigla=st_filter)
+        sql += (
+            "AND ("
+            "  SELECT sc2.sigla FROM historico_chamado hc2 "
+            "  JOIN status_chamado sc2 ON hc2.id_status = sc2.id_status "
+            "  WHERE hc2.id_chamado = c.id_chamado "
+            "  ORDER BY hc2.dt_alteracao DESC LIMIT 1"
+            ") = %s "
+        )
+        params.append(st_filter)
 
     dt_filter = request.GET.get("data")
     if dt_filter:
-        qs = qs.filter(dt_abertura__date=dt_filter)
+        sql += "AND c.dt_abertura::date = %s "
+        params.append(dt_filter)
 
     q_filter = request.GET.get("q")
     if q_filter:
-        qs = qs.filter(num_protocolo__icontains=q_filter)
+        sql += "AND c.num_protocolo ILIKE %s "
+        params.append(f"%{q_filter}%")
 
-    # Paginação: 15 chamados por página
-    from django.core.paginator import Paginator
-    total_count = qs.count()
-    paginator = Paginator(qs, 15)
-    page_number = request.GET.get("pagina", 1)
-    page_obj = paginator.get_page(page_number)
+    sql += "ORDER BY c.dt_abertura DESC"
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql, params)
+        rows = cursor.fetchall()
+
+    # Monta lista de objetos para o template
+    now = timezone.now()
+    chamados = []
+    for r in rows:
+        dias = (now - r[4]).days
+        if dias >= r[10]:
+            cor = "vermelho"
+        elif dias >= r[9]:
+            cor = "amarelo"
+        else:
+            cor = "verde"
+        chamados.append(SimpleNamespace(
+            id_chamado=r[0], pk=r[0], num_protocolo=r[1], prioridade=r[2],
+            descricao=r[3], dt_abertura=r[4], atualizado_em=r[5],
+            id_servico=SimpleNamespace(id_servico=r[6], pk=r[6], nome=r[8]),
+            id_bairro=SimpleNamespace(id_bairro=r[7], pk=r[7], nome_bairro=r[11]),
+            sigla_status=r[12] or "", cor_semaforo=cor,
+        ))
+
+    # Paginação manual
+    total_count = len(chamados)
+    per_page = 15
+    try:
+        page_number = int(request.GET.get("pagina", 1))
+    except (ValueError, TypeError):
+        page_number = 1
+    total_pages = max(1, (total_count + per_page - 1) // per_page)
+    page_number = max(1, min(page_number, total_pages))
+    start = (page_number - 1) * per_page
+    end = start + per_page
+    page_items = chamados[start:end]
+
+    page_obj = SimpleNamespace(
+        object_list=page_items,
+        number=page_number,
+        paginator=SimpleNamespace(num_pages=total_pages, page_range=range(1, total_pages + 1)),
+        has_previous=page_number > 1,
+        has_next=page_number < total_pages,
+        previous_page_number=page_number - 1 if page_number > 1 else None,
+        next_page_number=page_number + 1 if page_number < total_pages else None,
+    )
+    # Tornar page_obj iterável (para {% for ch in lista %})
+    page_obj.__iter__ = lambda self: iter(self.object_list)
+    page_obj.__len__ = lambda self: len(self.object_list)
 
     # Stats (Semáforo)
-    base_qs = Chamado.objects.filter(id_cidadao=request.portal_user)
-    stats = Chamado.calcular_stats(base_qs)
+    stats = _calcular_stats_sql(cidadao_id=uid)
 
     return render(
         request,
@@ -114,10 +256,39 @@ def cidadao_chamados_lista(request):
 @perfis("CID")
 @require_http_methods(["GET", "POST"])
 def cidadao_chamado_novo(request):
-    categorias = CategoriaServico.objects.filter(ativo=True).prefetch_related(
-        Prefetch("servicos", queryset=Servico.objects.filter(ativo=True).order_by("nome"))
-    )
-    bairros = Bairro.objects.filter(ativo=True).order_by("nome_bairro")
+    # SQL puro: busca categorias com seus serviços
+    categorias_list = []
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT id_categoria, nome, descricao "
+            "FROM categoria_servico WHERE ativo = TRUE "
+            "ORDER BY nome"
+        )
+        cats = cursor.fetchall()
+        for cat_row in cats:
+            cat = SimpleNamespace(id_categoria=cat_row[0], pk=cat_row[0], nome=cat_row[1], descricao=cat_row[2])
+            cursor.execute(
+                "SELECT id_servico, nome "
+                "FROM servico "
+                "WHERE id_categoria = %s AND ativo = TRUE ORDER BY nome",
+                [cat.pk],
+            )
+            cat.servicos = SimpleNamespace(all=lambda rows=[
+                SimpleNamespace(id_servico=r[0], pk=r[0], nome=r[1]) for r in cursor.fetchall()
+            ]: rows)
+            categorias_list.append(cat)
+
+    # SQL puro: busca bairros ativos
+    bairros = []
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT id_bairro, nome_bairro FROM bairro "
+            "WHERE ativo = TRUE ORDER BY nome_bairro"
+        )
+        bairros = [
+            SimpleNamespace(id_bairro=r[0], pk=r[0], nome_bairro=r[1])
+            for r in cursor.fetchall()
+        ]
 
     if request.method == "POST":
         form = ChamadoNovoForm(request.POST, request.FILES)
@@ -130,37 +301,45 @@ def cidadao_chamado_novo(request):
                 return render(
                     request,
                     "portal/cidadao/novo_chamado.html",
-                    {"form": form, "categorias": categorias, "bairros": bairros},
+                    {"form": form, "categorias": categorias_list, "bairros": bairros},
                 )
             now = timezone.now()
-            with transaction.atomic():
-                ch = Chamado.objects.create(
-                    num_protocolo=proximo_protocolo(),
-                    prioridade=0,
-                    ponto_de_referencia=d.get("ponto_de_referencia") or None,
-                    descricao=d["descricao"],
-                    dt_abertura=now,
-                    atualizado_em=now,
-                    id_cidadao=request.portal_user,
-                    id_servico=d["id_servico"],
-                    id_bairro=d["id_bairro"],
+            protocolo = proximo_protocolo()
+            # SQL puro: INSERT na tabela chamado + foto_chamado (transação)
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO chamado "
+                    "(num_protocolo, prioridade, ponto_de_referencia, descricao, "
+                    "dt_abertura, atualizado_em, id_cidadao, id_servico, id_bairro) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                    "RETURNING id_chamado",
+                    [
+                        protocolo, 0,
+                        d.get("ponto_de_referencia") or None,
+                        d["descricao"], now, now,
+                        request.portal_user.pk,
+                        d["id_servico"].pk,
+                        d["id_bairro"].pk,
+                    ],
                 )
-                FotoChamado.objects.create(
-                    id_chamado=ch,
-                    url_foto=url,
-                    dt_upload=now,
+                chamado_id = cursor.fetchone()[0]
+                # INSERT foto do chamado
+                cursor.execute(
+                    "INSERT INTO foto_chamado (id_chamado, url_foto, dt_upload) "
+                    "VALUES (%s, %s, %s)",
+                    [chamado_id, url, now],
                 )
             messages.success(
                 request,
-                f"Chamado aberto. Protocolo: {ch.num_protocolo}",
+                f"Chamado aberto. Protocolo: {protocolo}",
             )
-            return redirect("portal:cidadao_chamado", pk=ch.pk)
+            return redirect("portal:cidadao_chamado", pk=chamado_id)
     else:
         form = ChamadoNovoForm()
     return render(
         request,
         "portal/cidadao/novo_chamado.html",
-        {"form": form, "categorias": categorias, "bairros": bairros},
+        {"form": form, "categorias": categorias_list, "bairros": bairros},
     )
 
 
@@ -179,14 +358,15 @@ def cidadao_chamado_detalhe(request, pk):
         if acao == "obs" and pode_obs_foto:
             form_o = ObservacaoForm(request.POST)
             if form_o.is_valid():
-                # Observação centralizada em historico_chamado (Plano v6)
-                HistoricoChamado.objects.create(
-                    id_chamado=ch,
-                    id_servidor=None,
-                    id_status=ch.status_atual,
-                    observacao=form_o.cleaned_data["texto"],
-                    dt_alteracao=timezone.now(),
-                )
+                # SQL puro: INSERT observação no historico_chamado
+                status_id = ch.status_atual.pk if ch.status_atual else None
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO historico_chamado "
+                        "(id_chamado, id_servidor, id_status, observacao, dt_alteracao) "
+                        "VALUES (%s, %s, %s, %s, %s)",
+                        [pk, None, status_id, form_o.cleaned_data["texto"], timezone.now()],
+                    )
                 messages.success(request, "Observação registrada.")
             return redirect("portal:cidadao_chamado", pk=pk)
         if acao == "foto" and pode_obs_foto:
@@ -197,55 +377,95 @@ def cidadao_chamado_detalhe(request, pk):
                 except ValueError as e:
                     messages.error(request, str(e))
                 else:
-                    FotoChamado.objects.create(
-                        id_chamado=ch,
-                        url_foto=url,
-                        dt_upload=timezone.now(),
-                    )
+                    # SQL puro: INSERT foto no foto_chamado
+                    with connection.cursor() as cursor:
+                        cursor.execute(
+                            "INSERT INTO foto_chamado (id_chamado, url_foto, dt_upload) "
+                            "VALUES (%s, %s, %s)",
+                            [pk, url, timezone.now()],
+                        )
                     messages.success(request, "Foto adicionada.")
             return redirect("portal:cidadao_chamado", pk=pk)
         if acao == "cancelar" and pode_cancelar:
             form_c = CancelarChamadoForm(request.POST)
             if form_c.is_valid():
-                ca = StatusChamado.objects.get(sigla="CA")
-                HistoricoChamado.objects.create(
-                    id_chamado=ch,
-                    id_servidor=None,
-                    id_status=ca,
-                    observacao=form_c.cleaned_data["motivo"],
-                    dt_alteracao=timezone.now(),
-                )
-                ch.resolucao = form_c.cleaned_data["motivo"]
-                ch.save(update_fields=["resolucao"])
+                # SQL puro: busca o id do status 'CA' (Cancelado)
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT id_status FROM status_chamado WHERE sigla = 'CA'"
+                    )
+                    ca_id = cursor.fetchone()[0]
+                    # INSERT historico com status cancelado
+                    cursor.execute(
+                        "INSERT INTO historico_chamado "
+                        "(id_chamado, id_servidor, id_status, observacao, dt_alteracao) "
+                        "VALUES (%s, %s, %s, %s, %s)",
+                        [pk, None, ca_id, form_c.cleaned_data["motivo"], timezone.now()],
+                    )
+                    # UPDATE resolução do chamado
+                    cursor.execute(
+                        "UPDATE chamado SET resolucao = %s WHERE id_chamado = %s",
+                        [form_c.cleaned_data["motivo"], pk],
+                    )
                 messages.success(request, "Chamado cancelado.")
             return redirect("portal:cidadao_chamado", pk=pk)
         if acao == "avaliar" and pode_avaliar:
             form_a = AvaliacaoForm(request.POST)
             if form_a.is_valid():
-                ch.nota_avaliacao = form_a.cleaned_data["nota"]
-                ch.comentario_avaliacao = (
-                    form_a.cleaned_data.get("comentario") or None
-                )
-                ch.dt_avaliacao = timezone.now()
-                ch.save(
-                    update_fields=[
-                        "nota_avaliacao",
-                        "comentario_avaliacao",
-                        "dt_avaliacao",
-                    ]
-                )
+                # SQL puro: UPDATE avaliação do chamado
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "UPDATE chamado SET nota_avaliacao = %s, "
+                        "comentario_avaliacao = %s, dt_avaliacao = %s "
+                        "WHERE id_chamado = %s",
+                        [
+                            form_a.cleaned_data["nota"],
+                            form_a.cleaned_data.get("comentario") or None,
+                            timezone.now(),
+                            pk,
+                        ],
+                    )
                 messages.success(request, "Avaliação registrada.")
             return redirect("portal:cidadao_chamado", pk=pk)
 
-    historicos = (
-        HistoricoChamado.objects.filter(id_chamado=ch)
-        .select_related("id_servidor", "id_status")
-        .order_by("dt_alteracao")
-    )
-    fotos = FotoChamado.objects.filter(id_chamado=ch).order_by("dt_upload")
+    # SQL puro: busca históricos do chamado com JOIN em servidor e status
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT hc.id_historico_chamado, hc.dt_alteracao, hc.observacao, "
+            "hc.id_servidor, hc.id_status, "
+            "sv.nome_completo AS servidor_nome, "
+            "sc.sigla AS status_sigla, sc.descricao AS status_descricao "
+            "FROM historico_chamado hc "
+            "LEFT JOIN servidor sv ON hc.id_servidor = sv.id_servidor "
+            "JOIN status_chamado sc ON hc.id_status = sc.id_status "
+            "WHERE hc.id_chamado = %s "
+            "ORDER BY hc.dt_alteracao",
+            [pk],
+        )
+        historicos = [
+            SimpleNamespace(
+                id_historico_chamado=r[0], pk=r[0], dt_alteracao=r[1],
+                observacao=r[2], id_servidor_id=r[3],
+                id_servidor=SimpleNamespace(nome_completo=r[5]) if r[3] else None,
+                id_status=SimpleNamespace(id_status=r[4], sigla=r[6], descricao=r[7]),
+            )
+            for r in cursor.fetchall()
+        ]
 
-    # Separar observações do cidadão (id_servidor=NULL com observacao)
-    observacoes = historicos.filter(observacao__isnull=False).exclude(observacao="")
+        # SQL puro: busca fotos do chamado
+        cursor.execute(
+            "SELECT id_foto, url_foto, dt_upload "
+            "FROM foto_chamado WHERE id_chamado = %s "
+            "ORDER BY dt_upload",
+            [pk],
+        )
+        fotos = [
+            SimpleNamespace(id_foto=r[0], pk=r[0], url_foto=r[1], dt_upload=r[2])
+            for r in cursor.fetchall()
+        ]
+
+    # Observações = registros com observacao preenchida
+    observacoes = [h for h in historicos if h.observacao]
 
     return render(
         request,
@@ -271,26 +491,45 @@ def cidadao_chamado_detalhe(request, pk):
 @perfis("CID")
 @require_http_methods(["GET", "POST"])
 def cidadao_notificacoes(request):
-    # Notificações do cidadão via seus chamados
-    chamado_ids = Chamado.objects.filter(
-        id_cidadao=request.portal_user
-    ).values_list("id_chamado", flat=True)
-    qs = Notificacao.objects.filter(
-        id_chamado__in=chamado_ids,
-        arquivada=False,
-    ).order_by("-dt_envio")
+    uid = request.portal_user.pk
+    # SQL puro: busca notificações dos chamados do cidadão
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT n.id_notificacao, n.mensagem, n.lida, n.arquivada, "
+            "n.dt_envio, n.id_chamado "
+            "FROM notificacao n "
+            "WHERE n.arquivada = FALSE "
+            "AND n.id_chamado IN ("
+            "    SELECT c.id_chamado FROM chamado c WHERE c.id_cidadao = %s"
+            ") "
+            "ORDER BY n.dt_envio DESC",
+            [uid],
+        )
+        lista = [
+            SimpleNamespace(
+                id_notificacao=r[0], pk=r[0], mensagem=r[1],
+                lida=r[2], arquivada=r[3], dt_envio=r[4], id_chamado_id=r[5],
+            )
+            for r in cursor.fetchall()
+        ]
 
     if request.method == "POST":
         nid = request.POST.get("excluir")
         if nid:
-            Notificacao.objects.filter(
-                pk=nid,
-                id_chamado__in=chamado_ids,
-            ).delete()
+            # SQL puro: DELETE notificação (apenas se pertence a um chamado do cidadão)
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "DELETE FROM notificacao "
+                    "WHERE id_notificacao = %s "
+                    "AND id_chamado IN ("
+                    "    SELECT c.id_chamado FROM chamado c WHERE c.id_cidadao = %s"
+                    ")",
+                    [nid, uid],
+                )
             messages.info(request, "Notificação removida.")
         return redirect("portal:cidadao_notificacoes")
     return render(
         request,
         "portal/cidadao/notificacoes.html",
-        {"lista": qs},
+        {"lista": lista},
     )

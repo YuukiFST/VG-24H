@@ -3,18 +3,23 @@ import uuid
 
 from django.conf import settings
 from django.core.files.storage import default_storage
-from django.db.models import Max
+from django.db import connection
 from django.utils import timezone
-
-from portal.models import Chamado
 
 
 def proximo_protocolo():
+    """Gera o próximo número de protocolo no formato ANO + sequencial."""
     y = timezone.now().year
     prefix = str(y)
-    ultimo = Chamado.objects.filter(num_protocolo__startswith=prefix).aggregate(
-        m=Max("num_protocolo")
-    )["m"]
+    # SQL puro: busca o maior protocolo do ano atual
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT MAX(num_protocolo) FROM chamado "
+            "WHERE num_protocolo LIKE %s",
+            [f"{prefix}%"],
+        )
+        row = cursor.fetchone()
+        ultimo = row[0] if row else None
     if not ultimo:
         n = 1
     else:
@@ -48,4 +53,3 @@ def salvar_foto_upload(arquivo, request=None):
     if request:
         return request.build_absolute_uri(f"{settings.MEDIA_URL}{caminho}")
     return f"{settings.MEDIA_URL}{caminho}"
-

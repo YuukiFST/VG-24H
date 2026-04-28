@@ -18,7 +18,7 @@ from portal.models import Cidadao, Servidor
 
 def _usuario_da_sessao(request):
     """
-    Lê o cookie de sessão e busca o usuário correspondente no banco.
+    Lê o cookie de sessão e busca o usuário correspondente no banco via SQL puro.
     Retorna um objeto Cidadao ou Servidor, ou None se não estiver logado.
     """
     uid = request.session.get("usuario_id")       # ID salvo no login
@@ -26,14 +26,74 @@ def _usuario_da_sessao(request):
     if not uid or not tipo:
         return None  # nao esta logado
     try:
-        if tipo == "servidor":
-            # SELECT * FROM servidor WHERE id = uid AND ativo = true
-            return Servidor.objects.get(pk=uid, ativo=True)
-        else:
-            # SELECT * FROM cidadao WHERE id = uid AND ativo = true
-            return Cidadao.objects.get(pk=uid, ativo=True)
-    except (Cidadao.DoesNotExist, Servidor.DoesNotExist):
-        # usuario foi desativado ou removido? Ele limpa a sessão
+        with connection.cursor() as cursor:
+            if tipo == "servidor":
+                # SELECT na tabela servidor — busca pelo ID armazenado na sessão
+                cursor.execute(
+                    "SELECT id_servidor, nome_completo, cpf, dt_nascimento, "
+                    "telefone, email, senha_hash, senha_temporaria, perfil, "
+                    "dt_cadastro, ativo, id_secretaria "
+                    "FROM servidor "
+                    "WHERE id_servidor = %s AND ativo = TRUE",
+                    [uid],
+                )
+                row = cursor.fetchone()
+                if not row:
+                    request.session.flush()
+                    return None
+                # Monta o objeto Servidor com os dados retornados pelo SQL
+                user = Servidor()
+                user.id_servidor = row[0]
+                user.nome_completo = row[1]
+                user.cpf = row[2]
+                user.dt_nascimento = row[3]
+                user.telefone = row[4]
+                user.email = row[5]
+                user.senha_hash = row[6]
+                user.senha_temporaria = row[7]
+                user.perfil = row[8]
+                user.dt_cadastro = row[9]
+                user.ativo = row[10]
+                user.id_secretaria_id = row[11]
+                user._state.adding = False
+                return user
+            else:
+                # SELECT na tabela cidadao — busca pelo ID armazenado na sessão
+                cursor.execute(
+                    "SELECT id_cidadao, nome_completo, cpf, dt_nascimento, "
+                    "telefone, email, senha_hash, senha_temporaria, perfil, "
+                    "rua, num_endereco, complemento_endereco, bairro_endereco, "
+                    "cep_endereco, dt_cadastro, ativo "
+                    "FROM cidadao "
+                    "WHERE id_cidadao = %s AND ativo = TRUE",
+                    [uid],
+                )
+                row = cursor.fetchone()
+                if not row:
+                    request.session.flush()
+                    return None
+                # Monta o objeto Cidadao com os dados retornados pelo SQL
+                user = Cidadao()
+                user.id_cidadao = row[0]
+                user.nome_completo = row[1]
+                user.cpf = row[2]
+                user.dt_nascimento = row[3]
+                user.telefone = row[4]
+                user.email = row[5]
+                user.senha_hash = row[6]
+                user.senha_temporaria = row[7]
+                user.perfil = row[8]
+                user.rua = row[9]
+                user.num_endereco = row[10]
+                user.complemento_endereco = row[11]
+                user.bairro_endereco = row[12]
+                user.cep_endereco = row[13]
+                user.dt_cadastro = row[14]
+                user.ativo = row[15]
+                user._state.adding = False
+                return user
+    except Exception:
+        # usuario foi desativado ou removido? Limpa a sessão
         request.session.flush()
         return None
 
