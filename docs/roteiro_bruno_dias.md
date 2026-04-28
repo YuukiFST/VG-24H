@@ -59,18 +59,18 @@ Bruno é responsável por toda a **experiência do cidadão** no portal: desde o
 - `AB` = Aberto, `EA` = Em Análise, `EE` = Em Execução, `CO` = Concluído, `CA` = Cancelado
 
 - **Dashboard / Lista de chamados** — função `cidadao_chamados_lista` em `views_cidadao.py`:
-  - Filtra `Chamado.objects.filter(id_cidadao=request.portal_user)`
-  - Usa `prefetch_related("historicos__id_status")` para carregar o histórico junto
-  - Filtro de status usa `Subquery` para pegar o último histórico
+  - Usa `cursor.execute("SELECT ... FROM chamado c WHERE c.id_cidadao = %s", [uid])`
+  - Faz `JOIN` com tabelas `servico` e `bairro` no próprio SQL
+  - Filtro de status usa `Subquery` no SQL para pegar o último histórico
   - Calcula semáforo (verde/amarelo/vermelho) usando prazos do serviço
   - Renderiza `cidadao/dashboard.html`
 
 - **Abertura de chamado** — função `cidadao_chamado_novo`:
-  - Usa `ChamadoNovoForm` + `Prefetch` para categorias com serviços vinculados
+  - Usa `ChamadoNovoForm` + `cursor.execute` para buscar categorias com serviços vinculados
   - Upload de foto via `salvar_foto_upload()` (Cloudinary ou local)
   - Gera protocolo numérico via `proximo_protocolo()` — formato `20260001`
   - **NÃO define `id_status`** no chamado — o Trigger 1 insere automaticamente em `historico_chamado` com status AB
-  - Cria `Chamado` + `FotoChamado` dentro de `transaction.atomic()`
+  - Cria Chamado + FotoChamado via `INSERT INTO chamado ... RETURNING id_chamado` no SQL puro
 
 - **Detalhe do chamado** — função `cidadao_chamado_detalhe`:
   - Obtém status via `sigla_status(ch)` (que usa `ch.sigla_status` → último histórico)
@@ -89,7 +89,7 @@ Bruno é responsável por toda a **experiência do cidadão** no portal: desde o
 ### 4. Página Inicial (Homepage)
 
 - **Root view** — função `root_view` em `views_root.py`:
-  - Calcula `total_resolvidos` via `Subquery` no último histórico com sigla CO
+  - Calcula `total_resolvidos` via `Subquery` no SQL buscando a sigla CO no último histórico
   - Carrega servicos ativos (top 5), estatísticas e banners
   - Renderiza `root.html`
 

@@ -8,20 +8,21 @@ Este documento reúne perguntas frequentes sobre "Onde acontece tal coisa no có
 
 > **Arquivo:** `backend/portal/views_auth.py` (função `login_view`)
 
-Quando o usuário digita e-mail e senha e clica em "Entrar", os dados são enviados para a `login_view`. O Django não utiliza SQL "cru" nessas validações de leitura, ele utiliza uma camada de abstração (ORM). Como existem as tabelas separadas `Cidadao` e `Servidor`, ocorre uma **busca dual**:
+Quando o usuário digita e-mail e senha e clica em "Entrar", os dados são enviados para a `login_view`. Para atender a exigência da disciplina, o sistema utiliza **SQL puro** (via `connection.cursor()`) em todas as operações de banco de dados. Como existem as tabelas separadas `Cidadao` e `Servidor`, ocorre uma **busca dual**:
 
 ```python
-try:
-    user = Cidadao.objects.get(email__iexact=email, ativo=True)
-    tipo = "cidadao"
-except Cidadao.DoesNotExist:
-    try:
-        user = Servidor.objects.get(email__iexact=email, ativo=True)
-        tipo = "servidor"
-    except Servidor.DoesNotExist:
-        pass
+with connection.cursor() as cursor:
+    # SELECT na tabela 'cidadao' — busca pelo email informado
+    cursor.execute(
+        "SELECT id_cidadao, nome_completo, senha_hash, perfil, senha_temporaria "
+        "FROM cidadao "
+        "WHERE LOWER(email) = %s AND ativo = TRUE",
+        [email],
+    )
+    row = cursor.fetchone()
+    # Se não encontrar, faz um SELECT na tabela 'servidor'...
 ```
-*Tradução para o Banco de Dados:* Isso funciona como `SELECT * FROM cidadao WHERE LOWER(email) = 'x' AND ativo = true`. Se voltar vazio, ele tenta fazer `SELECT * FROM servidor WHERE LOWER(email) = 'x' AND ativo = true`.
+*Exatamente como escrito no código:* A consulta é feita usando `SELECT` explícito para a tabela `cidadao`. Se não retornar nada, uma nova consulta `SELECT` é feita na tabela `servidor`.
 
 ---
 
@@ -113,10 +114,14 @@ def _usuario_da_sessao(request):
         return None  # não está logado
     if tipo == "servidor":
         # SQL: SELECT * FROM servidor WHERE id_servidor = uid AND ativo = true
-        return Servidor.objects.get(pk=uid, ativo=True)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT ... FROM servidor WHERE id_servidor = %s AND ativo = TRUE", [uid])
+            # ... monta e retorna o objeto Servidor
     else:
         # SQL: SELECT * FROM cidadao WHERE id_cidadao = uid AND ativo = true
-        return Cidadao.objects.get(pk=uid, ativo=True)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT ... FROM cidadao WHERE id_cidadao = %s AND ativo = TRUE", [uid])
+            # ... monta e retorna o objeto Cidadao
 ```
 
 Isso é convertido na variável `request.portal_user` disponibilizando informações para toda a regra Python.
@@ -258,9 +263,14 @@ def proximo_protocolo():
     y = timezone.now().year              # Ex: 2026
     prefix = str(y)                      # "2026"
     # SQL: SELECT MAX(num_protocolo) FROM chamado WHERE num_protocolo LIKE '2026%'
-    ultimo = Chamado.objects.filter(
-        num_protocolo__startswith=prefix
-    ).aggregate(m=Max("num_protocolo"))["m"]
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT MAX(num_protocolo) FROM chamado "
+            "WHERE num_protocolo LIKE %s",
+            [f"{prefix}%"]
+        )
+        row = cursor.fetchone()
+        ultimo = row[0] if row else None
     if not ultimo:
         n = 1                            # Primeiro do ano
     else:
@@ -286,9 +296,15 @@ VALUES (NEW.id_chamado, 'Chamado 2026000001: status alterado para Concluído');
 
 **2. Contagem no menu (Context Processor):** O arquivo `context_processors.py` conta notificações não lidas a cada página:
 ```python
-notif_count = Notificacao.objects.filter(
-    id_chamado__in=chamado_ids, arquivada=False, lida=False
-).count()
+with connection.cursor() as cursor:
+    cursor.execute(
+        "SELECT COUNT(*) FROM notificacao n "
+        "WHERE n.arquivada = FALSE AND n.lida = FALSE "
+        "AND n.id_chamado IN ("
+        "    SELECT c.id_chamado FROM chamado c WHERE c.id_cidadao = %s"
+        ")", [u.pk]
+    )
+    notif_count = cursor.fetchone()[0]
 ```
 
 **3. Visualização (View):** O cidadão vê suas notificações em `/cidadao/notificacoes/` via `views_cidadao.py`.
@@ -311,7 +327,7 @@ class Chamado(models.Model):
 **O que isso significa:**
 - O Django **NÃO** cria nem altera as tabelas automaticamente (`makemigrations`/`migrate` não tocam nelas).
 - As tabelas foram criadas **manualmente** via scripts SQL da pasta `database/` (01_schema.sql → 02_seed.sql → ...).
-- O Django apenas **lê e escreve** nos registros, usando as classes como mapeamento (ORM).
+- Nós usamos **SQL puro (`cursor.execute`)** nas views para ler e escrever dados, ignorando as facilidades de consulta do ORM do Django.
 
 **Por que fizemos assim:** Porque a disciplina é de **Banco de Dados** — a professora exige que as tabelas, triggers e rules sejam criadas com SQL puro, não geradas automaticamente pelo framework.
 
@@ -324,23 +340,20 @@ class Chamado(models.Model):
 Ao abrir um novo chamado, precisamos inserir em **duas tabelas** (chamado + foto). Se a foto falhar, o chamado não pode ficar registrado sem foto. O `transaction.atomic()` garante que ambos os INSERTs funcionem ou nenhum funcione:
 
 ```python
-with transaction.atomic():
-    # INSERT 1: chamado
-    ch = Chamado.objects.create(
-        num_protocolo=proximo_protocolo(),
-        descricao=d["descricao"],
-        id_cidadao=request.portal_user,
-        id_servico=d["id_servico"],
-        id_bairro=d["id_bairro"],
+# O código do INSERT na view faz algo como:
+with connection.cursor() as cursor:
+    cursor.execute(
+        "INSERT INTO chamado (num_protocolo, ...) VALUES (%s, ...) RETURNING id_chamado",
+        [...]
     )
-    # INSERT 2: foto vinculada ao chamado
-    FotoChamado.objects.create(
-        id_chamado=ch,
-        url_foto=url,
+    chamado_id = cursor.fetchone()[0]
+    cursor.execute(
+        "INSERT INTO foto_chamado (id_chamado, url_foto, ...) VALUES (%s, %s, ...)",
+        [chamado_id, url, ...]
     )
 ```
 
-**Tradução SQL:** Isso equivale a `BEGIN; INSERT INTO chamado ...; INSERT INTO foto_chamado ...; COMMIT;` — se qualquer INSERT falhar, executa `ROLLBACK` e nenhum dado é salvo.
+**Tradução SQL:** O banco garante que ambos os INSERTs funcionem ou nenhum funcione; se falhar na foto, executa `ROLLBACK`.
 
 ---
 
@@ -365,27 +378,25 @@ CREATE INDEX ix_notificacao_chamado ON notificacao (id_chamado);
 
 ---
 
-## 18. Qual a diferença entre `select_related()` e `prefetch_related()` no ORM?
+## 18. Como é feito o JOIN para pegar os dados relacionados de um chamado?
 
-> **Arquivo:** `backend/portal/views_cidadao.py` e `views_equipe.py`
-
-Ambos servem para carregar dados de tabelas relacionadas, mas funcionam de forma diferente:
+No sistema, usamos SQL puro para trazer dados de múltiplas tabelas em uma única consulta:
 
 ```python
 # views_equipe.py — Dashboard da equipe
-qs = Chamado.objects.select_related(
-    "id_servico", "id_bairro", "id_cidadao"    # JOINs no SQL
-).prefetch_related(
-    "historicos__id_status"                     # Consulta separada
-).order_by("-dt_abertura")
+with connection.cursor() as cursor:
+    cursor.execute(
+        "SELECT c.id_chamado, c.num_protocolo, "
+        "s.nome AS servico_nome, b.nome_bairro "
+        "FROM chamado c "
+        "JOIN servico s ON c.id_servico = s.id_servico "
+        "JOIN bairro b ON c.id_bairro = b.id_bairro "
+        "WHERE TRUE "
+        "ORDER BY c.dt_abertura DESC"
+    )
 ```
 
-| Método | SQL gerado | Quando usar |
-|---|---|---|
-| `select_related()` | Faz **JOIN** na mesma query | Relações 1-para-1 (FK): chamado → serviço |
-| `prefetch_related()` | Faz **query separada** e junta no Python | Relações 1-para-muitos: chamado → históricos |
-
-**Sem essas funções**, cada vez que acessamos `ch.id_servico.nome` no template, o Django faria uma nova query ao banco (problema N+1). Com elas, tudo vem em 1-2 queries no total.
+**Por que fazemos o JOIN manualmente?** Como usamos apenas SQL puro, em vez de fazer várias consultas separadas (`SELECT` na tabela servico e bairro para cada chamado), montamos um único `SELECT` com `JOIN` para evitar lentidão e múltiplas idas ao banco.
 
 ---
 
@@ -395,10 +406,10 @@ qs = Chamado.objects.select_related(
 
 Quando o cidadão preenche o formulário e clica "Abrir Chamado", acontecem **5 operações no banco** em sequência:
 
-1. **INSERT chamado** → `Chamado.objects.create(...)` — cria o registro principal
+1. **INSERT chamado** → `cursor.execute("INSERT INTO chamado ...")` — cria o registro principal
 2. **Trigger 1 dispara** → `trg_chamado_after_insert_historico_ab` insere automaticamente `INSERT INTO historico_chamado (sigla='AB')` — primeiro histórico
 3. **Trigger 2B dispara** → `trg_historico_after_insert_status` cria `INSERT INTO notificacao (mensagem='Chamado aberto')` — notifica o cidadão
-4. **INSERT foto** → `FotoChamado.objects.create(...)` — salva a foto obrigatória
+4. **INSERT foto** → `cursor.execute("INSERT INTO foto_chamado ...")` — salva a foto obrigatória
 5. **COMMIT** → `transaction.atomic()` confirma tudo de uma vez
 
 Se qualquer etapa falhar, o `ROLLBACK` desfaz tudo (atomicidade).
@@ -419,9 +430,12 @@ def gestao_chamado_excluir(request, pk):
         messages.error(request, "É obrigatório informar uma justificativa...")
     
     # 2. Grava LOG de auditoria ANTES de apagar
-    HistoricoChamado.objects.create(
-        observacao=f"[EXCLUSÃO] Justificativa: {justificativa}",
-    )
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO historico_chamado (id_chamado, observacao, dt_alteracao) "
+            "VALUES (%s, %s, %s)",
+            [pk, f"[EXCLUSÃO] Justificativa: {justificativa}", timezone.now()]
+        )
     
     # 3. Apaga registros filhos primeiro, depois o chamado
     with connection.cursor() as cursor:

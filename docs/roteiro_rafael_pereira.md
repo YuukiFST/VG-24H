@@ -65,7 +65,7 @@ Rafael é responsável por toda a **camada de banco de dados** (schema, triggers
 
 #### `04_rules.sql` (126 linhas)
 
-> **Mudança importante**: As rules R1, R2 e R3 foram **convertidas para Triggers BEFORE** porque rules condicionais impediam o `INSERT RETURNING` do Django ORM. Agora usam `RAISE EXCEPTION` (erro explícito) em vez de `DO INSTEAD NOTHING` (falha silenciosa).
+> **Mudança importante**: As rules R1, R2 e R3 foram **convertidas para Triggers BEFORE** porque rules condicionais impediam o `INSERT RETURNING` nas queries SQL. Agora usam `RAISE EXCEPTION` (erro explícito) em vez de `DO INSTEAD NOTHING` (falha silenciosa).
 
 | Rule/Trigger | Tabela | Tipo | O que faz |
 |---|---|---|---|
@@ -88,7 +88,7 @@ Rafael é responsável por toda a **camada de banco de dados** (schema, triggers
 - `vw_estatisticas_chamados`: usa **`JOIN LATERAL`** para buscar o último status de cada chamado no `historico_chamado`
 - Agrupa por categoria, bairro, sigla_status, status_descricao → `COUNT(*)`
 
-### 3. Models Django (ORM) — `models.py`
+### 3. Models Django (Estrutura) — `models.py`
 
 > **Mudança importante**: O model `Chamado` agora tem **3 properties** em vez do campo `id_status`:
 
@@ -157,7 +157,7 @@ O model `HistoricoChamado` agora tem `related_name="historicos"` para facilitar 
 
 | Arquivo | Conteúdo |
 |---|---|
-| `models.py` | 12 classes ORM. `Chamado` com properties `status_atual`, `sigla_status` |
+| `models.py` | 12 classes para estrutura. `Chamado` com properties `status_atual`, `sigla_status` |
 | `middleware.py` | Autenticação dual + `set_config` PG |
 | `decorators.py` | `@perfis()` |
 | `utils.py` | Protocolo, upload, semáforo |
@@ -178,7 +178,7 @@ O model `HistoricoChamado` agora tem `related_name="historicos"` para facilitar 
 5. **Mostre as Rules restantes**: R5 (historico imutável), Extra (chamado sem delete)
 6. **Mostre a View** com `JOIN LATERAL` no último histórico
 7. **Explique o middleware**: `set_config` → sessão PG
-8. **Explique porque rules foram convertidas**: `INSERT RETURNING` do Django ORM é incompatível com rules condicionais
+8. **Explique porque rules foram convertidas**: `INSERT RETURNING` na query SQL é incompatível com rules condicionais
 
 ---
 
@@ -196,9 +196,9 @@ O model `HistoricoChamado` agora tem `related_name="historicos"` para facilitar 
 ### ⚠️ Ponto Crítico — Conversão Rules → Triggers
 
 Explique que as rules R1, R2 e R3 precisaram ser convertidas para triggers porque:
-- O Django ORM usa `INSERT ... RETURNING id` para obter o ID do registro inserido
+- O código Python usa `INSERT ... RETURNING id_chamado` para obter o ID do registro inserido
 - Rules condicionais (`DO INSTEAD NOTHING`) interceptam o INSERT, fazendo o RETURNING falhar
-- Triggers BEFORE com `RAISE EXCEPTION` são compatíveis: retornam erro explícito que o Django captura
+- Triggers BEFORE com `RAISE EXCEPTION` são compatíveis: retornam erro explícito que o backend captura
 
 ### 📄 Checklist
 
