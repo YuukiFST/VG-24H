@@ -179,6 +179,21 @@ Bruno é responsável por toda a **experiência do cidadão** no portal: desde o
 
 ---
 
+## 💡 Como explicar e demonstrar na prática (Dicas de Fala para a Professora)
+
+1. **Ao explicar a Autenticação Dual:** 
+   - *O que falar:* "Professora, não usamos o auth nativo do Django porque nosso DER exigiu separar `Cidadao` de `Servidor`. Então nossa view de login (Python) faz primeiro um `SELECT` no Cidadão; se voltar vazio, ela tenta um `SELECT` no Servidor. O perfil que ela encontrar, ela salva na sessão do navegador."
+2. **Ao mostrar o Wizard de Cadastro:**
+   - *Ação:* Vá preenchendo o formulário de cadastro aba por aba na frente dela.
+   - *O que falar:* "Fizemos o formulário dividido em 3 etapas com JavaScript (Dados Pessoais, Endereço, Segurança) para não sobrecarregar o usuário. A validação do banco (CPF e e-mail únicos) funciona de forma integrada."
+3. **Ao abrir um Chamado:**
+   - *Ação:* Faça o fluxo completo até o fim e mostre o protocolo gerado na tela.
+   - *O que falar:* "Professora, repare que no meu `INSERT` de chamado via Python, eu não envio a informação 'Status = Aberto'. O banco de dados intercepta esse novo chamado através do nosso **Trigger 1** e cria o primeiro registro de 'AB' no histórico automaticamente por debaixo dos panos."
+4. **Ao mostrar Privacidade dos Chamados:**
+   - *O que falar:* "O cidadão só vê os próprios chamados porque no nosso código injetamos de forma segura o `id_cidadao` capturado na sessão e aplicamos na query: `SELECT * FROM chamado WHERE id_cidadao = %s`."
+
+---
+
 ## 📚 Mapeamento por Etapa da Disciplina
 
 | Etapa | O que Bruno apresenta |

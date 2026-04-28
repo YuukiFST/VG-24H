@@ -182,6 +182,20 @@ O model `HistoricoChamado` agora tem `related_name="historicos"` para facilitar 
 
 ---
 
+## 💡 Como explicar e demonstrar na prática (Dicas de Fala para a Professora)
+
+1. **Ao demonstrar o Trigger 1 (Chamado -> Histórico):**
+   - *Ação:* Abra o pgAdmin na tabela `historico_chamado` e conte as linhas. Peça para o Bruno (ou você mesmo) abrir um chamado no site. Em seguida, atualize o pgAdmin.
+   - *O que falar:* "Professora, a aplicação Python deu apenas 1 INSERT, que foi na tabela Chamado. Mas veja aqui no pgAdmin: o registro de histórico 'AB' apareceu automaticamente junto. Isso foi o nosso Trigger 1 (AFTER INSERT) garantindo a integridade dos dados."
+2. **Ao explicar a View `vw_estatisticas_chamados`:**
+   - *O que falar:* "Para não travar a aplicação do Gestor fazendo dezenas de `SELECT`s individuais, criei uma View no PostgreSQL. Ela usa um `JOIN LATERAL` poderoso para buscar exclusivamente qual é o ÚLTIMO status registrado no histórico de cada chamado, e já devolve tudo consolidado agrupando por bairro e categoria."
+3. **A pergunta de Ouro: Por que trocaram Rules por Triggers?**
+   - *O que falar:* "Professora, descobrimos na prática que as Rules condicionais (`DO INSTEAD NOTHING`) matam silenciosamente o comando `INSERT`. Como o nosso Python usa o comando `RETURNING id_chamado` para recuperar o ID gerado pelo banco e salvar a foto na sequência, a Rule engolia isso e o Python dava erro de variável vazia. Trocamos para Trigger BEFORE com `RAISE EXCEPTION` porque o trigger barra a transação no banco da mesma forma, mas cospe um erro explícito que o Python consegue ler e tratar."
+4. **Ao mostrar os `set_config` no Middleware:**
+   - *O que falar:* "Como a conexão do Django com o banco de dados tem um usuário unificado, nós injetamos na sessão daquele momento no PostgreSQL as variáveis customizadas como: `set_config('portal.perfil', 'CID', true)`. Assim, todas as Triggers e Functions que criamos no banco sabem exatamente QUAL perfil de sistema está disparando a ação."
+
+---
+
 ## 📚 Mapeamento por Etapa da Disciplina
 
 | Etapa | O que Rafael apresenta |

@@ -132,6 +132,20 @@ Fausto é responsável pelos **módulos administrativos** (Colaborador e Gestor)
 
 ---
 
+## 💡 Como explicar e demonstrar na prática (Dicas de Fala para a Professora)
+
+1. **Ao mostrar a Herança de Templates (`base.html`):**
+   - *O que falar:* "Professora, para não repetir código, o cabeçalho, menu lateral e rodapé estão todos em um único arquivo: `base.html`. As outras telas só 'injetam' o miolo. Além disso, o menu é inteligente: usamos um `IF` (`{% if nav_perfil == 'GES' %}`) para mostrar os links de Gestão apenas se quem está logado for Gestor."
+2. **Ao explicar a regra do Status (Arquitetura):**
+   - *O que falar:* "Nós tomamos a decisão de não ter a coluna 'status' na tabela Chamado. Para o colaborador mudar o status para 'Em Análise', nossa view não faz um UPDATE no chamado, ela faz um `INSERT INTO historico_chamado`. O status atual que o usuário vê na tela é sempre calculado dinamicamente puxando o último registro desse histórico."
+3. **Ao demonstrar as restrições COL vs GES:**
+   - *Ação:* Logue como Colaborador (COL) e tente acessar `/gestao/categorias/` forçando a URL no navegador.
+   - *O que falar:* "Temos uma camada de segurança usando o decorator `@perfis('GES')` nas views em Python. Se o COL tentar burlar clicando ou digitando a URL do gestor, o backend bloqueia e devolve um erro de permissão."
+4. **Ao mostrar a Gestão de Serviços (Prazos):**
+   - *O que falar:* "Ao criar o serviço, o Gestor define com quantos dias ele fica Amarelo e Vermelho. A nossa propriedade no backend Python chamada `cor_semaforo` lê esses dias, compara com a idade do chamado, e é ela que decide se pinta a bolinha de verde, amarelo ou vermelho lá no Dashboard."
+
+---
+
 ## 📚 Mapeamento por Etapa da Disciplina
 
 | Etapa | O que Fausto apresenta |

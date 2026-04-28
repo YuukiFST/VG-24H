@@ -292,19 +292,67 @@ Para trocar a logo, substitua o arquivo `logo.png` por outra imagem com o mesmo 
 
 ---
 
-## 🧠 Dicas Importantes
+## 🎯 FAQ de Apresentação (Perguntas Frequentes sobre Interface)
 
-1. **Herança de Templates**: Toda página usa `{% extends "portal/base.html" %}`. Se algo aparece em todas as páginas, está no `base.html`.
+Se a professora fizer perguntas específicas sobre a localização de elementos visuais na hora da apresentação, use este guia rápido de respostas:
 
-2. **Blocos**: Cada página preenche `{% block content %}`. Se quiser adicionar CSS/JS só em uma página, use `{% block extra_css %}` ou `{% block extra_js %}`.
+### 1. Onde eu coloco a imagem do "Banner" do carrossel?
+- **Pelo sistema (dinâmico):** Um usuário logado com perfil de Gestor (GES) deve ir no menu **Gestão > Banners** e fazer o upload da imagem por lá. As imagens não ficam "chumbadas" no código.
+- **Estrutura no código:** Se ela perguntar onde fica o código HTML que exibe esse carrossel, a resposta é no arquivo `backend/templates/portal/root.html`. O arquivo de JavaScript responsável por fazer as imagens girarem é o `backend/static/portal/js/vg24h.js`.
 
-3. **Contexto dinâmico**: As variáveis disponíveis em todos os templates (via context processor) são:
-   - `nav_user` — objeto do usuário logado
-   - `nav_perfil` — sigla do perfil (`"CID"`, `"COL"`, `"GES"` ou `None`)
-   - `notif_count` — contagem de notificações não lidas (só para CID)
+### 2. O projeto tem cookies? Onde eles estão e como altero a mensagem?
+- **Localização:** `backend/templates/portal/base.html`
+- **Resposta:** Sim, o projeto possui um aviso de consentimento de Cookies (regra da LGPD). Como essa barra precisa aparecer em **todas** as telas do portal, ela foi colocada no arquivo mestre `base.html`, geralmente próximo ao código do rodapé (`<footer>`). Para alterar o texto da mensagem, basta buscar por `cookie` dentro do `base.html`.
 
-4. **Mensagens Django**: Quando uma view faz `messages.success(request, "texto")`, o `base.html` renderiza um alerta. A aparência é controlada no CSS.
+### 3. Se eu quiser mudar a logo do sistema, onde fica?
+- **Imagem:** O arquivo físico da imagem fica em `backend/static/img/logo.png`. Para trocar a logo de fato, basta substituir essa imagem por outra de mesmo nome.
+- **Código:** O HTML que puxa essa logo para aparecer no topo do site está no `<header>` dentro de `backend/templates/portal/base.html`. Alterando no `base.html`, a logo muda no site inteiro. A tela de login tem um layout próprio, mas puxa essa mesma imagem em `auth/login.html`.
 
-5. **Antes de mexer no CSS**: Procure se já existe uma classe para o que você quer fazer. O `vg24h.css` tem muitas classes prontas.
+### 4. Se eu quiser alterar o "Breadcrumb" (ex: Início > Meus Chamados) dentro do chamado, onde devo ir?
+- **Resposta:** O breadcrumb (rastro de navegação) não é global; ele é construído especificamente para cada página. Para alterar o breadcrumb de dentro de um chamado, você deve editar o HTML da própria tela do chamado:
+  - Visão do Cidadão: `backend/templates/portal/cidadao/chamado_detalhe.html`
+  - Visão da Equipe/Gestão: `backend/templates/portal/equipe/chamado_detalhe.html`
+- Procure pelas tags com a classe `.br-breadcrumb` logo no topo do código desses arquivos.
 
-6. **Componentes Gov.br**: O projeto usa componentes como `br-button`, `br-input`, `br-table`, `br-tag`. Se precisa do HTML correto, consulte: https://www.gov.br/ds/
+### 5. Onde ficam os "Modais" (popups) do projeto? (Ex: Modal de excluir, de cancelar chamado)
+- **Resposta:** Os modais (que usam a classe `.br-modal` do padrão Gov.br) não ficam em arquivos separados. Eles ficam embutidos no próprio arquivo HTML da página onde são chamados, geralmente no final do código, e ficam ocultos até o usuário clicar no botão de ação.
+- **Exemplo:** O popup para o Gestor excluir uma categoria fica dentro de `backend/templates/portal/gestao/categorias.html`. O modal para o Cidadão cancelar um chamado fica no fim de `backend/templates/portal/cidadao/chamado_detalhe.html`.
+
+---
+
+## 🧠 Dicas Importantes (Aprofundado com Exemplos para Apresentação)
+
+### 1. Herança de Templates (O que está no `base.html` vs. O que está nas páginas)
+Toda página do sistema começa com a linha `{% extends "portal/base.html" %}`. Isso significa que a tela inteira é estruturada pelo `base.html`, e a página atual só "preenche" o miolo.
+- **Exemplos do que APARECE em TODAS as páginas (e que, portanto, fica no `base.html`)**:
+  - O **Header escuro no topo** (Logo VG 24H, link "Entrar", menu de acessibilidade alto contraste e avatar do usuário).
+  - O **Menu Lateral (Sidebar)** (onde os usuários clicam em "Meus Chamados", "Gestão", "Sair").
+  - O **Rodapé (Footer)** (endereço da prefeitura, telefones, ouvidoria, redes sociais, barra de Cookies e selo do Governo).
+- **Exemplos do que NÃO aparece em todas as páginas (e que fica no arquivo específico da página)**:
+  - O "miolo" central em si (tabelas, gráficos, listas, formulários).
+  - O **Breadcrumb** (ex: *Início > Meus Chamados*). Como o caminho e os links mudam de página para página, ele é colocado no topo do código de cada página específica (como `dashboard.html` ou `chamado_detalhe.html`), e nunca no `base.html`.
+  - O Carrossel e Banners rotativos (existem apenas no `root.html`).
+
+### 2. O conceito de Blocos (Blocks)
+Cada página específica "injeta" seu conteúdo no `base.html` através de blocos definidos.
+- **`{% block content %}`**: É o bloco principal. É aqui que o HTML da tabela de chamados ou de um formulário daquela tela entra.
+- **Exemplo de JS e CSS isolado (`{% block extra_js %}`)**: Se a professora perguntar como o sistema gerencia performance, você pode explicar que o JavaScript do carrossel ou gráficos não é carregado no sistema inteiro. Em vez de deixar todas as páginas pesadas colocando tudo no `base.html`, a página inicial (`root.html`) usa o `{% block extra_js %}` para carregar aquele script *apenas e somente nela*.
+
+### 3. Contexto Dinâmico (Como a tela sabe quem é o usuário?)
+Se a professora perguntar *"Como você exibe o nome do usuário ali no canto ou esconde o botão de Gestão para quem não é gestor?"*:
+- O backend Python injeta variáveis silenciosamente em **todas** as telas do sistema simultaneamente (via `backend/portal/context_processors.py`).
+- **Exemplos práticos no HTML:**
+  - **Para exibir o nome:** Qualquer template do projeto só precisa chamar a tag `{{ nav_user.nome_completo }}`.
+  - **Para esconder menus restritos:** No `base.html` usamos um IF: `{% if nav_perfil == "GES" %}` mostra o botão "Gestão" `{% endif %}`. Se for "CID", o HTML desse botão sequer é renderizado para o cidadão.
+  - **Notificações:** O sininho vermelho no menu do cidadão usa a variável global `{{ notif_count }}` para mostrar quantas mensagens não lidas existem, sem que as Views do projeto precisem ficar recalculando isso o tempo todo.
+
+### 4. Mensagens do Sistema (Toasts/Alerts)
+Se a professora perguntar *"De onde saem essas barrinhas verdes e vermelhas de alerta no topo?"*:
+- **A Lógica:** Quando uma ação dá certo (ex: criar serviço) ou errado, o backend diz via Python: `messages.success(request, "Serviço criado!")` e redireciona o usuário.
+- **O Visual:** Como é o `base.html` que desenha o topo de *todas* as telas, ele tem um pedaço de código programado para ler se existe alguma mensagem pendente e desenhá-la. Assim a mensagem exibe lindamente, independente de para qual tela o usuário acabou sendo redirecionado.
+
+### 5. Estilização e Componentes Gov.br
+Se a professora quiser saber *"Vocês fizeram esse CSS todo do zero?"*:
+- **A Resposta:** O projeto adota a biblioteca oficial de design do governo (https://www.gov.br/ds/). A maior parte da beleza e interações já vem pronta através de classes CSS oficiais.
+- **Exemplo Prático:** Para criar um botão azul, não escrevemos CSS novo. Simplesmente escrevemos no HTML `<button class="br-button primary">`. Para inputs textuais, usamos `<div class="br-input">`. 
+- O arquivo que nós criamos (`vg24h.css`) existe apenas para customizar a **cor principal** para azul escuro (através de variáveis `:root` e de tema), alinhar componentes (margins/paddings) e aplicar cores semânticas como o verde/amarelo/vermelho do semáforo, que não são nativas do Gov.br.
