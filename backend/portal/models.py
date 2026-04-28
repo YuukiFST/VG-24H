@@ -22,6 +22,7 @@ automaticamente quando usamos select_related() ou acessamos obj.id_servico.nome.
 """
 
 from django.db import models
+from django.utils import timezone
 
 
 # ============================================================
@@ -232,20 +233,25 @@ class Chamado(models.Model):
         db_table = "chamado"
 
     @property
+    def _ultimo_historico(self):
+        """Retorna o último registro de histórico (usa cache do prefetch se disponível)."""
+        try:
+            historicos = list(self.historicos.all())
+            if not historicos:
+                return None
+            return max(historicos, key=lambda h: h.dt_alteracao)
+        except (ValueError, AttributeError):
+            return None
+
+    @property
     def status_atual(self):
         """
         Retorna o status atual do chamado consultando o último histórico.
-        SQL equivalente:
-          SELECT s.* FROM historico_chamado h
-          JOIN status_chamado s ON h.id_status = s.id_status
-          WHERE h.id_chamado = X
-          ORDER BY h.dt_alteracao DESC LIMIT 1
+
+        >>> chamado.status_atual.descricao
+        'Aberto'
         """
-        ultimo = (
-            self.historicos.select_related("id_status")
-            .order_by("-dt_alteracao")
-            .first()
-        )
+        ultimo = self._ultimo_historico
         return ultimo.id_status if ultimo else None
 
     @property
@@ -257,8 +263,44 @@ class Chamado(models.Model):
     @property
     def ultima_atualizacao(self):
         """Retorna a data/hora da última alteração de status."""
-        ultimo = self.historicos.order_by("-dt_alteracao").first()
+        ultimo = self._ultimo_historico
         return ultimo.dt_alteracao if ultimo else self.dt_abertura
+
+    @property
+    def cor_semaforo(self):
+        """Classifica o chamado pelo prazo: 'verde', 'amarelo' ou 'vermelho'.
+
+        >>> chamado.cor_semaforo
+        'verde'
+        """
+        s = self.id_servico
+        dias = (timezone.now() - self.dt_abertura).days
+        if dias >= s.prazo_vermelho_dias:
+            return "vermelho"
+        if dias >= s.prazo_amarelo_dias:
+            return "amarelo"
+        return "verde"
+
+    @classmethod
+    def calcular_stats(cls, queryset):
+        """Calcula estatísticas de semáforo para um queryset de chamados.
+
+        >>> stats = Chamado.calcular_stats(Chamado.objects.all())
+        >>> stats['no_prazo']
+        5
+        """
+        stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
+        now = timezone.now()
+        for ch in queryset.select_related("id_servico"):
+            dias = (now - ch.dt_abertura).days
+            s = ch.id_servico
+            if dias >= s.prazo_vermelho_dias:
+                stats["critico"] += 1
+            elif dias >= s.prazo_amarelo_dias:
+                stats["atencao"] += 1
+            else:
+                stats["no_prazo"] += 1
+        return stats
 
 
 # ============================================================

@@ -12,6 +12,8 @@ Diferença chave em relação ao views_cidadao.py:
 """
 
 from django.contrib import messages
+from django.db import connection
+from django.db.models import OuterRef, Subquery
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
@@ -25,7 +27,7 @@ from portal.models import (
     HistoricoChamado,
     StatusChamado,
 )
-from portal.utils import cor_semaforo, salvar_foto_upload, sigla_status
+from portal.utils import salvar_foto_upload
 
 
 def _int_none(v):
@@ -55,17 +57,7 @@ def equipe_chamados_lista(request):
     ).prefetch_related("historicos__id_status").order_by("-dt_abertura")
 
     # Calculate global stats (Semáforo) before filtering
-    stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
-    now = timezone.now()
-    for ch in qs:
-        dias = (now - ch.dt_abertura).days
-        s = ch.id_servico
-        if dias >= s.prazo_vermelho_dias:
-            stats["critico"] += 1
-        elif dias >= s.prazo_amarelo_dias:
-            stats["atencao"] += 1
-        else:
-            stats["no_prazo"] += 1
+    stats = Chamado.calcular_stats(qs)
     total_count = qs.count()
 
     # Apply Filters
@@ -76,8 +68,6 @@ def equipe_chamados_lista(request):
     if bairro:
         qs = qs.filter(id_bairro_id=bairro)
     if st:
-        from portal.models import HistoricoChamado
-        from django.db.models import Subquery, OuterRef
         latest_status = HistoricoChamado.objects.filter(
             id_chamado=OuterRef("pk")
         ).order_by("-dt_alteracao").values("id_status_id")[:1]
@@ -87,9 +77,7 @@ def equipe_chamados_lista(request):
     if d1:
         qs = qs.filter(dt_abertura__date__lte=d1)
 
-    linhas = []
-    for ch in qs:
-        linhas.append({"ch": ch, "cor": cor_semaforo(ch)})
+    linhas = [{"ch": ch, "cor": ch.cor_semaforo} for ch in qs]
 
     return render(
         request,
@@ -118,7 +106,7 @@ def equipe_chamado_detalhe(request, pk):
         pk=pk,
     )
     p = perfil_codigo(request.portal_user)
-    ts = sigla_status(ch)
+    ts = ch.sigla_status
     bloqueia_status_col = p == "COL" and ts in ("CO", "CA")
     pode_status = not bloqueia_status_col
 
@@ -168,7 +156,7 @@ def equipe_chamado_detalhe(request, pk):
                 form_f = FotoForm(request.POST, request.FILES)
                 if form_f.is_valid():
                     try:
-                        url = salvar_foto_upload(request, request.FILES["foto"])
+                        url = salvar_foto_upload(request.FILES["foto"], request=request)
                     except ValueError as e:
                         messages.error(request, str(e))
                     else:
@@ -240,8 +228,6 @@ def equipe_chamado_detalhe(request, pk):
 @perfis("GES")
 @require_http_methods(["POST"])
 def gestao_chamado_excluir(request, pk):
-    from django.db import connection
-
     ch = get_object_or_404(Chamado, pk=pk)
     justificativa = (request.POST.get("justificativa") or "").strip()
 

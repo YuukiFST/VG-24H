@@ -1,8 +1,15 @@
-from django.db.models import Q
+from django.db.models import Count, OuterRef, Q, Subquery
 from django.shortcuts import redirect, render
 
 from portal.decorators import perfil_codigo
-from portal.models import BannerPublicacao, CategoriaServico, Servico
+from portal.models import (
+    Bairro,
+    BannerPublicacao,
+    CategoriaServico,
+    Chamado,
+    HistoricoChamado,
+    Servico,
+)
 
 
 def catalogo_servicos(request):
@@ -38,12 +45,7 @@ def catalogo_servicos(request):
 
 
 def root_view(request):
-    from django.db.models import Count
-    from portal.models import Bairro, Chamado
-
     try:
-        from portal.models import HistoricoChamado
-        from django.db.models import Subquery, OuterRef
 
         # Categorias com seus serviços agrupados (para os cards GOV.br)
         categorias = []

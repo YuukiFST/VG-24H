@@ -33,7 +33,7 @@ backend/
 
 ## 🧩 Template Base — `base.html` (afeta TODAS as páginas)
 
-> **Localização:** `backend/templates/portal/base.html` (17 KB)
+> **Localização:** `backend/templates/portal/base.html` (21 KB)
 >
 > Todas as páginas do sistema usam `{% extends "portal/base.html" %}`. Então qualquer mudança aqui **afeta o sistema inteiro**.
 
@@ -62,7 +62,7 @@ backend/
 
 ## 🏠 Homepage (Página Pública) — `root.html`
 
-> **Localização:** `backend/templates/portal/root.html` (10 KB)
+> **Localização:** `backend/templates/portal/root.html` (14 KB)
 >
 > **URL:** `http://localhost:8000/`
 
@@ -92,7 +92,7 @@ backend/
 | Arquivo | URL | O que faz |
 |---|---|---|
 | `login.html` | `/accounts/login/` | Formulário de e-mail + senha. Links para cadastro e recuperação. |
-| `cadastro.html` (14 KB) | `/accounts/cadastro/` | **Wizard de 3 etapas**: Dados Pessoais → Endereço → Segurança. Contém sidebar com dicas, validação JS inline. |
+| `cadastro.html` (8 KB) | `/accounts/cadastro/` | **Wizard de 3 etapas**: Dados Pessoais → Endereço → Segurança. Contém sidebar com dicas, validação JS inline. |
 | `recuperar_senha.html` | `/accounts/recuperar-senha/` | Campo de e-mail para enviar link de recuperação. |
 | `redefinir_senha.html` | `/accounts/redefinir-senha/<token>/` | Campos nova senha + confirmação. |
 | `troca_senha_obrigatoria.html` | `/accounts/trocar-senha/` | Troca de senha no 1º acesso de colaboradores. |

@@ -1,8 +1,20 @@
+"""
+views_gestao.py — Views de Gestão (Portal VG 24H)
+
+Este módulo contém todas as views acessíveis apenas por gestores (GES).
+O decorador @perfis("GES") garante que APENAS usuários com perfil 'GES'
+podem acessar estas rotas. Cidadaos e colaboradores são bloqueados.
+
+Operações:
+  - CRUD de Categorias, Serviços, Bairros, Colaboradores e Banners
+  - Visualização de estatísticas via view SQL
+"""
+
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
-from django.db import IntegrityError
-from django.db.utils import ProgrammingError
+from django.db import IntegrityError, connection
 from django.db.models.functions import Trim
+from django.db.utils import ProgrammingError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
@@ -22,6 +34,7 @@ from portal.models import (
     Servico,
     Servidor,
 )
+from portal.utils import salvar_foto_upload
 
 
 # ─── Estatísticas ────────────────────────────────────────────
@@ -259,7 +272,6 @@ def gestao_banner_novo(request):
             messages.error(request, "Imagem é obrigatória.")
             return redirect("portal:gestao_banner_novo")
 
-        from portal.utils import salvar_foto_upload
         url_imagem = salvar_foto_upload(foto)
 
         BannerPublicacao.objects.create(
@@ -286,7 +298,6 @@ def gestao_banner_editar(request, pk):
 
         foto = request.FILES.get("imagem")
         if foto:
-            from portal.utils import salvar_foto_upload
             banner.url_imagem = salvar_foto_upload(foto)
 
         banner.save()

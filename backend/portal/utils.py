@@ -25,7 +25,11 @@ def proximo_protocolo():
     return f"{prefix}{n:06d}"
 
 
-def salvar_foto_upload(request, arquivo):
+def salvar_foto_upload(arquivo, request=None):
+    """Salva foto via Cloudinary (se configurado) ou filesystem local.
+
+    >>> url = salvar_foto_upload(uploaded_file, request=request)
+    """
     if not arquivo:
         raise ValueError("Foto obrigatória.")
     cu = os.environ.get("CLOUDINARY_URL")
@@ -41,19 +45,7 @@ def salvar_foto_upload(request, arquivo):
     ext = os.path.splitext(arquivo.name)[1][:12] or ".jpg"
     nome = f"chamados/{uuid.uuid4().hex}{ext}"
     caminho = default_storage.save(nome, arquivo)
-    return request.build_absolute_uri(f"{settings.MEDIA_URL}{caminho}")
+    if request:
+        return request.build_absolute_uri(f"{settings.MEDIA_URL}{caminho}")
+    return f"{settings.MEDIA_URL}{caminho}"
 
-
-def sigla_status(chamado):
-    """Retorna a sigla do status (ex: 'AB', 'CO')."""
-    return chamado.sigla_status
-
-
-def cor_semaforo(chamado):
-    s = chamado.id_servico
-    dias = (timezone.now() - chamado.dt_abertura).days
-    if dias >= s.prazo_vermelho_dias:
-        return "vermelho"
-    if dias >= s.prazo_amarelo_dias:
-        return "amarelo"
-    return "verde"

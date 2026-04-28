@@ -57,41 +57,17 @@ def login_view(request):
         email = (request.POST.get("email") or "").strip().lower()
         senha = request.POST.get("password") or ""
 
-        user = None
-        tipo = None
-
-        # BUSCA NO BANCO DE DADOS (SELECT)                  
-        # Aqui é onde o sistema consulta o PostgreSQL/Neon
-        # para verificar se o email existe nas tabelas.
-        # Primeiro tenta na tabela 'cidadao', se não encontrar, tenta na tabela 'servidor'.
-        from django.db import connection
-        with connection.cursor() as cursor:
-            # SELECT na tabela 'cidadao' — busca pelo email informado
-            cursor.execute(
-                "SELECT id_cidadao, nome_completo, senha_hash, perfil, senha_temporaria "
-                "FROM cidadao "
-                "WHERE LOWER(email) = %s AND ativo = TRUE",
-                [email],
-            )
-            row = cursor.fetchone()
-
-            if row:
-                # Encontrou na tabela cidadao → monta o objeto manualmente
-                user = Cidadao.objects.get(pk=row[0])
-                tipo = "cidadao"
-            else:
-                # Não encontrou em cidadao → tenta SELECT na tabela 'servidor'
-                cursor.execute(
-                    "SELECT id_servidor, nome_completo, senha_hash, perfil, senha_temporaria "
-                    "FROM servidor "
-                    "WHERE LOWER(email) = %s AND ativo = TRUE",
-                    [email],
-                )
-                row = cursor.fetchone()
-                if row:
-                    # Encontrou na tabela servidor
-                    user = Servidor.objects.get(pk=row[0])
-                    tipo = "servidor"
+        # Busca o usuário pelo email: primeiro em cidadão, depois em servidor
+        try:
+            user = Cidadao.objects.get(email__iexact=email, ativo=True)
+            tipo = "cidadao"
+        except Cidadao.DoesNotExist:
+            try:
+                user = Servidor.objects.get(email__iexact=email, ativo=True)
+                tipo = "servidor"
+            except Servidor.DoesNotExist:
+                user = None
+                tipo = None
 
         # ┌─────────────────────────────────────────────────────┐
         # │  TRATAMENTO DE ERRO — Usuário NÃO encontrado       │

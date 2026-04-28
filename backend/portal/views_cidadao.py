@@ -14,6 +14,7 @@ Operações CRUD realizadas:
 
 from django.contrib import messages
 from django.db import transaction
+from django.db.models import OuterRef, Prefetch, Subquery
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -34,9 +35,10 @@ from portal.models import (
     FotoChamado,
     HistoricoChamado,
     Notificacao,
+    Servico,
     StatusChamado,
 )
-from portal.utils import proximo_protocolo, salvar_foto_upload, sigla_status
+from portal.utils import proximo_protocolo, salvar_foto_upload
 
 
 # FUNÇÃO AUXILIAR DE SEGURANÇA:
@@ -77,8 +79,6 @@ def cidadao_chamados_lista(request):
     # Filters
     st_filter = request.GET.get("status")
     if st_filter:
-        from portal.models import HistoricoChamado
-        from django.db.models import Subquery, OuterRef
         latest_status = HistoricoChamado.objects.filter(
             id_chamado=OuterRef("pk")
         ).order_by("-dt_alteracao").values("id_status__sigla")[:1]
@@ -99,10 +99,14 @@ def cidadao_chamados_lista(request):
     page_number = request.GET.get("pagina", 1)
     page_obj = paginator.get_page(page_number)
 
+    # Stats (Semáforo)
+    base_qs = Chamado.objects.filter(id_cidadao=request.portal_user)
+    stats = Chamado.calcular_stats(base_qs)
+
     return render(
         request,
         "portal/cidadao/dashboard.html",
-        {"lista": page_obj, "total_count": total_count, "page_obj": page_obj},
+        {"lista": page_obj, "total_count": total_count, "page_obj": page_obj, "stats": stats},
     )
 
 
@@ -110,8 +114,6 @@ def cidadao_chamados_lista(request):
 @perfis("CID")
 @require_http_methods(["GET", "POST"])
 def cidadao_chamado_novo(request):
-    from django.db.models import Prefetch
-    from portal.models import Servico
     categorias = CategoriaServico.objects.filter(ativo=True).prefetch_related(
         Prefetch("servicos", queryset=Servico.objects.filter(ativo=True).order_by("nome"))
     )
@@ -122,7 +124,7 @@ def cidadao_chamado_novo(request):
         if form.is_valid():
             d = form.cleaned_data
             try:
-                url = salvar_foto_upload(request, request.FILES.get("foto"))
+                url = salvar_foto_upload(request.FILES.get("foto"), request=request)
             except ValueError as e:
                 messages.error(request, str(e))
                 return render(
@@ -167,7 +169,7 @@ def cidadao_chamado_novo(request):
 @require_http_methods(["GET", "POST"])
 def cidadao_chamado_detalhe(request, pk):
     ch = _chamado_do_cidadao(request, pk)
-    ts = sigla_status(ch)
+    ts = ch.sigla_status
     pode_obs_foto = ts not in ("CO", "CA")
     pode_cancelar = ts in ("AB", "EA")
     pode_avaliar = ts == "CO" and ch.nota_avaliacao is None
@@ -191,7 +193,7 @@ def cidadao_chamado_detalhe(request, pk):
             form_f = FotoForm(request.POST, request.FILES)
             if form_f.is_valid() and request.FILES.get("foto"):
                 try:
-                    url = salvar_foto_upload(request, request.FILES["foto"])
+                    url = salvar_foto_upload(request.FILES["foto"], request=request)
                 except ValueError as e:
                     messages.error(request, str(e))
                 else:

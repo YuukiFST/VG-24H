@@ -1,6 +1,6 @@
 # FAQ de Código e Arquitetura — Portal VG 24H
 
-Este documento reúne perguntas frequentes sobre "Onde acontece tal coisa no código?" para orientar a apresentação e facilitar o entendimento logico de como as requisições se comunicam com o banco de dados.
+Este documento reúne perguntas frequentes sobre "Onde acontece tal coisa no código?" para orientar a apresentação e facilitar o entendimento lógico de como as requisições se comunicam com o banco de dados.
 
 ---
 
@@ -21,7 +21,9 @@ except Cidadao.DoesNotExist:
     except Servidor.DoesNotExist:
         pass
 ```
-*Tradução para o Banco de Dados:* Isso funciona como `SELECT * FROM cidadao WHERE email = 'X' AND ativo = true`. Se voltar vazio, ele tenta fazer `SELECT * FROM servidor WHERE email = 'X' AND ativo = true`.
+*Tradução para o Banco de Dados:* Isso funciona como `SELECT * FROM cidadao WHERE LOWER(email) = 'x' AND ativo = true`. Se voltar vazio, ele tenta fazer `SELECT * FROM servidor WHERE LOWER(email) = 'x' AND ativo = true`.
+
+---
 
 ## 2. Como e onde é tratado se os dados de acesso estiverem errados?
 
@@ -40,6 +42,8 @@ else:
     messages.error(request, "E-mail ou senha incorretos.")
 ```
 > **Por segurança:** Nunca retornamos erros diferenciais como "Email não encontrado" ou "Senha incorreta". Em ambos os casos a resposta falha de forma genérica para blindar as contas.
+
+---
 
 ## 3. Quando o login deu certo, o que o sistema memoriza?
 
@@ -62,61 +66,369 @@ elif check_password(senha, user.senha_hash):
     return redirect("portal:root")
 ```
 
+---
+
 ## 4. Onde ocorre a separação de telas de acordo com o perfil?
 
 A divisão do código por perfil (CID, COL, GES) acontece interceptando acessos em três camadas:
 
 1. **Camada de Rotas (Views)**: Ocorre no arquivo `backend/portal/decorators.py` com o uso das funções `@perfis`. Antes de carregar uma página (`views_gestao.py` por exemplo), ele exige `@perfis("GES")`. Se um cidadão (CID) tentar contornar navegando pela aba da URL, a tela o barra e redireciona de volta mandando erro.
 2. **Camada de Botões Visual (Templates HTML)**: O modelo base `backend/templates/portal/base.html` verifica `{% if nav_perfil == "GES" %}` para mostrar o link da administração do menu ou mostrar tela do "Cidadão".
-3. **Camada de Segurança do Banco (PostgreSQL)**: Todas as "Rules e Triggers" no SQL dependem do nível de acesso. Exemplo, a Rule R4 verifica se `current_setting('portal.perfil')` é 'COL' ou 'GES' para deixar um chamado ser atualizado para Concluído. 
+3. **Camada de Segurança do Banco (PostgreSQL)**: As Triggers de integridade no SQL dependem do nível de acesso. Exemplo, a Trigger de Rule 1 verifica se o chamado está encerrado antes de deixar adicionar fotos, protegendo mesmo se alguém burlar a interface.
 
 ---
 
 # Mais Perguntas Técnicas Similares
 
 ## 5. Como as senhas são criptografadas antes de ir para o banco?
-> **Arquivos:** `views_auth.py` e `views_gestao.py` 
+
+> **Arquivos:** `views_auth.py` e `views_gestao.py`
 
 O armazenamento de senhas cruas (ex: "123456") é quebrado com a função `make_password()` nativa do pacote de hashes do Django.
-No momento do cadastro (`views_auth.py`) ou da criação de um Colaborador pela gestão (`gestao_colaborador_toggle` no `views_gestao.py`), acontece:
-`u.senha_hash = make_password(form.cleaned_data["senha"])`
-No BD caem *hashes* parecidos com: `pbkdf2_sha256$260000$....`. 
+No momento do cadastro (`views_auth.py`) ou da criação de um Colaborador pela gestão (`gestao_colaboradores` no `views_gestao.py`), acontece:
+
+```python
+# views_auth.py — cadastro de cidadão
+senha_hash=make_password(d["senha"])
+
+# views_gestao.py — criação de colaborador
+senha_hash=make_password(d["senha_provisoria"])
+```
+
+No BD caem *hashes* parecidos com: `pbkdf2_sha256$720000$....`. A senha real **nunca** é gravada.
+
+---
 
 ## 6. Como o sistema identifica o usuário a cada vez que ele troca de página?
+
 > **Arquivo:** `backend/portal/middleware.py`
 
-Quando o usuário efetua login, ganha apenas a sessão salva (visto na pergunta 3). Cada vez que ele acessa uma rota como `/cidadao/chamados`, o `PortalUserMiddleware` é acionado **antes de mostrar a tela (Request)**. Ele executa a rotina nativa `_usuario_da_sessao` que puxa toda a ficha baseada em sua ID em background. Isso é convertido na variável `request.portal_user` disponibilizando informações para toda a regra Python. 
+Quando o usuário efetua login, ganha apenas a sessão salva (visto na pergunta 3). Cada vez que ele acessa uma rota como `/cidadao/chamados`, o `PortalUserMiddleware` é acionado **antes de mostrar a tela (Request)**. Ele executa a rotina `_usuario_da_sessao` que puxa toda a ficha baseada em sua ID em background.
 
-## 7. Como as Rules/Triggers do banco sabem que eu sou Gestor ou um Cidadão se estão fora do Django?
+```python
+def _usuario_da_sessao(request):
+    uid = request.session.get("usuario_id")       # ID salvo no login
+    tipo = request.session.get("usuario_tipo")     # 'cidadao' ou 'servidor'
+    if not uid or not tipo:
+        return None  # não está logado
+    if tipo == "servidor":
+        # SQL: SELECT * FROM servidor WHERE id_servidor = uid AND ativo = true
+        return Servidor.objects.get(pk=uid, ativo=True)
+    else:
+        # SQL: SELECT * FROM cidadao WHERE id_cidadao = uid AND ativo = true
+        return Cidadao.objects.get(pk=uid, ativo=True)
+```
+
+Isso é convertido na variável `request.portal_user` disponibilizando informações para toda a regra Python.
+
+---
+
+## 7. Como as Triggers do banco sabem que eu sou Gestor ou Cidadão, se estão fora do Django?
+
 > **Arquivo:** `backend/portal/middleware.py`
 
 Toda vez que a `request` do usuário é recebida, o mesmo middleware que faz a conexão entre usuário e a tela também é programado para criar uma **conversa oculta entre o App e o PostgreSQL**:
+
 ```python
 def _postgres_sessao(perfil, id_acao):
     with connection.cursor() as c:
         c.execute("SELECT set_config('portal.perfil', %s, true)", [perfil])
         c.execute("SELECT set_config('portal.id_usuario_acao', %s, true)", [id_acao])
 ```
-É isso que torna inteligente as Triggers de Integridade que verificam se ele está burlando a página ou acessando a tela pelo `pgAdmin` em nome dele.
 
-## 8. Como a cor do semáforo do prazo é feita? 
-> **Arquivo:** `backend/portal/utils.py` com o painel chamando em `views_equipe.py`
+É isso que torna inteligente as Triggers de Integridade que verificam se ele está burlando a página ou acessando o banco diretamente.
 
-Criou-se a função reutilizável `cor_semaforo(chamado)`:
+---
+
+## 8. Como a cor do semáforo do prazo é calculada?
+
+> **Arquivo:** `backend/portal/models.py` (propriedade `cor_semaforo` na classe `Chamado`)
+
+Criou-se a propriedade reutilizável `cor_semaforo` dentro do model `Chamado`:
+
 ```python
-def cor_semaforo(chamado):
-    s = chamado.id_servico
-    dias = (timezone.now() - chamado.dt_abertura).days
-    
+@property
+def cor_semaforo(self):
+    s = self.id_servico                          # Faz JOIN com tabela servico
+    dias = (timezone.now() - self.dt_abertura).days
     if dias >= s.prazo_vermelho_dias: return "vermelho"
-    if dias >= s.prazo_amarelo_dias: return "amarelo"
+    if dias >= s.prazo_amarelo_dias:  return "amarelo"
     return "verde"
 ```
-Isso varre dinamicamente a data exata daquele minuto subtraindo pela data de abertura que o usuário anexou, tudo sem salvar essas contagens pesadas diretamente no BD. Isso é renderizado na tela mandando as variáveis ao template HTML.
 
-## 9. O que ocorre se um usuário for muito esperto e alterar via DevTools para "concluir chamado" em que só equipe visualiza?
-> **Arquivos:** `views_cidadao.py` além do BD (Triggers/Rules)
+Isso varre dinamicamente a data exata daquele minuto subtraindo pela data de abertura, tudo sem salvar essas contagens no BD. A view `equipe_chamados_lista` em `views_equipe.py` chama `ch.cor_semaforo` e passa para o template HTML.
+
+---
+
+## 9. O que ocorre se um usuário alterar via DevTools para "concluir chamado" em que só a equipe visualiza?
+
+> **Arquivos:** `views_cidadao.py` + banco (Triggers)
 
 O backend ignora o que não é submetido das Views para o qual foi programado. Além disso:
-- Toda e qualquer visualização submete as informações a testes, validando que status a ação pretende atingir.
-- Em *Último Recurso*, se ele por exemplo burlasse via POST para colocar observação no chamado já concluído, o TRIGGER 2 (Integridade DB) iria parar o INSERT emitindo a exceção severa: `RAISE EXCEPTION: Chamado encerrado (CO/CA): não é permitido adicionar fotos.` e reverteria as transações automaticamente.
+
+- O `@perfis("CID")` no decorador rejeita qualquer acesso direto a rotas da equipe.
+- Na view `cidadao_chamado_detalhe`, antes de processar qualquer POST, o código verifica: `pode_obs_foto = ts not in ("CO", "CA")` e `pode_cancelar = ts in ("AB", "EA")`. Se a condição falha, a ação é simplesmente ignorada.
+- Em **último recurso**, se ele burlasse via POST para adicionar foto em chamado concluído, a Trigger no banco (`fn_rule_foto_chamado_encerrado` no `04_rules.sql`) iria parar o INSERT: `RAISE EXCEPTION: 'Chamado encerrado (CO/CA): não é permitido adicionar fotos.'` e reverteria as transações automaticamente.
+
+---
+
+## 10. O que são os Triggers do banco e quais existem no projeto?
+
+> **Arquivo:** `database/03_functions_triggers.sql` e `database/04_rules.sql`
+
+Triggers são funções que o PostgreSQL executa **automaticamente** quando ocorre INSERT, UPDATE ou DELETE em uma tabela. No projeto existem:
+
+| Trigger | Tabela | Evento | O que faz |
+|---|---|---|---|
+| `trg_chamado_after_insert_historico_ab` | `chamado` | AFTER INSERT | Insere o 1º histórico com status "AB" (Aberto) automaticamente |
+| `trg_chamado_before_update_metadados` | `chamado` | BEFORE UPDATE | Atualiza o campo `atualizado_em` com a data/hora atual |
+| `trg_historico_after_insert_status` | `historico_chamado` | AFTER INSERT | Atualiza `dt_conclusao` no chamado + cria notificação |
+| `trg_foto_chamado_encerrado` | `foto_chamado` | BEFORE INSERT | Bloqueia foto se chamado está CO/CA |
+| `trg_historico_obs_encerrado` | `historico_chamado` | BEFORE INSERT | Bloqueia observação se chamado está CO/CA |
+| `trg_avaliacao_imutavel` | `chamado` | BEFORE UPDATE | Impede alterar avaliação já registrada |
+
+**Exemplo prático:** Quando o cidadão abre um chamado (INSERT INTO chamado), o Trigger 1 automaticamente insere `INSERT INTO historico_chamado (..., sigla='AB')` — o desenvolvedor não precisa fazer isso manualmente no Python.
+
+---
+
+## 11. O que são as Rules do banco e qual a diferença para Triggers?
+
+> **Arquivo:** `database/04_rules.sql`
+
+Rules são regras que o PostgreSQL aplica para **reescrever** comandos SQL antes de executá-los. A diferença prática:
+- **Trigger** = executa uma função antes/depois do evento (pode fazer lógica complexa)
+- **Rule** = substitui o comando inteiro (ex: transforma DELETE em "faça nada")
+
+No projeto existem 3 Rules ativas:
+
+```sql
+-- Impede UPDATE no histórico (preserva o registro original)
+CREATE RULE r05_historico_sem_update AS ON UPDATE TO historico_chamado
+DO INSTEAD NOTHING;
+
+-- Impede DELETE no histórico (nunca se apaga um histórico)
+CREATE RULE r05_historico_sem_delete AS ON DELETE TO historico_chamado
+DO INSTEAD NOTHING;
+
+-- Impede DELETE em chamado (integridade referencial)
+CREATE RULE rx_chamado_sem_delete AS ON DELETE TO chamado
+DO INSTEAD NOTHING;
+```
+
+**Na prática:** Se alguém acessar o pgAdmin e tentar `DELETE FROM historico_chamado WHERE id = 5`, o PostgreSQL simplesmente ignora o comando e não apaga nada.
+
+---
+
+## 12. O que é a View SQL `vw_estatisticas_chamados` e onde ela é usada?
+
+> **Arquivos:** `database/05_views.sql` + `backend/portal/views_gestao.py`
+
+Uma View SQL é uma "tabela virtual" — ela não armazena dados, apenas salva uma consulta complexa com um nome amigável. No projeto:
+
+```sql
+CREATE VIEW vw_estatisticas_chamados AS
+SELECT
+    cat.nome AS categoria,  b.nome_bairro AS bairro,
+    s.sigla  AS sigla_status, COUNT(*)::BIGINT AS total_chamados
+FROM chamado ch
+JOIN servico srv ON srv.id_servico = ch.id_servico
+JOIN categoria_servico cat ON cat.id_categoria = srv.id_categoria
+JOIN bairro b ON b.id_bairro = ch.id_bairro
+JOIN LATERAL (...) -- pega o último status de cada chamado
+GROUP BY cat.nome, b.nome_bairro, s.sigla, s.descricao;
+```
+
+No Python (`views_gestao.py`), a consulta é feita com SQL direto:
+```python
+c.execute("SELECT * FROM vw_estatisticas_chamados ORDER BY categoria, bairro")
+```
+
+O gestor vê esses dados na tela `/gestao/estatisticas/`.
+
+---
+
+## 13. Como é gerado o número de protocolo de um chamado?
+
+> **Arquivo:** `backend/portal/utils.py` (função `proximo_protocolo`)
+
+O número de protocolo segue o formato `ANO + SEQUENCIAL` (ex: `2026000001`, `2026000002`):
+
+```python
+def proximo_protocolo():
+    y = timezone.now().year              # Ex: 2026
+    prefix = str(y)                      # "2026"
+    # SQL: SELECT MAX(num_protocolo) FROM chamado WHERE num_protocolo LIKE '2026%'
+    ultimo = Chamado.objects.filter(
+        num_protocolo__startswith=prefix
+    ).aggregate(m=Max("num_protocolo"))["m"]
+    if not ultimo:
+        n = 1                            # Primeiro do ano
+    else:
+        n = int(ultimo[len(prefix):]) + 1  # Pega o número e soma 1
+    return f"{prefix}{n:06d}"            # "2026000001"
+```
+
+**Na prática:** Se o último protocolo do ano é `2026000042`, o próximo será `2026000043`.
+
+---
+
+## 14. Como funciona o sistema de notificações automáticas?
+
+> **Arquivos:** `database/03_functions_triggers.sql` (Trigger 2B) + `backend/portal/views_cidadao.py` + `backend/portal/context_processors.py`
+
+A notificação funciona em 3 etapas:
+
+**1. Criação automática (Trigger no banco):** Toda vez que um novo registro é inserido no `historico_chamado`, o Trigger `trg_historico_after_insert_status` cria automaticamente uma notificação:
+```sql
+INSERT INTO notificacao (id_chamado, mensagem)
+VALUES (NEW.id_chamado, 'Chamado 2026000001: status alterado para Concluído');
+```
+
+**2. Contagem no menu (Context Processor):** O arquivo `context_processors.py` conta notificações não lidas a cada página:
+```python
+notif_count = Notificacao.objects.filter(
+    id_chamado__in=chamado_ids, arquivada=False, lida=False
+).count()
+```
+
+**3. Visualização (View):** O cidadão vê suas notificações em `/cidadao/notificacoes/` via `views_cidadao.py`.
+
+---
+
+## 15. Como o `managed = False` no models.py afeta o projeto?
+
+> **Arquivo:** `backend/portal/models.py`
+
+Todas as classes de modelo possuem `managed = False` no `Meta`:
+
+```python
+class Chamado(models.Model):
+    class Meta:
+        managed = False          # Django NÃO gerencia esta tabela
+        db_table = "chamado"     # Nome exato da tabela no PostgreSQL
+```
+
+**O que isso significa:**
+- O Django **NÃO** cria nem altera as tabelas automaticamente (`makemigrations`/`migrate` não tocam nelas).
+- As tabelas foram criadas **manualmente** via scripts SQL da pasta `database/` (01_schema.sql → 02_seed.sql → ...).
+- O Django apenas **lê e escreve** nos registros, usando as classes como mapeamento (ORM).
+
+**Por que fizemos assim:** Porque a disciplina é de **Banco de Dados** — a professora exige que as tabelas, triggers e rules sejam criadas com SQL puro, não geradas automaticamente pelo framework.
+
+---
+
+## 16. O que é `transaction.atomic()` e onde é usado?
+
+> **Arquivo:** `backend/portal/views_cidadao.py` (função `cidadao_chamado_novo`)
+
+Ao abrir um novo chamado, precisamos inserir em **duas tabelas** (chamado + foto). Se a foto falhar, o chamado não pode ficar registrado sem foto. O `transaction.atomic()` garante que ambos os INSERTs funcionem ou nenhum funcione:
+
+```python
+with transaction.atomic():
+    # INSERT 1: chamado
+    ch = Chamado.objects.create(
+        num_protocolo=proximo_protocolo(),
+        descricao=d["descricao"],
+        id_cidadao=request.portal_user,
+        id_servico=d["id_servico"],
+        id_bairro=d["id_bairro"],
+    )
+    # INSERT 2: foto vinculada ao chamado
+    FotoChamado.objects.create(
+        id_chamado=ch,
+        url_foto=url,
+    )
+```
+
+**Tradução SQL:** Isso equivale a `BEGIN; INSERT INTO chamado ...; INSERT INTO foto_chamado ...; COMMIT;` — se qualquer INSERT falhar, executa `ROLLBACK` e nenhum dado é salvo.
+
+---
+
+## 17. Para que servem os Índices (CREATE INDEX) no schema?
+
+> **Arquivo:** `database/01_schema.sql`
+
+Os índices aceleram as buscas (SELECT) em colunas muito consultadas. Sem índice, o banco lê a tabela inteira (*Full Table Scan*). Com índice, vai direto ao registro.
+
+```sql
+CREATE INDEX ix_chamado_cidadao    ON chamado (id_cidadao);
+CREATE INDEX ix_chamado_bairro     ON chamado (id_bairro);
+CREATE INDEX ix_chamado_servico    ON chamado (id_servico);
+CREATE INDEX ix_foto_chamado       ON foto_chamado (id_chamado);
+CREATE INDEX ix_historico_chamado   ON historico_chamado (id_chamado);
+CREATE INDEX ix_notificacao_chamado ON notificacao (id_chamado);
+```
+
+**Exemplo prático:** Quando o cidadão acessa `/cidadao/chamados/`, o Django faz `SELECT * FROM chamado WHERE id_cidadao = 5 ORDER BY dt_abertura DESC`. Sem o índice `ix_chamado_cidadao`, o banco varreria TODOS os chamados. Com o índice, vai direto nos chamados do cidadão 5.
+
+**Desvantagem:** Índices ocupam espaço e deixam INSERT/UPDATE um pouco mais lentos, por isso indexamos apenas as colunas de chave estrangeira (FK) mais consultadas.
+
+---
+
+## 18. Qual a diferença entre `select_related()` e `prefetch_related()` no ORM?
+
+> **Arquivo:** `backend/portal/views_cidadao.py` e `views_equipe.py`
+
+Ambos servem para carregar dados de tabelas relacionadas, mas funcionam de forma diferente:
+
+```python
+# views_equipe.py — Dashboard da equipe
+qs = Chamado.objects.select_related(
+    "id_servico", "id_bairro", "id_cidadao"    # JOINs no SQL
+).prefetch_related(
+    "historicos__id_status"                     # Consulta separada
+).order_by("-dt_abertura")
+```
+
+| Método | SQL gerado | Quando usar |
+|---|---|---|
+| `select_related()` | Faz **JOIN** na mesma query | Relações 1-para-1 (FK): chamado → serviço |
+| `prefetch_related()` | Faz **query separada** e junta no Python | Relações 1-para-muitos: chamado → históricos |
+
+**Sem essas funções**, cada vez que acessamos `ch.id_servico.nome` no template, o Django faria uma nova query ao banco (problema N+1). Com elas, tudo vem em 1-2 queries no total.
+
+---
+
+## 19. Como funciona o fluxo completo de abertura de um chamado no banco?
+
+> **Arquivos:** `views_cidadao.py` → `03_functions_triggers.sql`
+
+Quando o cidadão preenche o formulário e clica "Abrir Chamado", acontecem **5 operações no banco** em sequência:
+
+1. **INSERT chamado** → `Chamado.objects.create(...)` — cria o registro principal
+2. **Trigger 1 dispara** → `trg_chamado_after_insert_historico_ab` insere automaticamente `INSERT INTO historico_chamado (sigla='AB')` — primeiro histórico
+3. **Trigger 2B dispara** → `trg_historico_after_insert_status` cria `INSERT INTO notificacao (mensagem='Chamado aberto')` — notifica o cidadão
+4. **INSERT foto** → `FotoChamado.objects.create(...)` — salva a foto obrigatória
+5. **COMMIT** → `transaction.atomic()` confirma tudo de uma vez
+
+Se qualquer etapa falhar, o `ROLLBACK` desfaz tudo (atomicidade).
+
+---
+
+## 20. Como o gestor exclui um chamado se existe Rule impedindo DELETE?
+
+> **Arquivo:** `backend/portal/views_equipe.py` (função `gestao_chamado_excluir`)
+
+A Rule `rx_chamado_sem_delete` impede DELETE via ORM (`chamado.delete()`). Porém, o gestor precisa poder excluir chamados. A solução é usar **SQL direto** que contorna a Rule:
+
+```python
+@perfis("GES")
+def gestao_chamado_excluir(request, pk):
+    # 1. Exige justificativa obrigatória
+    if not justificativa:
+        messages.error(request, "É obrigatório informar uma justificativa...")
+    
+    # 2. Grava LOG de auditoria ANTES de apagar
+    HistoricoChamado.objects.create(
+        observacao=f"[EXCLUSÃO] Justificativa: {justificativa}",
+    )
+    
+    # 3. Apaga registros filhos primeiro, depois o chamado
+    with connection.cursor() as cursor:
+        cursor.execute("DELETE FROM foto_chamado WHERE id_chamado = %s", [pk])
+        cursor.execute("DELETE FROM historico_chamado WHERE id_chamado = %s", [pk])
+        cursor.execute("DELETE FROM notificacao WHERE id_chamado = %s", [pk])
+        cursor.execute("DELETE FROM chamado WHERE id_chamado = %s", [pk])
+```
+
+**Importante:** Apaga os registros filhos (foto, histórico, notificação) **antes** do chamado pai, para respeitar as FOREIGN KEYs.
