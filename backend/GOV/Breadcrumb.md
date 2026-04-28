@@ -1,5 +1,3 @@
-Vou te mandar um codigo de referencia do Breadcrumb de acordo com o Design System do GOV:
-
 HTML:
 
 <nav class="br-breadcrumb" aria-label="Breadcrumbs">
