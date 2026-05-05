@@ -64,3 +64,4 @@ error_log.txt
 # Custom
 # =========================
 .skills/
+rewrite*.sh
