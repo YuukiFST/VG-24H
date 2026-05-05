@@ -1,6 +1,11 @@
 {% extends "portal/base.html" %}
 {% load static %}
-
+{# ========================================================================== #}
+{# DASHBOARD CIDADAO — Lista de chamados do cidadao logado                  #}
+{# [!] Filtro por status usa Subquery no ultimo historico (sigla_status)    #}
+{#     Semaforo: verde/amarelo/vermelho calculado com prazos do servico     #}
+{#     Dados vem de views_cidadao.cidadao_chamados_lista()                  #}
+{# ========================================================================== #}
 {% block title %}Meu Painel — VG 24H{% endblock %}
 
 {% block content %}

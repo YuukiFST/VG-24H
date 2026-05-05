@@ -1,6 +1,11 @@
 {% extends "portal/base.html" %}
 {% load static %}
-
+{# ========================================================================== #}
+{# NOVO CHAMADO — Formulario de abertura de chamado pelo cidadao            #}
+{# [!] Ao salvar, a view faz INSERT em chamado + foto_chamado               #}
+{#     O Trigger 1 (banco) cria automaticamente o historico com status AB    #}
+{#     Nao insere status manualmente!                                        #}
+{# ========================================================================== #}
 {% block title %}Novo Chamado — VG 24H{% endblock %}
 
 {% block content %}

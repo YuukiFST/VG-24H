@@ -1,4 +1,8 @@
 @charset "UTF-8";
+/* ===================================================================
+   govbr-carousel-custom.css — Customizacao do carousel GOV.BR
+   Usado na pagina inicial (root.html) para exibir banners.
+   =================================================================== */
 .br-carousel {
   --carousel-button-margin: var(--spacing-scale-default);
   --carousel-buton-icon-size: var(--icon-size-base);

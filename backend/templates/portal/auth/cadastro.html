@@ -1,6 +1,12 @@
 {% extends "portal/base.html" %}
 {% load static %}
-
+{# ========================================================================== #}
+{# CADASTRO — Wizard de 3 etapas (JS)                                       #}
+{# [!] Dados Pessoais → Endereco → Seguranca                                #}
+{#     Envia POST para /accounts/cadastro/                                   #}
+{#     A view cadastro_view (views_auth.py) faz INSERT na tabela cidadao     #}
+{#     com make_password() para gerar hash bcrypt.                           #}
+{# ========================================================================== #}
 {% block title %}Criar Conta — VG 24H{% endblock %}
 
 {% block extra_head %}

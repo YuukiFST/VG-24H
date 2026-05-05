@@ -1,10 +1,15 @@
 {% extends "portal/base.html" %}
 {% load static %}
-
+{# ========================================================================== #}
+{# LOGIN — Formulario de login dual (cidadao ou servidor)                   #}
+{# [!] O formulario envia POST para /accounts/login/                        #}
+{#     A view login_view (views_auth.py) faz SELECT em cidadao, depois       #}
+{#     servidor. Se encontrar, salva na sessao.                              #}
+{# ========================================================================== #}
 {% block title %}Entrar — VG 24H{% endblock %}
 
 {% block content %}
-      <!-- ====== LOGIN FORM ====== -->
+      {# ====== LOGIN FORM (br-input do GOV.br) ====== #}
       <main class="auth-main" id="main-content">
         <div class="auth-card">
           <div class="auth-logo" style="display: flex; align-items: center; justify-content: center; gap: 10px;">

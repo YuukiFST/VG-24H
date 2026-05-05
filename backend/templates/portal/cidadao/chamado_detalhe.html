@@ -1,6 +1,12 @@
 {% extends "portal/base.html" %}
 {% load static %}
-
+{# ========================================================================== #}
+{# DETALHE DO CHAMADO (Cidadao) — 4 acoes possiveis                        #}
+{# [!] obs: INSERT em historico_chamado                                     #}
+{#     foto: INSERT em foto_chamado                                         #}
+{#     cancelar: INSERT historico CA + Trigger 2B gera notificacao          #}
+{#     avaliar: UPDATE chamado (nota + comentario)                          #}
+{# ========================================================================== #}
 {% block title %}Detalhes do Chamado #{{ ch.num_protocolo }} — VG 24H{% endblock %}
 
 {% block content %}

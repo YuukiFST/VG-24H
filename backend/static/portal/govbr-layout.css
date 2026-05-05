@@ -1,4 +1,7 @@
-/* Complementos ao @govbr-ds/core — alinhado ao protótipo index.html */
+/* ===================================================================
+   govbr-layout.css — Complementos ao Design System GOV.BR
+   Ajustes de layout (search-area, alinhamentos) para o prototipo VG 24H.
+   =================================================================== */
 .search-area {
   max-width: 720px;
   margin: 0 auto 24px;

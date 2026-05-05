@@ -1,6 +1,12 @@
 {% extends "portal/base.html" %}
 {% load static %}
-
+{# ========================================================================== #}
+{# DETALHE DO CHAMADO (Equipe) — COL e GES                                  #}
+{# [!] Mudanca de status = INSERT em historico_chamado                      #}
+{#     COL bloqueado em CO/CA (pode_status = False)                         #}
+{#     GES pode sempre                                                       #}
+{#     3 acoes: alterar status, adicionar obs, adicionar foto               #}
+{# ========================================================================== #}
 {% block title %}Gerenciar Chamado #{{ ch.num_protocolo }} — VG 24H{% endblock %}
 
 {% block content %}

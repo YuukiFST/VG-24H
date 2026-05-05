@@ -1,6 +1,11 @@
 {% extends "portal/base.html" %}
 {% load static %}
-
+{# ========================================================================== #}
+{# DASHBOARD EQUIPE — Semaforo + lista de TODOS os chamados                 #}
+{# [!] @perfis("COL", "GES") — APENAS servidores                            #}
+{#     Cada chamado mostra cor_semaforo (verde/amarelo/vermelho)            #}
+{#     Filtros: bairro, status (Subquery no ultimo historico), data         #}
+{# ========================================================================== #}
 {% block title %}Painel do Colaborador — VG 24H{% endblock %}
 
 {% block content %}

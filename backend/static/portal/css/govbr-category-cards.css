@@ -1,4 +1,7 @@
-/* GRID */
+/* ===================================================================
+   govbr-category-cards.css — Grid de cards de categorias
+   Usado na pagina inicial (root.html) para exibir servicos por categoria.
+   =================================================================== */
 .grid-cards {
     display: flex;
     flex-wrap: wrap;

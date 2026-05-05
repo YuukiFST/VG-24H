@@ -1,5 +1,15 @@
 /* ===================================================================
-   VG 24H — Client-side Interactions
+   vg24h.js — Interacoes client-side do Portal VG 24H
+   ===================================================================
+   [!] Inicializa 8 funcionalidades ao carregar a pagina:
+       - initCharCounters    — Contador de caracteres (textarea)
+       - initWizard          — Wizard 3 etapas do cadastro
+       - initSelectionCards  — Cards selecionaveis (categorias/servicos)
+       - initModals          - Modais de confirmacao
+       - initTabs            — Abas de navegacao
+       - initMobileMenu      — Menu responsivo (mobile)
+       - initRatingStars     — Estrelas de avaliacao (click)
+       - initAnimateOnScroll — Animacao ao rolar a pagina
    =================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {

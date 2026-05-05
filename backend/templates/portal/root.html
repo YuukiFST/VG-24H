@@ -1,7 +1,12 @@
 {% extends "portal/base.html" %}
 {% load static %}
-
-{% block title %}Página Inicial — VG 24H{% endblock %}
+{# ========================================================================== #}
+{# PAGINA INICIAL (root) — Publica, NAO requer login                        #}
+{# [!] total_resolvidos usa Subquery no ultimo historico (status 'CO')      #}
+{#     Exibe: banner carousel, categorias/servicos, estatisticas             #}
+{#     Dados vem de views_root.root_view()                                   #}
+{# ========================================================================== #}
+{% block title %}Pagina Inicial — VG 24H{% endblock %}
 
 {% block extra_head %}
 <style>

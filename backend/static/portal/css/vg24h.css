@@ -1,6 +1,14 @@
 /* ===================================================================
-   VG 24H — Custom Styles (Gov.br DS overrides & project specifics)
-   @govbr-ds/core@3.7.0 is loaded via CDN in the HTML <head>
+   vg24h.css — Estilos customizados do Portal VG 24H
+   ===================================================================
+   [!] GOV.br Design System carregado via CDN (core.min.css).
+       Este arquivo contem APENAS customizacoes especificas do projeto:
+       - Variaveis CSS (cores, sombras)
+       - Semaforo de chamados (verde/amarelo/vermelho)
+       - Dashboard cards
+       - Formularios (wizard, cadastro)
+       - Tabelas responsivas
+       - Animated on scroll
    =================================================================== */
 
 /* ---- CSS Variables (project-level tokens) ---- */
@@ -632,7 +640,9 @@ img {
 }
 
 /* ===================================================================
-   SEMÁFORO CARDS (Collaborator/Admin Dashboard)
+   [!] SEMAFORO CARDS — Dashboard do Colaborador/Gestor
+       verde = no prazo, amarelo = atencao, vermelho = critico
+       A cor e definida pela property cor_semaforo() em models.py
    =================================================================== */
 .semaforo-grid {
   display: grid;
