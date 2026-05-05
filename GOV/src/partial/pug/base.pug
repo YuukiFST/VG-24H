@@ -1,0 +1,44 @@
+extends default
+
+block template
+  .template-base
+    +skiplinks
+    block header
+      +header#header(data-sticky).mb-4
+        .header-bottom
+          .header-menu
+            .header-menu-trigger#header-navigation
+              +button.small.circle(aria-label="Menu" data-toggle="menu" data-target="#main-navigation" id="navigation")
+                +icon.fa-bars
+            .header-info
+              .header-title #{title}
+              .header-subtitle Subtítulo do Header
+          .header-search#main-searchbox
+            +input("Texto da pesquisa")(id="searchbox" type="text" class="has-icon" placeholder="O que você procura?")
+              +button.circle.small(aria-label="Pesquisar")
+                +icon.fa-search
+            +button.circle.search-close.ml-1(aria-label="Fechar Busca" data-dismiss="search")
+              +icon.fa-times
+    main#main.d-flex.flex-fill.mb-5
+      div(class=grid ? grid : "container-lg").d-flex
+        .row
+          block side-bar
+            +menu-offcanvas
+          .col.mb-5
+            +breadcrumb
+              +crumb("Tela Anterior")
+              +crumb("Tela Anterior2")
+              +crumb("Tela Anterior3")
+              +crumb("Tela Anterior4")
+              +crumb("Tela Atual")(dataActive="active")
+            #main-content.main-content.pl-sm-3.mt-4
+              block content
+    block footer
+      +footer#footer.pt-3
+        div(class=grid ? grid : "container-lg")
+          .info
+            .text-down-01.text-medium.pb-3
+              | Texto destinado a exibição de informações relacionadas à&nbsp;
+              strong <a href="">licença de uso</a>.
+    block cookiebar
+      +cookiebar-padrao

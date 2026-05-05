@@ -1,0 +1,13 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../tag
+
+block content
+  .d-flex.align-items-center
+    +tag-text.bg-orange-vivid-50.small(aria-describedby="densidade01")
+      span(id="densidade01") Alta
+    +tag-text.bg-green-warm-vivid-50.medium(aria-describedby="densidade02")
+      span(id="densidade02") Padrão
+    +tag-text.bg-indigo-warm-vivid-50.large(aria-describedby="densidade03")
+      span(id="densidade03") Baixa

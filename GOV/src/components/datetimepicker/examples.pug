@@ -1,0 +1,33 @@
+extends ../../partial/pug/component
+
+append vars
+  - let title = "DatePicker";
+append content
+  .row.mt-5
+    .col-sm-12.col-lg-4
+      +datetimepicker-simple
+
+  .row.mt-5
+    .col-sm-12.col-lg-4
+      +datetimepicker-simple-textaux
+
+  .row.mt-5
+    .col-sm-12.col-lg-4
+      +datetimepicker-simple-custom
+
+  .row.mt-5
+    .col-sm-12.col-lg-4
+      +datetimepicker-range
+
+  .row.mt-5
+    .col-sm-12.col-lg-4
+      +datetimepicker-time
+
+  .row.mt-5
+    .col-sm-12.col-lg-4
+      +datetimepicker-dateandtime
+
+  .row.mt-5
+    .col-sm-12.col-lg-4
+      p.h4.mt-5 Desativado
+      +datetimepicker-dateandtime.disabled#datetimepicker-disabled

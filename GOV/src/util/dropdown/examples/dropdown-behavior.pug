@@ -1,0 +1,15 @@
+extends ../../../partial/pug/isolate
+
+
+append vars
+  - var title = "Dropdown";
+
+block dependencies
+  include ../../../components/button/button
+  include ../../../components/item/item
+  include ../../../components/list/list
+  include ../dropdown
+
+
+append content
+  +dropdown-behavior

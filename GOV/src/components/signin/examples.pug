@@ -1,0 +1,58 @@
+extends ../../partial/pug/component
+
+include signin
+
+append vars
+  - var title = "Sign-in";
+
+append content
+  p.h5.pt-5 Ênfase Primária
+  div
+    +sign-in-pri
+    +sign-in-pri-circ
+  
+  p.h5.pt-5 Ênfase Secundária
+  .mt-3
+    +sign-in-sec
+    +sign-in-sec-circ 
+
+  p.h5.mt-5 Fundo escuro
+  .p-3.mb-3.bg-primary-darken-02
+    div
+      +sign-in-pri-inv
+      +sign-in-sec-inv
+    .mt-3
+      +sign-in-pri-circ-inv
+      +sign-in-sec-circ-inv
+  
+
+
+  p.h5 Tipos
+  p Uso no Gov.br (Tipo Interno)
+  +sign-in-tipo1
+
+  .row.mt-3
+    .col-sm-auto
+      p Exemplo com texto (Tipo Exteno 1)
+      +sign-in-tipo2
+    .col-sm-auto.mt-3.mt-sm-0
+      p Exemplo com imagem (Tipo Externo 2)
+      +sign-in-tipo2-image
+  .row.mt-3
+    .col-sm-auto 
+      p Exemplo dos Tipos Icônicos (Primário e Secundário) 
+      +sign-in-pri-circ.mt-3.mt-sm-0.ml-sm-3
+      +sign-in-sec-circ  
+
+  p.h5.mt-5 Densidades (Alta, Média e baixa)
+  div 
+    +sign-in-small
+    +sign-in-medium
+    +sign-in-large
+  .mt-3
+    +sign-in-sec-circ-ml
+    +sign-in-sec-circ
+    +sign-in-sec-circ-lge
+
+  p.h5.mt-5 Em bloco
+  +sign-in-sec-blk

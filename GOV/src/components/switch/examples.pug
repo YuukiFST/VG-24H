@@ -1,0 +1,48 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Switch";
+
+append content
+
+  .row
+    .col-md-4
+      p.h4.mt-5 Switch padrão
+      +switch-default
+    .col-md-4
+      p.h4.mt-5 Switch Desabilitado
+      +switch-disabled
+
+  .row
+    .col-md-4
+      p.h4.mt-5 Densidade Alta
+      +switch-small
+    .col-md-4
+      p.h4.mt-5 Densidade Média (Padrão)
+      +switch-medium
+    .col-md-4
+      p.h4.mt-5 Densidade Baixa
+      +switch-large
+
+  .row
+    .col-md-4
+      p.h4.mt-5 Switch Com Rótulo(Ligado/Desligado)
+      +switch-label-onoff
+    .col-md-4
+      p.h4.mt-5 Switch Com Rótulo(Concordo/Discordo)
+      +switch-label-terms
+
+  .row
+    .col-md-4
+      p.h4.mt-5 Label Alinhado à Esquerda
+      +switch-left
+    .col-md-4
+      p.h4.mt-5 Label Alinhado à Direita
+      +switch-right
+    .col-md-4
+      p.h4.mt-5 Label Alinhado ao Topo
+      +switch-top
+  .row
+    .col-md-4
+      p.h4.mt-5 Switch Com Ícone
+      +switch-icon

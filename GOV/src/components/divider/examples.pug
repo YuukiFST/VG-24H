@@ -1,0 +1,108 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = 'Divider'
+
+append content
+  p.h4.mt-5 Horizontal
+  .row
+    .col-sm
+      .p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.my-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+    .col-sm
+      .bg-secondary-07.text-secondary-01.p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.inverted.my-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+
+  .row.mt-3
+    .col-sm
+      .p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.dashed.my-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+    .col-sm
+      .bg-secondary-07.text-secondary-01.p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.inverted.dashed.my-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+
+  p.h4.mt-5 Vertical
+  .row
+    .col-sm
+      .d-flex.p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.vertical.mx-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+    .col-sm
+      .bg-secondary-07.text-secondary-01.p-3
+        .d-flex
+          p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+          +divider.vertical.inverted.mx-3
+          p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+
+  .row.mt-3
+    .col-sm
+      .d-flex.p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.vertical.dashed.mx-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+    .col-sm
+      .bg-secondary-07.text-secondary-01.p-3
+        .d-flex
+          p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+          +divider.vertical.inverted.dashed.mx-3
+          p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+
+  p.h4.mt-5 Espessura média
+  .row.mt-5
+    .col-sm
+      .p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.md.my-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+    .col-sm
+      .bg-secondary-07.text-secondary-01.p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.inverted.md.my-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+
+  .row.mt-3
+    .col-sm
+      .p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.dashed.md.my-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+    .col-sm
+      .bg-secondary-07.text-secondary-01.p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.inverted.dashed.md.my-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+
+  p.h4.mt-5 Espessura grande
+  .row
+    .col-sm
+      .p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.lg.my-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+    .col-sm
+      .bg-secondary-07.text-secondary-01.p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.inverted.lg.my-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+
+  .row.mt-3
+    .col-sm
+      .p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.dashed.lg.my-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+    .col-sm
+      .bg-secondary-07.text-secondary-01.p-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        +divider.inverted.dashed.lg.my-3
+        p Lorem ipsum dolor sit amet consectetur adipisicing elit.
+

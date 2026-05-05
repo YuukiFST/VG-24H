@@ -1,0 +1,40 @@
+mixin switch(label="Label")
+  - let className = [prefix + "switch", attributes.class]
+  div(class=className role="presentation")
+    input( id=attributes.id type="checkbox" name=attributes.id  checked=attributes.checked disabled=attributes.disabled   role="switch")
+    label(for=attributes.id)=label
+    if block
+      block
+mixin switch-default
+  +switch("Label")#switch-default(checked)
+
+mixin switch-disabled
+  +switch("switch desativado")#switch-disabled.disabled(checked disabled)
+
+mixin switch-small
+  +switch("Densidade Alta").small.mr-5#switch-small(checked)
+mixin switch-medium
+  +switch("Densidade Média (Padrão)").medium#switch-medium(checked)
+
+mixin switch-large
+  +switch("Densidade Baixa").large.mr-5#switch-large(checked)
+
+mixin switch-label-onoff
+  +switch("Label do switch").medium#switch-label-01(checked)
+    .switch-data(data-enabled="Ligado" data-disabled="Desligado")
+
+mixin switch-label-terms
+  +switch("Label do switch").medium#switch-label-02(checked)
+    .switch-data(data-enabled="Concordo" data-disabled="Discordo")
+
+mixin switch-left
+  +switch("Label na esquerda").mr-5#switch-left(checked)
+
+mixin switch-right
+  +switch("Label na direita").right.mr-5#switch-right(checked)
+
+mixin switch-top
+  +switch("Label no topo").top.mr-5#switch-top(checked)
+
+mixin switch-icon
+  +switch("Label").icon#switch-icon(checked)

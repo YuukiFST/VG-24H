@@ -1,0 +1,12 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../input
+
+block content
+  .col-sm-6.col-lg-4.mb-3
+    +input-medium("Login")(icon="fa-user-tie")#input-icon
+  .col-sm-6.col-lg-4.mb-3
+    +input-small("Nome")(icon="fa-user")#input-icon-small
+  .col-sm-6.col-lg-4.mb-3
+    +input-large("Grupo")(icon="fa-users")#input-icon-large

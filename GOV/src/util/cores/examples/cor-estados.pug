@@ -1,0 +1,42 @@
+extends ../../../partial/pug/isolate
+
+block content
+  .container-fluid
+    .row.mb-3
+      .col-12
+        h5 Combinações de Cores para Estados de Interação
+
+    .row
+      .col-md-6.mb-3
+        h6.mb-2 Botão Primário
+        button.br-button.primary.mb-2(type="button") Estado Normal
+        button.br-button.primary.mb-2(type="button" style="background-color: var(--interactive-dark) !important;") Estado Hover
+        button.br-button.primary(type="button" disabled) Estado Desabilitado
+
+      .col-md-6.mb-3
+        h6.mb-2 Botão Secundário
+        button.br-button.secondary.mb-2(type="button") Estado Normal
+        button.br-button.secondary.mb-2(type="button" style="background-color: var(--gray-2) !important;") Estado Hover
+        button.br-button.secondary(type="button" disabled) Estado Desabilitado
+
+    .row
+      .col-md-6.mb-3
+        h6.mb-2 Mensagens de Feedback
+        .bg-green-cool-vivid-5.text-green-cool-vivid-50.p-3.mb-2.border.border-color-green-cool-vivid-50
+          p.mb-0 ✓ Sucesso - Ação realizada com êxito
+
+        .bg-yellow-vivid-5.text-yellow-vivid-30.p-3.mb-2.border.border-color-yellow-vivid-20
+          p.mb-0 ⚠ Aviso - Atenção necessária
+
+        .bg-red-vivid-5.text-red-vivid-50.p-3.border.border-color-red-vivid-50
+          p.mb-0 ✕ Erro - Falha na operação
+
+      .col-md-6.mb-3
+        h6.mb-2 Estados de Link
+        .p-3.bg-pure-0.border
+          p
+            a.text-blue-warm-vivid-70(href="#") Link Normal
+          p
+            a.text-blue-warm-vivid-80(href="#" style="text-decoration: underline;") Link Hover
+          p
+            a.text-blue-warm-vivid-60(href="#" style="opacity: 0.6;") Link Visitado

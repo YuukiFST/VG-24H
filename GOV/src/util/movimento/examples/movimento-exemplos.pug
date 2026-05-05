@@ -1,0 +1,125 @@
+extends ../../../partial/pug/isolate
+include ../../../components/radio/radio
+include ../../../components/list/list
+include ../../../components/item/item
+include ../../../components/divider/divider
+include ../../../components/button/button
+include ../../../components/input/input
+include ../../../components/select/select
+
+block content
+  .d-flex(style='gap: 3rem;')
+    div
+      p.label.mb-2x Atenuação
+      +radio('Ease')(id='ease', name='easing', checked)
+      +radio('Ease-in')(id='ease-in', name='easing')
+      +radio('Ease-out')(id='ease-out', name='easing')
+      +radio('Ease-in-out')(id='ease-in-out', name='easing')
+      +radio('Linear')(id='linear', name='easing')
+    div
+      p.label.mb-2x Duração
+      +radio('Muito rápido')(id='very-fast', name='duration')
+      +radio('Rápido')(id='fast', name='duration')
+      +radio('Moderado')(id='moderate', name='duration', checked)
+      +radio('Lento')(id='slow', name='duration')
+      +radio('Muito lento')(id='very-slow', name='duration')
+
+  +button-primary(id='trigger', class='my-3x') Clique para ver a animação
+
+  .bg-gray-10#target
+    .p-2x Lorem ipsum dolor sit amet consectetur adipisicing elit. Ad, iure earum. Eaque illum, ducimus qui aperiam voluptas saepe quis ab magnam placeat architecto expedita iusto facere praesentium et eligendi laborum.
+
+  style.
+    @keyframes slideDown {
+      from { height: 0; }
+      to   { height: var(--target-height); }
+    }
+    @keyframes slideUp {
+      from { height: var(--target-height); }
+      to   { height: 0; }
+    }
+
+    /* Estado aberto/fechado */
+    #target.opening {
+      overflow: hidden;
+      animation-name: slideDown;
+      animation-fill-mode: forwards;
+    }
+    #target.closing {
+      overflow: hidden;
+      animation-name: slideUp;
+      animation-fill-mode: forwards;
+    }
+
+  script.
+    document.addEventListener("DOMContentLoaded", function () {
+      const trigger = document.getElementById("trigger");
+      const target  = document.getElementById("target");
+
+      // Retorna arrays de classes válidas lendo os radios do DOM
+      function getValidClasses() {
+        const easingOptions   = Array.from(document.querySelectorAll('input[name="easing"]')).map(r => r.value);
+        const durationOptions = Array.from(document.querySelectorAll('input[name="duration"]')).map(r => r.value);
+        return { easingOptions, durationOptions };
+      }
+
+      // Aplica classes de easing e duração com base nos valores selecionados
+      function updateClasses() {
+        const { easingOptions, durationOptions } = getValidClasses();
+
+        // Remove apenas classes de easing/duração atuais
+        target.classList.forEach(cls => {
+          if (easingOptions.includes(cls) || durationOptions.includes(cls)) {
+            target.classList.remove(cls);
+          }
+        });
+
+        // Pega os selecionados e aplica
+        const easingChecked   = document.querySelector('input[name="easing"]:checked');
+        const durationChecked = document.querySelector('input[name="duration"]:checked');
+
+        if (easingChecked)   target.classList.add(easingChecked.value);
+        if (durationChecked) target.classList.add(durationChecked.value);
+      }
+
+      // Inicializa classes
+      updateClasses();
+
+      // Atualiza ao trocar radios
+      document.querySelectorAll('input[name="easing"], input[name="duration"]').forEach(radio => {
+        radio.addEventListener("change", updateClasses);
+      });
+
+      // Como o texto já começa visível, inicializamos como aberto
+      let isOpen = true;
+
+      trigger.addEventListener("click", () => {
+        const height = target.scrollHeight + "px";
+        target.style.setProperty("--target-height", height);
+
+        if (isOpen) {
+          // Primeira vez → fecha
+          target.classList.remove("opening");
+          target.classList.add("closing");
+          isOpen = false;
+        } else {
+          // Depois alterna para abrir
+          target.classList.remove("closing");
+          target.classList.add("opening");
+          isOpen = true;
+        }
+
+        // Garante que easing/duração atuais estejam aplicadas
+        updateClasses();
+      });
+
+      // Opcional: reset para auto após fim da animação
+      target.addEventListener("animationend", (e) => {
+        if (e.animationName === "slideDown") {
+          target.style.height = "auto";
+        }
+        if (e.animationName === "slideUp") {
+          target.style.height = "0";
+        }
+      });
+    });

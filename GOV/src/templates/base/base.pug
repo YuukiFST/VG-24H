@@ -1,0 +1,56 @@
+extends ../../partial/pug/base
+
+append vars
+  - var title = "Template básico";
+
+block content
+  h1 Título h1
+  p Parágrafo de exemplo <a href="">link de exemplo</a>.
+  h2 Título h2
+  h3 Título h3
+  h4 Título h4
+  h5 Título h5
+  h6 Título h6
+  .row
+    .col-auto
+      ul
+        li item sem ordenação
+        li item sem ordenação
+        li item sem ordenação
+    .col-auto
+      ol
+        li item ordenado
+        li item ordenado
+        li item ordenado
+  .row
+    .col-sm
+      fieldset
+        legend Nome Completo (Legend)
+        .row
+          .col-md-7.mb-3
+            .br-input
+              <label for="name">Nome</label>
+              <input id="name" value="Fulano (input preenchido)" type="text" />
+          .col-md-7.mb-3
+            +input("Sobrenome")#surname
+    .col-sm
+      fieldset
+        legend Outros Dados (Legend)
+        .row
+          .col-md-7.mb-3
+            +input("CPF")#cpf
+          .col-md-7.mb-3
+            +input-password
+  .row
+    .col-sm.d-flex
+      +card
+        .card-header Card de exemplo 1
+        .card-content Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ducimus dignissimos, recusandae at accusamus autem error hic adipisci eligendi eum debitis dolores magnam quod sint doloribus omnis vitae placeat. Natus, minus.
+    .col-sm.d-flex
+      +card
+        .card-header Card de exemplo 2
+        .card-content Lorem ipsum dolor, sit amet consectetur adipisicing elit. Veritatis culpa inventore mollitia vitae a nesciunt reiciendis incidunt, labore repudiandae voluptate nisi. Numquam illo est maiores doloribus recusandae rem inventore ea?
+    .col-sm.d-flex
+      +card
+        .card-header Card de exemplo 3
+        .card-content Lorem ipsum, dolor sit amet consectetur adipisicing elit. Laboriosam cupiditate nihil facere autem dignissimos ex beatae labore? Fuga consequuntur consectetur voluptatum incidunt, tenetur, dolore magnam inventore hic iusto amet ipsa.

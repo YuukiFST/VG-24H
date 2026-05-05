@@ -1,0 +1,113 @@
+mixin textarea(label)
+  - let className = [prefix + "textarea", attributes.class]
+  div(class=className
+      data-success = attributes.dataSuccess
+      data-danger = attributes.dataDanger
+      data-warning = attributes.dataWarning
+      data-info = attributes.dataInfo)
+    if label
+      label(for=attributes.id)=label
+      textarea(id=attributes.id placeholder=attributes.placeholder disabled=attributes.disabled aria-label=attributes.ariaLabel)
+    if block
+      block
+
+mixin textarea-left(label)
+  - let className = attributes.class
+  - let componentClass = prefix + "textarea"
+  - className = componentClass
+  div(class=className
+      data-success = attributes.dataSuccess
+      data-danger = attributes.dataDanger
+      data-warning = attributes.dataWarning
+      data-info = attributes.dataInfo)
+    .row
+      .col-auto.pt-half
+        if label
+          label(for=attributes.id)=label
+      .col
+        textarea(id=attributes.id placeholder=attributes.placeholder disabled=attributes.disabled aria-label=attributes.ariaLabel)
+        if block
+          block
+
+mixin textarea-counter(label)
+  - let className = [prefix + "textarea", attributes.class]
+  div(class=className
+      data-success = attributes.dataSuccess
+      data-danger = attributes.dataDanger
+      data-warning = attributes.dataWarning
+      data-info = attributes.dataInfo)
+    if label
+      label(for=attributes.id)=label
+      textarea(id=attributes.id  aria-controls="limitmax" placeholder=attributes.placeholder disabled=attributes.disabled aria-label=attributes.ariaLabel maxlength = attributes.maxlength)
+      div.text-base.mt-1
+        span.limit(aria-live="polite") Limite máximo de <strong>#{attributes.maxlength ? attributes.maxlength : 300}</strong> caracteres
+        span.current(aria-live="polite" role="status")#limitmax
+    if block
+      block
+
+mixin textarea-counter-no-limit(label)
+  - let className = [prefix + "textarea", attributes.class]
+  div(class=className
+      data-success = attributes.dataSuccess
+      data-danger = attributes.dataDanger
+      data-warning = attributes.dataWarning
+      data-info = attributes.dataInfo)
+    if label
+      label(for=attributes.id)=label
+      textarea(id=attributes.id placeholder=attributes.placeholder disabled=attributes.disabled aria-label=attributes.ariaLabel)
+      div.text-base.mt-1
+        span.characters(aria-live="assertive") <strong>0</strong> caracteres digitados
+    if block
+      block
+
+mixin textarea-default
+  +textarea("Label")(id="textarea-id1" placeholder="Exemplo de textarea simples" rows=5 cols=5)
+    p.text-base.mt-1 Texto auxiliar ao preenchimento.
+
+mixin textarea-dark-mode
+  +textarea("Label")(id="textarea-dark-id1" placeholder="Exemplo de textarea simples" rows=5 cols=5 class="dark-mode")
+    p.text-base.mt-1 Texto auxiliar ao preenchimento.
+
+mixin textarea-default-left
+  +textarea-left("Label")(id="textarea-left-id1" placeholder="Exemplo de textarea simples" rows=5 cols=5)
+    p.text-base.mt-1 Texto auxiliar ao preenchimento.
+
+mixin textarea-large
+  +textarea("Densidade baixa")(id="textarea-density-id2" class="large" placeholder="Digite somente números" rows=5 cols=5)
+
+mixin textarea-medium
+  +textarea("Densidade média(padrão)")(id="textarea-density-id3" class="medium" placeholder="Digite somente números" rows=5 cols=5)
+
+mixin textarea-small
+  +textarea("Densidade alta")(id="textarea-density-id4" class="small"  placeholder="Digite somente números" rows=5 cols=5)
+
+mixin textarea-success
+  +textarea("Label")(id="textarea-success" placeholder="Exemplo de textarea com sucesso" rows=5 cols=5).success
+    +feedback-success
+      span Campo correto
+
+mixin textarea-danger
+  +textarea("Label")(id="textarea-danger" placeholder="Exemplo de textarea com erro" rows=5 cols=5).danger
+    +feedback-danger
+      span Campo com erro
+
+mixin textarea-warning
+  +textarea("Label")(id="textarea-alerta" placeholder="Exemplo de textarea com alerta" rows=5 cols=5).warning
+    +feedback-warning
+      span Campo com alerta
+
+mixin textarea-info
+  +textarea("Label")(id="textarea-info" placeholder="Exemplo de textarea com informação" rows=5 cols=5).info
+    +feedback-info
+      span Campo com informação
+
+mixin textarea-disabled
+  +textarea("Label")(id="textarea-id7" placeholder="Exemplo de textarea desabilitado" rows=5 cols=5 disabled)
+    +feedback-warning
+      span Campo desabilitado
+
+mixin textarea-maxlength
+  +textarea-counter("Label")(id="textarea-id8" placeholder="Exemplo de textarea com contador de caracteres" rows=5 cols=5 maxlength=300)
+
+mixin textarea-no-maxlength
+  +textarea-counter-no-limit("Label")(id="textarea-id9" placeholder="Exemplo de textarea com contador e sem limite de caracteres" rows=5 cols=5)

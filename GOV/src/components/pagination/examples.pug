@@ -1,0 +1,35 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Paginação";
+
+append content
+  p.h4.mt-5 Paginação padrão
+  +pagination-medium
+
+  p.h4.mt-5 Densidades
+  .my-1
+    +pagination-small
+  .my-1
+    +pagination-large
+
+  p.h4.mt-5 Ellipsis
+  .my-1
+    +pagination-ellipsis-start
+  .my-1.d-none.d-sm-block
+    +pagination-ellipsis-double
+  .my-1.d-none.d-sm-block
+    +pagination-ellipsis-end
+
+  p.h4.mt-5 Paginação contextual
+  +pagination-contextual-1
+  hr
+  +pagination-contextual-2
+  hr
+  +pagination-contextual-3
+
+  p.h4.mt-5 Fundo Escuro
+  .bg-gray-60.p-3
+    +pagination-ellipsis-start.dark-mode
+    hr
+    +pagination-contextual-3.dark-mode

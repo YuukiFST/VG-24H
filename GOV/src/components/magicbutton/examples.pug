@@ -1,0 +1,20 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Magic Button";
+
+append content
+  p.h4.mt-5 Tipos
+  .row
+    .col-auto
+      +magic-button-text
+    .col-auto
+      +magic-button-icon
+
+  p.h4.mt-5 Densidades
+  .d-block.d-sm-inline
+    +magic-button-small
+  .d-block.mt-3.d-sm-inline.mt-sm-0.ml-sm-3
+    +magic-button-medium
+  .d-block.mt-3.d-sm-inline.mt-sm-0.ml-sm-3
+    +magic-button-large

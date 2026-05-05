@@ -1,0 +1,15 @@
+extends ../../partial/pug/component
+
+
+append vars
+  - var title = "Loading";
+
+append content
+  p.h4.mt-5 Com porcentagem
+  +loading-progress
+
+  p.h4.mt-5 Indeterminado médio
+  +loading-md
+
+  p.h4.mt-5 Indeterminado pequeno
+  +loading-sml

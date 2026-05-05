@@ -1,0 +1,172 @@
+mixin input(label="Label / Rótulo")
+  div(class=[prefix + "input", attributes.class]
+    data-success = attributes.dataSuccess
+    data-danger = attributes.dataDanger
+    data-warning = attributes.dataWarning
+    
+    data-info = attributes.dataInfo)
+    label(for = attributes.id
+      class = attributes["hide-label"] ? "sr-only" : "")=label
+    //- Ícone
+    +input-icon(label)(icon = attributes.icon
+      id = attributes.id
+      type = attributes.type      
+      class = attributes.class
+      placeholder = attributes.placeholder
+      ariadescribedby = attributes.ariadescribedby
+      ariaLabel = attributes.ariaLabel
+      ariaLabelledby = attributes.ariaLabelledby
+      disabled = attributes.disabled
+      data-input = attributes.datainput)
+    //- Input de busca
+    if attributes.type == "search"
+      +button(aria-label="Buscar")
+        +icon.fa-search
+    //- Input password
+    if attributes.type == "password"
+      +button(aria-label="Exibir senha" role="switch" aria-checked="false")
+        +icon.fa-eye
+    //- Dentro de select
+    if attributes.select
+      +button(aria-label="Exibir lista" tabindex="-1" data-trigger)
+        +icon.fa-angle-down
+    if block
+      block
+
+mixin input-inline(label="Label / Rótulo")
+  div(class=[prefix + "input", "input-inline", attributes.class])
+    .input-label: label.text-nowrap(for = attributes.id)=label
+    .input-content
+      //- Ícone
+      +input-icon(label)(icon = attributes.icon
+        id = attributes.id
+        type = attributes.type
+        class = attributes.class
+        placeholder = attributes.placeholder
+        aria-describedby = attributes.ariadescribedby
+        ariaLabel = attributes.ariaLabel
+        ariaLabelledby = attributes.ariaLabelledby
+        disabled = attributes.disabled
+        data-input = attributes.datainput)
+      if block
+        block
+
+mixin input-icon(label)
+  if attributes.icon
+    .input-group
+      .input-icon(aria-label = attributes.label): +icon(class = attributes.icon)
+      input(
+        id = attributes.id
+        type = attributes.type ? attributes.type : "text"
+        class = attributes.class
+        placeholder = attributes.placeholder ? attributes.placeholder : "Placeholder"
+        aria-describedby = attributes.ariadescribedby
+        aria-labelledby = attributes.ariaLabelledby
+        aria-label = attributes.ariaLabel
+        disabled = attributes.disabled
+        data-input = attributes.dataInfo ? attributes.dataInfo : attributes["data-input"])
+  //- Sem ícone
+  else
+    input(
+      id = attributes.id
+      type = attributes.type ? attributes.type : "text"
+      placeholder = attributes.placeholder ? attributes.placeholder : "Placeholder"
+      aria-describedby = attributes.ariadescribedby
+      aria-labelledby = attributes.ariaLabelledby
+      aria-label = attributes.ariaLabel
+      disabled = attributes.disabled
+      data-input = attributes["data-input"])
+
+mixin input-default
+  +input()(id = attributes.id ? attributes.id : "input-default")
+    p Texto auxiliar. Função de previnir erros.
+
+mixin input-small(label="Alta densidade")
+  +input(label)(placeholder = attributes.placeholder
+    id = attributes.id ? attributes.id : "input-small"
+    icon = attributes.icon
+    hide-label = attributes["hide-label"]).small
+
+mixin input-medium(label="Densidade padrão")
+  +input(label)(placeholder = attributes.placeholder
+    id = attributes.id ? attributes.id : "input-medium"
+    icon = attributes.icon
+    hide-label = attributes["hide-label"])
+
+mixin input-large(label="Baixa densidade")
+  +input(label)(placeholder = attributes.placeholder
+    id = attributes.id ? attributes.id : "input-large"
+    icon = attributes.icon
+    hide-label = attributes["hide-label"]).large
+
+mixin input-button(label)
+  +input(label)(placeholder = attributes.placeholder
+    id = attributes.id ? attributes.id : "input-large"
+    class = attributes.class
+    disabled = attributes.disabled
+    type = attributes.type
+    hide-label = attributes["hide-label"]).input-button
+    if block
+      block
+
+mixin input-password
+  +input-button("Senha")(placeholder="Digite sua senha"
+    type="password"
+    id = attributes.id ? attributes.id : "input-password"
+    class = attributes.class
+    disabled = attributes.disabled
+    icon = attributes.icon
+    hide-label = attributes["hide-label"])
+
+mixin input-highlight(label)
+  +input(label)(placeholder = attributes.placeholder
+    id = attributes.id ? attributes.id : "input-highlight"
+    class = attributes.class
+    type = attributes.type
+    icon = attributes.icon
+    hide-label = attributes["hide-label"]).input-highlight
+
+mixin input-success
+  +input()(id = attributes.id ? attributes.id : "input-success"
+    type="text"        
+    placeholder="Digite somente números"
+    ariadescribedby="success"
+    class=attributes.class).success
+    +feedback-success(id="success")
+      | Mensagem de Sucesso
+
+mixin input-danger
+  +input()(id = attributes.id ? attributes.id : "input-danger"
+    type="text"    
+    placeholder="Digite somente números"
+    ariadescribedby="danger"
+    class=attributes.class).danger
+    +feedback-danger(id="danger")
+      | Mensagem de Erro
+
+mixin input-info
+  +input()(id = attributes.id ? attributes.id : "input-info"
+    type="text"    
+    placeholder="Digite somente números"
+    ariadescribedby="info"
+    class=attributes.class).info
+    +feedback-info(id="info")
+      | Mensagem informativa
+
+mixin input-warning
+  +input()(id = attributes.id ? attributes.id : "input-warning"
+    type="text"    
+    placeholder="Digite somente números"
+    ariadescribedby="warning"
+    class=attributes.class).warning
+    +feedback-warning(id="warning")
+      | Mensagem de alerta
+
+mixin input-disabled
+  +input()(id = attributes.id ? attributes.id : "input-disabled"
+    type="text"    
+    placeholder="Digite somente números"
+    ariadescribedby="warning-des"
+    disabled)
+    +feedback-warning(id="warning-des")
+      | Campo Desabilitado

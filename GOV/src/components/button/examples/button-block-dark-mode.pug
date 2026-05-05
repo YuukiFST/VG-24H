@@ -1,0 +1,10 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../button
+
+block content
+  .p-3.bg-blue-warm-vivid-90
+    +button-block-primary.dark-mode.mb-3 Primário
+    +button-block-secondary.dark-mode.mb-3 Secundário
+    +button-block.dark-mode Terciário

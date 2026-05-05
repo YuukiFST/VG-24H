@@ -1,0 +1,9 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../tooltip
+
+block content
+  div.mb-3
+    a(href="javascript:void(0);").h5 Sucesso
+    +tooltip-success-left

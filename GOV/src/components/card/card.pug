@@ -1,0 +1,103 @@
+mixin card
+  - let className = prefix + 'card'
+  div(class=className)&attributes(attributes)
+    if block
+      block
+
+mixin card-example
+  +card
+    .card-content
+      img(src="https://picsum.photos/id/0/500" alt="Imagem de exemplo")
+
+mixin card-full
+  +card
+    +card-header
+    .card-content
+      p Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempore perferendis nam porro atque ex at, numquam non optio ab eveniet error vel ad exercitationem, earum et fugiat recusandae harum? Assumenda.
+    +card-footer
+
+mixin card-hover
+  .row
+    .col-md
+      +card.hover
+        .card-content
+          p Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempore perferendis nam porro atque ex at, numquam non optio ab eveniet error vel ad exercitationem, earum et fugiat recusandae harum? Assumenda.
+
+    .col-md
+      +card.hover
+        .card-content
+          p Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempore perferendis nam porro atque ex at, numquam non optio ab eveniet error vel ad exercitationem, earum et fugiat recusandae harum? Assumenda.
+
+    .col-md
+      +card.hover
+        .card-content
+          p Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempore perferendis nam porro atque ex at, numquam non optio ab eveniet error vel ad exercitationem, earum et fugiat recusandae harum? Assumenda.
+
+mixin card-scroll
+  +card.h-fixed
+    +card-header
+    .card-content(tabindex="0")
+      p Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempore perferendis nam porro atque ex at, numquam non optio ab eveniet error vel ad exercitationem, earum et fugiat recusandae harum? Assumenda. Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempore perferendis nam porro atque ex at, numquam non optio ab eveniet error vel ad exercitationem, earum et fugiat recusandae harum? Assumenda.
+      p Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempore perferendis nam porro atque ex at, numquam non optio ab eveniet error vel ad exercitationem, earum et fugiat recusandae harum? Assumenda. Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempore perferendis nam porro atque ex at, numquam non optio ab eveniet error vel ad exercitationem, earum et fugiat recusandae harum? Assumenda.
+    +card-footer
+
+mixin card-collapse
+  +card
+    +card-header
+    .card-content
+      p Lorem ipsum dolor sit amet, consectetur adipisicing elit. Iste sit dolor exercitationem asperiores voluptates tenetur consectetur error vero ut expedita, sapiente voluptate nulla esse! Veritatis aliquam consectetur quod harum expedita!
+    .card-footer
+      .text-right
+        +button.circle(aria-label="Botão para expandir ou recolher conteúdos adicionais" data-toggle="collapse" data-target="expanded" aria-controls="expanded" aria-expanded="false" data-visible="false")
+          +icon.fa-chevron-down
+      #expanded(hidden)
+        +list.mt-3
+          +item
+            .row
+              .col-auto
+                +icon.fa-heartbeat
+              .col
+                p.m-0 Lorem ipsum dolor sit amet consectetur adipisicing elit.
+          +divider
+          +item
+            .row
+              .col-auto
+                +icon.fa-heartbeat
+              .col
+                p.m-0 Nesciunt, laudantium ea officiis hic tempora velit aperiam nemo accusamus nisi, eligendi ducimus! Incidunt ullam minima ratione amet sequi.
+          +divider
+          +item
+            .row
+              .col-auto
+                +icon.fa-heartbeat
+              .col
+                p.m-0 Voluptates, iste recusandae.
+
+mixin card-disabled
+  +card.disabled
+    +card-header
+    .card-content
+      p Lorem ipsum doloris sit, amet consectetur adipisicing elit. Tempore perferendis nam porro atque ex at, numquam non optio ab eveniet error vel ad exercitationem, earum et fugiat recusandae harum? Assumenda.
+    +card-footer
+
+mixin card-header
+  .card-header
+    .d-flex
+      +avatar-image.mt-1
+      .ml-3
+        .text-weight-semi-bold.text-up-02 Maria Amorim
+        div UX Designer
+      .ml-auto
+        +button.circle(aria-label="Ícone ilustrativo")
+          +icon.fa-ellipsis-v
+
+mixin card-footer
+  .card-footer
+    .d-flex
+      div
+        +button Button
+      .ml-auto
+        +button.circle(aria-label="Ícone ilustrativo")
+          +icon.fa-heart
+        +button.circle(aria-label="Ícone ilustrativo 3")
+          +icon.fa-share-alt

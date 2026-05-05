@@ -1,0 +1,30 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Utilitário de Iconografia";
+
+append content
+  p.h3.my-3x Tamanhos
+  +icon.fa-home
+  +icon.fa-home.fa-3x
+  +icon.fa-home.fa-5x
+
+  p.h3.my-3x Rotação nativa do Font Awesome
+  +icon.fa-cog.fa-4x.fa-spin
+
+  p.h3.my-3x Dentro de botão
+  +button.circle#olho(aria-label="Alterna entre visualizar e não visualizar")
+    +icon.fa-eye
+
+  script.
+    document.getElementById('olho').addEventListener('click', function() {
+      // trocar ícone de visualizar para não visualizar
+      const icon = this.querySelector('i');
+      if (icon.classList.contains('fa-eye')) {
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });

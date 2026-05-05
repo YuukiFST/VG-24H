@@ -1,0 +1,47 @@
+mixin carousel(type="simple", stage="in", nav="on")
+  - let className = [prefix + "carousel", attributes.class]
+  .row
+    .col-sm-12.col-md-8
+      div(
+        class=className
+        data-stage=attributes.stage
+        data-mobile-nav=attributes.nav
+        data-circular=attributes.circular
+        aria-label="Carrossel de Exemplo" aria-roledescription="carousel")
+        .carousel-button
+          +button.carousel-btn-prev.terciary.circle(aria-label="Anterior")
+            +icon.fa-chevron-left
+        .carousel-stage
+          .carousel-page(active role='group' aria-roledescription="slide" aria-live="polite")
+            .carousel-content.bg-blue-10
+              .h3.carousel-title Página 1
+          .carousel-page(role='group' aria-roledescription="slide" aria-live="polite")
+            .carousel-content.bg-violet-warm-10
+              .h3.carousel-title Página 2
+          .carousel-page(role='group' aria-roledescription="slide" aria-live="polite")
+            .carousel-content.bg-yellow-5
+              .h3.carousel-title Página 3
+          .carousel-page(role='group' aria-roledescription="slide" aria-live="polite")
+            .carousel-content.bg-green-cool-10
+              .h3.carousel-title Página 4
+          .carousel-page(role='group' aria-roledescription="slide" aria-live="polite")
+            .carousel-content.bg-orange-vivid-10
+              .h3.carousel-title Página 5
+        .carousel-button
+          +button.carousel-btn-next.terciary.circle(aria-label="Próximo")
+            +icon.fa-chevron-right
+        .carousel-step
+          +step(scroll=false, vertical=false,  total=5, initial=1, type=attributes.type)
+
+mixin carousel-padrao
+  +carousel(type="simple")&attributes(attributes)
+mixin carousel-circular
+  +carousel(type="simple" circular="true")&attributes(attributes)
+mixin carousel-in
+  +carousel(type="simple", stage="in", nav="")&attributes(attributes)
+mixin carousel-hibw
+  +carousel(type="simple", stage="hibw", nav="")&attributes(attributes)
+mixin carousel-hibh
+  +carousel(type="simple", stage="hibh", nav="")&attributes(attributes)
+mixin carousel-text
+  +carousel(type="text")&attributes(attributes)

@@ -1,0 +1,53 @@
+extends ../../partial/pug/component
+
+
+append vars
+  - var title = "Menu";
+
+append style
+  style.
+    .position-static {
+      position: static !important;
+    }
+    .position-static .menu-panel {
+      height: auto;
+      z-index: 0 !important;
+    }
+
+append content
+  p.h4.mt-5 Menu Principal
+
+  .row
+    +menu-offcanvas#offcanvas
+    +menu-push#push
+    .col
+      .d-flex.align-items-center
+        div
+          +button.small.circle(aria-label="Menu" data-toggle="menu" data-target="#offcanvas")
+            +icon.fa-bars
+        .ml-3 Menu Off Canvas
+      .d-flex.align-items-center.mt-3
+        div
+          +button.small.circle(aria-label="Menu" data-toggle="menu" data-target="#push")
+            +icon.fa-bars
+        .ml-3 Menu Push
+
+  p.h4.mt-5 Menu Contextual
+  p.d-sm-none Clicar no botão "Menu Contextual" ao final da tela
+  #contextual
+    +menu-contextual.active
+
+  p.h4.mt-5 Agrupamento de itens
+  +menu-groupedby
+
+  p.h4.mt-5 Densidades
+  +menu-sizes
+
+append style
+  style.
+    #contextual {
+      min-height: 350px;
+      position: relative;
+    }
+
+//- Usando exemplo de menu do https://www.w3.org/WAI/ARIA/apg/patterns/treeview/examples/treeview-navigation/

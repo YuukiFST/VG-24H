@@ -1,0 +1,14 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../pagination
+  include ../../button/button
+  include ../../item/item
+  include ../../list/list
+
+block content
+  +pagination-ellipsis-start
+  hr
+  +pagination-ellipsis-double
+  hr
+  +pagination-ellipsis-end

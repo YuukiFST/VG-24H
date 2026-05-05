@@ -1,0 +1,76 @@
+mixin accordion
+  - let className = ["accordion-example", attributes.class]
+  div(class=className)&attributes(attributes)
+    +list()(role="list")
+      +item(role="listitem" tabindex="0" data-toggle="accordion" data-target="a-l1" data-group="group1")
+        .content
+          .flex-fill RÓTULO 01
+          +icon.fa-angle-down
+      +list(id="a-l1" role="list" hidden)
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+      +item(role="listitem" tabindex="0" data-toggle="accordion" data-target="a-l2" data-group="group1")
+        .content
+          .flex-fill RÓTULO 02
+          +icon.fa-angle-down
+      +list(id="a-l2" role="list" hidden)
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+      +item(role="listitem" tabindex="0" data-toggle="accordion" data-target="a-l3" data-group="group1")
+        .content
+          .flex-fill RÓTULO 03
+          +icon.fa-angle-down
+      +list(id="a-l3" role="list" hidden)
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+
+mixin accordion-behavior
+  +accordion

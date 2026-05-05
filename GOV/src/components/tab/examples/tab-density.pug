@@ -1,0 +1,14 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../tab
+
+block content
+  p.h4 Densidade alta
+  +tabs-padrao-small
+
+  p.h4.mt-5 Densidade padrão
+  +tabs-padrao
+
+  p.h4.mt-5 Densidade baixa
+  +tabs-padrao-large

@@ -1,0 +1,10 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../button
+
+block content
+  .p-3
+    +button-block-primary.mb-3 Primário
+    +button-block-secondary.mb-3 Secundário
+    +button-block Terciário

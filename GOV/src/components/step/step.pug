@@ -1,0 +1,154 @@
+mixin step(labelClass, vertical=false, total = 4, initial = 1, scroll=true, position="left", type=false, role="listbox", orientation="vertical")
+  - let componentClass = [prefix + "step", attributes.class]
+  - total = attributes.total ?  attributes.total : 5
+  - initial = attributes.initial ? attributes.initial : 1
+  - orientation = attributes.orientation ? attributes.orientation : "horizontal"
+  - role = attributes.role ? attributes.role : "listbox"
+  nav(
+    id=attributes.id
+    data-initial=initial
+    data-label=attributes.position
+    data-scroll=attributes.scroll
+    data-type=attributes.type
+    class=componentClass
+    role="none")
+    .step-progress(role=role aria-orientation = orientation aria-label="Lista de Opções")
+      - let n = 1;
+      while n <= total
+        if ( n == total && attributes.type == "false")
+          if attributes['tooltip-text']
+            button(role="option" aria-posinset=`${n}` aria-setsize=`${total}` class="step-progress-btn" type="button" data-tooltip-text=`Exemplo de Rótulo ${n}` disabled)
+              span.step-info=`Exemplo de Rótulo ${n}`
+          else
+            button(role="option" aria-posinset=`${n}` aria-setsize=`${total}` class="step-progress-btn" type="button" disabled)
+              span.step-info=`Exemplo de Rótulo ${n}`
+        else
+          if attributes['tooltip-text']
+            button(role="option" aria-posinset=`${n}` aria-setsize=`${total}` class="step-progress-btn" type="button" data-tooltip-text=`Exemplo de Rótulo ${n}`)
+              span.step-info=`Exemplo de Rótulo ${n}`
+          else
+            button(role="option" aria-posinset=`${n}` aria-setsize=`${total}` class="step-progress-btn" type="button")
+              span.step-info=`Exemplo de Rótulo ${n}`
+        - n++
+
+mixin step-icon(labelClass, vertical=false,  initial = 1, scroll=true, position="left", role="listbox")
+  - let componentClass = [prefix + "step", attributes.class]
+  - initial = attributes.initial ? attributes.initial : 1
+  - className = className ? componentClass + " " + className : componentClass
+  - orientation = attributes.orientation ? attributes.orientation : "horizontal"
+  - role = attributes.role ? attributes.role : "listbox"
+  nav(
+    id=attributes.id
+    data-initial=initial
+    data-label=attributes.position
+    data-scroll=attributes.scroll
+    data-type=attributes.type
+    class=componentClass
+    role="none")
+    .step-progress(role=role aria-orientation = orientation aria-label="Lista de Opções")
+        if attributes['tooltip-text']
+          button(role="option" aria-posinset="1" aria-setsize="4" class="step-progress-btn" type="button" data-tooltip-text="Acesse sua Conta" )
+            span.step-info Acesse sua Conta
+            i.step-icon.fas.fa-lock(aria-hidden="true")
+          button(role="option" aria-posinset="2" aria-setsize="4" class="step-progress-btn" type="button" data-tooltip-text="Dados da entrega")
+            span.step-info Dados da entrega
+            i.step-icon.fas.fa-truck(aria-hidden="true")
+          button(role="option" aria-posinset="3" aria-setsize="4" class="step-progress-btn" type="button" data-tooltip-text="Dados de Pagamento" )
+            span.step-info Dados de Pagamento
+            i.step-icon.far.fa-credit-card(aria-hidden="true")
+          button(role="option" aria-posinset="4" aria-setsize="4" class="step-progress-btn" type="button" data-tooltip-text="Finalizar" disabled)
+            span.step-info Finalizar
+            i.step-icon.fas.fa-check(aria-hidden="true")
+        else
+          button(role="option" aria-posinset="1" aria-setsize="4" class="step-progress-btn" type="button")
+            span.step-info Acesse sua Conta
+            i.step-icon.fas.fa-lock(aria-hidden="true")
+          button(role="option" aria-posinset="2" aria-setsize="4" class="step-progress-btn" type="button")
+            span.step-info Dados da entrega
+            i.step-icon.fas.fa-truck(aria-hidden="true")
+          button(role="option" aria-posinset="3" aria-setsize="4" class="step-progress-btn" type="button")
+            span.step-info Dados de Pagamento
+            i.step-icon.far.fa-credit-card(aria-hidden="true")
+          button(role="option" aria-posinset="4" aria-setsize="4" class="step-progress-btn" type="button" disabled)
+            span.step-info Finalizar
+            i.step-icon.fas.fa-check(aria-hidden="true")
+
+mixin step-alert(labelClass, vertical=false,  initial = 2, scroll=true, position="right", type=false, role="listbox")
+  - let componentClass = [prefix + "step", attributes.class]
+  - initial = attributes.initial ? attributes.initial : 1
+  - className = className ? componentClass + " " + className : componentClass
+  - orientation = attributes.orientation ? attributes.orientation : "horizontal"
+  - role = attributes.role ? attributes.role : "listbox"
+  nav(
+    id=attributes.id
+    data-initial=initial
+    data-label=attributes.position
+    data-scroll=attributes.scroll
+    data-type=attributes.type
+    class=componentClass
+    role="none")
+    .step-progress(role=role aria-orientation = orientation aria-label="Lista de Opções")
+        if attributes['tooltip-text']
+          button(role="option" aria-posinset="1" aria-setsize="4" class="step-progress-btn" type="button" data-tooltip-text="Acesse sua Conta" data-alert="success" )
+            span.step-info Acesse sua Conta
+            span.step-alert
+          button(role="option" aria-posinset="2" aria-setsize="4" class="step-progress-btn" type="button" data-tooltip-text="Dados da entrega" data-alert="info")
+            span.step-info Dados da entrega
+            span.step-alert
+          button(role="option" aria-posinset="3" aria-setsize="4" class="step-progress-btn" type="button" data-tooltip-text="Dados de Pagamento" data-alert="danger")
+            span.step-info Dados de Pagamento
+            span.step-alert
+          button(role="option" aria-posinset="4" aria-setsize="4" class="step-progress-btn" type="button" data-tooltip-text="Finalizar" disabled data-alert="warning")
+            span.step-info Finalizar
+            i.step-icon.fas.fa-check(aria-hidden="true")
+            span.step-alert
+        else
+          button(role="option" aria-posinset="1" aria-setsize="4" class="step-progress-btn" type="button" data-alert="success" )
+            span.step-info Acesse sua Conta
+            span.step-alert
+          button(role="option" aria-posinset="2" aria-setsize="4" class="step-progress-btn" type="button" data-alert="info")
+            span.step-info Dados da entrega
+            span.step-alert
+          button(role="option" aria-posinset="3" aria-setsize="4" class="step-progress-btn" type="button" data-alert="danger")
+            span.step-info Dados de Pagamento
+            span.step-alert
+          button(role="option" aria-posinset="4" aria-setsize="4" class="step-progress-btn" type="button" disabled data-alert="warning")
+            span.step-info Finalizar
+            i.step-icon.fas.fa-check(aria-hidden="true")
+            span.step-alert
+
+mixin step-vertical-left
+  +step.vertical(scroll=false, vertical=true, total=3, initial=1, position="left", type=false, orientation="vertical" class=attributes.class)
+
+mixin step-vertical
+  +step-vertical-right(class=attributes.class)
+
+mixin step-vertical-right
+  +step.vertical(scroll=false, vertical=true, total=3, initial=1, position="right", type=false, orientation="vertical" class=attributes.class)
+
+mixin step-horizontal
+  +step-horizontal-bottom(class=attributes.class)
+
+mixin step-horizontal-bottom
+  +step(scroll=false, vertical=false, total=3, initial=1, position="bottom", type=false class=attributes.class)
+
+mixin step-horizontal-top
+  +step(scroll=false, vertical=false, total=3, initial=1, position="top", type=false class=attributes.class)
+
+mixin step-horizontal-left
+  +step(scroll=false, vertical=false, total=3, initial=1, position="left", type=false class=attributes.class)
+
+mixin step-horizontal-right
+  +step(scroll=true, vertical=false, total=3, initial=1, position="right", type=false class=attributes.class)
+
+mixin step-void
+  +step(scroll=false, vertical=false, total=3, initial=1, type="void" class=attributes.class tooltip-text)
+
+mixin step-void-alert
+  +step-alert(scroll=false, vertical=false, total=3, initial=1, type="void" class=attributes.class tooltip-text)
+
+mixin step-simple
+  +step(scroll=false, vertical=false, total=5, initial=1, type="simple" class=attributes.class tooltip-text)
+
+mixin step-text
+  +step(scroll=false, vertical=false, total=5, initial=3, type="text" class=attributes.class tooltip-text)

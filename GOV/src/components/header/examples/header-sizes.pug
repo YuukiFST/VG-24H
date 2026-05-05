@@ -1,0 +1,20 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../../avatar/avatar
+  include ../../button/button
+  include ../../signin/signin
+  include ../../divider/divider
+  include ../../input/input
+  include ../../item/item
+  include ../../list/list
+  include ../../menu/menu
+  include ../../notification/notification
+  include ../../tab/tab
+  include ../../tag/tag
+  include ../header
+
+block content
+  +header-small("Header Densidade Alta")
+  .mb-5
+  +header-large("Header Densidade Baixa")

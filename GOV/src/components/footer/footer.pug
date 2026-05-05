@@ -1,0 +1,94 @@
+mixin footer
+  footer.br-footer&attributes(attributes)
+    if block
+      block
+
+mixin footer-logo
+  - let type = attributes.inverted ? "positive" : "negative"
+  .logo&attributes(attributes)
+    img(src=`https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-${type}.png` alt="Imagem")
+
+mixin footer-list-item
+  +item(href="javascript:void(0)")&attributes(attributes)
+    if block
+      block
+
+mixin footer-list-header
+  +item&attributes(attributes)
+    if block
+      block
+
+mixin footer-list-filler(attributes)
+  - total = attributes.total ?  attributes.total : 6
+  - col = typeof(attributes.col) === 'number' ? `col-${attributes.col}` : 'col'
+  - let n = 1;
+
+  while n <= total
+    - let itens = Math.floor(Math.random() * (1 - 4) + 4)
+    div(class = col)
+      +footer-list-item(class="header")
+        .content.text-down-01.text-bold.text-uppercase=`Categoria ${n}`
+        .support
+          +icon.fa-angle-down
+      +list
+        +divider.d-md-none
+        - let i = 0;
+        while i <= itens
+          - let index = Math.floor(Math.random() * 8)
+          - let phrases = ['Ad deserunt nostrud', 'Adipisicing culpa et ad consequat', 'Ex qui laborum consectetur aute commodo', 'Est ex deserunt', 'Qui esse', 'Deserunt', 'Duis incididunt consectetur', 'Nulla occaecat eiusmod']
+          +footer-list-item
+            .content=phrases[index]
+          - i++
+        +divider.d-md-none
+    - n++
+
+mixin footer-bottom-filler
+  - let type = attributes.inverted ? "positive" : "negative"
+  .d-none.d-sm-block
+    .row.align-items-end.justify-content-between.py-5
+      .col
+        .social-network
+          .social-network-title Redes Sociais
+          .d-flex
+            a.br-button.circle(href="javascript: void(0)" aria-label="Compartilhar por Facebook")
+              i.fab.fa-facebook-f(aria-hidden="true")
+            a.br-button.circle(href="javascript: void(0)" aria-label="Compartilhar por Twitter")
+              i.fab.fa-twitter(aria-hidden="true")
+            a.br-button.circle(href="javascript: void(0)" aria-label="Compartilhar por Linkedin")
+              i.fab.fa-linkedin-in(aria-hidden="true")
+            a.br-button.circle(href="javascript: void(0)" aria-label="Compartilhar por Whatsapp")
+              i.fab.fa-whatsapp(aria-hidden="true")
+                  
+      .col.assigns.text-right
+        - let chancela = 0
+        while chancela < 2
+          img.ml-4(src=`https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-assign-${type}.png` alt="Imagem")
+          - chancela++
+
+mixin footer-info
+  .info
+    .text-down-01.text-medium.pb-3
+      | Texto destinado a exibição de informações relacionadas à&nbsp;
+      strong licença de uso.
+
+mixin footer-default
+  +footer
+      .container-lg
+        +footer-logo
+        +list()(data-toggle data-sub).horizontal
+          +footer-list-filler()(total=6 col=2)
+        +footer-bottom-filler
+      +divider.my-3
+      .container-lg
+        +footer-info
+
+mixin footer-inverted
+  +footer.inverted
+      .container-lg
+        +footer-logo.text-sm-left(inverted)
+        +list()(data-toggle data-sub).horizontal
+          +footer-list-filler()(total=6 col=2)
+        +footer-bottom-filler()(inverted)
+      +divider.my-3
+      .container-lg
+        +footer-info

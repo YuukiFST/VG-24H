@@ -1,0 +1,16 @@
+extends ../../../partial/pug/isolate
+include ../../../components/checkbox/checkbox
+include ../../../components/radio/radio
+
+block content
+  p.h1 Título h1
+  p Lorem ipsum dolor <span class="mark">texto usando mark</span> elit. Ipsam distinctio temporibus <span class="code">texto usando code</span> adipisci, mollitia omnis! Porro eligendi, fuga voluptatem nemo, placeat repudiandae adipisci quam corrupti animi quibusdam similique impedit cum?
+  p.legend Configurações (legend)
+  p.mb-base.label Opções (label)
+  +checkbox("Opção 1")#check-1
+  +checkbox("Opção 2")#check-2
+  p.legend Tema (legend)
+  p.mb-base.label Cor selecionada (label)
+  +radio("Verde")(name="radio")#radio-1
+  +radio("Azul")(name="radio" checked)#radio-2
+

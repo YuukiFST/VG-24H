@@ -1,0 +1,21 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../tooltip
+  include ../../input/input
+  include ../../button/button
+
+block content
+  div.mb-3
+        a(href="javascript:void(0);").h5 PopOver Simples
+        +tooltip-popover
+  div.mb-3
+      a(href="javascript:void(0);").h5 PopOver com imagem
+      +tooltip-popover-image
+  div.mb-3
+        a(href="javascript:void(0);").h5 PopOver com ícone - Erro
+        +tooltip-popover-icon-error
+  div.mb-3
+        a(href="javascript:void(0);").h5 PopOver com ícone e botão- Warning
+        +tooltip-popover-icon-warning
+    

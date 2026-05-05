@@ -1,0 +1,15 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../avatar
+
+block content
+  +avatar.mr-3
+    span.content
+      +icon.fa-user
+  +avatar.medium.mr-3
+    span.content
+      +icon.fa-user
+  +avatar.large.mr-3
+    span.content
+      +icon.fa-user

@@ -1,0 +1,10 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../wizard
+  include ../../button/button
+
+block content
+  <style>.wizard-sample-2 {height: 400px;}</style>
+  div.wizard-sample-2
+    +wizard-vertical

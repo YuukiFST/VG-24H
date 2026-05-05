@@ -1,0 +1,67 @@
+extends ../../partial/pug/component
+
+
+append vars
+  - var title = "Botão";
+
+append content
+
+  p.h4.mt-5 Ênfases
+  .row
+    .col-md
+      .p-3
+        +button-primary.mr-3 Primário
+        +button-secondary.mr-3 Secundário
+        +button Terciário
+    .col-md
+      .p-3.bg-blue-warm-vivid-90
+        +button-primary.dark-mode.mr-3 Primário
+        +button-secondary.dark-mode.mr-3 Secundário
+        +button.dark-mode Terciário
+  p.h4.mt-5 Tipo circular
+  .row
+    .col-md
+      .p-3
+        +button-circle-primary.mr-3(aria-label="Ícone ilustrativo")
+          +icon.fa-city
+        +button-circle-secondary.mr-3(aria-label="Ícone ilustrativo")
+          +icon.fa-city
+        +button-circle(aria-label="Ícone ilustrativo")
+          +icon.fa-city
+    .col-md
+      .p-3.bg-blue-warm-vivid-90
+        +button-circle-primary.dark-mode.mr-3(aria-label="Ícone ilustrativo")
+          +icon.fa-city
+        +button-circle-secondary.dark-mode.mr-3(aria-label="Ícone ilustrativo")
+          +icon.fa-city
+        +button-circle.dark-mode(aria-label="Ícone ilustrativo")
+          +icon.fa-city
+  p.h4.mt-5 Tipo bloco
+  .row
+    .col-md
+      .p-3
+        +button-block-primary.mb-3 Primário
+        +button-block-secondary.mb-3 Secundário
+        +button-block Terciário
+    .col-md
+      .p-3.bg-blue-warm-vivid-90
+        +button-block-primary.dark-mode.mb-3 Primário
+        +button-block-secondary.dark-mode.mb-3 Secundário
+        +button-block.dark-mode Terciário
+  p.h4.mt-5 Densidades
+  .p-3
+    +button-secondary.large.mr-3 Baixa densidade
+    +button-secondary.mr-3 Padrão
+    +button-secondary.small Alta densidade
+  .p-3
+    +button-circle-secondary.large.mr-3(aria-label="Ícone ilustrativo")
+      +icon.fa-city
+    +button-circle-secondary.mr-3(aria-label="Ícone ilustrativo")
+      +icon.fa-city
+    +button-circle-secondary.small(aria-label="Ícone ilustrativo")
+      +icon.fa-city
+  p.h4.mt-5 Estados
+  .p-3
+    +button-primary.mr-3(disabled) Desativado
+    +button-primary.active.mr-3 Ativado
+    +button-primary.loading Carregando

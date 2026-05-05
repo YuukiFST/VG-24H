@@ -1,0 +1,20 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Utilitário de Overflow";
+
+append style
+  style.
+    .example {
+      white-space: nowrap;
+      width: 300px;
+    }
+
+append content
+  p.h4.mt-5=title
+
+  strong.bg-support-02.px-half.rounder-sm .overflow-auto
+  p.overflow-auto.example Lorem ipsum dolor sit amet consectetur adipisicing elit. Autem voluptatum veniam ut. Facere hic recusandae maiores atque in, unde aliquid soluta harum saepe vitae vel voluptatem veniam id placeat iste.
+
+  strong.bg-support-02.px-half.rounder-sm .overflow-hidden
+  p.overflow-hidden.example Lorem ipsum dolor sit amet consectetur adipisicing elit. Non recusandae magnam velit, nisi laboriosam optio hic dicta eius quos fuga debitis, facilis eveniet voluptate saepe! Tempora assumenda voluptate eligendi dignissimos?

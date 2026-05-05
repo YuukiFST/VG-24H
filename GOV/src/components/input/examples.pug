@@ -1,0 +1,94 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Input";
+
+append content
+  p.h4.mt-5 Input padrão
+  .row
+    .col-sm-8.col-lg-5
+      +input-default
+
+  p.h4.mt-5 Densidades
+  .row.mb-1
+    .col-sm-4.col-lg-3
+      +input-medium
+  .row.mb-1
+    .col-sm-4.col-lg-3
+      +input-small
+  .row.mb-1
+    .col-sm-4.col-lg-3
+      +input-large
+
+  p.h4.mt-5 Input com ícones
+  .row.mb-1
+    .col-sm-6.col-lg-4
+      +input-medium("Login")(icon="fa-user-tie")#input-icon
+  .row.mb-1
+    .col-sm-6.col-lg-4
+      +input-small("Nome")(icon="fa-user")#input-icon-small
+  .row.mb-1
+    .col-sm-6.col-lg-4
+      +input-large("Grupo")(icon="fa-users")#input-icon-large
+
+  p.h4.mt-5 Input com botões
+  .row.mb-1
+    .col-sm-5.col-lg-3
+      +input-password
+  .row.mb-1
+    .col-sm-5.col-lg-3
+      +input-button("Logar")(placeholder="Digite seu usuário")#input-login-small.small
+        +button(aria-label="Botão de ação"): +icon.fa-arrow-right
+  .row.mb-1
+    .col-sm-5.col-lg-3
+      +input-button("Buscar")(placeholder="Digite uma palavra" type="search")#input-search-large.large
+
+  p.h4.mt-5 Rótulo lateral
+  .row.mb-1
+    .col-sm-10.col-lg-7
+      +input-inline#lateral
+  .row.mb-1
+    .col-sm-10.col-lg-7
+      +input-inline("Com ícone")(icon="fa-edit")#lateral-icon
+  .row.mb-1
+    .col-sm-10.col-lg-7
+      +input-inline("Com botão")#input-button.input-button
+        +button(aria-label="Botão de ação"): +icon.fa-heart
+
+  p.h4.mt-5 Input Destaque
+  .row.mb-1
+    .col-sm-10.col-lg-8
+      +input-highlight()(hide-label)#input-highlight-labeless
+  .row.mb-1
+    .col-sm-10.col-lg-8
+      +input-highlight()(type="search" hide-label)#input-highlight-search-labeless.input-button
+  .row.mb-1
+    .col-sm-10.col-lg-8
+      +input-highlight()(type="search" icon="fa-user" hide-label)#input-highlight-icon-search-labeless.input-button
+
+  p.h4.mt-5 Validação e estados
+  .row
+    .col-sm-4.mb-1
+      +input-success
+    .col-sm-4.mb-1
+      +input-danger
+    .col-sm-4.mb-1
+      +input-info
+    .col-sm-4.mb-1
+      +input-warning
+    .col-sm-4.mb-1
+      +input-disabled
+
+  p.h4.mt-5 Em fundo escuro
+  .bg-primary-darken-02.p-3
+    .row
+      .col-sm-4.mb-1
+        +input-success#input-success-dark.dark-mode
+      .col-sm-4.mb-1
+        +input-danger#input-danger-dark.dark-mode
+      .col-sm-4.mb-1
+        +input-info#input-info-dark.dark-mode
+      .col-sm-4.mb-1
+        +input-warning#input-warning-dark.dark-mode
+      .col-sm-4.mb-1
+        +input-disabled#input-disabled-dark.dark-mode

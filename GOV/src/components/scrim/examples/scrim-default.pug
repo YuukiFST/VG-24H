@@ -1,0 +1,10 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../scrim
+  include ../../button/button
+
+block content
+  +scrim-default
+  .scrimexemplo
+    +button.primary Testar Scrim

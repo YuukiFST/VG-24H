@@ -1,0 +1,9 @@
+extends ../../partial/pug/component
+include cookiebar
+
+append vars
+	- var title = "Cookiebar";
+
+append content
+	p.h4.mt-5 Cookiebar
+	+cookiebar-padrao

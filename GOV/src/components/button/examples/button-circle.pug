@@ -1,0 +1,13 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../button
+
+block content
+  .p-3
+    +button-circle-primary.mr-3(aria-label="Ícone ilustrativo")
+      +icon.fa-city
+    +button-circle-secondary.mr-3(aria-label="Ícone ilustrativo")
+      +icon.fa-city
+    +button-circle(aria-label="Ícone ilustrativo")
+      +icon.fa-city

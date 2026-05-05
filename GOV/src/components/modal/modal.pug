@@ -1,0 +1,138 @@
+mixin modal
+  - var className = prefix + 'modal';
+  .div(class=className)&attributes(attributes)
+    if block
+      block
+
+mixin modal-header(title)
+  .br-modal-header&attributes(attributes)=title
+    if block
+      block
+
+mixin modal-body
+  .br-modal-body&attributes(attributes)
+    if block
+      block
+
+mixin modal-footer
+  - var className=attributes.class
+  .br-modal-footer&attributes(attributes)
+    if block
+      block
+
+mixin modal-close
+  +button.close.circle(data-dismiss="br-modal" aria-label="Fechar")
+    +icon.fa-times
+
+mixin modal-alert
+  +modal.medium(aria-modal="true" role="dialog" aria-labelledby="modalalerttitle")
+    +modal-header("")
+      .modal-title#modalalerttitle Título da modal
+      +modal-close
+    +modal-body
+      p Lorem ipsum dolor sit amet consectetur adipisicing elit. Temporibus commodi laboriosam vel sequi quam deleniti, laborum mollitia blanditiis dolores officiis nulla quos dolorem repellat in nisi alias nesciunt fugit. Similique!
+    +modal-footer.justify-content-end
+      +button.secondary Ação 1
+      +button.primary.ml-2 Ação2
+
+mixin modal-acao
+  +modal.medium(aria-modal="true" role="dialog" aria-labelledby="modalactiontitle")
+    +modal-header("")
+      .modal-title#modalactiontitle Retornar para página inicial?
+      +modal-close
+    +modal-body
+      p  Você está sendo redirecionado para a página inicial do sistema
+    +modal-footer
+      +button.secondary Ação 1
+      +button.primary.ml-2 Ação 2
+
+mixin modal-titulo-linhas
+  +modal.small(aria-modal="true" role="dialog" aria-labelledby="modaltitlelines")
+    +modal-header("")
+      .modal-title#modaltitlelines Título do modal de exemplo com uso de duas linhas, título do modal de exemplo com uso de duas linhas
+      +modal-close
+    +modal-body
+      p  Texto com duas linhas Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+    +modal-footer.justify-content-center
+      +button.secondary Ação 1
+      +button.primary.ml-2 Ação 2
+
+mixin modal-loading
+  +modal.xsmall(aria-modal="true" role="dialog" aria-label="Carregando Conteúdo")
+    +modal-body.loading.medium
+    +modal-footer.justify-content-around
+      +button.secondary Cancelar
+
+mixin modal-sem-titulo
+  +modal.medium(aria-modal="true" role="dialog" aria-label="Exemplo de modal sem título" aria-describedby="untitledmodal")
+    +modal-body#untitledmodal
+      p Modal de alerta sem título Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+    +modal-footer.justify-content-end
+      +button.secondary Ação 1
+      +button.primary.ml-2 Ação 2
+
+mixin modal-options
+  +modal.small(aria-modal="true" role="dialog" aria-labelledby="modaloptionstitle")
+    +modal-header("")
+      .modal-title#modaloptionstitle Título
+      +modal-close
+    +modal-body
+      +radio("Fotos")(id="op-fotos" class="d-block" name="op")
+      +radio("Filmes")(id="op-filmes" class="d-block mt-1" name="op" checked)
+      +radio("Áudio")(id="op-audio" class="d-block mt-1" name="op")
+      +radio("Todas")(id="op-todas" class="d-block mt-1" name="op")
+    +modal-footer.justify-content-center
+      +button.secondary Ação 1
+      +button.primary.ml-2 Ação 2
+
+
+mixin modal-login
+  +modal.large(aria-modal="true" role="dialog" aria-labelledby="modallogintitle")
+    +modal-header("")
+      .modal-title#modallogintitle Título
+      +modal-close
+    +modal-body
+      +select("Domínio da autenticação")(id="auth-dominio")
+        +option("GOV.BR", 'opt-' + Math.floor(Math.random() * 1000))
+      .mt-3: +input("Usuário")(id="auth-usuario" placeholder="Insira um texto")
+      .mt-3: +input-password
+    +modal-footer.justify-content-center
+      +button.secondary Cancelar
+      +button.primary.ml-2(disabled) Finalizar
+
+mixin modal-list
+  +modal.xsmall(aria-modal="true" role="dialog" aria-labelledby="modallisttitle")
+    +modal-header("")
+      .modal-title#modallisttitle Título
+      +modal-close
+    +modal-body
+      +list
+        +item(href="javascript:void(0)")
+          .row.align-items-center
+            .col-auto
+              img(src="https://picsum.photos/40/40" alt="imagem de exemplo 1").rounded
+            .col Opção 1
+        +divider
+        +item(href="javascript:void(0)")
+          .row.align-items-center
+            .col-auto
+              img(src="https://picsum.photos/40/40" alt="imagem de exemplo 1").rounded
+            .col Opção 2
+        +divider
+        +item(href="javascript:void(0)")
+          .row.align-items-center
+            .col-auto
+              img(src="https://picsum.photos/40/40" alt="imagem de exemplo 1").rounded
+            .col Opção 3
+
+
+mixin modal-terms
+  +modal.large(aria-modal="true" role="dialog" aria-labelledby="modaltermstitle")
+    +modal-header("Concorda com os termos?")#modaltermstitle
+    +modal-body
+      p Lorem Ipsum dolor sit amet, consectetur adipiscing elit. Mauris id gravida nulla. Cras sagittis dapibus felis vitae semper. Donec vel hendrerit ante. Etiam sed blandit nisi. Praesent iaculis, nisl eget rutrum vehicula, lacus tortor feugiat diam, et euismod lacus metus eget nisi. Sed fermentum, nunc nec efficitur pharetra, felis dolor feugiat massa, et semper turpis felis quis ligula. Quisque non metus at risus maximus ultrices. Nam vel massa tellus. Vestibulum lobortis dui et pellentesque porta. Cras rhoncus augue a mauris porttitor, in malesuada metus eleifend. Praesent ac lacinia lorem. Sed cursus nisl ligula, vel ultrices ex pellentesque eu. Curabitur facilisis egestas libero, non pharetra lacus ultricies quis. Mauris non finibus justo, eu varius metus. Donec nec eros semper, consequat turpis id, fermentum dolor.
+      p Lorem Ipsum dolor sit amet, consectetur adipiscing elit. Mauris id gravida nulla. Cras sagittis dapibus felis vitae semper. Donec vel hendrerit ante. Etiam sed blandit nisi. Praesent iaculis, nisl eget rutrum vehicula, lacus tortor feugiat diam, et euismod lacus metus eget nisi. Sed fermentum, nunc nec efficitur pharetra, felis dolor feugiat massa, et semper turpis felis quis ligula. Quisque non metus at risus maximus ultrices. Nam vel massa tellus. Vestibulum lobortis dui et pellentesque porta. Cras rhoncus augue a mauris porttitor, in malesuada metus eleifend. Praesent ac lacinia lorem. Sed cursus nisl ligula, vel ultrices ex pellentesque eu. Curabitur facilisis egestas libero, non pharetra lacus ultricies quis. Mauris non finibus justo, eu varius metus. Donec nec eros semper, consequat turpis id, fermentum dolor.
+      p Lorem Ipsum dolor sit amet, consectetur adipiscing elit. Mauris id gravida nulla. Cras sagittis dapibus felis vitae semper. Donec vel hendrerit ante. Etiam sed blandit nisi. Praesent iaculis, nisl eget rutrum vehicula, lacus tortor feugiat diam, et euismod lacus metus eget nisi. Sed fermentum, nunc nec efficitur pharetra, felis dolor feugiat massa, et semper turpis felis quis ligula. Quisque non metus at risus maximus ultrices. Nam vel massa tellus. Vestibulum lobortis dui et pellentesque porta. Cras rhoncus augue a mauris porttitor, in malesuada metus eleifend. Praesent ac lacinia lorem. Sed cursus nisl ligula, vel ultrices ex pellentesque eu. Curabitur facilisis egestas libero, non pharetra lacus ultricies quis. Mauris non finibus justo, eu varius metus. Donec nec eros semper, consequat turpis id, fermentum dolor.
+    +modal-footer.justify-content-center
+      +button.secondary Negar
+      +button.primary.ml-2 Aceitar

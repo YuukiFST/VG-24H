@@ -1,0 +1,17 @@
+extends ../../partial/pug/component
+
+
+append vars
+  - let title = "Header";
+
+append content
+  +header-sticky("Header Sticky")
+  .mt-3
+  +header("Header Padrão")
+  .mt-3
+  +header-compact("Header Compacto")
+
+  p.h4.mt-5 Densidades
+  +header-small("Header Densidade Alta")
+  .mt-3
+  +header-large("Header Densidade Baixa")

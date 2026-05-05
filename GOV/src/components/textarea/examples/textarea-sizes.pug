@@ -1,0 +1,11 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../textarea
+
+block content
+  .row
+    .col-sm-6
+      +textarea-large
+    .col-sm-6.mt-5.mt-sm-0
+      +textarea-small

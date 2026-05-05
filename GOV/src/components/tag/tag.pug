@@ -1,0 +1,46 @@
+mixin tag
+  - let className = prefix + 'tag'
+  span(class=className)&attributes(attributes)
+    if block
+      block
+
+mixin tag-icon
+  +tag.icon&attributes(attributes)
+    if block
+      block
+
+mixin tag-status
+  +tag.status&attributes(attributes)
+
+mixin tag-interaction
+  +tag.interaction&attributes(attributes)
+    if block
+      block
+
+mixin tag-interaction-select
+  +tag.interaction-select&attributes(attributes)
+    if block
+      block
+
+mixin tag-text
+  +tag&attributes(attributes)
+    if block
+      block
+
+mixin tag-count
+  +tag.count&attributes(attributes)
+    if block
+      block
+
+mixin tag-radio
+  +tag-interaction-select
+    input(id="tag-select-01" type="radio" aria-label="selecionar tag"  name="vehicle" value="car")
+    label(for="tag-select-01" aria-describedby="tag-label-select-01")
+      +icon.fa-car
+      span(id="tag-label-select-01") Label
+  +tag-interaction-select.selected.ml-3
+    input(id="tag-select-02" type="radio" aria-label="selecionar tag" checked  name="vehicle" value="ship")
+    label(for="tag-select-02" aria-describedby="tag-label-select-02")
+      +icon.fa-ship
+      span(id="tag-label-select-02") Label
+

@@ -1,0 +1,12 @@
+extends ../../partial/pug/component
+
+
+append vars
+  - var title = "Breadcrumb";
+
+append content
+  p.h4.mt-5 Breadcrumb Padrão
+  +breadcrumb-default
+  hr
+  p.h4.mt-5 Breadcrumb com truncamento
+  +breadcrumb-truncate

@@ -1,0 +1,12 @@
+
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../message
+  include ../../button/button
+
+block content
+  +message-danger
+  +message-success
+  +message-info
+  +message-warning

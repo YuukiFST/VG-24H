@@ -1,0 +1,16 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../step
+  include ../../button/button
+  include ../../tooltip/tooltip
+
+block content
+  .my-5
+    +step-void
+  .my-5
+    +step-void-alert
+  .my-5
+    +step-simple
+  .my-5
+    +step-text

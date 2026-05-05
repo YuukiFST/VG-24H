@@ -1,0 +1,45 @@
+mixin item
+  - let componentClass = prefix + "item"
+
+  //- Item do tipo link
+  if attributes['href']
+    a(class=componentClass)&attributes(attributes)
+      if block
+        block
+  //- Item do tipo botão
+  else if attributes['type'] === 'button'
+    button(class=componentClass)&attributes(attributes)
+      if block
+        block
+  else
+    div(class=componentClass)&attributes(attributes)
+      if block
+        block
+
+mixin item-elems-iteractive
+  +item
+    .row.align-items-center
+      .col Lorem ipsum <a href="javascript:void(0);">dolor</a>, sit amet consectetur <a href="javascript:void(0);">adipisicing</a> elit.
+      .col-auto
+        +button.circle(aria-label="Interagir com item")
+          +icon.fa-city
+
+mixin item-selection-checkbox
+  +item(data-toggle="selection")
+    +checkbox('Rótulo do Checkbox 01')#check-01
+  +item(data-toggle="selection")
+    +checkbox('Rótulo do Checkbox 02')#check-02
+
+mixin item-selection-radio
+  +item(data-toggle="selection")
+    +radio('Rótulo do Radio 01')(name="radio")#radio-01
+  +item(data-toggle="selection")
+    +radio('Rótulo do Radio 02')(name="radio")#radio-02
+
+mixin item-disabled
+  +item()(disabled)
+    .row.align-items-center
+      .col-auto
+        img(src="https://picsum.photos/40/40" alt="imagem de exemplo 1").rounded
+      .col
+        span Lorem ipsum dolor sit amet consectetur adipisicing elit

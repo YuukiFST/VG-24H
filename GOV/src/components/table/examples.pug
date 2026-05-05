@@ -1,0 +1,26 @@
+extends ../../partial/pug/component
+
+
+append vars
+  - var title = "Tabela";
+
+append content
+  +header("Header Padrão")
+  +table-example
+  .mt-5
+  +table-irregular-1
+  .mt-5
+  +table-irregular-2
+  p.h4.mt-5 Versão sem hover
+  .mt-5
+  +table-example.no-hover
+  .mt-5.bg-blue-warm-vivid-90
+    +table-example.inverted.no-hover
+
+  p.h4.mt-5 Versão em fundo escuro
+  .mt-5.bg-blue-warm-vivid-90
+    +table-example.inverted
+  .mt-5.bg-blue-warm-vivid-90
+    +table-irregular-1.inverted
+  .mt-5.bg-blue-warm-vivid-90
+    +table-irregular-2.inverted

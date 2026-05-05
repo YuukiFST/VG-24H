@@ -1,0 +1,17 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../pagination
+  include ../../button/button
+  include ../../divider/divider
+  include ../../list/list
+  include ../../input/input
+  include ../../radio/radio
+  include ../../select/select
+
+block content
+  +pagination-contextual-1
+  hr
+  +pagination-contextual-2
+  hr
+  +pagination-contextual-3

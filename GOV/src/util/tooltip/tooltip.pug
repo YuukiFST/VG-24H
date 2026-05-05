@@ -1,0 +1,57 @@
+
+mixin tooltip-sample(label,idtooltip)
+  - let className = attributes.notification ? prefix + "notification" : prefix + "tooltip"
+  - className =   className + " utilities"
+  div(id=idtooltip class=className role="tooltip" data-toggle="tooltip" )&attributes(attributes)
+    if (attributes.popover || attributes.notification)
+      if block
+        block
+    else
+      span.text(role="tooltip" id=attributes.ariaDescribedby)=label
+      if block
+        block
+
+
+
+mixin popover-image
+  div.popover-image
+    if block
+      block
+mixin popover-icon
+  div.popover-icon
+    if block
+      block
+mixin popover-header
+  div.popover-header
+    if block
+      block
+mixin popover-body
+  div.popover-body
+    if block
+      block
+mixin popover-footer
+  div.popover-footer
+    if block
+      block
+
+mixin tooltip-info-top-example
+  +tooltip-sample("Fulano de Tal da Silva","sample-info-top")(info place="top")
+    span.subtext Diretor Presidente
+
+mixin tooltip-success-left-example
+  +tooltip-sample("Incluído com Sucesso!","sample-success-left")(success place="left")
+    span.subtext Protocolo 000.22-11
+
+mixin tooltip-error-right-example
+  +tooltip-sample("Não foi possível logar!","sample-erro-right")(error place="right")
+    span.subtext Verifique seus dados
+
+mixin tooltip-warning-bottom-example
+  +tooltip-sample("O Caps Lock está ligadoo!","sample-warning-bottom")(warning place="bottom")
+    span.subtext Desabilite antes de digitar
+
+mixin tooltip-warning-bottom-timer
+  +tooltip-sample("O Caps Lock está ligado!","sample-warning-bottom-timer")(warning place="bottom" active=true timer="10000")
+    span.subtext Desative antes de digitar
+
+

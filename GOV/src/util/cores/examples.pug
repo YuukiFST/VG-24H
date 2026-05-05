@@ -1,0 +1,70 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Utilitário de Cores";
+
+mixin old-colors(...colors)
+  each color in colors
+    div
+      .p-1.d-inline-block.m-1(class=`bg-${color}`)=`bg-${color}`
+      .p-1.d-inline-block.m-1.border-solid-sm(class=`border-${color}`)=`border-${color}`
+      .p-1.d-inline-block.m-1(class=`text-${color}`)=`text-${color}`
+
+mixin exemplos(color, ...iterations)
+  p.h4.mt-5.text-capitalize=color
+  each key in iterations
+    div
+      .p-1.d-inline-block.m-1(class=`bg-${color}-${key}`)=`bg-${color}-${key}`
+      .p-1.d-inline-block.m-1.border-solid-sm(class=`border-${color}-${key}`)=`border-${color}-${key}`
+      .p-1.d-inline-block.m-1(class=`text-${color}-${key}`)=`text-${color}-${key}`
+
+mixin states
+  each color in ['interactive', 'danger', 'warning', 'success', 'info']
+    div
+      .p-1.d-inline-block.m-1(class=`bg-${color}`)=`bg-${color}`
+      .p-1.d-inline-block.m-1.border-solid-sm(class=`border-${color}`)=`border-${color}`
+      .p-1.d-inline-block.m-1(class=`text-${color}`)=`text-${color}`
+
+mixin apply-color(...colors)
+  each color in colors
+    case color
+      when 'pure': +exemplos(color, 100, 0)
+      when 'gray': +exemplos(color, 90, 80, 70, 60, 50, 40, 20, 10, 5, 4, 3, 2, 1)
+      when 'gray-cool': +exemplos(color, 90, 80, 70, 60, 50, 40, 20, 10, 5, 4, 3, 2, 1)
+      when 'gray-warm': +exemplos(color, 90, 80, 70, 60, 50, 40, 20, 10, 5, 4, 3, 2, 1)
+      default: +exemplos(color, 90, 80, 70, 60, 50, 40, 20, 10, 5)
+
+append content
+  p.h4.mt-5 Estados
+  +states
+
+  +apply-color('pure')
+  +apply-color('gray', 'gray-cool', 'gray-warm')
+  +apply-color('blue', 'blue-vivid', 'blue-cool', 'blue-warm', 'blue-cool-vivid', 'blue-warm-vivid')
+  +apply-color('cyan', 'cyan-vivid')
+  +apply-color('gold', 'gold-vivid')
+  +apply-color('green', 'green-vivid', 'green-cool', 'green-warm', 'green-cool-vivid', 'green-warm-vivid')
+  +apply-color('indigo', 'indigo-vivid', 'indigo-cool', 'indigo-warm', 'indigo-cool-vivid', 'indigo-warm-vivid')
+  +apply-color('magenta', 'magenta-vivid')
+  +apply-color('mint', 'mint-vivid', 'mint-cool', 'mint-cool-vivid')
+  +apply-color('orange', 'orange-vivid', 'orange-warm', 'orange-warm-vivid')
+  +apply-color('red', 'red-vivid', 'red-cool', 'red-warm', 'red-cool-vivid', 'red-warm-vivid')
+  +apply-color('violet', 'violet-vivid', 'violet-warm', 'violet-warm-vivid')
+  +apply-color('yellow', 'yellow-vivid')
+
+  p.h4.mt-5 Cores antigas
+
+  p.my-3 Primário
+  +old-colors('primary-pastel-02', 'primary-pastel-01', 'primary-lighten-02', 'primary-lighten-01', 'primary-default', 'primary-darken-01', 'primary-darken-02')
+
+  p.my-3 Secundário
+  +old-colors('secondary-01', 'secondary-02', 'secondary-03', 'secondary-04', 'secondary-05', 'secondary-06', 'secondary-07', 'secondary-08', 'secondary-09')
+
+  p.my-3 Highlight
+  +old-colors('highlight')
+
+  p.my-3 Estados
+  +old-colors('warning', 'success', 'danger', 'info')
+
+  p.my-3 Apoio
+  +old-colors('support-01', 'support-02', 'support-03', 'support-04', 'support-05', 'support-06', 'support-07', 'support-08', 'support-09', 'support-10', 'support-11')

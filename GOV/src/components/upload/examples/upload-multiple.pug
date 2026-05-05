@@ -1,0 +1,9 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../upload
+  include ../../button/button
+  include ../../message/message
+
+block content
+  +upload-multiple

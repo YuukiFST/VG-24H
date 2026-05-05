@@ -1,0 +1,43 @@
+extends ../../partial/pug/component
+include scrim
+
+append vars
+  - var title = "Scrim";
+
+append content
+  +scrim-default
+  p.h4.mt-5 Foco
+  .row
+    .scrimexemplo
+      +button.primary Testar Efeito
+  p.h4.mt-5 Foco com com modal com conteudo grande
+  .row
+
+      +scrim-big
+      #scrimexemplo-big
+        +button.primary Testar Efeito
+
+  p.h4.mt-5 Legibilidade
+  .row
+    .col-auto
+      +card.legibilidade
+        .front
+          .content.p-0
+            img(src="https://picsum.photos/400" alt="imagem aleatória")
+            .effect
+              .p-3 Scrim - Legibilidade
+
+append style
+  style.
+    .legibilidade .content {
+      position: relative;
+    }
+    .legibilidade .effect {
+      background: rgba(var(--rgb-secondary-09), 0.45);
+      color: var(--color-secondary-01);
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1;
+    }

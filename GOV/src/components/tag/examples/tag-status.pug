@@ -1,0 +1,17 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../tag
+
+block content
+  .d-flex.align-items-center
+    +tag-status.bg-danger.large(title="Status do usuário Offline")
+    +tag-status.bg-warning.medium(title="Status do usuário Ausente")
+    +tag-status.bg-success.small(title="Status do usuário Online")
+  .d-flex.align-items-center.mt-1
+    +tag-status.bg-danger.large(aria-describedby="tag-status-01")
+    span.ml-1(id="tag-status-01") Offline
+    +tag-status.bg-warning(aria-describedby="tag-status-01")
+    span.ml-1(id="tag-status-02") Ausente
+    +tag-status.bg-success.small(aria-describedby="tag-status-01")
+    span.ml-1(id="tag-status-03") Online

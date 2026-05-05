@@ -1,0 +1,1 @@
+O *template base*, modelo *Base* ou simplesmente *Base* representa um modelo estrutural de página que define as regras de organização, comportamento e localização dos elementos de *layout*. Define sobre onde e qual tipo de conteúdo deve ser localizado em cada área de apresentação, assim como suas variações em decorrência de adaptação responsiva.

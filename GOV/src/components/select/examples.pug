@@ -1,0 +1,20 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Select";
+  - var options = ["Acre", "Alagoas", "Amapá", "Amazonas", "Bahia", "Ceará", "Distrito Federal", "Espírito Santo", "Goiás", "Maranhão", "Mato Grosso", "Mato Grosso do Sul", "Minas Gerais", "Pará", "Paraíba", "Paraná", "Pernambuco", "Piauí", "Rio de Janeiro", "Rio Grande do Norte", "Rio Grande do Sul", "Rondônia", "Santa Catarina", "São Paulo", "Sergipe", "Tocantins","estado com nome grande que não cabe no input para mostrar como utiliza"]
+
+append content
+  .row.justify-content-center.mb-5
+    .col
+      +select-simples
+  .row.justify-content-center.mb-5
+    .col
+      +select-multiplo
+  .row.justify-content-center.mb-5
+    .col
+      +select-simples-checked
+  .row.justify-content-center
+    .col
+      +select-multiplo-checked
+  

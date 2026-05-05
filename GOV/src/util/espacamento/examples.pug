@@ -1,0 +1,30 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Utilitário de Espaçamento";
+
+append content
+  p.h4.mt-5 Margin
+  p.my-1 Sentido
+  each val in ['mx-3','my-3']
+    .border-solid-sm.d-inline-block.m-1
+      .bg-support-02.px-half.rounder-sm.text-weight-bold(class=`${val}`)=`${val}`
+  p.my-1 Direção específica
+  each val in ['mt-3','mr-3','mb-3','ml-3']
+    .border-solid-sm.d-inline-block.m-1
+      .bg-support-02.px-half.rounder-sm.text-weight-bold(class=`${val}`)=`${val}`
+  p.my-1 Todas as direções
+  each val in ['0','half','base','1','baseh','2','2x','3','2xh','3x','4','3xh','4x','4xh','5x','5','5xh','6x','6xh','7x','7xh','8x','8xh','9x','9xh','10x','10xh']
+    .border-solid-sm.d-inline-block.m-1
+      .bg-support-02.px-half.rounder-sm.text-weight-bold(class=`m-${val}`)=`m-${val}`
+
+  p.h4.mt-5 Padding
+  p.my-1 Sentido
+  each val in ['px-3','py-3']
+    .bg-support-02.d-inline-block.m-1.rounder-sm.text-weight-bold(class=`${val}`)=`${val}`
+  p.my-1 Direção específica
+  each val in ['pt-3','pr-3','pb-3','pl-3']
+    .bg-support-02.d-inline-block.m-1.rounder-sm.text-weight-bold(class=`${val}`)=`${val}`
+  p.my-1 Todas as direções
+  each val in ['0','half','base','1','baseh','2','2x','3','2xh','3x','4','3xh','4x','4xh','5x','5','5xh','6x','6xh','7x','7xh','8x','8xh','9x','9xh','10x','10xh']
+    .bg-support-02.d-inline-block.m-1.rounder-sm.text-weight-bold(class=`p-${val}`)=`p-${val}`

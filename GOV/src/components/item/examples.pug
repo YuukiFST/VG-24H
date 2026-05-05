@@ -1,0 +1,36 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Item";
+
+append content
+  p.h4.mt-5 Exemplos de itens
+  .row.flex-column
+    .col-sm-6.mt-5.mt-sm-0
+      +item
+        .row
+          .col-auto
+            img(src="https://picsum.photos/40" alt="Imagem de exemplo do item sem interação").rounded
+          .col
+            span Sint ipsum est excepteur qui. Aute Lorem cillum duis reprehenderit. Ut aute cillum esse dolor.
+      +divider
+      +item-elems-iteractive
+      +divider
+      +item(href="javascript: void(0)")
+        | Item link
+      +divider
+      +item(type="button")
+        | Item botão
+
+  p.h4.mt-5 Item com seleção
+  .row
+    .col-sm-6.col-lg-4.mt-5.mt-sm-0
+      +item-selection-checkbox
+
+    .col-sm-6.col-lg-4.mt-5.mt-sm-0
+      +item-selection-radio
+
+  p.h4.mt-5 Item desativado
+  .row
+    .col-sm-6.col-lg-4.mt-5.mt-sm-0
+      +item-disabled

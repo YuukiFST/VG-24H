@@ -1,0 +1,39 @@
+mixin breadcrumb
+  - let className = [prefix + "breadcrumb", attributes.class]
+  nav(class=className)&attributes(attributes)
+    ol.crumb-list(role="list")
+      li.crumb.home
+        a(href="javascript:void(0)").br-button.circle
+          span.sr-only Página inicial
+          i.fas.fa-home
+      if block
+        block
+
+mixin crumb(name="crumb")
+  - className = ["crumb", attributes.class]
+  li(class=className data-active=attributes.dataActive)
+    i.icon.fas.fa-chevron-right
+    if attributes.dataActive
+      span(tabindex="0" aria-current="page")=name
+    else
+      a(href="javascript:void(0)")=name
+      if block
+        block
+
+
+mixin breadcrumb-default
+  +breadcrumb(aria-label="Breadcrumbs")
+    +crumb("Página Ancestral 01")
+    +crumb("Página Ancestral 02")
+    +crumb("Página Ancestral 03")
+    +crumb("Página atual")(dataActive="active")
+
+mixin breadcrumb-truncate
+  +breadcrumb(aria-label="Breadcrumbs")
+    +crumb("Página Ancestral 01")
+    +crumb("Página Ancestral 02")
+    +crumb("Página Ancestral 03")
+    +crumb("Página Ancestral Com Título Grande")
+      +tooltip("Página Ancestral Com Título Grande")(info place="top")
+    +crumb("Página atual")(dataActive="active")
+

@@ -1,0 +1,15 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../modal
+  include ../../button/button
+  include ../../card/card
+
+block content
+  +modal-terms
+
+block style
+  style.
+    .br-modal {
+      max-height: 400px;
+    }

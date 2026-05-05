@@ -1,0 +1,13 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../tag
+
+block content
+  .d-flex.align-items-center
+    +tag-icon.bg-magenta-vivid-50(title="Ícone de Carro")
+      +icon.fa-car
+    +tag-icon.bg-orange-50(title="Ícone de Lupa")
+      +icon.fa-search
+    +tag-icon.bg-violet-warm-vivid-70(title="Ícone de Usuário")
+      +icon.fa-user

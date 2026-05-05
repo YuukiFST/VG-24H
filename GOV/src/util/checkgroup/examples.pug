@@ -1,0 +1,14 @@
+extends ../../partial/pug/component
+include checkgroup
+
+append vars
+  - var title = "Checkgroup";
+
+append content
+  .row
+    .col
+      p.h4.mt-5 Comportamento checkgroup simples
+      +checkgroup-behavior
+    .col
+      p.h4.mt-5 Comportamento checkgroup em cadeia
+      +checkgroup-behavior-chain

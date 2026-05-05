@@ -1,0 +1,15 @@
+//- loading com porcentagem de carregamento
+mixin loading-progress
+  .br-loading(role="progressbar" data-progress="75" aria-label="carregando exemplo com porcetagem" aria-valuemin="0" aria-valuenow="75" aria-valuemax="100")
+    .br-loading-mask.full
+      .br-loading-fill
+    .br-loading-mask
+      .br-loading-fill
+
+//- loading indeterminado de tamanho médio
+mixin loading-md
+  .br-loading.medium(role="progressbar" aria-label="carregando exemplo medium exemplo")
+
+//- loading indeterminado pequeno
+mixin loading-sml
+  .br-loading(role="progressbar" aria-label="carregando exemplo indeterminado pequeno")

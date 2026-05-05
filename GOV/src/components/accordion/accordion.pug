@@ -1,0 +1,75 @@
+mixin accordion-deprecated
+  - let className = attributes.class
+  - let componentClass = prefix + "accordion"
+  - className = className ? componentClass + " " + className : componentClass
+  div(id=attributes.id class=className, negative=attributes.negative, single=attributes.single)
+    if block
+      block
+
+mixin accordion-deprecated-single
+  - let className = attributes.class
+  - let componentClass = prefix + "accordion"
+  - className = className ? componentClass + " " + className : componentClass
+  div(id=attributes.id class=className, single, negative=attributes.negative)
+    if block
+      block
+
+mixin accordion-item(title="Título")
+  .item(active=attributes.active)
+    button.header(type="button" aria-controls=attributes.id)
+      span.icon
+        if className
+          +icon.fa-angle-up
+        else
+          +icon.fa-angle-down
+
+      span.title=title
+  .content(id=attributes.id hidden=attributes.hidden)
+    if block
+      block
+    else
+      | Conteúdo
+
+
+mixin accordion-default
+  +accordion-deprecated()(id='accordion1')
+    +accordion-item("Assuntos")(id='id9' group='accordion1') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Serviços")(id='id10' group='accordion1') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Canais de atendimento")(id="id11" group='accordion1') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Galeria de aplicativos")(id="id12" group='accordion1') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Centrais de conteúdo")(id='id13' group='accordion1') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Navegação")(id='id14' group='accordion1') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Planalto")(id='id15' group='accordion1') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+mixin accordion-default-negative
+  +accordion-deprecated()(id='accordion2-negative' negative)
+    +accordion-item("Assuntos")(id='id16' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Serviços")(id='id17' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Canais de atendimento")(id='id18' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Galeria de aplicativos")(id='id19' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Centrais de conteúdo")(id='id20' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Navegação")(id='id21' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Planalto")(id='id22' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+mixin accordion-default-negative-single
+  +accordion-deprecated-single()(id='accordion3' negative single=single)
+    +accordion-item("Assuntos")(id='ids23' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Serviços")(id='ids24' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Canais de atendimento")(id='ids25' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Galeria de aplicativos")(id='ids26' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Centrais de conteúdo")(id='ids27' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Navegação")(id='ids28' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Planalto")(id='ids29' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+
+mixin accordion-default-single
+  +accordion-deprecated-single()(id='accordion4-negative' single=single)
+    +accordion-item("Assuntos")(id='idsn30' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Serviços")(id='idsn31' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Canais de atendimento")(id='idsn32' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Galeria de aplicativos")(id='idsn33' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Centrais de conteúdo")(id='idsn34' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Navegação")(id='idsn35' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    +accordion-item("Planalto")(id='idsn36' group='accordion2') Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+

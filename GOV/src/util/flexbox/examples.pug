@@ -1,0 +1,126 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Utilitário de Flexbox";
+
+mixin parent(name, children = 3)
+  .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold=`.${name}`
+  .d-flex.border-solid-sm.mt-1(class=attributes.height ? `height-${attributes.height} ${name}` : name)
+    - i = 1
+    while i <= children
+      .m-half.border-dashed-sm.p-1=`children ${i}`
+      - i++
+
+mixin order(...names)
+  .d-flex.flex-wrap.border-solid-sm.mt-1
+    - i = 1
+    each name in names
+      .m-half.border-dashed-sm.p-1(class=name)
+        .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold=`.${name}`
+        p.mt-3=`children ${i}`
+        - i++
+
+mixin align-self(name)
+  .d-flex.border-solid-sm.mt-1.height-120(class=name)
+    .m-half.border-dashed-sm.p-1 children 1
+    .m-half.border-dashed-sm.p-1(class=name)
+      .d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold=`.${name}`
+    .m-half.border-dashed-sm.p-1 children 3
+
+append style
+  style.
+    .height-120 {
+      height: 120px;
+    }
+    .height-540 {
+      height: 540px;
+    }
+
+append content
+  p.h4.mt-5 Direction
+  each name in ["flex-row", "flex-row-reverse", "flex-column", "flex-column-reverse"]
+    +parent(name)
+
+  p.h4.mt-5 Justify content
+  each name in ["justify-content-start", "justify-content-end", "justify-content-center", "justify-content-between", "justify-content-around", "justify-content-evenly"]
+    +parent(name)
+
+  p.h4.mt-5 Align items
+  each name in ["align-items-start", "align-items-end", "align-items-center", "align-items-baseline", "align-items-stretch"]
+    +parent(name, 3)(height="120")
+
+  p.h4.mt-5 Align self
+  each name in ["align-self-start", "align-self-end", "align-self-center", "align-self-baseline", "align-self-stretch"]
+    +align-self(name)
+
+  p.h4.mt-5 Fill, grow e shrink
+  .d-flex.border-solid-sm.mt-1
+    .m-half.border-dashed-sm.p-1
+      p.mt-3 Children 1
+    .m-half.border-dashed-sm.p-1
+      p.mt-3 Children 2
+    .m-half.border-dashed-sm.p-1
+      p.mt-3 Children 3
+
+  .d-flex.border-solid-sm.mt-1
+    .m-half.border-dashed-sm.p-1.flex-fill
+      .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold .flex-fill
+      p.mt-3 Children 1
+    .m-half.border-dashed-sm.p-1.flex-fill
+      .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold .flex-fill
+      p.mt-3 Children 2
+    .m-half.border-dashed-sm.p-1.flex-fill
+      .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold .flex-fill
+      p.mt-3 Children 3
+
+  .d-flex.border-solid-sm.mt-1
+    .m-half.border-dashed-sm.p-1.flex-grow-1
+      .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold .flex-grow-1
+      p.mt-3 Children 1
+    .m-half.border-dashed-sm.p-1.flex-fill
+      .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold .flex-fill
+      p.mt-3 Children 2
+    .m-half.border-dashed-sm.p-1.flex-fill
+      .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold .flex-fill
+      p.mt-3 Children 3
+
+  .d-flex.border-solid-sm.mt-1
+    .m-half.border-dashed-sm.p-1.flex-shrink-1
+      .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold .flex-shrink-1
+      p.mt-3 Children 1
+    .m-half.border-dashed-sm.p-1.flex-fill
+      .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold .flex-fill
+      p.mt-3 Children 2
+    .m-half.border-dashed-sm.p-1.flex-fill
+      .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold .flex-fill
+      p.mt-3 Children 3
+
+  p.h4.mt-5 Wrap
+  .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold .flex-wrap
+  .col-6.col-sm-5.col-md-4.col-lg-3.col-xl-1
+    .d-flex.border-solid-sm.mt-1.flex-wrap
+      .m-half.border-dashed-sm.p-1.text-nowrap children 1
+      .m-half.border-dashed-sm.p-1.text-nowrap children 2
+      .m-half.border-dashed-sm.p-1.text-nowrap children 3
+      .m-half.border-dashed-sm.p-1.text-nowrap children 4
+  .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold .flex-nowrap
+  .col-6.col-sm-5.col-md-4.col-lg-3.col-xl-1
+    .d-flex.border-solid-sm.mt-1.flex-nowrap
+      .m-half.border-dashed-sm.p-1.text-nowrap children 1
+      .m-half.border-dashed-sm.p-1.text-nowrap children 2
+      .m-half.border-dashed-sm.p-1.text-nowrap children 3
+      .m-half.border-dashed-sm.p-1.text-nowrap children 4
+  .mt-3.d-inline-block.bg-support-02.px-half.rounder-sm.text-weight-bold .flex-wrap-reverse
+  .col-6.col-sm-5.col-md-4.col-lg-3.col-xl-1
+    .d-flex.border-solid-sm.mt-1.flex-wrap-reverse
+      .m-half.border-dashed-sm.p-1.text-nowrap children 1
+      .m-half.border-dashed-sm.p-1.text-nowrap children 2
+      .m-half.border-dashed-sm.p-1.text-nowrap children 3
+      .m-half.border-dashed-sm.p-1.text-nowrap children 4
+
+  p.h4.mt-5 Order
+  +order("order-3", "order-0", "order-9", "order-5", "order-1", "order-11", "order-4", "order-8", "order-2", "order-6", "order-12", "order-10", "order-7")
+
+  p.h4.mt-5 Align content
+  each name in ["align-content-start flex-wrap", "align-content-end flex-wrap", "align-content-center flex-wrap", "align-content-around flex-wrap", "align-content-evenly flex-wrap", "align-content-stretch flex-wrap"]
+    +parent(name, 30)(height="540")

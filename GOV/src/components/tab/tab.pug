@@ -1,0 +1,251 @@
+//-
+  Como usar os mixins:
+  +tab
+    +tab-nav
+      +tab-item(data-panel="id-do-conteudo")
+        | Nome da aba
+      +tab-item(data-panel="id-do-conteudo").active
+        | Aba ativa
+    +tav-content
+      +tab-pane#id-do-conteudo
+        | Conteúdo da aba
+      +tab-pane#id-do-conteudo.active
+        | Conteúdo ativo
+
+mixin tab
+  - let className = prefix + 'tab'
+  div(class=className)&attributes(attributes)
+    if block
+      block
+
+mixin tab-nav
+  nav.tab-nav
+    ul
+      if block
+        block
+
+mixin tab-item
+  li.tab-item(class=attributes.class title=attributes.title  )
+    button(
+      type="button" 
+      data-target=attributes["data-target"] 
+      aria-label=attributes["aria-label"] 
+      data-panel=attributes["data-panel"] 
+      data-tooltip-text=attributes["tooltip-text"])
+      span.name
+        if block
+          block
+    if attributes["data-count"]
+      span.results=`(${attributes["data-count"]})`
+
+mixin tab-content
+  .tab-content
+    if block
+      block
+
+mixin tab-pane
+  div.tab-panel&attributes(attributes)
+    if block
+      block
+
+mixin tabs-padrao
+  +tab
+    +tab-nav
+      +tab-item(data-panel="panel-1").active Sobre
+      +tab-item(data-panel="panel-2") Todos
+      +tab-item(data-panel="panel-3") Notícias
+      +tab-item(data-panel="panel-4") Serviços
+      +tab-item(data-panel="panel-5") Aplicativos
+      +tab-item(data-panel="panel-6") Mídias
+    +tab-content
+      +tab-pane#panel-1.active
+        p Painel Sobre
+      +tab-pane#panel-2
+        p Painel Todos
+      +tab-pane#panel-3
+        p Painel Noticias
+      +tab-pane#panel-4
+        p Painel Serviços
+      +tab-pane#panel-5
+        p Painel Aplicativos
+      +tab-pane#panel-6
+        p Painel Mídias
+
+mixin tabs-padrao-medium
+  +tab.medium
+    +tab-nav
+      +tab-item(title="Sobre" data-panel="panel-1").active
+      +tab-item(title="Todos" data-panel="panel-2")
+      +tab-item(title="Notícias" data-panel="panel-3")
+      +tab-item(title="Serviços" data-panel="panel-4")
+      +tab-item(title="Aplicativos" data-panel="panel-5")
+      +tab-item(title="Mídias" data-panel="panel-6")
+    +tab-content
+      +tab-pane#panel-1-large.active
+        p Painel Sobre
+      +tab-pane#panel-2-large
+        p Painel Todos
+      +tab-pane#panel-3-large
+        p Painel Noticias
+      +tab-pane#panel-4-large
+        p Painel Serviços
+      +tab-pane#panel-5-large
+        p Painel Aplicativos
+      +tab-pane#panel-6-large
+        p Painel Mídias
+
+mixin tabs-padrao-large
+  +tab.large
+    +tab-nav
+      +tab-item(title="Sobre" data-panel="large-panel-1").active Sobre
+      +tab-item(title="Todos" data-panel="large-panel-2") Todos
+      +tab-item(title="Notícias" data-panel="large-panel-3") Notícias
+      +tab-item(title="Serviços" data-panel="large-panel-4") Serviços
+      +tab-item(title="Aplicativos" data-panel="large-panel-5") Aplicativos
+      +tab-item(title="Mídias" data-panel="large-panel-6") Mídias
+    +tab-content
+      +tab-pane#large-panel-1.active
+        p Painel Sobre
+      +tab-pane#large-panel-2
+        p Painel Todos
+      +tab-pane#large-panel-3
+        p Painel Noticias
+      +tab-pane#large-panel-4
+        p Painel Serviços
+      +tab-pane#large-panel-5
+        p Painel Aplicativos
+      +tab-pane#large-panel-6
+        p Painel Mídias
+
+mixin tabs-padrao-small
+  +tab.small
+    +tab-nav
+      +tab-item(title="Sobre" data-panel="panel-1-small").active Sobre
+      +tab-item(title="Todos" data-panel="panel-2-small") Todos
+      +tab-item(title="Notícias" data-panel="panel-3-small") Notícias
+      +tab-item(title="Serviços" data-panel="panel-4-small") Serviços
+      +tab-item(title="Aplicativos" data-panel="panel-5-small") Aplicativos
+      +tab-item(title="Mídias" data-panel="panel-6-small") Mídias
+    +tab-content
+      +tab-pane#panel-1-small.active
+        p Painel Sobre
+      +tab-pane#panel-2-small
+        p Painel Todos
+      +tab-pane#panel-3-small
+        p Painel Noticias
+      +tab-pane#panel-4-small
+        p Painel Serviços
+      +tab-pane#panel-5-small
+        p Painel Aplicativos
+      +tab-pane#panel-6-small
+        p Painel Mídias
+
+mixin tabs-padrao-inverted
+  +tab.dark-mode
+    +tab-nav
+      +tab-item(title="Sobre" data-panel="panel-1-inverted").active Sobre
+      +tab-item(title="Todos" data-panel="panel-2-inverted") Todos
+      +tab-item(title="Notícias" data-panel="panel-3-inverted") Notícias
+      +tab-item(title="Serviços" data-panel="panel-4-inverted") Serviços
+      +tab-item(title="Aplicativos" data-panel="panel-5-inverted") Aplicativos
+      +tab-item(title="Mídias" data-panel="panel-6-inverted") Mídias
+    +tab-content
+      +tab-pane#panel-1-inverted.active
+        p Painel Sobre
+      +tab-pane#panel-2-inverted
+        p Painel Todos
+      +tab-pane#panel-3-inverted
+        p Painel Noticias
+      +tab-pane#panel-4-inverted
+        p Painel Serviços
+      +tab-pane#panel-5-inverted
+        p Painel Aplicativos
+      +tab-pane#panel-6-inverted
+        p Painel Mídias
+
+mixin tabs-contadores
+  +tab(data-counter="true")&attributes(attributes)
+    +tab-nav
+      +tab-item(title="Todos" class="is-active" data-panel="panel-7-count" data-count="124") Todos
+      +tab-item(title="Notícias" data-panel="panel-8-count" data-count="74") Notícias
+      +tab-item(title="Serviços" data-panel="panel-9-count" data-count="16") Serviços
+      +tab-item(title="Aplicativos" data-panel="panel-10-count" data-count="12") Aplicativos
+    +tab-content
+      +tab-pane#panel-7-count.active
+        p Painel Todos
+      +tab-pane#panel-8-count
+        p Painel Notícias
+      +tab-pane#panel-9-count
+        p Painel Serviços
+      +tab-pane#panel-10-count
+        p Painel Aplicativos
+
+mixin tabs-icones
+  +tab
+    +tab-nav
+      +tab-item(data-panel="panel-1-icon").active
+        span.d-flex.flex-column.flex-sm-row
+          span.icon.mb-1.mb-sm-0.mr-sm-1: +icon.fa-image
+          span.name ITEM
+      +tab-item(data-panel="panel-2-icon")
+        span.d-flex.flex-column.flex-sm-row
+          span.icon.mb-1.mb-sm-0.mr-sm-1: +icon.fa-image
+          span.name TODOS
+      +tab-item(data-panel="panel-3-icon")
+        span.d-flex.flex-column.flex-sm-row
+          span.icon.mb-1.mb-sm-0.mr-sm-1: +icon.fa-image
+          span.name Notícias
+      +tab-item(data-panel="panel-4-icon")
+        span.d-flex.flex-column.flex-sm-row
+          span.icon.mb-1.mb-sm-0.mr-sm-1: +icon.fa-image
+          span.name Serviços
+      +tab-item(data-panel="panel-5-icon")
+        span.d-flex.flex-column.flex-sm-row
+          span.icon.mb-1.mb-sm-0.mr-sm-1: +icon.fa-image
+          span.name APLICATIVOS
+      +tab-item(data-panel="panel-6-icon")
+        span.d-flex.flex-column.flex-sm-row
+          span.icon.mb-1.mb-sm-0.mr-sm-1: +icon.fa-image.fa-1x
+          span.name Mídias
+    +tab-content
+      +tab-pane#panel-1-icon.active
+        p Painel Sobre
+      +tab-pane#panel-2-icon
+        p Painel Todos
+      +tab-pane#panel-3-icon
+        p Painel Noticias
+      +tab-pane#panel-4-icon
+        p Painel Serviços
+      +tab-pane#panel-5-icon
+        p Painel Aplicativos
+      +tab-pane#panel-6-icon
+        p Painel Mídias
+
+mixin tabs-icons
+  +tab
+    +tab-nav
+      +tab-item(aria-label='Exemplo de tab com ícone' data-panel="panel-1-icons" tooltip-text="sobre").active
+        +icon.fa-image
+      +tab-item(aria-label='Exemplo de tab com ícone' data-panel="panel-2-icons" tooltip-text="Todos")
+        +icon.fa-image
+      +tab-item(aria-label='Exemplo de tab com ícone' data-panel="panel-3-icons" tooltip-text="Notícias")
+        +icon.fa-image
+      +tab-item(aria-label='Exemplo de tab com ícone' data-panel="panel-4-icons" tooltip-text="Serviços")
+        +icon.fa-image
+      +tab-item(aria-label='Exemplo de tab com ícone' data-panel="panel-5-icons" tooltip-text="Aplicativos")
+        +icon.fa-image
+      +tab-item(aria-label='Exemplo de tab com ícone' data-panel="panel-6-icons" tooltip-text="Mídias")
+        +icon.fa-image
+    +tab-content
+      +tab-pane#panel-1-icons.active
+        p Painel Sobre
+      +tab-pane#panel-2-icons
+        p Painel Todos
+      +tab-pane#panel-3-icons
+        p Painel Noticias
+      +tab-pane#panel-4-icons
+        p Painel Serviços
+      +tab-pane#panel-5-icons
+        p Painel Aplicativos
+      +tab-pane#panel-6-icons
+        p Painel Mídias

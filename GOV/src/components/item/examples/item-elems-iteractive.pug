@@ -1,0 +1,29 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../item
+  include ../../button/button
+  include ../../divider/divider
+
+block content
+  .exemplo
+    +item
+      .row.align-items-center
+        .col-auto
+          img(src="https://picsum.photos/40" alt="Imagem de exemplo do item sem interação").rounded
+        .col
+          span Sint ipsum est excepteur qui. Aute Lorem cillum duis reprehenderit. Ut aute cillum esse dolor.
+    +divider
+    +item-elems-iteractive
+    +divider
+    +item(href="javascript: void(0)")
+      | Item link
+    +divider
+    +item(type="button")
+      | Item botão
+
+append style
+  style.
+    .exemplo {
+      max-width: 500px;
+    }

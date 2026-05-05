@@ -1,0 +1,91 @@
+mixin tooltip(label)
+  - let className = attributes.notification ? prefix + "notification" : prefix + "tooltip"
+  div(class=className role="tooltip")&attributes(attributes)
+    if (attributes.popover || attributes.notification)
+      if block
+        block
+    else
+      span.text(role="tooltip" id=attributes.ariaDescribedby)=label
+      if block
+        block
+mixin popover-image
+  div.popover-image
+    if block
+      block
+mixin popover-icon
+  div.popover-icon
+    if block
+      block
+mixin popover-header
+  div.popover-header
+    if block
+      block
+mixin popover-body
+  div.popover-body
+    if block
+      block
+mixin popover-footer
+  div.popover-footer
+    if block
+      block
+
+mixin tooltip-info-top
+  +tooltip("Fulano de Tal da Silva")(info place="top")
+    span.subtext Diretor Presidente
+
+mixin tooltip-success-left
+  +tooltip("Incluído com Sucesso!")(success place="left")
+    span.subtext Protocolo 000.22-11
+
+mixin tooltip-error-right
+  +tooltip("Não foi possível logar!")(error place="right")
+    span.subtext Verifique seus dados
+
+mixin tooltip-warning-bottom
+  +tooltip("O Caps Lock está ligado!")(warning place="bottom")
+    span.subtext Desabilite antes de digitar
+
+mixin tooltip-warning-bottom-timer
+  +tooltip("O Caps Lock está ligado!")(warning place="bottom" active=true timer="10000")
+    span.subtext Desative antes de digitar
+
+mixin tooltip-popover
+  +tooltip("Cadastro Concluído")(success popover=true timer="5000" place="bottom")
+    +popover-header
+      span.text Cadastro Concluído!
+    +popover-body
+      span.subtext Para verificar mais detalhes a respeito do seu acesso, clique no link abaixo.
+    +popover-footer
+      a.link(href="javascript:void(0)") Clique aqui
+
+mixin tooltip-popover-icon-warning
+  +tooltip("Incluído com sucesso!")(warning popover=true place="right")
+    +popover-icon
+      +icon.fa-exclamation-triangle.fa-3x
+    .div
+      +popover-body
+        span.subtext É recomendado que o cadastro seja atualizado antes de prosseguir.
+      +popover-footer
+        +button.primary
+          span Atualizar
+
+mixin tooltip-popover-icon-error
+  +tooltip()(error popover=true  place="left" timer="3000")
+    +popover-icon
+      +icon.fa-ban.fa-3x
+    .div
+      +popover-header
+        span.text Fulano de Tal da Silva
+      +popover-body
+        span.subtext Essa ação só é permitida após o preenchimento dos campos no formulário!
+
+
+mixin tooltip-popover-image
+  +tooltip("Incluído com sucesso!")(info popover=true  place="bottom" timer="4000")
+    +popover-image
+      img(src="https://picsum.photos/80" alt="Avatar")
+    .div
+      +popover-header
+        span.text Fulano de Tal da Silva
+      +popover-body
+        span.subtext Diretor Presidente

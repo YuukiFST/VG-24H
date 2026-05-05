@@ -1,0 +1,24 @@
+extends ../../partial/pug/component
+
+
+append vars
+  - var title = "Wizard";
+
+append content
+  p.h4.mt-5 Layout Vertical 1
+  .wizard-sample-1
+    +wizard-vertical
+
+  p.h4.mt-5 Layout Horizontal
+  .wizard-sample-2
+    +wizard-horizontal
+
+append style
+  style.
+    .wizard-sample-1 {
+      height: 400px;
+    }
+
+    .wizard-sample-2 {
+      height: 400px;
+    }

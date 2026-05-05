@@ -1,0 +1,22 @@
+extends ../../partial/pug/component
+include checkbox
+
+append vars
+  - var title = "Checkbox";
+
+append content
+  p.h4.mt-5 Checkbox padrão
+  +checkbox-padrao
+
+  p.h4.mt-5 Listagem horizontal
+  +checkbox-horizontal
+
+  p.h4.mt-5 Estados e validação
+  +checkbox-estados-validacao
+
+  p.h4.mt-5 Checkbox sem Label
+  +checkbox-no-label
+
+  p.h4.mt-5 Checkbox com estado intermediário
+  +checkbox-indeterminate
+

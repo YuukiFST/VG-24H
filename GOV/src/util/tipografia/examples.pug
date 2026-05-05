@@ -1,0 +1,54 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Utilitário de Tipografia";
+
+append content
+  p.h4.mt-5 Estilos aplicados por tag ou classe
+
+  .mt-5.mb-1: strong.bg-yellow-vivid-10.px-half.mx-1.rounder-sm .h1
+  .mx-5: .d-flex.bg-cyan-5: .h1.flex-fill Título 1
+
+  .mt-5.mb-1: strong.bg-yellow-vivid-10.px-half.mx-1.rounder-sm .h2
+  .mx-5: .d-flex.bg-cyan-5: .h2.flex-fill Título 2
+
+  .mt-5.mb-1: strong.bg-yellow-vivid-10.px-half.mx-1.rounder-sm .h3
+  .mx-5: .d-flex.bg-cyan-5: .h3.flex-fill Título 3
+
+  .mt-5.mb-1: strong.bg-yellow-vivid-10.px-half.mx-1.rounder-sm .h4
+  .mx-5: .d-flex.bg-cyan-5: .h4.flex-fill Título 4
+
+  .mt-5.mb-1: strong.bg-yellow-vivid-10.px-half.mx-1.rounder-sm .h5
+  .mx-5: .d-flex.bg-cyan-5: .h5.flex-fill Título 5
+
+  .mt-5.mb-1: strong.bg-yellow-vivid-10.px-half.mx-1.rounder-sm .h6
+  .mx-5: .d-flex.bg-cyan-5: .h6.flex-fill Título 6
+
+  .mt-5.mb-1: strong.bg-yellow-vivid-10.px-half.mx-1.rounder-sm .label
+  .mx-5: span.label Label
+
+  .mt-5.mb-1: strong.bg-yellow-vivid-10.px-half.mx-1.rounder-sm .legend
+  .mx-5: .d-flex.bg-cyan-5: .legend.flex-fill Legend
+
+  .mt-5.mb-1: strong.bg-yellow-vivid-10.px-half.mx-1.rounder-sm .mark
+  .mx-5: span.mark Mark
+
+  p.h4.mt-5 Estilos aplicados somente por tag
+
+  .mt-5.mb-1: strong.bg-green-10.px-half.mx-1.rounder-sm placeholder
+  .mx-5: span.placeholder Placeholder
+
+  .mt-5.mb-1: strong.bg-green-10.px-half.mx-1.rounder-sm input
+  .mx-5: span.input Input
+
+  .mt-5.mb-1: strong.bg-green-10.px-half.mx-1.rounder-sm code
+  .mx-5: code code
+
+  .mt-5.mb-1: strong.bg-green-10.px-half.mx-1.rounder-sm pre + code
+  .mx-5
+    pre
+      code
+        | &lt;html&gt;
+        |   &lt;head&gt;&lt;/head&gt;
+        |   &lt;body&gt;&lt;/body&gt;
+        | &lt;/html&gt;

@@ -1,0 +1,27 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Abas";
+
+append content
+  p.h4.mt-5 Padrão
+  +tabs-padrao
+
+  p.h4.mt-5 Padrão densidade Alta
+  +tabs-padrao-small
+
+  p.h4.mt-5 Padrão densidade Baixa
+  +tabs-padrao-large
+
+  p.h4.mt-5 Com Contadores
+  +tabs-contadores
+
+  p.h4.mt-5 Com Icones
+  +tabs-icones
+
+  p.h4.mt-5 Somente Icones
+  +tabs-icons.inverted
+
+  p.h4.mt-5 Fundo Escuro
+  .bg-gray-60.p-3
+    +tabs-padrao-inverted

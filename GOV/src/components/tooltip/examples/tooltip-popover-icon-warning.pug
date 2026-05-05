@@ -1,0 +1,10 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../tooltip
+  include ../../button/button
+
+block content
+  div.mb-3
+        a(href="javascript:void(0);").h5 PopOver com ícone e botão- Warning
+        +tooltip-popover-icon-warning

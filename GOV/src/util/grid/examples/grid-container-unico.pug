@@ -1,0 +1,28 @@
+extends ../../../partial/pug/isolate
+include ../../../components/checkbox/checkbox
+
+block content
+  p Neste exemplo o conteúdo fica sempre dentro do container.
+  p Imagens ou cores de fundo não fazem sangria.
+  +checkbox("Ver a margem").pb-3x#margem
+
+  .container-fluid#container
+    .bg-pure-0
+
+      p lorem ipsum dolor sit amet, consectetur adipiscing elit.
+
+      .py-6x.px-2x.mb-3x(style="background: linear-gradient(to left, transparent, var(--blue-20));")
+        p.m-0 Conteúdo com fundo colorido.
+
+      figure.m-0(style="position: relative;")
+        img(src="https://www.gov.br/ds/background-card.98fb75c15858969c.png" alt="Imagem de fundo para fins de demonstração" style="max-height: 200px; width: 100%;")
+        figcaption
+          .m-2x(style="position: absolute; bottom: 0;")
+            p A legenda da imagem
+
+  script.
+    const checkbox = document.getElementById('margem');
+    const container = document.getElementById('container');
+    checkbox.addEventListener('change', () => {
+      container.classList.toggle('bg-green-cool-vivid-10', checkbox.checked);
+    });

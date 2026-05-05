@@ -1,0 +1,23 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../tag
+  include ../../button/button
+
+block content
+  .d-flex.align-items-center
+    +tag-interaction(id="interaction01")
+      +icon.fa-car
+      span(id="interactivetag1") Carro 1
+      +button.inverted.circle(aria-label="Fechar" aria-describedby="interactivetag1"  data-dismiss="interaction01")
+        +icon.fa-times
+    +tag-interaction#interaction02
+      +icon.fa-car
+      span(id="interactivetag2") Carro 2
+      +button(aria-label="Fechar" data-dismiss="interaction02"  aria-describedby="interactivetag2")
+        +icon.fa-times
+    +tag-interaction#interaction03
+      +icon.fa-car
+      span(id="interactivetag3") Carro 3
+      +button(aria-label="Fechar" data-dismiss="interaction03" aria-describedby="interactivetag3")
+        +icon.fa-times

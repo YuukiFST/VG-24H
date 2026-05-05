@@ -1,0 +1,17 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../item
+  include ../../checkbox/checkbox
+  include ../../radio/radio
+
+block content
+  .exemplo
+    +item-selection-checkbox
+    +item-selection-radio
+
+append style
+  style.
+    .exemplo {
+      max-width: 500px;
+    }

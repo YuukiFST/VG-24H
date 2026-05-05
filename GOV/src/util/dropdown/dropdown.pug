@@ -1,0 +1,26 @@
+mixin dropdown-behavior
+  - let className = ["dropdown-example", attributes.class]
+  div(class=className)&attributes(attributes)
+    .row
+      .col
+        div
+          +button#triggerexample.circle.small(data-toggle="dropdown" aria-label="Abrir Acesso Rápido" data-target="target")
+            +icon.fa-ellipsis-v
+          +list#target.target(hidden )
+            +list-header("Acesso Rápido")
+            +item(href="javascript:void(0)") Link de acesso 1
+            +item(href="javascript:void(0)") Link de acesso 2
+            +item(href="javascript:void(0)") Link de acesso 3
+            +item(href="javascript:void(0)") Link de acesso 5
+      .col
+        div
+          +button#triggerexample2.circle.small(data-toggle="dropdown" aria-label="Abrir Acesso Rápido" data-target="target2")
+            +icon.fa-ellipsis-v
+          +list#target2.target(hidden )
+            +list-header("Acesso Rápido")
+            +item(href="javascript:void(0)") Link de acesso 1
+            +item(href="javascript:void(0)") Link de acesso 2
+            +item(href="javascript:void(0)") Link de acesso 3
+            +item(href="javascript:void(0)") Link de acesso 5
+    
+

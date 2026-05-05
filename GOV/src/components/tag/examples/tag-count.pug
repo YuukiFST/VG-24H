@@ -1,0 +1,17 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../tag
+  include ../../tooltip/tooltip
+
+block content
+  .d-flex.align-items-center
+    +tag-count.bg-danger(title="1 Notificação não lidas")
+      span(aria-hidden="true") 1
+    +tag-count.bg-danger(title="10 Notificações não lidas")
+      span(aria-hidden="true") 10
+    +tag-count.bg-danger(title="130 Notificações não lidas")
+      span(aria-hidden="true") 130
+    +tag-count.bg-danger(title="999+ Notificações não lidas")
+      span(aria-hidden="true") 999+
+    +tooltip("99957")(info place="right")

@@ -1,0 +1,69 @@
+mixin message
+  - let className = prefix + 'message'
+  div(class=className )&attributes(attributes)
+    if block
+      block
+    .close
+      +button.circle.small(aria-label="Fechar a messagem alterta" )
+        +icon.fa-times
+
+mixin message-danger
+  +message.danger&attributes(attributes)
+    .icon
+      +icon.fa-times-circle.fa-lg(aria-hidden="true")
+    .content(aria-label="Data de início do afastamento inválida. A data não pode ser superior à data atual." role="alert" )
+      span.message-title Data de início do afastamento inválida.
+      span.message-body  A data não pode ser superior à data atual.
+
+mixin message-success
+  +message.success&attributes(attributes)
+    .icon
+      +icon.fa-check-circle.fa-lg(aria-hidden="true")
+    .content(aria-label="Sucesso. Seus dados foram alterados conforme preenchimento do formulário." role="alert")
+      span.message-title Sucesso.
+      span.message-body  Seus dados foram alterados conforme preenchimento do formulário.
+
+mixin message-warning
+  +message.warning&attributes(attributes)
+    .icon
+      +icon.fa-exclamation-triangle.fa-lg(aria-hidden="true")
+    .content(aria-label="Em caso de dúvida, não compartilhe sua senha com terceiros. Ligue para a Central de atendimento." role="alert")
+      span.message-title Atenção.
+      span.message-body  Em caso de dúvida, não compartilhe sua senha com terceiros. Ligue para a Central de atendimento.
+
+mixin message-info
+  +message.info&attributes(attributes)
+    .icon
+      +icon.fa-info-circle.fa-lg(aria-hidden="true")
+    .content(aria-label="Informação. Seus dados só serão salvos após o preenchimento do primeiro campo do formulário." role="alert")
+      span.message-title Informação.
+      span.message-body  Seus dados só serão salvos após o preenchimento do primeiro campo do formulário.
+
+mixin feedback
+  span.feedback(role="alert")&attributes(attributes)
+    if block
+      block
+
+mixin feedback-danger
+  +feedback.danger&attributes(attributes)
+    +icon.fa-times-circle
+    if block
+      block
+
+mixin feedback-success
+  +feedback.success&attributes(attributes)
+    +icon.fa-check-circle
+    if block
+      block
+
+mixin feedback-warning
+  +feedback.warning&attributes(attributes)
+    +icon.fa-exclamation-triangle
+    if block
+      block
+
+mixin feedback-info
+  +feedback.info&attributes(attributes)
+    +icon.fa-info-circle
+    if block
+      block

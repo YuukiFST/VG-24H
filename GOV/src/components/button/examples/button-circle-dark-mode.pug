@@ -1,0 +1,13 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../button
+
+block content
+  .p-3.bg-blue-warm-vivid-90
+    +button-circle-primary.dark-mode.mr-3(aria-label="Ícone ilustrativo")
+      +icon.fa-city
+    +button-circle-secondary.dark-mode.mr-3(aria-label="Ícone ilustrativo")
+      +icon.fa-city
+    +button-circle.dark-mode(aria-label="Ícone ilustrativo")
+      +icon.fa-city

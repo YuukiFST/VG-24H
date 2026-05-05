@@ -1,0 +1,30 @@
+mixin magic-button
+  - let componentClass = prefix + 'magic-button'
+  div(class=componentClass)&attributes(attributes)
+    if block
+      block
+
+mixin magic-button-text
+  +magic-button
+    +button
+      | Label
+
+mixin magic-button-icon
+  +magic-button
+    +button.circle(aria-label="Adicionar")
+      +icon.fa-cart-plus
+
+mixin magic-button-small
+  +magic-button.small
+    +button
+      | Label
+
+mixin magic-button-medium
+  +magic-button.medium
+    +button
+      | Label
+
+mixin magic-button-large
+  +magic-button.large
+    +button
+      | Label

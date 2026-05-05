@@ -1,0 +1,77 @@
+mixin select(label="Label")
+  - let className = [prefix + "select", attributes.class]
+  - let placeholder = attributes.multiple ? "Selecione os itens" : attributes.placeholder
+  div(class=className
+    multiple=attributes.multiple)
+    +input(label)(
+      id=attributes.id
+      type="text"
+      placeholder=attributes.placeholder ? attributes.placeholder : placeholder
+      select
+    )
+    
+    +list()(tabindex="0")
+      if block
+        block
+
+mixin option(item="item", ID, value="value")
+  - let className = [attributes.highlighted ? 'highlighted' : '']
+  +list-item(class=className, data-all=attributes.all, tabindex="-1")
+    if attributes.multiple
+      if attributes.checked
+        +checkbox(item)(id=ID checked value=value)
+      else
+        +checkbox(item)(id=ID value=value)
+    else
+      if attributes.checked
+        +radio(item)(id=ID name=value checked value=value)
+      else
+        +radio(item)(id=ID name=value value=value)
+
+mixin select-simples
+  +select("Label")(id="select-simple" placeholder="Selecione o item")
+    each val, index in options
+      +option(val, "rb" + index , 'estados-simples')
+    +option("Exterior", "rb" + 27, 'estados-simples')
+  +feedback-warning
+    | Texto auxiliar Função de prevenir erros.
+
+mixin select-simples-checked
+  +select("Select Simples com Item selecionado")(id="select-simple-checked" placeholder="Selecione o item")
+    each val, index in options
+      +option(val, "rbs" + index , 'estados-checked')
+    +option("Exterior", "rbs" + 27 , 'estados-checked ')(checked)
+  +feedback-warning
+    | Texto auxiliar Função de prevenir erros.
+
+mixin select-multiplo
+  +select("Label")(id="select-multtiple" multiple)
+    +option("Selecionar todos", "cb")(multiple highlighted all name="estados-multiplos")
+    each val, index in options
+      +option(val, "cbs" + index)(multiple)
+  +feedback-warning
+    | Texto auxiliar Função de prevenir erros.
+
+mixin select-multiplo-checked
+  +select("Select Múltiplo com itens selecionados")(id="select-multtiple-checked" multiple name="paises")
+    +option("Selecionar todos", "cbsm")(multiple highlighted all)
+    +option("Paraguai", "paraguai" + 1)(multiple checked )
+    +option("Argentina", "argentina" + 2)(multiple)
+    +option("Uruguai", "uruguai" + 3)(multiple)
+    +option("Chile", "chile" + 4)(multiple)
+    +option("Colombia", "colombia" + 5)(multiple)
+    +option("Equador", "equador" + 6)(multiple)
+    +option("Portugal", "portugal" + 7)(multiple)
+    +option("Espanha", "espanha" + 8)(multiple)
+    +option("França", "franca" + 9)(multiple)
+    +option("Alemanha", "alemanha" + 10)(multiple)
+    +option("Italia", "italia" + 11)(multiple)
+    +option("Inglaterra", "inglaterra" + 12)(multiple)
+    +option("Holanda", "holanda" + 13)(multiple)
+    +option("Estados Unidos", "estados-unidos" + 14)(multiple)
+    +option("Canada", "canada" + 15)(multiple)
+    +option("México", "mexico" + 16)(multiple)
+    +option("Costa Rica", "costa-rica" + 17)(multiple)
+    
+  +feedback-warning
+    | Texto auxiliar Função de prevenir erros.

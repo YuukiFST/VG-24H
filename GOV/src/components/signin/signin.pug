@@ -1,0 +1,91 @@
+mixin sign-in
+  - let className = prefix + "sign-in"
+  button(class=className type="button")&attributes(attributes)
+    if block
+      block
+
+
+//- signin-primary and inverted
+mixin sign-in-pri
+  +sign-in.primary.mt-3.mt-sm-0.ml-sm-3
+    +icon.fa-user
+    | Entrar
+
+mixin sign-in-pri-circ
+  +sign-in.primary.circle.mt-3.mt-sm-0.ml-sm-3(aria-label="Ícone ilustrativo")
+    +icon.fa-user
+
+mixin sign-in-pri-inv
+  +sign-in.primary.inverted.mt-3.mt-sm-0.ml-sm-3
+    +icon.fa-user
+    | Entrar
+
+mixin sign-in-pri-circ-inv
+  +sign-in.primary.circle.inverted.mt-3.mt-sm-0.ml-sm-3(aria-label="Ícone ilustrativo")
+    +icon.fa-user
+
+//- Signin-secondary and inverted
+mixin sign-in-sec
+  +sign-in.mt-3.mt-sm-0.ml-sm-3
+    +icon.fa-user
+    | Entrar
+
+mixin sign-in-sec-circ
+  +sign-in.circle.mt-3.mt-sm-0.ml-sm-3(aria-label="Ícone ilustrativo")
+    +icon.fa-user
+
+mixin sign-in-sec-inv
+  +sign-in.inverted.mt-3.mt-sm-0.ml-sm-3
+    +icon.fa-user
+    | Entrar
+
+mixin sign-in-sec-circ-inv
+  +sign-in.circle.inverted.mt-3.mt-sm-0.ml-sm-3(aria-label="Ícone ilustrativo")
+    +icon.fa-user
+
+//-  Signin Tipos Externos e Internos
+mixin sign-in-tipo1
+  +sign-in.primary
+    +icon.fa-user
+    | Entrar
+
+mixin sign-in-tipo2
+  +sign-in.primary
+    | Entrar com&nbsp;
+    span.text-black gov.br
+
+mixin sign-in-tipo2-image
+  +sign-in
+    | Entrar com&nbsp;
+    img(src="https://www.gov.br/++theme++padrao_govbr/img/govbr-colorido-b.png" alt="gov.br")
+
+//- Signin Densidades
+mixin sign-in-small
+  +sign-in.small.primary.mt-3.mt-sm-0.ml-sm-3
+    | Entrar com&nbsp;
+    span.text-black gov.br
+
+mixin sign-in-medium
+  +sign-in.medium.primary.mt-3.mt-sm-0.ml-sm-3
+    | Entrar com&nbsp;
+    span.text-black gov.br
+
+mixin sign-in-large
+  +sign-in.large.primary.mt-3.mt-sm-0.ml-sm-3
+    | Entrar com&nbsp;
+    span.text-black gov.br
+
+mixin sign-in-sec-circ-ml
+  +sign-in.circle.small.mt-3.mt-sm-0.ml-sm-3(aria-label="Ícone ilustrativo")
+    +icon.fa-user
+
+mixin sign-in-sec-circ-lge
+  +sign-in.circle.large.mt-3.mt-sm-0.ml-sm-3(aria-label="Ícone ilustrativo")
+    +icon.fa-user
+
+
+//- Signin Tipo bloco
+mixin sign-in-sec-blk
+  +sign-in.block
+    +icon.fa-user
+    | Entrar

@@ -1,0 +1,9 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../message
+
+  .mb-3: +feedback-danger O CPF deve conter apenas dígitos.
+  .mb-3: +feedback-success Campo correto.
+  .mb-3: +feedback-warning A tecla CAPS-LOCK está ativada.
+  .mb-3: +feedback-info Os arquivos devem ser no formato PNG, JPG, PDF e ter no máximo 1GB.

@@ -1,0 +1,20 @@
+extends ../../partial/pug/component
+include scrim
+
+append vars
+  - var title = "Scrim - Utilitario";
+
+append content
+  p.h4.mt-5 Exemplo de uso do Scrim com Modal
+  +scrim-default-util
+  .row
+    .actionscrimutil
+      +button#idbuttonscrimutil.primary Abrir Modal
+
+  p.h4.mt-5 Exemplo de uso do Scrim com Modal com conteúdo grande
+  +scrim-big-util
+  .row
+    .actionscrimutil
+      +button#idbuttonscrimutil1.primary Abrir Modal com conteúdo grande
+
+

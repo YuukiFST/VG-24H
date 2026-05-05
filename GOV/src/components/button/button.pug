@@ -1,0 +1,45 @@
+mixin button
+  - let className = prefix + "button"
+  button(class=className type="button")&attributes(attributes)
+    if block
+      block
+
+mixin button-primary
+  +button.primary&attributes(attributes)
+    if block
+      block
+
+mixin button-secondary
+  +button.secondary&attributes(attributes)
+    if block
+      block
+
+mixin button-circle
+  +button.circle&attributes(attributes)
+    if block
+      block
+
+mixin button-circle-primary
+  +button.circle.primary&attributes(attributes)
+    if block
+      block
+
+mixin button-circle-secondary
+  +button.circle.secondary&attributes(attributes)
+    if block
+      block
+
+mixin button-block
+  +button.block&attributes(attributes)
+    if block
+      block
+
+mixin button-block-primary
+  +button.block.primary&attributes(attributes)
+    if block
+      block
+
+mixin button-block-secondary
+  +button.block.secondary&attributes(attributes)
+    if block
+      block

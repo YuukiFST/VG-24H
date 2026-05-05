@@ -1,0 +1,435 @@
+mixin list
+  .br-list&attributes(attributes)
+    if block
+      block
+
+mixin list-header(header)
+  .header&attributes(attributes)
+    .title= header
+    if block
+      block
+
+mixin list-item
+  if attributes["data-link"]
+    a.br-item(href="javascript:void(0);" class=attributes.class)
+      if block
+        block
+  else
+    .br-item&attributes(attributes)
+      if block
+        block
+
+mixin list-vertical-simples
+  +list(role="list")
+    +list-header("Título (opcional)")
+    +divider
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col
+          | ITEM
+          | Texto principal
+        .col-auto META
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col
+          | ITEM
+          | Texto principal
+        .col-auto META
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col
+          | ITEM
+          | Texto principal
+        .col-auto META
+
+mixin list-simples-selecionaveis
+  +list(role="list")
+    +list-header("Itens selecionáveis")
+    +divider
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col
+          | ITEM
+          | Texto principal
+        .col-auto
+          +checkbox('')#check-01.hidden-label(ariaLabel="ITEM Texto principal")
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col
+          | ITEM
+          | Texto principal
+        .col-auto
+          +checkbox('')#check-02.hidden-label(ariaLabel="ITEM Texto principal")
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col
+          | ITEM
+          | Texto principal
+        .col-auto
+          +checkbox('')#check-03.hidden-label(ariaLabel="ITEM Texto principal")
+
+mixin list-dense-high
+  +list(role="list")
+    +list-header("Densidade alta (padrão)")
+    +divider
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Texto principal
+        .col-auto META
+    +divider
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Texto principal
+        .col-auto META
+    +divider
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Texto principal
+        .col-auto META
+    +divider
+
+mixin list-dense-medium
+  +list(role="list")
+    +list-header("Densidade média")
+    +divider
+    +item(role="listitem").py-3
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Texto principal
+        .col-auto META
+    +divider
+    +item(role="listitem").py-3
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Texto principal
+        .col-auto META
+    +divider
+    +item(role="listitem").py-3
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Texto principal
+        .col-auto META
+    +divider
+
+mixin list-dense-small
+  +list(role="list")
+    +list-header("Densidade baixa")
+    +divider
+    +item(role="listitem").py-4
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Texto principal
+        .col-auto META
+    +divider
+    +item(role="listitem").py-4
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Texto principal
+        .col-auto META
+    +divider
+    +item(role="listitem").py-4
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Texto principal
+        .col-auto META
+    +divider
+
+mixin list-group-tag
+  +list(role="list")
+    +list-header("Por rótulo")
+    +divider
+    +item(role="listitem")
+      | RÓTULO 01
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Sub-item
+        .col-auto META
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Sub-item
+        .col-auto META
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Sub-item
+        .col-auto META
+    +item(role="listitem")
+      | RÓTULO 02
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Sub-item
+        .col-auto META
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Sub-item
+        .col-auto META
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Sub-item
+        .col-auto META
+
+mixin list-group-divider
+  +list(role="list")
+    +list-header("Por separador")
+    +divider
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Sub-item
+        .col-auto META
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Sub-item
+        .col-auto META
+    +divider
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Sub-item
+        .col-auto META
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Sub-item
+        .col-auto META
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Sub-item
+        .col-auto META
+    +divider
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Sub-item
+        .col-auto META
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col Sub-item
+        .col-auto META
+
+mixin list-group-expansion
+  +list()(role="list")
+    +list-header("Por expansão")
+    +divider
+    +item(role="listitem" data-toggle="collapse" data-target="l1")
+      .content
+        .flex-fill RÓTULO 01
+        +icon.fa-angle-down
+    +list(id="l1" role="list" hidden)
+      +item(role="listitem")
+        .row.align-items-center
+          .col-auto
+            +icon.fa-heartbeat
+          .col Sub-item
+      +divider
+      +item(role="listitem")
+        .row.align-items-center
+          .col-auto
+            +icon.fa-heartbeat
+          .col Sub-item
+      +divider
+      +item(role="listitem")
+        .row.align-items-center
+          .col-auto
+            +icon.fa-heartbeat
+          .col Sub-item
+      +divider
+    +item(role="listitem" data-toggle="collapse" data-target="l2")
+      .content
+        .flex-fill RÓTULO 02
+        +icon.fa-angle-down
+    +list(id="l2" role="list" hidden)
+      +item(role="listitem")
+        .row.align-items-center
+          .col-auto
+            +icon.fa-heartbeat
+          .col Sub-item
+      +divider
+      +item(role="listitem")
+        .row.align-items-center
+          .col-auto
+            +icon.fa-heartbeat
+          .col Sub-item
+      +divider
+      +item(role="listitem")
+        .row.align-items-center
+          .col-auto
+            +icon.fa-heartbeat
+          .col Sub-item
+      +divider
+    +item(role="listitem" data-toggle="collapse" data-target="l3")
+      .content
+        .flex-fill RÓTULO 03
+        +icon.fa-angle-down
+    +list(id="l3" role="list" hidden)
+      +item(role="listitem")
+        .row.align-items-center
+          .col-auto
+            +icon.fa-heartbeat
+          .col Sub-item
+      +divider
+      +item(role="listitem")
+        .row.align-items-center
+          .col-auto
+            +icon.fa-heartbeat
+          .col Sub-item
+      +divider
+      +item(role="listitem")
+        .row.align-items-center
+          .col-auto
+            +icon.fa-heartbeat
+          .col Sub-item
+      +divider
+
+mixin list-horizontal-divider
+  +list(role="list").horizontal
+    +list-header("Separadores são opcionais")
+    +divider
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col
+          | ITEM
+          | Texto principal
+        .col-auto META
+    +divider
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col
+          | ITEM
+          | Texto principal
+        .col-auto META
+    +divider
+    +item(role="listitem")
+      .row.align-items-center
+        .col-auto
+          +icon.fa-heartbeat
+        .col
+          | ITEM
+          | Texto principal
+        .col-auto META
+
+mixin list-horizontal-expansion
+  +list()(role="list").horizontal.mt-5
+    +list-header("Versão com expansão")
+    +divider
+    .group
+      +item(role="listitem" data-toggle="collapse" data-target="h1")
+        .content
+          .flex-fill RÓTULO 01
+          +icon.fa-angle-down
+      +list(id="h1" role="list" hidden)
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+    .group
+      +item(role="listitem" data-toggle="collapse" data-target="h2")
+        .content
+          .flex-fill RÓTULO 02
+          +icon.fa-angle-down
+      +list(id="h2" role="list" hidden)
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+    .group
+      +item(role="listitem" data-toggle="collapse" data-target="h3")
+        .content
+          .flex-fill RÓTULO 03
+          +icon.fa-angle-down
+      +list(id="h3" role="list" hidden)
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider

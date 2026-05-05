@@ -1,0 +1,77 @@
+
+mixin collapse
+  - let className = ["collapse-example", attributes.class]
+  div(class=className)&attributes(attributes)
+    +list()(role="list" data-sub)
+      +item(role="listitem" tabindex="0" data-toggle="collapse" data-target="c-l1")
+        .content
+          .flex-fill RÓTULO 01
+          +icon.fa-angle-down
+      +list#c-l1(role="list" hidden data-sub)
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+      +item(role="listitem" tabindex="0" data-toggle="collapse" data-target="c-l2")
+        .content
+          .flex-fill RÓTULO 02
+          +icon.fa-angle-down
+      +list#c-l2(role="list" hidden data-sub)
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+      +item(role="listitem" tabindex="0" data-toggle="collapse" data-target="c-l3")
+        .content
+          .flex-fill RÓTULO 03
+          +icon.fa-angle-down
+      +list#c-l3(role="list" hidden data-sub)
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+        +item(role="listitem")
+          .row.align-items-center
+            .col-auto
+              +icon.fa-heartbeat
+            .col Sub-item
+        +divider
+
+mixin collapse-behavior
+  +collapse

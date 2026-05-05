@@ -1,0 +1,23 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Carousel";
+
+append content
+  p.h4.mt-5 Carousel OUT (padrão)
+  +carousel-padrao
+
+  p.h5.mt-5 Carousel Circular
+  +carousel-circular
+
+  p.h5.mt-5 Carousel IN
+  +carousel-in
+
+  p.h4.mt-5 Carousel Híbrido Horizontal
+  +carousel-hibw
+
+  p.h4.mt-5 Carousel Híbrido Vertical
+  +carousel-hibh
+
+  p.h5.mt-5 Carousel Text
+  +carousel-text

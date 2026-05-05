@@ -1,0 +1,11 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../skiplink
+  include ../../item/item
+
+append vars
+
+block content
+  p Para visualizar o comportamento dos links use a tecla "tab" do teclado.
+  +skiplinks-full

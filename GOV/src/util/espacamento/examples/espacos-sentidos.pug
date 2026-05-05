@@ -1,0 +1,24 @@
+extends ../../../partial/pug/isolate
+
+block content
+  p.h3 Margin
+
+  .d-flex.align-items-center(style="gap: 1rem;")
+    .bg-magenta-20
+      .border-dashed-lg.bg-pure-0.p-3x.mx-3x
+        p.mb-0 mx-3x
+
+    .bg-magenta-20
+      .border-dashed-lg.bg-pure-0.p-3x.my-3x
+        p.mb-0 my-3x
+
+  p.h3 Padding
+
+  .d-flex.align-items-center(style="gap: 1rem;")
+    .border-dashed-lg.px-3x.bg-magenta-20
+      .bg-pure-0.p-3x
+        p.mb-0 px-3x
+
+    .border-dashed-lg.py-3x.bg-magenta-20
+      .bg-pure-0.p-3x
+        p.mb-0 py-3x

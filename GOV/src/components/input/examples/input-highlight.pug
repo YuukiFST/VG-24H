@@ -1,0 +1,13 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../input
+  include ../../button/button
+
+block content
+  .col-sm-10.col-lg-8.mb-3
+    +input-highlight()(hide-label)#input-highlight-labeless
+  .col-sm-10.col-lg-8.mb-3
+    +input-highlight()(type="search" hide-label)#input-highlight-search-labeless
+  .col-sm-10.col-lg-8.mb-3
+    +input-highlight()(type="search" icon="fa-user" hide-label)#input-highlight-icon-search-labeless

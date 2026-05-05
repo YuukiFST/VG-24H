@@ -1,0 +1,13 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../step
+  include ../../button/button
+  include ../../tooltip/tooltip
+
+block content
+  .row
+    .col-auto.mx-5
+      +step-vertical
+    .col-auto.mx-5
+      +step-vertical-left

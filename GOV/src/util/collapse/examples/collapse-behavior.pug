@@ -1,0 +1,15 @@
+extends ../../../partial/pug/isolate
+
+
+append vars
+  - var title = "Collapse ";
+
+block dependencies
+  include ../../../components/list/list
+  include ../../../components/item/item
+  include ../../../components/divider/divider
+  include ../collapse
+
+
+append content
+  +collapse-behavior

@@ -1,0 +1,44 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Avatar";
+
+append content
+  p.h4.mt-5 Tipos e densidades
+  #sizes
+    #icon.mb-3
+      +avatar.mr-3
+        span.content
+          +icon.fa-user
+      +avatar.medium.mr-3
+        span.content
+          +icon.fa-user
+      +avatar.large.mr-3
+        span.content
+          +icon.fa-user
+    #image.mb-3
+      +avatar.mr-3
+        span.content
+          img(src="https://picsum.photos/id/1005/400" alt="Exemplo de avatar fotográfico com densidade alta")
+      +avatar.medium.mr-3
+        span.content
+          img(src="https://picsum.photos/id/287/400" alt="Exemplo de avatar fotográfico com densidade média")
+      +avatar.large.mr-3
+        span.content
+          img(src="https://picsum.photos/id/357/400" alt="Exemplo de avatar fotográfico com densidade baixa")
+    #letter.mb-3
+      +avatar.mr-3(title="Exemplo de avatar icônico densidade alta com a letra W")
+        span.content.bg-violet-50.text-pure-0 W
+      +avatar.medium.mr-3(title="Exemplo de avatar icônico densidade média com a letra A")
+        span.content.bg-orange-50.text-pure-0 A
+      +avatar.large.mr-3(title="Exemplo de avatar icônico densidade baixa com a letra H")
+        span.content.bg-green-50.text-pure-0 H
+  p.h4.mt-5 Avatar com dropdown
+  +avatar-dropdown
+
+append style
+  style.
+    #avatar-dropdown-trigger {
+      height: auto;
+      padding: var(--spacing-scale-base);
+    }

@@ -1,0 +1,220 @@
+mixin pagination
+  - let className = prefix + "pagination"
+  nav(class=className aria-label="paginação" )&attributes(attributes)
+    if block
+      block
+
+mixin pagination-pages
+  - let pageNumber = 1
+  +pagination()(data-total="5")&attributes(attributes)
+    ul
+      li()
+        +button.circle(data-previous-page aria-label="Voltar página"): +icon.fa-angle-left
+      while pageNumber <= attributes["data-total"]
+        li
+          a.page(
+            aria-label="Página " + pageNumber
+            href="javascript:void(0)"
+            class=[pageNumber == 1 ? "active" : ""]
+            )=pageNumber++
+      li
+        +button.circle(data-next-page aria-label="Página seguinte"): +icon.fa-angle-right
+
+mixin pagination-medium
+  +pagination-pages()(data-total="4" data-current="1")&attributes(attributes)
+
+mixin pagination-small
+  +pagination-pages.small(data-total="5" data-current="1")&attributes(attributes)
+
+mixin pagination-large
+  +pagination-pages.large(data-total="3" data-current="1")&attributes(attributes)
+
+mixin pagination-ellipsis-start
+  - let total = 10
+  - let current = 1
+  - let page = 1
+  - let visibles = 3
+  +pagination()(data-total=total data-current=current)&attributes(attributes)
+    ul
+      li()
+        +button.circle(data-previous-page aria-label="Voltar página"): +icon.fa-angle-left
+      li
+        a.page(
+          href="javascript:void(0)"
+          class=[page == current ? "active" : ""]
+          aria-label="Página "+page
+          )=page++
+      li.pagination-ellipsis
+        +button.circle(data-toggle="dropdown" aria-label="Abrir ou fechar a lista de paginação"): +icon.fa-ellipsis-h
+        +list(role="menu")
+          while page <= total - visibles
+            +item(href="javascript:void(0)" 
+             aria-label="Página  " + page
+             role="menuitem"
+             )=page++
+      while page <= total
+        li
+          a.page(
+            href="javascript:void(0)"
+            class=[page == current ? "active" : ""]
+            aria-label="Página  " + page
+            
+            )=page++
+      li
+        +button.circle(data-next-page aria-label="Proxima página"): +icon.fa-angle-right
+
+mixin pagination-ellipsis-double
+  - let total = 20
+  - let current = 1
+  - let page = 1
+  - let visibles = 3
+  +pagination.d-none.d-sm-flex(data-total=total data-current=current)&attributes(attributes)
+    ul
+      li()
+        +button.circle(data-previous-page aria-label="   página"): +icon.fa-angle-left
+      li
+        a.page(
+          href="javascript:void(0)"
+          class=[page == current ? "active" : ""]
+           aria-label="Página  " + page
+          )=page++
+      li.pagination-ellipsis
+        +button.circle(data-toggle="dropdown" aria-label="Abrir ou fechar a lista de paginação"): +icon.fa-ellipsis-h
+        +list(role="menu")
+          while page < 10
+            +item(
+            href="javascript:void(0)"
+            role="menuitem"
+            )=page++
+      - let qtd = page + visibles
+      while page < qtd
+        li
+          a.page(
+            href="javascript:void(0)"
+            class=[page == current ? "active" : ""]
+            aria-label="Página  " + page
+            
+            )=page++
+      li.pagination-ellipsis
+        +button.circle(data-toggle="dropdown" aria-label="Abrir ou fechar a lista de paginação"): +icon.fa-ellipsis-h
+        +list(role="menu")
+          while page <= total - 1
+            +item(href="javascript:void(0)" 
+            role="menuitem"
+            )=page++
+      li
+        a.page(
+          href="javascript:void(0)"
+          class=[page == current ? "active" : ""]
+          
+          
+          )=page++
+      li
+        +button.circle(data-next-page aria-label="Página seguinte"): +icon.fa-angle-right
+
+mixin pagination-ellipsis-end
+  - let total = 10
+  - let current = 1
+  - let page = 1
+  - let visibles = 4
+  +pagination()(data-total=total data-current=current)&attributes(attributes)
+    ul
+      li
+        +button.circle(data-previous-page aria-label="Voltar página"): +icon.fa-angle-left
+      while page <= visibles
+        li
+          a.page(
+            href="javascript:void(0)"
+            class=[page == current ? "active" : ""]
+             aria-label=" página "+page
+            
+            )=page++
+      li.pagination-ellipsis
+        +button.circle(data-toggle="dropdown" aria-label="Abrir ou fechar a lista de paginação"): +icon.fa-ellipsis-h
+        +list(role="menu")
+          while page <= total - 1
+            +item(
+              href="javascript:void(0)" 
+              aria-label=" página "+page
+              role="menuitem"
+              )=page++
+      li
+        a.page(
+          href="javascript:void(0)"
+          class=[page == current ? "active" : ""]
+          aria-label=" página "+page
+          
+          )=page++
+      li
+        +button.circle(data-next-page aria-label="Página seguinte"): +icon.fa-angle-right
+
+mixin pagination-arrows
+  .pagination-arrows&attributes(attributes)
+    +button.circle(aria-label="Voltar página"): +icon.fa-angle-left
+    +button.circle(aria-label="Página seguinte"): +icon.fa-angle-right
+
+mixin pagination-go-to-page(total, perPage)
+  - let random = `${Math.floor((Math.random() * 100000) + 1)}`
+  - let current = 1
+  - let pages = (total / perPage).toFixed(0)
+  .pagination-go-to-page.d-none.d-sm-flex&attributes(attributes)
+    +select("Página")(id=`go-to-selection-random-${random}` placeholder=" ")
+      while (current <= pages)
+        if current == 1
+          +option(`${current}`, `go-to-1-random-${random}`, `go-to-random-${random}`)(checked)
+        else
+          +option(`${current}`, `go-to-${current}-random-${random}`, `go-to-random-${random}`)
+        - current++
+
+mixin pagination-per-page
+  - let random = `${Math.floor((Math.random() * 100000) + 1)}`
+  .pagination-per-page&attributes(attributes)
+    +select("Exibir")(id=`per-page-selection-random-${random}` placeholder=" ")
+      +option("10", `per-page-10-random-${random}`, `per-page-random-${random}`)(checked )
+      +option("20", `per-page-20-random-${random}`, `per-page-random-${random}`)()
+      +option("30", `per-page-30-random-${random}`, `per-page-random-${random}`)()
+
+mixin pagination-information(total, current, perPage)
+  .pagination-information.d-none.d-sm-flex&attributes(attributes)
+    span.current=current
+    | &ndash;
+    span.per-page=perPage
+    | &nbsp;de&nbsp;
+    span.total=total
+    | &nbsp;itens
+
+mixin pagination-contextual-1
+  - let total = 50
+  - let current = 1
+  - let perPage = 20
+  +pagination()(data-total=total data-current=current data-per-page=perPage)&attributes(attributes)
+    +pagination-per-page
+    +divider.d-none.d-sm-block.mx-3
+    +pagination-information(total, current, perPage)
+    +pagination-go-to-page(total, perPage).ml-auto
+    +divider.d-none.d-sm-block.mx-3
+    +pagination-arrows.ml-auto.ml-sm-0
+
+mixin pagination-contextual-2
+  - let total = 50
+  - let current = 1
+  - let perPage = 10
+  +pagination()(data-total=total data-current=current data-per-page=perPage)&attributes(attributes)
+    +pagination-arrows
+    +divider.d-none.d-sm-block.mx-3
+    +pagination-go-to-page(total, perPage)
+    +pagination-per-page.ml-auto
+    +divider.d-none.d-sm-block.mx-3
+    +pagination-information(total, current, perPage)
+
+mixin pagination-contextual-3
+  - let total = 50
+  - let current = 1
+  - let perPage = 10
+  +pagination()(data-total=total data-current=current data-per-page=perPage)&attributes(attributes)
+    +pagination-per-page
+    +divider.d-none.d-sm-block.mx-3
+    +pagination-information(total, current, perPage)
+    +divider.d-none.d-sm-block.mx-3
+    +pagination-go-to-page(total, perPage)
+    +pagination-arrows.ml-auto

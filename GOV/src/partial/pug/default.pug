@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+
+block vars
+  - let prefix = "br-"
+
+block partials
+  include utilities/icon
+
+block components
+  include ../../components/accordion/accordion
+  include ../../components/avatar/avatar
+  include ../../components/breadcrumb/breadcrumb
+  include ../../components/button/button
+  include ../../components/signin/signin
+  include ../../components/card/card
+  include ../../components/carousel/carousel
+  include ../../components/checkbox/checkbox
+  include ../../components/cookiebar/cookiebar
+  include ../../components/datetimepicker/datetimepicker
+  include ../../components/divider/divider
+  include ../../components/footer/footer
+  include ../../components/header/header
+  include ../../components/input/input
+  include ../../components/item/item
+  include ../../components/list/list
+  include ../../components/loading/loading
+  include ../../components/magicbutton/magicbutton
+  include ../../components/message/message
+  include ../../components/menu/menu
+  include ../../components/modal/modal
+  include ../../components/notification/notification
+  include ../../components/pagination/pagination
+  include ../../components/radio/radio
+  include ../../components/select/select
+  include ../../components/skiplink/skiplink
+  include ../../components/step/step
+  include ../../components/switch/switch
+  include ../../components/tab/tab
+  include ../../components/tag/tag
+  include ../../components/table/table
+  include ../../components/textarea/textarea
+  include ../../components/tooltip/tooltip
+  include ../../components/upload/upload
+  include ../../components/wizard/wizard
+  include ../../util/accordion/accordion
+  include ../../util/checkgroup/checkgroup
+  include ../../util/collapse/collapse
+  include ../../util/dropdown/dropdown
+  include ../../util/scrim/scrim
+
+html(lang="pt-BR")
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport' content='width=device-width, initial-scale=1.0')
+    meta(http-equiv='X-UA-Compatible' content='ie=edge')
+    title= title ? title : "Template padrão"
+    // Fonte Rawline
+    link(rel="stylesheet" href="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/fonts/rawline/css/rawline.css")
+    // Fonte Raleway
+    link(rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway:300,400,500,600,700,800,900&display=swap")
+    block core-css
+      // Design System de Governo
+      link(rel="stylesheet" href=cdnUrl+"core.css")
+    // Fontawesome
+    link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css")
+    block style
+  body(class= templateClass ? `template-${templateClass}` : "")
+    block template
+    script(src=cdnUrl+"core-init.js")
+    block scripts
+

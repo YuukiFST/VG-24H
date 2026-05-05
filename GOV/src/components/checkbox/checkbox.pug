@@ -1,0 +1,48 @@
+mixin checkbox(label)
+  - let className = [prefix + "checkbox", attributes.class]
+  div(
+    class=className
+    valid=attributes.valid
+    invalid=attributes.invalid)
+    input(
+      id=attributes.id
+      name=attributes.id
+      type="checkbox"
+      aria-label=attributes.ariaLabel
+      checked=attributes.checked
+      disabled=attributes.disabled
+      indeterminate=attributes.indeterminate
+      data-toggle=attributes["data-toggle"]
+      data-parent=attributes['data-parent']
+      data-child=attributes['data-child'])
+    label(for=attributes.id)=label
+    if block
+      block
+
+mixin checkbox-padrao
+  p.label.mb-0 Rótulo
+  p.text-down-01 Informações adicionais
+  +checkbox("Opção 1")#checkbox-1(ariaLabel="opção 1")
+  +checkbox("Opção 2")#checkbox-2(ariaLabel="opção 2" checked)
+  +checkbox("Opção 3")#checkbox-3(ariaLabel="opção 3")
+  .mt-3: +feedback-warning Texto de mensagem
+
+mixin checkbox-horizontal
+  .d-inline-block.mr-5: +checkbox("Opção 1")#h-checkbox-1
+  .d-inline-block.mr-5: +checkbox("Opção 2")#h-checkbox-2
+  .d-inline-block.mr-5: +checkbox("Opção 3")#h-checkbox-3
+
+mixin checkbox-estados-validacao
+  +checkbox("Checado")#check-state-checked(checked)
+  +checkbox("Desativado")#check-state-disabled.disabled(disabled)
+  +checkbox("Inválido")#check-state-invalid.invalid
+  +checkbox("Válido")#check-state-valid.valid
+
+mixin checkbox-no-label
+  +checkbox("Opção 5")(id=`check-all` value="").hidden-label
+
+mixin checkbox-indeterminate
+  +checkbox("Selecionar tudo")#checkbox-ind1(ariaLabel="selecionar tudo" data-parent="check-01" indeterminate checked)
+  +checkbox("Opção 1")#checkbox-01(ariaLabel="opção 1" data-child="check-01" checked)
+  +checkbox("Opção 2")#checkbox-02(ariaLabel="opção 2" data-child="check-01")
+  +checkbox("Opção 3")#checkbox-03(ariaLabel="opção 3" data-child="check-01")

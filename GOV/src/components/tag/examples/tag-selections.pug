@@ -1,0 +1,38 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../tag
+
+block content
+  .row
+    .col-md
+      p.h4 Seleção múltipla
+      .d-flex.align-items-center
+        +tag-interaction-select
+          input(id="tag01" type="checkbox" name="multipla" value="bicicleta")
+          label(for="tag01")
+            +icon.fa-bicycle
+            span(id="tag01-label") Bicicleta
+        +tag-interaction-select.selected
+          input(id="tag02" type="checkbox" checked name="multipla" value="barco")
+          label(for="tag02" )
+            +icon.fa-ship
+            span(id="tag02-label") Barco
+        +tag-interaction-select.selected.disabled
+          input(id="tag03" type="checkbox" disabled checked name="multipla" value="carro")
+          label(for="tag03" )
+            +icon.fa-car
+            span(id="tag03-label") Carro
+    .col-md
+      p.h4 Seleção única
+      .d-flex.align-items-center
+        +tag-interaction-select
+          input(id="tag04" type="radio" name="vehicle" value="carro")
+          label(for="tag04" )
+            +icon.fa-car
+            span(id="tag04-label") Carro
+        +tag-interaction-select.selected
+          input(id="tag05" type="radio" checked name="vehicle" value="barco")
+          label(for="tag05" )
+            +icon.fa-ship
+            span(id="tag05-label") Barco

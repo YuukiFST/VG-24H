@@ -1,0 +1,21 @@
+extends ../../../partial/pug/isolate
+include ../../../components/button/button
+
+block content
+  p Botões alinhados horizontalmente
+  .d-flex.flex-row.bg-gray-10.p-2x(style="gap: 1rem;")
+    +button.mr-auto
+      | Botão terciário
+    +button.secondary
+      | Botão secundário
+    +button.primary
+      | Botão primário
+
+  p.mt-5x Botões alinhados verticalmente
+  .d-flex.flex-column.align-items-sm-center.bg-gray-10.p-2x(style="gap: 1rem;")
+    +button
+      | Botão terciário
+    +button.secondary
+      | Botão secundário
+    +button.primary
+      | Botão primário

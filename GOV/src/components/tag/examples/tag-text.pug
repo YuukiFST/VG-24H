@@ -1,0 +1,12 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../tag
+
+block content
+  .d-flex.align-items-center
+    +tag-text(aria-describedby="tag-text01").bg-mint-cool-vivid-70
+      +icon.fa-car
+      span(id="tag-text01") Texto e Ícone
+    +tag-text(aria-describedby="tag-text02").bg-violet-warm-vivid-70
+      span(id="tag-text02") Texto

@@ -1,0 +1,19 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../step
+  include ../../button/button
+  include ../../tooltip/tooltip
+
+block content
+  .my-5
+    +step-alert(vertical=false,  initial = 2, scroll=true, position="top", type=false)
+
+  .my-5
+    +step-horizontal
+
+  .my-5
+    +step-icon(scroll=true, vertical=false,  initial=1, position="right", type=false)
+
+  .my-5
+    +step-horizontal-left

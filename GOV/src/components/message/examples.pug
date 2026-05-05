@@ -1,0 +1,71 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Mensagem";
+
+append content
+  p.h4.mt-5 Mensagens padrão
+  .row
+    .col-sm.pt-3#exemplomessage
+      +message-danger
+      +message-success
+      +message-info
+      +message-warning
+      +button-primary.mr-3#acionamessagemalert Exemplo de acionamento Mensagens padrão
+
+  p.h4.mt-5 Mensagens contextuais
+  .row 
+    .col-sm.pt-3#exemplofeedback
+      p: +feedback-danger O CPF deve conter apenas dígitos.
+      p: +feedback-success Campo correto.
+      p: +feedback-warning A tecla CAPS-LOCK está ativada.
+      p: +feedback-info Os arquivos devem ser no formato PNG, JPG, PDF e ter no máximo 1GB.
+      p: +button-primary.mr-3#acionamessagemfeedback Exemplo de acionamento Mensagens contextuais
+  script. 
+    console.log("xx")
+    document.addEventListener('DOMContentLoaded', function () {
+      var criarElementoFeedbackBtn = document.getElementById('acionamessagemfeedback');
+      
+      var criarElementoAlertMBtn = document.getElementById('acionamessagemalert');
+      var exemplosMessage = document.getElementById('exemplomessage');
+      let exemplosfeedback = document.getElementById('exemplofeedback');
+      const mensagemPadrao = "Data de início do afastamento inválida. A data não pode ser superior à data atual."
+     
+      const iconeMessagem = `
+        <div class="icon">
+          <i class="fas fa-info-circle  fa-lg" aria-hidden="true"></i>
+        </div>
+        <div class="content" role="alert">
+          <span class="message-title">Data de início do afastamento inválida.</span>
+          <span class="message-body"> A data não pode ser superior à data atual.</span>
+        </div>
+        <div class="close">
+          <button class="br-button circle small" type="button" aria-label="Fechar a mensagem">
+            <i class="fas fa-times" aria-hidden="true"></i>
+          </button>
+        </div>
+      `;
+      criarElementoFeedbackBtn.addEventListener('click', function () {
+        var messageAcionado = document.createElement('div')
+        const icone2  = `<i class="fas fa-times-circle" aria-hidden="true"></i>Seus dados só serão salvos após o preenchimento do primeiro campo do formulário.`
+        messageAcionado.classList.add('feedback', 'info', 'mr-3')
+        messageAcionado.setAttribute('role', 'alert')
+        messageAcionado.innerHTML = icone2
+        console.log("teste",messageAcionado)
+        exemplosfeedback.appendChild(messageAcionado);
+      });
+
+      criarElementoAlertMBtn.addEventListener('click', function () {
+        var messageAcionado = document.createElement('div')
+        messageAcionado.classList.add('br-message', 'info', 'mt-1')
+        messageAcionado.innerHTML = iconeMessagem
+         for (const button of messageAcionado.querySelectorAll( '.br-message .close'
+        )) {
+          button.addEventListener('click', () => {
+            messageAcionado.parentNode.removeChild(messageAcionado)
+          })
+        }
+        exemplosMessage.appendChild(messageAcionado);
+      });
+    });
+    

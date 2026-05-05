@@ -1,0 +1,189 @@
+extends ../../partial/pug/component
+
+
+append vars
+  - var title = "Tooltip";
+
+append content
+  .container-lg
+    .row.align-items-center
+      .col-md-6
+        +list.condensed
+          +list-header("Tooltip")
+          +list-item()
+            .content
+              strong Tipo:
+              | texto simples
+          +list-item()
+            .content
+              strong Comportamento:
+              | mouseOver
+          +list-item()
+            .content
+              strong Permanência:
+              | por evento mouseOver
+          +list-item()
+            .content
+              strong Direção:
+              | padrão (em cima)
+          +list-item()
+            .content
+              strong Semântica:
+              | padrão (informação)
+      .col-md-6.text-center
+        a(href="javascript:void(0);")
+          img(src="https://picsum.photos/50" alt="Avatar")
+        +tooltip("Texto de Informação!")
+    hr
+    .row.align-items-center
+      .col-md-6
+        +list.condensed
+          +list-header("Tooltip")
+          +list-item()
+            .content
+              strong Tipo:
+              | texto auxiliar
+          +list-item()
+            .content
+              strong Comportamento:
+              | mouseOver
+          +list-item()
+            .content
+              strong Permanência:
+              | por evento mouseOver
+          +list-item()
+            .content
+              strong Direção:
+              | em cima, à esquerda, à direita e em baixo
+          +list-item()
+            .content
+              strong Semântica:
+              | informação, sucesso, erro e advertência
+      .col-md-6.text-center
+        div.mb-3
+          a(href="javascript:void(0);").h4 Informação
+          +tooltip-info-top
+        div.mb-3
+          a(href="javascript:void(0);").h4 Sucesso
+          +tooltip-success-left
+        div.mb-3
+          a(href="javascript:void(0);").h4 Erro
+          +tooltip-error-right
+        div.mb-3
+          a(href="javascript:void(0);").h4 Advertência
+          +tooltip-warning-bottom
+
+    hr
+    .row.align-items-center
+      .col-md-6
+        +list.condensed
+          +list-header("Tooltip")
+          +list-item()
+            .content
+              strong Tipo:
+              | texto com input
+          +list-item()
+            .content
+              strong Comportamento:
+              | onload
+          +list-item()
+            .content
+              strong Permanência:
+              | tempo (10s)
+          +list-item()
+            .content
+              strong Direção:
+              | em baixo
+          +list-item()
+            .content
+              strong Semântica:
+              | advertência
+      .col-md-6
+        +input-password
+        +tooltip-warning-bottom-timer
+    hr
+    .row.align-items-center
+      .col-md-6
+        +list.condensed
+          +list-header("PopOver")
+          +list-item()
+            .content
+              strong Tipo:
+              | popover simples
+          +list-item()
+            .content
+              strong Comportamento:
+              | mouseOver
+          +list-item()
+            .content
+              strong Permanência:
+              | tempo (5s) ou ação direta do usuário
+          +list-item()
+            .content
+              strong Direção:
+              | em baixo
+          +list-item()
+            .content
+              strong Semântica:
+              | sucesso
+      .col-md-6.text-center
+        a(href="javascript:void(0);").h4 PopOver Simples
+        +tooltip-popover
+    hr
+    .row.align-items-center
+      .col-md-6
+        +list.condensed
+          +list-header("PopOver")
+          +list-item()
+            .content
+              strong Tipo:
+              | popover com ícone e botão
+          +list-item()
+            .content
+              strong Comportamento:
+              | mouseOver
+          +list-item()
+            .content
+              strong Permanência:
+              | ação direta do usuário
+          +list-item()
+            .content
+              strong Direção:
+              | à direita (conflito de limite de tela)
+          +list-item()
+            .content
+              strong Semântica:
+              | adverência
+      .col-md-6.text-center
+        a(href="javascript:void(0);").h4 PopOver com ícone e botão- Warning
+        +tooltip-popover-icon-warning
+    hr
+    .row.align-items-center
+      .col-md-6
+        +list.condensed
+          +list-header("PopOver")
+          +list-item()
+            .content
+              strong Tipo:
+              | popover com ícone
+          +list-item()
+            .content
+              strong Comportamento:
+              | mouseOver
+          +list-item()
+            .content
+              strong Permanência:
+              | tempo (3s) ou ação direta do usuário
+          +list-item()
+            .content
+              strong Direção:
+              | à esquerda
+          +list-item()
+            .content
+              strong Semântica:
+              | erro
+      .col-md-6.text-center
+        a(href="javascript:void(0);").h4 PopOver com ícone - Erro
+        +tooltip-popover-icon-error
+    hr
+

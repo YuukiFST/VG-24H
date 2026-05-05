@@ -1,0 +1,56 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Skip Link";
+
+append style
+  style.
+    .br-skiplink {
+      position: static;
+      flex-direction: row;
+    }
+    .br-skiplink a {
+      position: static;
+      top: 20vh;
+      left: 0;
+      transition-property: top, left;
+      margin-right: 20px;
+    }
+    .br-skiplink a:nth-child(2) {
+      top: 20vh;
+      left: 310px;
+    }
+    .br-skiplink a:nth-child(3) {
+      top: 20vh;
+      left: 620px;
+    }
+    .br-skiplink a:nth-child(4) {
+      top: 20vh;
+      left: 930px;
+    }
+    .br-skiplink a:focus,
+    .br-skiplink a:focus-visible {
+      top: 0;
+      left: inherit;
+      position: absolute;
+    }
+    .br-skiplink.full {
+      top: 30vh;
+    }
+    .br-skiplink.full:focus-within {
+      top: 0;
+      position: fixed;
+    }
+    .br-skiplink.full a {
+      top: 0;
+      left: auto;
+      position: relative;
+      margin-right: 0;
+    }
+
+append content
+  p Para visualizar o comportamento dos links use a tecla "tab" do teclado.
+
+  +skiplinks
+  .mb-3
+  +skiplinks-full

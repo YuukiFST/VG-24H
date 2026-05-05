@@ -1,0 +1,41 @@
+mixin upload()
+  - let className = prefix + 'upload'
+  - let id = attributes.id ? attributes.id : 'upload'
+
+  div(class=className
+    data-success = attributes.dataSuccess
+    data-danger = attributes.dataDanger
+    data-warning = attributes.dataWarning
+    data-info = attributes.dataInfo
+    disabled=attributes.disabled)
+    if (attributes.multiple)
+      label.upload-label(for=id)
+        span='Envio de arquivos'
+    else
+      label.upload-label(for=id)
+        span='Envio de arquivo'
+
+    input.upload-input(
+      id=id,
+      type="file",
+      multiple=attributes.multiple,
+      disabled=attributes.disabled,
+      aria-hidden=attributes.aria-hidden
+      aria-label="enviar arquivo"
+    )
+
+    .upload-list
+
+mixin upload-single
+  +upload.dragging#single-file
+
+mixin upload-multiple
+  +upload()(id="multiple-files" multiple)
+  p.text-base.mt-1 Clique ou arraste os arquivos para cima do componente Upload.
+
+mixin upload-feedback
+  +upload()(dataDanger)
+  +feedback-danger.mt-1 Os arquivos devem ser no formato PNG ou JPG e ter no máximo 100MB.
+
+mixin upload-disabled
+  +upload()(id="disabled" disabled="disabled" aria-hidden="true")

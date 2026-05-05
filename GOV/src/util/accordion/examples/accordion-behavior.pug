@@ -1,0 +1,10 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../../../components/list/list
+  include ../../../components/item/item
+  include ../../../components/divider/divider
+  include ../accordion
+
+block content
+  +accordion-behavior

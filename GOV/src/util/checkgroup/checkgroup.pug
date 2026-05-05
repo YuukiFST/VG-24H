@@ -1,0 +1,46 @@
+mixin example-checkbox(label)
+  - let className = ["checkgroup-example", attributes.class]
+  div(
+    class=className
+    valid=attributes.valid
+    invalid=attributes.invalid)
+    input(
+      id=attributes.id
+      name=attributes.id
+      type="checkbox"
+      aria-label=attributes.ariaLabel
+      checked=attributes.checked
+      disabled=attributes.disabled
+      indeterminate=attributes.indeterminate
+      data-toggle=attributes["data-toggle"]
+      data-parent=attributes['data-parent']
+      data-child=attributes['data-child']
+      data-checked-label=attributes['data-checked-label']
+      data-unchecked-label=attributes['data-unchecked-label'])
+    label(for=attributes.id)=label
+    if block
+      block
+
+mixin checkgroup-behavior
+  .mb-1
+    +example-checkbox("Selecionar tudo")#p1(ariaLabel="Selecionar tudo" data-parent="check-01" data-checked-label="Selecionar tudo" data-unchecked-label="Desselecionar tudo" checked indeterminate)
+  .mb-1.ml-2
+    +example-checkbox("Opção 1")#p1-f1(ariaLabel="opção 1" data-child="check-01" checked)
+  .mb-1.ml-2
+    +example-checkbox("Opção 2")#p1-f2(ariaLabel="opção 2" data-child="check-01")
+  .mb-1.ml-2
+    +example-checkbox("Opção 3")#p1-f3(ariaLabel="opção 3" data-child="check-01")
+
+mixin checkgroup-behavior-chain
+  .mb-1
+    +example-checkbox("Selecionar tudo")#p2(ariaLabel="Selecionar tudo" data-parent="check-02" data-checked-label="Selecionar tudo" data-unchecked-label="Desselecionar tudo" checked indeterminate)
+  .mb-1.ml-2
+    +example-checkbox("Opção 1")#p2-f1(ariaLabel="opção 1" data-child="check-02" checked)
+  .mb-1.ml-2
+    +example-checkbox("Opção 2")#p2-f2(ariaLabel="opção 2" data-child="check-02")
+  .mb-1.ml-2
+    +example-checkbox("Selecionar grupo")#p2-f3(ariaLabel="Selecionar grupo" data-child="check-02" data-parent="check-03" data-checked-label="Selecionar grupo" data-unchecked-label="Desselecionar grupo")
+  .mb-1.ml-4
+    +example-checkbox("Opção 3")#p2-f3-1(ariaLabel="opção 3" data-child="check-03")
+  .mb-1.ml-4
+    +example-checkbox("Opção 3")#p2-f3-2(ariaLabel="opção 3" data-child="check-03")

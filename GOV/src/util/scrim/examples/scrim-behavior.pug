@@ -1,0 +1,11 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../../../components/button/button
+
+  include ../scrim
+
+block content
+  +scrim-default-util
+  .actionscrimutil
+      +button#idbuttonscrimutil.primary Abrir Modal

@@ -1,0 +1,34 @@
+mixin radio(label)
+  - let className = [prefix + "radio", attributes.class]
+  div(class=className)
+    input(
+      id=attributes.id
+      type="radio"
+      name=attributes.name
+      value=attributes.id
+      aria-label=attributes.ariaLabel
+      checked=attributes.checked
+      disabled=attributes.disabled)
+    label(for=attributes.id)=label
+    if block
+      block
+
+mixin radio-default
+  p.label.mb-0 Rótulo
+  p.help-text Informações adicionais
+  +radio("opcao-1")(name="radio")#op-1
+  +radio("opcao-2")(name="radio" checked)#op-2
+  +radio("opcao-3")(name="radio")#op-3
+  +radio("opcao-4")(name="radio")#op-4
+  .mt-3: +feedback-warning Texto de mensagem
+
+mixin radio-inline
+  .d-inline-block.mr-5: +radio("Opção 1")(name="h-radio")#h-radio-1
+  .d-inline-block.mr-5: +radio("Opção 2")(name="h-radio")#h-radio-2
+  .d-inline-block.mr-5: +radio("Opção 3")(name="h-radio")#h-radio-3
+
+mixin radio-states
+  +radio("Checado")(checked name="validate-radio")#check-state-checked
+  +radio("Desativado")(disabled name="validate-radio")#check-state-disabled.disabled
+  +radio("Inválido")(name="validate-radio")#check-state-invalid.invalid
+  +radio("Válido")(name="validate-radio")#check-state-valid.valid

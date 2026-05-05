@@ -1,0 +1,12 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../step
+  include ../../button/button
+  include ../../tooltip/tooltip
+
+block content
+    .step-sample-3.mt-5.mb-5
+      +step-void
+    .step-sample-3
+      +step-void-alert

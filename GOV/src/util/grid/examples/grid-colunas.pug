@@ -1,0 +1,39 @@
+extends ../../../partial/pug/isolate
+include ../../../components/checkbox/checkbox
+
+block content
+  +checkbox("Ver margem e gaps").pb-3x#toggle
+
+  .container-fluid#container
+    .bg-pure-0
+      p.py-3x.m-0 As colunas abaixo dividem em todas as resoluções
+      .gap
+        .row
+          .col-6
+            .br-card.m-0.bg-pure-0
+              .card-content col-6
+          .col-6
+            .br-card.m-0.bg-pure-0
+              .card-content col-6
+      p.py-3x.m-0 As colunas abaixo dividem a partir de 536px
+      .gap
+        .row
+          .col-sm-4
+            .br-card.m-0.bg-pure-0
+              .card-content col-sm-4
+          .col-sm-4
+            .br-card.m-0.bg-pure-0
+              .card-content col-sm-4
+          .col-sm-4
+            .br-card.m-0.bg-pure-0
+              .card-content col-sm-4
+
+  script.
+    const toggle = document.getElementById('toggle');
+    const container = document.getElementById('container');
+    toggle.addEventListener('change', () => {
+      container.classList.toggle('bg-green-cool-vivid-10', toggle.checked);
+      document.querySelectorAll('.gap').forEach(el => {
+        el.classList.toggle('bg-blue-cool-vivid-10', toggle.checked);
+      });
+    });

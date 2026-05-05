@@ -1,0 +1,15 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../menu
+  include ../../button/button
+
+block content
+  .row
+    +menu-push#main-navigation
+    .col
+      .d-flex.align-items-center.mt-3
+        div
+          +button.small.circle(aria-label="Menu" data-toggle="menu" data-target="#main-navigation")
+            +icon.fa-bars
+        .ml-3 Acionar menu

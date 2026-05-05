@@ -1,0 +1,116 @@
+extends ../../partial/pug/component
+
+
+append vars
+  - var title = "Step";
+
+append content
+  div.row
+    div.col-sm-6
+      p.h4.mt-5 Layout Vertical - Alinhamento a Direita
+      .row
+        .col-auto
+          .p-3
+            +step-vertical
+        .col-auto
+          .p-3.bg-blue-80
+            +step-vertical.dark-mode
+
+    div.col-sm-6
+      p.h4.mt-5 Layout Vertical - Alinhamento a Esquerda
+      .row
+        .col-auto
+          .p-3
+            +step-vertical-left
+        .col-auto
+          .p-3.bg-blue-80
+            +step-vertical-left.dark-mode
+
+  p.h4.mt-5 Layout Horizontal - Alinhamento Abaixo
+  .p-3
+    +step-horizontal
+  .p-3.bg-blue-80
+    +step-horizontal.dark-mode
+
+  p.h4.mt-5 Layout Horizontal - Alinhamento Acima
+  .p-3
+    +step-horizontal-top
+  .p-3.bg-blue-80
+    +step-horizontal-top.dark-mode
+
+  p.h4.mt-5 Layout Horizontal - Alinhamento Direita
+  .p-3
+    +step-horizontal-right
+  .p-3.bg-blue-80
+    +step-horizontal-right.dark-mode
+
+  p.h4.mt-5 Layout Horizontal - Alinhamento Esquerda
+  .p-3
+    +step-horizontal-left
+  .p-3.bg-blue-80
+    +step-horizontal-left.dark-mode
+
+  p.h4.mt-5 Step com icone
+  .p-3
+    .mb-3: +step-icon(scroll=true, vertical=false,  initial=1, position="right", type=false)
+    hr
+    .mb-3: +step-icon(scroll=true, vertical=false,  initial=1, position="left", type=false)
+    hr
+    .mb-3: +step-icon(scroll=true, vertical=false,  initial=1, position="top", type=false)
+    hr
+    .mb-3: +step-icon(scroll=true, vertical=false,  initial=1, position="bottom", type=false)
+  .p-3.bg-blue-80
+    .mb-3: +step-icon.dark-mode(scroll=true, vertical=false,  initial=1, position="right", type=false)
+    hr
+    .mb-3: +step-icon.dark-mode(scroll=true, vertical=false,  initial=1, position="left", type=false)
+    hr
+    .mb-3: +step-icon.dark-mode(scroll=true, vertical=false,  initial=1, position="top", type=false)
+    hr
+    .mb-3: +step-icon.dark-mode(scroll=true, vertical=false,  initial=1, position="bottom", type=false)
+
+  p.h4.mt-5 Step com alert
+  .p-3
+    .mb-3: +step-alert(vertical=false,  initial = 2, scroll=true, position="right", type=false)
+    hr
+    .mb-3: +step-alert(vertical=false,  initial = 2, scroll=true, position="left", type=false)
+    hr
+    .mb-3: +step-alert(vertical=false,  initial = 2, scroll=true, position="top", type=false)
+    hr
+    .mb-3: +step-alert(vertical=false,  initial = 2, scroll=true, position="bottom", type=false)
+  .p-3.bg-blue-80
+    .mb-3: +step-alert.dark-mode(vertical=false,  initial = 2, scroll=true, position="right", type=false)
+    hr
+    .mb-3: +step-alert.dark-mode(vertical=false,  initial = 2, scroll=true, position="left", type=false)
+    hr
+    .mb-3: +step-alert.dark-mode(vertical=false,  initial = 2, scroll=true, position="top", type=false)
+    hr
+    .mb-3: +step-alert.dark-mode(vertical=false,  initial = 2, scroll=true, position="bottom", type=false)
+
+  p.h4.mt-5 Step Indicador Vazio
+  .p-3
+    .mb-3: +step-void
+    .mb-3: +step-void-alert
+  .p-3.bg-blue-80
+    .mb-3: +step-void.dark-mode
+    .mb-3: +step-void-alert.dark-mode
+
+  p.h4.mt-5 Step Simples
+  .p-3
+    +step-simple.mx-3
+  .p-3.bg-blue-80
+    +step-simple.dark-mode.mx-3
+
+  p.h4.mt-5 Step Textual
+  .p-3
+    +step-text.mx-3
+  .p-3.bg-blue-80
+    +step-text.dark-mode.mx-3
+
+append style
+  style.
+    .step-sample-4 {
+      align-items: center;
+      justify-content: center;
+      display: flex;
+      width: 100%;
+    }

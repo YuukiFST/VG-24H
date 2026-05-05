@@ -1,0 +1,13 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../switch
+
+block content
+  .row
+    .col-md
+      +switch-left
+    .col-md.mt-3.mt-md-0
+      +switch-right
+    .col-md.mt-3.mt-md-0
+      +switch-top

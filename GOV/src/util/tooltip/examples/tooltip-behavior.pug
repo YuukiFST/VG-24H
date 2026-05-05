@@ -1,0 +1,27 @@
+extends ../../../partial/pug/isolate
+
+
+append vars
+  - var title = "Tooltip";
+
+block dependencies
+  include ../../../components/button/button
+  include ../../../components/item/item
+  include ../../../components/list/list
+  include ../tooltip
+
+
+append content
+  .col-md-6.text-center
+        div.mb-3
+          a(href="javascript:void(0);" data-tooltip-target="#sample-info-top").h5 Informação
+          +tooltip-info-top-example
+        div.mb-3
+          a(href="javascript:void(0);" data-tooltip-target="#sample-success-left").h5 Sucesso
+          +tooltip-success-left-example
+        div.mb-3
+          a(href="javascript:void(0);" data-tooltip-target="#sample-erro-right").h5 Erro
+          +tooltip-error-right-example
+        div.mb-3
+          a(href="javascript:void(0);" data-tooltip-target="#sample-warning-bottom").h5 Advertência
+          +tooltip-warning-bottom-example

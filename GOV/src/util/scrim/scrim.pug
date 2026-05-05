@@ -1,0 +1,28 @@
+mixin scrim-default-util
+  #scrimutilexample.br-scrim-util.foco(data-scrim="true" )
+      .br-modal.medium(aria-labelledby="titulomodal")
+        .br-modal-dialog
+          .br-modal-content
+            .br-modal-header
+              h1.br-modal-title#titulomodal Scrim com Foco
+            .br-modal-body
+              p Exemplo utilizando o componente scrim com FOCO
+            .br-modal-footer.justify-content-center
+              +button#scrimfechar.secondary(data-dismiss="true") Cancelar
+              +button.primary.mt-3.mt-sm-0.ml-sm-3 Retornar
+
+
+
+mixin scrim-big-util
+  #scrimutilfocobig.br-scrim.foco(data-trigger="scrim" )
+      .br-modal.medium(aria-labelledby="titulomodal1")
+        .br-modal-dialog
+          .br-modal-content
+            .br-modal-header
+              h1.br-modal-title#titulomodal1 Scrim com Foco
+            .br-modal-body
+            each val in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+              p Exemplo utilizando o componente scrim com FOCO #{val}
+            .br-modal-footer.justify-content-center
+              +button#scrimfechar.secondary Cancelar
+              +button.primary.mt-3.mt-sm-0.ml-sm-3 Retornar

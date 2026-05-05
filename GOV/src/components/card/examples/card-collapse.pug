@@ -1,0 +1,13 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../card
+  include ../../avatar/avatar
+  include ../../button/button
+  include ../../divider/divider
+  include ../../item/item
+  include ../../list/list
+
+block content
+  .col-sm-6.col-md-4.col-lg-3
+    +card-collapse

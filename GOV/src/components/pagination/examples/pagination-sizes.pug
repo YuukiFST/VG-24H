@@ -1,0 +1,10 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../pagination
+  include ../../button/button
+
+block content
+  +pagination-small
+  hr
+  +pagination-large

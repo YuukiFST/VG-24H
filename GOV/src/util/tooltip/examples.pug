@@ -1,0 +1,78 @@
+extends ../../partial/pug/component
+
+
+include ./tooltip
+
+append vars
+  - var title = "Tooltip";
+
+append content
+
+  .container-lg
+    
+    hr
+    .row.align-items-center
+      .col-md-6
+        +list.condensed
+          +list-header("Tooltip")
+          +list-item()
+            .content
+              strong Tipo:
+              | texto auxiliar
+          +list-item()
+            .content
+              strong Comportamento:
+              | mouseOver
+          +list-item()
+            .content
+              strong Permanência:
+              | por evento mouseOver
+          +list-item()
+            .content
+              strong Direção:
+              | em cima, à esquerda, à direita e em baixo
+          +list-item()
+            .content
+              strong Semântica:
+              | informação, sucesso, erro e advertência
+      .col-md-6.text-center
+        div.mb-3
+          a(href="javascript:void(0);" data-tooltip-target="#sample-info-top").h5 Informação
+          +tooltip-info-top-example
+        div.mb-3
+          a(href="javascript:void(0);" data-tooltip-target="#sample-success-left").h5 Sucesso
+          +tooltip-success-left-example
+        div.mb-3
+          a(href="javascript:void(0);" data-tooltip-target="#sample-erro-right").h5 Erro
+          +tooltip-error-right-example
+        div.mb-3
+          a(href="javascript:void(0);" data-tooltip-target="#sample-warning-bottom").h5 Advertência
+          +tooltip-warning-bottom-example
+    hr
+    .row.align-items-center
+      .col-md-6
+        +list.condensed
+          +list-header("Tooltip")
+          +list-item()
+            .content
+              strong Tipo:
+              | texto simples
+          +list-item()
+            .content
+              strong Comportamento:
+              | mouseOver
+          +list-item()
+            .content
+              strong Permanência:
+              | por evento mouseOver
+          +list-item()
+            .content
+              strong Direção:
+              | padrão (em cima)
+          +list-item()
+            .content
+              strong Semântica:
+              | padrão (informação)
+      .col-md-6.text-center
+        a(href="javascript:void(0);" data-tooltip-text="Texto de Informação!" )
+          img(src="https://picsum.photos/50" alt="Avatar")

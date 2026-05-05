@@ -1,0 +1,15 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../avatar
+
+block content
+  +avatar.mr-3
+    span.content
+      img(src="https://picsum.photos/id/1005/400" alt="Avatar")
+  +avatar.medium.mr-3
+    span.content
+      img(src="https://picsum.photos/id/287/400" alt="Avatar")
+  +avatar.large.mr-3
+    span.content
+      img(src="https://picsum.photos/id/357/400" alt="Avatar")

@@ -1,0 +1,11 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../tooltip
+  include ../../input/input
+  include ../../button/button
+
+block content
+  .mb-3
+    +input-password
+    +tooltip-warning-bottom-timer

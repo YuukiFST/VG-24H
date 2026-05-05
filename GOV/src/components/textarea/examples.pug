@@ -1,0 +1,56 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Textarea";
+
+append content
+  p.h4.mt-5 Textarea padrão
+  .row
+    .col-sm-4
+      +textarea-default
+
+  p.h4.mt-5 Textarea padrão com fundo escuro
+  .p-3.bg-gray-60
+    .row
+      .col-sm-4
+        +textarea-dark-mode
+
+  p.h4.mt-5 Textarea padrão com label à esquerda
+  .row
+    .col-sm-4
+      +textarea-default-left
+
+  p.h4.mt-5 Densidades dos Inputs
+  .row
+    .col-sm-4
+      +textarea-large
+
+    .col-sm-4
+      +textarea-medium
+
+    .col-sm-4
+      +textarea-small
+
+  p.h4.mt-5 Validação e estados
+  .row
+    .col-sm-4.mb-3
+      +textarea-success
+    .col-sm-4.mb-3
+      +textarea-danger
+    .col-sm-4.mb-3
+      +textarea-warning
+    .col-sm-4.mb-3
+      +textarea-info
+    .col-sm-4.mb-3
+      +textarea-disabled
+
+  p.h4.mt-5  Textarea COM limite e contador de caracteres
+  .row
+    .col-sm-4
+      +textarea-maxlength()
+
+  p.h4.mt-5  Textarea SEM limite e contador de caracteres
+  .row
+    .col-sm-4
+      +textarea-no-maxlength()
+

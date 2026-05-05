@@ -1,0 +1,15 @@
+extends ../../partial/pug/component
+
+
+append vars
+  - var title = "Radio";
+
+append content
+  p.h4.mt-5 Radio padrão
+  +radio-default
+
+  p.h4.mt-5 Listagem horizontal
+  +radio-inline
+
+  p.h4.mt-5 Estados e validação
+  +radio-states

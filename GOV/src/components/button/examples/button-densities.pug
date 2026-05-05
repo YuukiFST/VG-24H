@@ -1,0 +1,17 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../button
+
+block content
+  .p-3
+    +button-secondary.large.mr-3 Baixa densidade
+    +button-secondary.mr-3 Padrão
+    +button-secondary.small Alta densidade
+  .p-3
+    +button-circle-secondary.large.mr-3(aria-label="Ícone ilustrativo")
+      +icon.fa-city
+    +button-circle-secondary.mr-3(aria-label="Ícone ilustrativo")
+      +icon.fa-city
+    +button-circle-secondary.small(aria-label="Ícone ilustrativo")
+      +icon.fa-city

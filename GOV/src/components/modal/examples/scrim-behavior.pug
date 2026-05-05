@@ -1,0 +1,17 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../modal
+  include ../../../components/button/button
+
+block content
+  #scrimutilexamplemodal.br-scrim-util.foco(data-scrim="true" )
+    .br-modal(aria-labelledby="titulomodalexemplo")
+      .br-modal-header#titulomodalexemplo Modal com scrim
+      .br-modal-body
+        p Exemplo utilizando o componente scrim com FOCO
+      .br-modal-footer.justify-content-center
+        +button.secondary(data-dismiss="true") Cancelar
+        +button.primary.mt-3.mt-sm-0.ml-sm-3 Retornar
+  .scrimutilexamplemodal
+    +button#buttonactivatemodal.primary Testar o Modal com o Scrim

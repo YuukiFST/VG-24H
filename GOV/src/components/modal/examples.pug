@@ -1,0 +1,33 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Modal";
+
+append content
+  p.h4.mt-5 Exemplo de uso do Scrim com o componente Modal
+  #scrimutilexamplemodal.br-scrim-util.foco(data-scrim="true")
+    .br-modal(aria-labelledby="titulomodalexemplo")
+      .br-modal-header#titulomodalexemplo Modal com scrim
+      .br-modal-body
+        p Exemplo utilizando o componente scrim com FOCO
+      .br-modal-footer.justify-content-center
+        +button#scrimfechar.secondary(data-dismiss="true") Cancelar
+        +button.primary.mt-3.mt-sm-0.ml-sm-3 Retornar
+  .scrimutilsample
+    +button#buttonactivatemodal.primary Testar o Modal com o Scrim
+  p.h4.mt-5 Modal Alerta
+  +modal-alert
+  p.h4.mt-5 Modal com duas ou mais linhas de título
+  +modal-titulo-linhas
+  p.h4.mt-5 Modal com Temporizador
+  +modal-loading
+  p.h4.mt-5 Modal sem título
+  +modal-sem-titulo
+  p.h4.mt-5 Modal com escolha de opção
+  +modal-options
+  p.h4.mt-5 Modal com entrada de dados
+  +modal-login
+  p.h4.mt-5 Modal com lista de opções
+  +modal-list
+  p.h4.mt-5 Modal com termo de aceite
+  +modal-terms

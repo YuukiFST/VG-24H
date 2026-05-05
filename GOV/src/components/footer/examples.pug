@@ -1,0 +1,11 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "footer";
+
+append content
+  p.h4.mt-5 Tema 1
+  +footer-default
+
+  p.h4.mt-5 Tema 2
+  +footer-inverted

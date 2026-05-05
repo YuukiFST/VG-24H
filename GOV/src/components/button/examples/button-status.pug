@@ -1,0 +1,10 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../button
+
+block content
+  .p-3
+    +button-primary.mr-3(disabled) Desativado
+    +button-primary.active.mr-3 Ativado
+    +button-primary.loading Carregando

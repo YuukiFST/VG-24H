@@ -1,0 +1,23 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../tooltip
+  include ../../input/input
+  include ../../button/button
+
+block content
+  .mb-3
+    a(href="javascript:void(0);").h5 Informação
+    +tooltip-info-top
+  .mb-3
+    a(href="javascript:void(0);").h5 Erro
+    +tooltip-error-right
+  .mb-3
+    a(href="javascript:void(0);").h5 Sucesso
+    +tooltip-success-left
+  .mb-3
+    +input-password
+    +tooltip-warning-bottom-timer
+  .mb-3
+    a(href="javascript:void(0);").h5 Advertência
+    +tooltip-warning-bottom

@@ -1,0 +1,42 @@
+extends ../../partial/pug/component
+
+
+append vars
+  - var title = "List";
+  - var i = 0;
+
+append content
+  p.h4.mt-5 Lista Vertical
+  .row
+    .col-sm-6.col-md-4
+      +list-vertical-simples
+
+    .col-sm-6.col-md-4.mt-4.mt-sm-0
+      +list-simples-selecionaveis
+
+  p.h4.mt-5 Densidades
+  .row
+    .col-sm-6.col-md-4
+      +list-dense-high
+
+    .col-sm-6.col-md-4.mt-4.mt-sm-0
+      +list-dense-medium
+
+    .col-sm-6.col-md-4.mt-4.mt-sm-0
+      +list-dense-small
+
+  p.h4.mt-5 Agrupamentos
+  .row
+    .col-sm-6.col-md-4
+      +list-group-tag
+
+    .col-sm-6.col-md-4.mt-4.mt-sm-0
+      +list-group-divider
+
+    .col-sm-6.col-md-4.mt-4.mt-sm-0
+      +list-group-expansion
+
+  p.mt-5.h4 Lista Horizontal
+  +list-horizontal-divider
+
+  +list-horizontal-expansion

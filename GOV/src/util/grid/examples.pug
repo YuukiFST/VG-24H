@@ -1,0 +1,51 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Utilitário de Grid";
+  - let i = 1
+
+append content
+  p.h4.mt-5 Coluna Proporcional
+  p.my-1 Smartphone Portrait
+  .row
+    - i = 1
+    while i <= 4
+      .col: .bg-support-02.p-1 .col
+      - i++
+  p.my-1 Smartphone Landscape
+  .row
+    - i = 1
+    while i <= 8
+      .col-sm: .bg-support-05.p-1 .col-sm
+      - i++
+  p.my-1 Tablet Landscape
+  .row
+    - i = 1
+    while i <= 8
+      .col-md: .bg-support-06.p-1 .col-md
+      - i++
+  p.my-1 Desktop
+  .row
+    - i = 1
+    while i <= 12
+      .col-lg: .bg-support-09.p-1 .col-lg
+      - i++
+  p.my-1 TV
+  .row
+    - i = 1
+    while i <= 12
+      .col-xl: .bg-support-11.p-1 .col-xl
+      - i++
+
+  p.h4.mt-5 Coluna de Tamanho predefinido
+  - i = 1
+  while i <= 12
+    .row.my-1
+      div(class=`col-${i}`): .bg-support-02.p-1=`.col-${i}`
+      - i++
+
+  p.h4.mt-5 Coluna do Tamanho do conteúdo
+  .row
+    .col-auto: .bg-support-02.p-1 Lorem ipsum
+    .col-auto: .bg-support-02.p-1 Lorem ipsum dolor sit
+    .col-auto: .bg-support-02.p-1 Lorem ipsum dolor sit amet consectetur adipisicing elit.

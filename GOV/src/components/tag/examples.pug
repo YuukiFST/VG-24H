@@ -1,0 +1,162 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Tag";
+
+append content
+  p.h4.mt-5 Tag de Interação Dispensável
+  +tag-interaction(id="interaction01")
+    +icon.fa-car
+    span(id="interactivetag1") Carro 1
+    +button.inverted.circle(aria-label="Fechar" aria-describedby="interactivetag1"  data-dismiss="interaction01")
+      +icon.fa-times
+  +tag-interaction#interaction02
+    +icon.fa-car
+    span(id="interactivetag2") Carro 2
+    +button(aria-label="Fechar" data-dismiss="interaction02"  aria-describedby="interactivetag2")
+      +icon.fa-times
+  +tag-interaction#interaction03
+    +icon.fa-car
+    span(id="interactivetag3") Carro 3
+    +button(aria-label="Fechar" data-dismiss="interaction03" aria-describedby="interactivetag3")
+      +icon.fa-times
+
+  p.h4.mt-5 Tag com Seleção Múltipla
+  +tag-interaction-select
+    input(id="tag01" type="checkbox" name="multipla" value="bicicleta")
+    label(for="tag01")
+      +icon.fa-bicycle
+      span(id="tag01-label") Bicicleta
+  +tag-interaction-select.selected
+    input(id="tag02" type="checkbox" checked name="multipla" value="barco")
+    label(for="tag02" )
+      +icon.fa-ship
+      span(id="tag02-label") Barco
+  +tag-interaction-select.selected.disabled
+    input(id="tag03" type="checkbox" disabled checked name="multipla" value="carro")
+    label(for="tag03" )
+      +icon.fa-car
+      span(id="tag03-label") Carro
+  p.h4.mt-5 Tag com Seleção Única
+  +tag-interaction-select
+    input(id="tag04" type="radio" name="vehicle" value="carro")
+    label(for="tag04" )
+      +icon.fa-car
+      span(id="tag04-label") Carro
+  +tag-interaction-select.selected
+    input(id="tag05" type="radio" checked name="vehicle" value="barco")
+    label(for="tag05" )
+      +icon.fa-ship
+      span(id="tag05-label") Barco
+
+  p.h4.mt-5 Tag de Texto
+  +tag-text(aria-describedby="tag-text01").bg-mint-cool-vivid-70
+    +icon.fa-car
+    span(id="tag-text01") Texto e Ícone
+  +tag-text(aria-describedby="tag-text02").bg-violet-warm-vivid-70
+    span(id="tag-text02") Texto
+
+  p.h4.mt-5 Tag de Status
+  .d-flex.align-items-center
+    +tag-status.bg-danger.large(title="Status do usuário Offline")
+    +tag-status.bg-warning.medium(title="Status do usuário Ausente")
+    +tag-status.bg-success.small(title="Status do usuário Online")
+  .d-flex.align-items-center.mt-1
+    +tag-status.bg-danger.large(aria-describedby="tag-status-01")
+    span.ml-1(id="tag-status-01") Offline
+    +tag-status.bg-warning(aria-describedby="tag-status-01")
+    span.ml-1(id="tag-status-02") Ausente
+    +tag-status.bg-success.small(aria-describedby="tag-status-01")
+    span.ml-1(id="tag-status-03") Online
+
+  p.h4.mt-5 Tag de Contagem
+  .d-flex.align-items-center
+    +tag-count.bg-danger(title="1 Notificação não lidas")
+      span(aria-hidden="true") 1
+    +tag-count.bg-danger(title="10 Notificações não lidas")
+      span(aria-hidden="true") 10
+    +tag-count.bg-danger(title="130 Notificações não lidas")
+      span(aria-hidden="true") 130
+    +tag-count.bg-danger(title="999+ Notificações não lidas")
+      span(aria-hidden="true") 999+
+    +tooltip("99957")(info place="right")
+
+  p.h4.mt-5 Tag de Ícone
+  .d-flex.align-items-center
+    +tag-icon.bg-magenta-vivid-50(title="Ícone de Carro")
+      +icon.fa-car
+    +tag-icon.bg-orange-50(title="Ícone de Lupa")
+      +icon.fa-search
+    +tag-icon.bg-violet-warm-vivid-70(title="Ícone de Usuário")
+      +icon.fa-user
+
+  p.h4.mt-5 Densidades
+  .d-flex.align-items-center.mt-1
+    +tag-text.bg-orange-vivid-50.small(aria-describedby="densidade01")
+      span(id="densidade01") Alta
+    +tag-text.bg-green-warm-vivid-50.medium(aria-describedby="densidade02")
+      span(id="densidade02") Padrão
+    +tag-text.bg-indigo-warm-vivid-50.large(aria-describedby="densidade03")
+      span(id="densidade03") Baixa
+  .mt-1
+  +tag-interaction.small
+    +icon.fa-car
+    span(id="interactivetag4") Alta
+    +button.close(aria-label="Fechar" aria-describedby="interactivetag4")
+      +icon.fa-times
+  +tag-interaction.medium
+    +icon.fa-car
+    span(id="interactivetag5") Padrão
+    +button.close(aria-label="Fechar" aria-describedby="interactivetag5")
+      +icon.fa-times
+  +tag-interaction.large
+    +icon.fa-car
+    span(id="interactivetag6") Baixa
+    +button.close(aria-label="Fechar" aria-describedby="interactivetag6")
+      +icon.fa-times
+  .mt-1
+  +tag-interaction-select.small
+    input(id="tag06" type="checkbox")
+    label(for="tag06")
+      +icon.fa-car
+      span Alta
+  +tag-interaction-select.medium
+    input(id="tag07" type="checkbox")
+    label(for="tag07")
+      +icon.fa-car
+      span Padrão
+  +tag-interaction-select.large
+    input(id="tag08" type="checkbox")
+    label(for="tag08")
+      +icon.fa-car
+      span Baixa
+  .mt-1
+  +tag-interaction-select.small
+    input(id="tag09" type="radio" name="radio-sizes" value="alta")
+    label(for="tag09")
+      +icon.fa-car
+      span Alta
+  +tag-interaction-select.medium
+    input(id="tag10" type="radio" name="radio-sizes" value="padrao")
+    label(for="tag10")
+      +icon.fa-car
+      span Padrão
+  +tag-interaction-select.large
+    input(id="tag11" type="radio" name="radio-sizes" value="baixa")
+    label(for="tag11")
+      +icon.fa-car
+      span Baixa
+  .d-flex.align-items-center.mt-1
+    +tag-count.bg-danger.small(title="1 Notificação não lida")
+      span(aria-hidden="true") 1
+    +tag-count.bg-danger.medium( title="2 Notificações não lidas")
+      span(aria-hidden="true") 2
+    +tag-count.bg-danger.large( title="3 Notificações não lidas")
+      span(aria-hidden="true") 3
+  .d-flex.align-items-center.mt-1
+    +tag-icon.bg-magenta-vivid-50.small(title="Ícone de Carro")
+      +icon.fa-car
+    +tag-icon.bg-magenta-vivid-50.medium(title="Ícone de Carro")
+      +icon.fa-car
+    +tag-icon.bg-magenta-vivid-50.large(title="Ícone de Carro")
+      +icon.fa-car

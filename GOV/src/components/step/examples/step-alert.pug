@@ -1,0 +1,10 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../step
+  include ../../button/button
+  include ../../tooltip/tooltip
+
+block content
+  .step-sample-2
+    +step-alert(vertical=false,  initial = 2, scroll=true, position="top", type=false)

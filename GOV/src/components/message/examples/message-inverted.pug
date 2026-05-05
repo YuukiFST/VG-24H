@@ -1,0 +1,14 @@
+
+
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../message
+  include ../../button/button
+
+block content
+  .col-sm.p-3.bg-primary-darken-02
+        +message-danger.inverted
+        +message-success.inverted
+        +message-info.inverted
+        +message-warning.inverted

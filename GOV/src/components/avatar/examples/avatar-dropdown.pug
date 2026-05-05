@@ -1,0 +1,17 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../avatar
+  include ../../signin/signin.pug
+  include ../../list/list.pug
+  include ../../item/item.pug
+
+block content
+  +avatar-dropdown
+
+append style
+  style.
+    #avatar-dropdown-trigger {
+      height: auto;
+      padding: var(--spacing-scale-base);
+    }

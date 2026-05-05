@@ -1,0 +1,18 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../input
+  include ../../message/message
+
+block content
+  .col-sm-4.mb-3
+    +input-success
+  .col-sm-4.mb-3
+    +input-danger
+  .col-sm-4.mb-3
+    +input-info
+  .col-sm-4.mb-3
+    +input-warning
+  .col-sm-4.mb-3
+    +input-disabled
+

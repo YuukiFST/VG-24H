@@ -1,0 +1,19 @@
+extends ../../partial/pug/component
+
+append vars
+  - var title = "Accordion";
+
+append content
+  p.h4.mt-5 Comportamento padrão
+  .row
+    .col-md-6
+      +accordion-default
+    .col-md-6.mt-3.mt-md-0
+      +accordion-default-negative
+
+  p.h4.mt-5 Comportamento Negativo
+  .row
+    .col-md-6
+      +accordion-default-single
+    .col-md-6.mt-3.mt-md-0
+      +accordion-default-negative-single

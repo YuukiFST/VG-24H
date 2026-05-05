@@ -1,0 +1,12 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../avatar
+
+block content
+  +avatar.mr-3
+    span.content.bg-violet-50.text-pure-0 W
+  +avatar.medium.mr-3
+    span.content.bg-orange-50.text-pure-0 A
+  +avatar.large.mr-3
+    span.content.bg-green-50.text-pure-0 H

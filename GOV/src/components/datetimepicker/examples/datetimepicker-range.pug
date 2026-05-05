@@ -1,0 +1,10 @@
+extends ../../../partial/pug/isolate
+
+block dependencies
+  include ../../button/button
+  include ../../input/input
+  include ../datetimepicker
+
+block content
+  .col-sm-6.col-md-4.col-lg-3
+    +datetimepicker-range
