@@ -1,18 +1,17 @@
 """
 decorators.py — Controle de Acesso do Portal VG 24H
 
-Estes decoradores são usados nas views para BLOQUEAR o acesso
-de usuários não autorizados. São colocados acima da função da view.
+Decorators usados nas views para BLOQUEAR acesso de usuarios nao autorizados.
+Sao colocados ACIMA da funcao da view (@"decorator").
 
-Exemplo de uso:
-    @perfis("GES", "COL")          # só gestores e colaboradores podem acessar
-    def equipe_chamados_lista(request):
-        ...
+[!] Substituem as Rules R4 e R6 que foram removidas do banco de dados.
+    O controle de perfil agora e feito na camada de aplicacao (Django),
+    nao no PostgreSQL.
 
-Existem 3 decoradores:
-    @anonimo     → só acessa se NÃO estiver logado (login, cadastro)
-    @autenticado → só acessa se ESTIVER logado (qualquer tipo)
-    @perfis(...) → só acessa se o perfil do usuário for um dos listados
+3 decorators:
+    @anonimo     → so acessa se NAO estiver logado (login, cadastro)
+    @autenticado → so acessa se ESTIVER logado (qualquer tipo)
+    @perfis(...) → so acessa se o perfil do usuario for um dos listados
 """
 
 from functools import wraps
@@ -22,51 +21,62 @@ from django.shortcuts import redirect
 
 
 def perfil_codigo(u):
-    """Retorna o perfil do usuário: 'CID', 'GES' ou 'COL'."""
+    """Retorna o perfil do usuario: 'CID', 'GES' ou 'COL'."""
     return (u.perfil or "").strip() if u else ""
 
 
+# ========================================================================
 # Decorador @anonimo — usado em login, cadastro, recuperar senha
-# Se o usuário JÁ está logado ele redireciona para home (não precisa logar de novo)
+# Se o usuario JA esta logado → redireciona para home
+# ========================================================================
 def anonimo(view):
     @wraps(view)
     def w(request, *args, **kwargs):
         if request.portal_user:
-            # Já está logado, não retorna o usuario no login/cadastro
+            # Ja esta logado, nao precisa acessar login/cadastro
             return redirect("portal:root")
         return view(request, *args, **kwargs)
 
     return w
 
 
-# Decorador @autenticado — bloqueia acesso se NÃO estiver logado
-# Se portal_user é None, ele redireciona para /accounts/login/
+# ========================================================================
+# Decorador @autenticado — bloqueia acesso se NAO estiver logado
+# Se portal_user e None → redireciona para /accounts/login/
+# ========================================================================
 def autenticado(view):
     @wraps(view)
     def w(request, *args, **kwargs):
         if not request.portal_user:
-            # Não está logado, ele redireciona para a tela de login
+            # Nao esta logado → redireciona para tela de login
             return redirect("portal:login")
         return view(request, *args, **kwargs)
 
     return w
 
 
-# Decorador @perfis("GES", "COL") — verifica se o perfil do usuário é permitido
-# Exemplo: @perfis("GES") → apenas Gestores podem acessar
-#          @perfis("COL", "GES") → Colaboradores e Gestores podem acessar
-# Se não for o perfil certo → mostra "Sem permissão" e volta para home
+# ========================================================================
+# Decorador @perfis("GES", "COL") — verifica se o perfil e permitido
+# ========================================================================
+# [!] Substitui a Rule R4 (removida do banco), que antes controlava
+#     permissoes de mudanca de status por perfil no PostgreSQL.
+#
+# Exemplo: @perfis("GES")          → apenas Gestores
+#          @perfis("COL", "GES")   → Colaboradores e Gestores
+#          @perfis("CID")          → apenas Cidadaos
+# Se nao for o perfil certo → mensagem "Sem permissao" e volta para home
+# ========================================================================
 def perfis(*codigos):
     def dec(view):
         @wraps(view)
         def w(request, *args, **kwargs):
             u = request.portal_user
             if not u:
-                # Não está logado → manda para login
+                # Nao esta logado → manda para login
                 return redirect("portal:login")
             if perfil_codigo(u) not in codigos:
-                # Está logado, mas o perfil não tem permissão
-                messages.error(request, "Sem permissão para acessar esta área.")
+                # Logado mas sem permissao para esta area
+                messages.error(request, "Sem permissao para acessar esta area.")
                 return redirect("portal:root")
             # Perfil autorizado → permite acessar a view normalmente
             return view(request, *args, **kwargs)

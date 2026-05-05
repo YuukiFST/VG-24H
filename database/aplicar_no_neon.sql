@@ -1,10 +1,16 @@
--- Portal VG 24H - Script completo para Neon DB (Plano de Trabalho v6)
--- Gerado automaticamente a partir dos scripts individuais
--- Execute este arquivo inteiro no console SQL do Neon
-
--- Portal VG 24H — PostgreSQL (Plano de Trabalho v6)
--- Ordem: 01_schema.sql → 02_seed.sql → 03_functions_triggers.sql → 04_rules.sql → 05_views.sql
--- Requer PostgreSQL 12+
+-- ============================================================================
+-- aplicar_no_neon.sql — Script CONSOLIDADO para Neon DB
+-- ============================================================================
+-- [!] ATENCAO: Este arquivo e a CONCATENACAO dos scripts:
+--     01_schema + 02_seed + 03_functions_triggers + 04_rules + 05_views
+--
+--     Para comentarios detalhados linha a linha, consulte os arquivos
+--     individuais na pasta database/. Este arquivo existe apenas como
+--     conveniencia para executar tudo de uma vez no console SQL do Neon.
+--
+-- Gerado do Plano de Trabalho v6. Requer PostgreSQL 12+.
+-- Execute este arquivo inteiro no console SQL do Neon.
+-- ============================================================================
 
 BEGIN;
 

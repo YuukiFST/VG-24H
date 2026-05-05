@@ -1,14 +1,16 @@
 """
-middleware.py — Middleware de Autenticação do Portal VG 24H
+middleware.py — Middleware de Autenticacao do Portal VG 24H
 
-Este middleware é executado AUTOMATICAMENTE em TODA requisição HTTP.
-Ele lê o cookie de sessão do navegador e carrega o usuário logado
-em request.portal_user, que fica disponível para todas as views e templates.
+[!] PONTO CRUCIAL: Este middleware injeta variaveis de sessao no PostgreSQL
+    via set_config(). As triggers e functions do banco (ver 03 e 04) usam
+    essas variaveis para saber qual usuario/pefil esta executando a acao.
 
+Executado AUTOMATICAMENTE em TODA requisicao HTTP.
 Fluxo:
-1. Usuário faz login → session['usuario_id'] e session['usuario_tipo'] são salvos
-2. Toda requisição seguinte → middleware lê a sessão e busca o usuário no banco
-3. Coloca em request.portal_user → views podem verificar quem está logado
+1. Usuario faz login → session['usuario_id'] e session['usuario_tipo'] salvos
+2. Toda requisicao → middleware le a sessao e busca o usuario no banco
+3. Coloca em request.portal_user → views podem verificar quem esta logado
+4. Chama set_config() no PostgreSQL para auditoria nas triggers
 """
 
 from django.db import connection
@@ -18,17 +20,21 @@ from portal.models import Cidadao, Servidor
 
 def _usuario_da_sessao(request):
     """
-    Lê o cookie de sessão e busca o usuário correspondente no banco via SQL puro.
-    Retorna um objeto Cidadao ou Servidor, ou None se não estiver logado.
+    Le o cookie de sessao e busca o usuario correspondente no banco via SQL puro.
+    Retorna um objeto Cidadao ou Servidor, ou None se nao estiver logado.
+    [!] Usa SQL puro (nao ORM) porque o login e baseado em sessao Django,
+        nao em django.contrib.auth.
     """
-    uid = request.session.get("usuario_id")       # ID salvo no login
-    tipo = request.session.get("usuario_tipo")    # 'cidadao' ou 'servidor'
+    uid = request.session.get("usuario_id")         # ID salvo no login
+    tipo = request.session.get("usuario_tipo")      # 'cidadao' ou 'servidor'
     if not uid or not tipo:
-        return None  # nao esta logado
+        return None                                 # Nao esta logado
+
     try:
         with connection.cursor() as cursor:
             if tipo == "servidor":
-                # SELECT na tabela servidor — busca pelo ID armazenado na sessão
+                # SELECT na tabela servidor — busca pelo ID armazenado na sessao
+                # [!] SQL puro porque o model Servidor e managed = False
                 cursor.execute(
                     "SELECT id_servidor, nome_completo, cpf, dt_nascimento, "
                     "telefone, email, senha_hash, senha_temporaria, perfil, "
@@ -39,9 +45,9 @@ def _usuario_da_sessao(request):
                 )
                 row = cursor.fetchone()
                 if not row:
-                    request.session.flush()
+                    request.session.flush()         # Sessao invalida
                     return None
-                # Monta o objeto Servidor com os dados retornados pelo SQL
+                # Monta o objeto Servidor manualmente (sem ORM)
                 user = Servidor()
                 user.id_servidor = row[0]
                 user.nome_completo = row[1]
@@ -55,10 +61,10 @@ def _usuario_da_sessao(request):
                 user.dt_cadastro = row[9]
                 user.ativo = row[10]
                 user.id_secretaria_id = row[11]
-                user._state.adding = False
+                user._state.adding = False          # Informa ao Django que o objeto existe no banco
                 return user
             else:
-                # SELECT na tabela cidadao — busca pelo ID armazenado na sessão
+                # SELECT na tabela cidadao — busca pelo ID armazenado na sessao
                 cursor.execute(
                     "SELECT id_cidadao, nome_completo, cpf, dt_nascimento, "
                     "telefone, email, senha_hash, senha_temporaria, perfil, "
@@ -72,7 +78,7 @@ def _usuario_da_sessao(request):
                 if not row:
                     request.session.flush()
                     return None
-                # Monta o objeto Cidadao com os dados retornados pelo SQL
+                # Monta o objeto Cidadao manualmente
                 user = Cidadao()
                 user.id_cidadao = row[0]
                 user.nome_completo = row[1]
@@ -93,16 +99,22 @@ def _usuario_da_sessao(request):
                 user._state.adding = False
                 return user
     except Exception:
-        # usuario foi desativado ou removido? Limpa a sessão
+        # Usuario foi desativado ou removido? Limpa a sessao
         request.session.flush()
         return None
 
 
 def _postgres_sessao(perfil, id_acao):
     """
-    Define variáveis de sessão no PostgreSQL.
-    Isso permite que triggers e functions no banco saibam
-    qual usuário está fazendo a operação (para auditoria/log).
+    [!] DESTAQUE: Injeta variaveis de sessao no PostgreSQL.
+    As triggers e functions (03_functions_triggers.sql, 04_rules.sql)
+    acessam essas variaveis para saber qual usuario/perfil esta agindo.
+
+    Exemplo de uso na trigger:
+        SELECT current_setting('portal.perfil', true);  -- retorna 'CID'
+        SELECT current_setting('portal.id_usuario_acao', true);  -- retorna '5'
+
+    terceiro argumento = true → variavel local (so existe nesta conexao)
     """
     perfil = perfil or ""
     id_acao = "" if id_acao is None else str(id_acao)
@@ -113,21 +125,26 @@ def _postgres_sessao(perfil, id_acao):
 
 class PortalUserMiddleware:
     """
-    Middleware registrado no settings.py (MIDDLEWARE).
-    Executado em TODA requisição antes de chegar na view.
-    Resultado: request.portal_user contém o objeto do usuário logado.
+    Middleware registrado em settings.py (MIDDLEWARE).
+    [!] Executado em TODA requisicao ANTES de chegar na view.
+
+    Efeitos:
+      - request.portal_user → objeto do usuario logado (ou None)
+      - set_config() no PG → triggers sabem quem esta agindo
     """
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        # 1. Busca o usuário logado a partir da sessão
+        # 1. Busca o usuario logado a partir da sessao
         user = _usuario_da_sessao(request)
 
         # 2. Disponibiliza em request.portal_user para todas as views/templates
         request.portal_user = user
 
-        # 3. Informa ao PostgreSQL quem está operando (para triggers)
+        # 3. [!] Informa ao PostgreSQL quem esta operando (para triggers/functions)
+        #     As variaveis 'portal.perfil' e 'portal.id_usuario_acao' ficam
+        #     disponiveis via current_setting() nas funcoes PL/pgSQL.
         if user:
             _postgres_sessao((user.perfil or "").strip(), user.pk)
         else:

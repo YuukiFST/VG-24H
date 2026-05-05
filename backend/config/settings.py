@@ -1,3 +1,13 @@
+"""
+settings.py — Configuracoes do Django para o Portal VG 24H
+
+[!] PONTOS IMPORTANTES PARA A APRESENTACAO:
+    1. Conexao PostgreSQL (Neon) — ENGINE = django.db.backends.postgresql
+    2. PortalUserMiddleware registrado — responsavel pelo set_config() nas triggers
+    3. TIME_ZONE = America/Cuiaba (fuso de Varzea Grande/MT)
+    4. context_processors.navegacao registrado — injeta nav_user, nav_perfil, notif_count
+"""
+
 import os
 from pathlib import Path
 
@@ -6,12 +16,12 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-# 1. Segurança Crítica (Sem fallbacks inseguros)
+# 1. Seguranca Critica (Sem fallbacks inseguros)
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
-    raise ValueError("⚠️ SECRET_KEY não configurada. O sistema foi interrompido por segurança.")
+    raise ValueError("SECRET_KEY nao configurada. Sistema interrompido por seguranca.")
 
-# 2. Debug Seguro (Padrão é desligado)
+# 2. Debug Seguro (Padrao e desligado)
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [
@@ -24,17 +34,17 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "portal",
+    "portal",                           # App principal do sistema
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",   # Servir arquivos estaticos em producao
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "portal.middleware.PortalUserMiddleware",
+    "portal.middleware.PortalUserMiddleware",        # [!] Injeta request.portal_user + set_config() no PG
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -49,7 +59,7 @@ TEMPLATES = [
             "context_processors": [
                 "django.template.context_processors.request",
                 "django.contrib.messages.context_processors.messages",
-                "portal.context_processors.navegacao",
+                "portal.context_processors.navegacao",   # [!] nav_user, nav_perfil, notif_count
             ],
         },
     },
@@ -57,6 +67,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
+# ============================================================================
+# BANCO DE DADOS — PostgreSQL (Neon na nuvem ou local)
+# ============================================================================
+# [!] Configuracoes lidas de variaveis de ambiente (.env):
+#     POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT
+#     POSTGRES_SSL=require para Neon (nuvem exige TLS)
+# ============================================================================
 _default_db = {
     "ENGINE": "django.db.backends.postgresql",
     "NAME": os.environ.get("POSTGRES_DB", "portal_vg"),
@@ -65,17 +82,23 @@ _default_db = {
     "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
     "PORT": os.environ.get("POSTGRES_PORT", "5432"),
 }
-# Neon (e outros hosts na nuvem) costumam exigir TLS — use POSTGRES_SSL=require no .env
+# Neon (e outros hosts na nuvem) costumam exigir TLS
 if os.environ.get("POSTGRES_SSL", "").lower() in ("1", "true", "yes", "require"):
     _default_db["OPTIONS"] = {"sslmode": "require"}
 
 DATABASES = {"default": _default_db}
 
+# ============================================================================
+# LOCALIZACAO — Varzea Grande/MT
+# ============================================================================
 LANGUAGE_CODE = "pt-br"
-TIME_ZONE = "America/Cuiaba"
+TIME_ZONE = "America/Cuiaba"                      # Fuso de Mato Grosso
 USE_I18N = True
 USE_TZ = True
 
+# ============================================================================
+# ARQUIVOS ESTATICOS (CSS, JS, imagens)
+# ============================================================================
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -87,18 +110,29 @@ STORAGE = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# ============================================================================
+# MIDIA (uploads de fotos)
+# ============================================================================
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# ============================================================================
+# EMAIL
+# ============================================================================
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@portal.vg.local")
 EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
 )
 
+# ============================================================================
+# LIMITES DE UPLOAD (8 MB)
+# ============================================================================
 FILE_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
 
-# ── Segurança — Produção ─────────────────────────────────────
+# ============================================================================
+# SEGURANCA — Producao
+# ============================================================================
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
@@ -111,6 +145,9 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-SESSION_COOKIE_AGE = 3600
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_SAVE_EVERY_REQUEST = True
+# ============================================================================
+# SESSAO — expira em 1h ou ao fechar navegador
+# ============================================================================
+SESSION_COOKIE_AGE = 3600                              # 1 hora
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True                # Expira ao fechar navegador
+SESSION_SAVE_EVERY_REQUEST = True                     # Renova a cada requisicao
