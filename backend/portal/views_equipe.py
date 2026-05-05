@@ -1,14 +1,14 @@
 """
 views_equipe.py — Views da Equipe (Gestores e Colaboradores)
 
-Este módulo contém as views acessíveis apenas por servidores.
-O decorador @perfis("COL", "GES") garante que APENAS usuários com perfil
-'COL' (Colaborador) ou 'GES' (Gestor) podem acessar estas rotas.
-Cidadãos são automaticamente bloqueados.
+[!] @perfis("COL", "GES") — APENAS servidores acessam. Cidadaos sao bloqueados.
+[!] Ao contrario de views_cidadao: aqui NAO filtra por id_cidadao — ve TODOS os chamados.
+[!] Mudanca de status = INSERT em historico_chamado (NAO update em chamado).
+    Trigger 2B trata dt_conclusao e notificacao automaticamente.
 
-Diferença chave em relação ao views_cidadao.py:
-  - Cidadão vê apenas SEUS próprios chamados (filter id_cidadao=request.portal_user)
-  - Equipe vê TODOS os chamados do sistema (sem filtro de cidadão)
+Diferenca chave:
+  - Cidadao: filtra WHERE c.id_cidadao = %s (privacidade)
+  - Equipe: sem filtro de cidadao (ve todos)
 """
 
 from types import SimpleNamespace
@@ -253,6 +253,9 @@ def equipe_chamado_detalhe(request, pk):
     else:
         ch.cor_semaforo = "verde"
 
+    # [!] REGRA DE NEGOCIO: COL nao pode alterar status de chamado encerrado (CO/CA)
+    #     GES pode sempre (isento). Essa validacao e feita na view (Python),
+    #     NAO no banco — substitui a Rule R4 que foi removida.
     p = perfil_codigo(request.portal_user)
     ts = ch.sigla_status
     bloqueia_status_col = p == "COL" and ts in ("CO", "CA")
@@ -265,7 +268,10 @@ def equipe_chamado_detalhe(request, pk):
             form_s = EquipeStatusForm(request.POST)
             if form_s.is_valid():
                 novo = form_s.cleaned_data["id_status"]
-                # SQL puro: INSERT historico para mudança de status
+                # [!] MUDANCA DE STATUS = INSERT em historico_chamado
+                #     Nao e UPDATE em chamado! O status atual e o ULTIMO registro.
+                #     Trigger 2B: atualiza dt_conclusao + gera notificacao.
+                #     id_servidor = quem esta logado (rastreabilidade)
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "INSERT INTO historico_chamado "
@@ -433,6 +439,9 @@ def gestao_chamado_excluir(request, pk):
     # │  LOG DE AUDITORIA — Registra no histórico ANTES de     │
     # │  apagar, para que fique documentado quem excluiu,      │
     # │  quando e por quê.                                     │
+    # │  [!] A Rule Extra (rx_chamado_sem_delete) no banco     │
+    # │      impede DELETE normal. Esta view contorna isso     │
+    # │      apagando manualmente os registros filhos primeiro. │
     # └─────────────────────────────────────────────────────────┘
     with connection.cursor() as cursor:
         # Busca status atual para o log

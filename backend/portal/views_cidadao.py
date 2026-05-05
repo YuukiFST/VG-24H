@@ -1,15 +1,16 @@
 """
-views_cidadao.py — Views do Cidadão (Portal VG 24H)
+views_cidadao.py — Views do Cidadao (Portal VG 24H)
 
-Este módulo contém todas as views acessíveis apenas por cidadãos.
-O decorador @perfis("CID") garante que APENAS usuários com perfil 'CID'
-podem acessar estas rotas. Gestores e colaboradores são bloqueados.
+[!] PONTOS CRITICOS:
+    1. @perfis("CID") — APENAS cidadaos acessam. COL/GES sao bloqueados.
+    2. [!] O status NAO esta em chamado — vem do ULTIMO historico_chamado via Subquery.
+    3. [!] Ao abrir chamado, a view NAO insere status — o Trigger 1 cria AB automaticamente.
+    4. [!] Privacidade: cada cidadao ve APENAS seus proprios chamados (WHERE id_cidadao = %s).
 
-Operações CRUD realizadas:
-  - READ:   Listar chamados do cidadão (SELECT com filtros)
-  - CREATE: Abrir novo chamado (INSERT em chamado + historico + foto)
-  - READ:   Ver detalhes de um chamado (SELECT com JOINs)
-  - UPDATE: Cancelar chamado, avaliar, adicionar observação
+Operacoes:
+  - CREATE: Abrir novo chamado (INSERT em chamado + Trigger 1 cria historico AB)
+  - READ:   Listar chamados (SELECT com Subquery no ultimo historico)
+  - UPDATE: Cancelar (INSERT historico CA), avaliar (UPDATE chamado), adicionar obs
 """
 
 from types import SimpleNamespace
@@ -73,20 +74,23 @@ def _buscar_chamado_por_pk(pk):
 
 
 def _popular_status(ch):
-    """SQL puro: busca o status atual do chamado (último histórico)."""
+    """
+    [!] SQL puro: busca o status ATUAL do chamado via ULTIMO historico.
+    Equivalente funcional da property status_atual em models.py (usada em Rafael).
+    """
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT sc.id_status, sc.sigla, sc.descricao "
             "FROM historico_chamado hc "
             "JOIN status_chamado sc ON hc.id_status = sc.id_status "
             "WHERE hc.id_chamado = %s "
-            "ORDER BY hc.dt_alteracao DESC LIMIT 1",
+            "ORDER BY hc.dt_alteracao DESC LIMIT 1",  # [!] Pega o registro mais recente
             [ch.pk],
         )
         row = cursor.fetchone()
     if row:
         ch.status_atual = SimpleNamespace(id_status=row[0], pk=row[0], sigla=row[1], descricao=row[2])
-        ch.sigla_status = (row[1] or "").strip()
+        ch.sigla_status = (row[1] or "").strip()     # Ex: 'AB', 'CO'
     else:
         ch.status_atual = None
         ch.sigla_status = ""
@@ -100,16 +104,16 @@ def _popular_status(ch):
         ch.cor_semaforo = "verde"
 
 
-# FUNÇÃO AUXILIAR DE SEGURANÇA:
-# Verifica se o chamado pertence ao cidadão logado.
-# Impede que um cidadão acesse chamados de outros cidadãos pela URL.
+# FUNCAO AUXILIAR DE SEGURANCA:
+# [!] Verifica se o chamado pertence ao cidadao logado.
+# Impede que um cidadao acesse chamados de outros cidadaos pela URL.
+# Retorna 404 (em vez de 403) para nao revelar se o chamado existe.
 def _chamado_do_cidadao(request, pk):
     ch = _buscar_chamado_por_pk(pk)
     if not ch:
         raise Http404()
-    # Compara o id_cidadao do chamado com o usuário logado
     if ch.id_cidadao_id != request.portal_user.pk:
-        raise Http404()  # Retorna 404 (não revela que o chamado existe)
+        raise Http404()
     return ch
 
 
@@ -307,12 +311,15 @@ def cidadao_chamado_novo(request):
             protocolo = proximo_protocolo()
             # SQL puro: INSERT na tabela chamado + foto_chamado (transação)
             with connection.cursor() as cursor:
+                # [!] INSERT apenas em chamado. NAO insere status!
+                #     O Trigger 1 (AFTER INSERT) cria automaticamente o
+                #     registro em historico_chamado com status 'AB'.
                 cursor.execute(
                     "INSERT INTO chamado "
                     "(num_protocolo, prioridade, ponto_de_referencia, descricao, "
                     "dt_abertura, atualizado_em, id_cidadao, id_servico, id_bairro) "
                     "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
-                    "RETURNING id_chamado",
+                    "RETURNING id_chamado",            # [!] RETURNING necessario para obter o ID
                     [
                         protocolo, 0,
                         d.get("ponto_de_referencia") or None,
@@ -322,7 +329,7 @@ def cidadao_chamado_novo(request):
                         d["id_bairro"].pk,
                     ],
                 )
-                chamado_id = cursor.fetchone()[0]
+                chamado_id = cursor.fetchone()[0]       # ID gerado pelo SERIAL
                 # INSERT foto do chamado
                 cursor.execute(
                     "INSERT INTO foto_chamado (id_chamado, url_foto, dt_upload) "
@@ -347,6 +354,19 @@ def cidadao_chamado_novo(request):
 @perfis("CID")
 @require_http_methods(["GET", "POST"])
 def cidadao_chamado_detalhe(request, pk):
+    """
+    [!] ACOES DISPONIVEIS (campo 'acao' no POST):
+        1. 'obs'      — INSERT em historico_chamado (observacao)
+        2. 'foto'     — INSERT em foto_chamado
+        3. 'cancelar' — INSERT historico com status CA + UPDATE resolucao
+        4. 'avaliar'  — UPDATE chamado (nota_avaliacao + comentario)
+
+    [!] REGRAS DE NEGOCIO:
+        - Obs/foto: bloqueadas se chamado estiver CO ou CA
+        - Cancelar: so se AB ou EA
+        - Avaliar: so se CO e nunca avaliado
+        - Triggers no BD (R1/R2) tambem bloqueiam obs/foto em CO/CA
+    """
     ch = _chamado_do_cidadao(request, pk)
     ts = ch.sigla_status
     pode_obs_foto = ts not in ("CO", "CA")
@@ -395,14 +415,15 @@ def cidadao_chamado_detalhe(request, pk):
                         "SELECT id_status FROM status_chamado WHERE sigla = 'CA'"
                     )
                     ca_id = cursor.fetchone()[0]
-                    # INSERT historico com status cancelado
+                    # [!] INSERT historico com status CA
+                    #     Trigger 2B: atualiza dt_conclusao + gera notificacao
                     cursor.execute(
                         "INSERT INTO historico_chamado "
                         "(id_chamado, id_servidor, id_status, observacao, dt_alteracao) "
                         "VALUES (%s, %s, %s, %s, %s)",
                         [pk, None, ca_id, form_c.cleaned_data["motivo"], timezone.now()],
                     )
-                    # UPDATE resolução do chamado
+                    # UPDATE resolucao do chamado
                     cursor.execute(
                         "UPDATE chamado SET resolucao = %s WHERE id_chamado = %s",
                         [form_c.cleaned_data["motivo"], pk],

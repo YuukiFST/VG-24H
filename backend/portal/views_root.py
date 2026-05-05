@@ -1,9 +1,13 @@
 """
-views_root.py — Views públicas e página inicial do Portal VG 24H
+views_root.py — Views publicas e pagina inicial do Portal VG 24H
 
-Contém:
-- Catálogo de serviços (público)
-- Página inicial com estatísticas e banners
+[!] NAO tem @perfis() — sao rotas PUBLICAS (qualquer um pode acessar).
+[!] total_resolvidos usa Subquery para contar chamados com ultimo status = 'CO'.
+    Mesma logica arquitetural: status vem do historico_chamado, nao de um campo direto.
+
+Contem:
+- Catalogo de servicos (publico)
+- Pagina inicial com estatisticas e banners
 """
 
 from types import SimpleNamespace

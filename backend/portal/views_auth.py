@@ -1,15 +1,16 @@
 """
-views_auth.py — Autenticação do Portal VG 24H
+views_auth.py — Autenticacao do Portal VG 24H
 
-Este módulo gerencia todo o fluxo de autenticação do sistema:
-- Login / Logout (cidadãos e servidores)
-- Cadastro de novos cidadãos
-- Recuperação e redefinição de senha
-- Troca de senha obrigatória (primeiro acesso de servidores)
+[!] PONTO CRITICO: NAO usamos o django.contrib.auth padrao.
+    Usamos um sistema proprio com as tabelas 'cidadao' e 'servidor'.
+    [!] LOGIN DUAL: primeiro busca em cidadao, depois em servidor.
+    Sessoes sao gerenciadas via cookie (request.session), nao via User model do Django.
 
-NOTA: NÃO usamos o django.contrib.auth padrão.
-Usamos um sistema próprio com as tabelas 'cidadao' e 'servidor' do banco.
-As senhas são armazenadas com hash bcrypt via django.contrib.auth.hashers.
+Este modulo gerencia:
+- Login / Logout (cidadaos e servidores)
+- Cadastro de novos cidadaos
+- Recuperacao e redefinicao de senha
+- Troca de senha obrigatoria (primeiro acesso de servidores)
 """
 
 from django.conf import settings
@@ -27,13 +28,14 @@ from django.views.decorators.http import require_http_methods
 
 from portal.decorators import anonimo, autenticado, perfil_codigo
 from portal.forms import (
-    CadastroCidadaoForm,
+    CadastroCidadaoForm,        # Formulario de cadastro (wizard 3 etapas)
     RecuperarSenhaForm,
     RedefinirSenhaForm,
-    TrocaSenhaObrigatoriaForm,
+    TrocaSenhaObrigatoriaForm,  # Formulario para 1o acesso de servidor
 )
-# Cidadao e Servidor: as duas tabelas de usuários do sistema
+# Cidadao e Servidor: as duas tabelas de usuarios do sistema
 # O sistema verifica em qual tabela o email existe para determinar o tipo
+# [!] LOGIN DUAL: a view faz SELECT primeiro em cidadao, depois em servidor
 from portal.models import Bairro, Cidadao, Servidor
 
 
@@ -62,9 +64,10 @@ def login_view(request):
         tipo = None
 
         # BUSCA NO BANCO DE DADOS (SELECT)                  
-        # Aqui é onde o sistema consulta o PostgreSQL/Neon
-        # para verificar se o email existe nas tabelas.
-        # Primeiro tenta na tabela 'cidadao', se não encontrar, tenta na tabela 'servidor'.
+        # [!] LOGIN DUAL: primeiro tenta em cidadao, depois em servidor.
+        #     Se o email existe em cidadao, usuario e cidadao (CID).
+        #     Se nao, tenta em servidor (COL ou GES).
+        #     Se nao encontrar em nenhuma → erro "E-mail ou senha incorretos."
         with connection.cursor() as cursor:
             # SELECT na tabela 'cidadao' — busca pelo email informado
             cursor.execute(
@@ -80,13 +83,13 @@ def login_view(request):
                 user = Cidadao()
                 user.id_cidadao = row[0]
                 user.nome_completo = row[1]
-                user.senha_hash = row[2]
-                user.perfil = row[3]
+                user.senha_hash = row[2]       # Hash bcrypt armazenado no banco
+                user.perfil = row[3]           # 'CID' ou 'VER'
                 user.senha_temporaria = row[4]
-                user._state.adding = False
+                user._state.adding = False     # Informa ao Django que o objeto existe
                 tipo = "cidadao"
             else:
-                # Não encontrou em cidadao → tenta SELECT na tabela 'servidor'
+                # Nao encontrou em cidadao → tenta SELECT na tabela 'servidor'
                 cursor.execute(
                     "SELECT id_servidor, nome_completo, senha_hash, perfil, senha_temporaria "
                     "FROM servidor "
@@ -100,7 +103,7 @@ def login_view(request):
                     user.id_servidor = row[0]
                     user.nome_completo = row[1]
                     user.senha_hash = row[2]
-                    user.perfil = row[3]
+                    user.perfil = row[3]       # 'COL' ou 'GES'
                     user.senha_temporaria = row[4]
                     user._state.adding = False
                     tipo = "servidor"
@@ -122,13 +125,15 @@ def login_view(request):
         elif check_password(senha, user.senha_hash):
             # ┌─────────────────────────────────────────────────┐
             # │  LOGIN BEM-SUCEDIDO                             │
-            # │  Salva na sessão (cookie) o ID e o tipo do      │
-            # │  usuário. O middleware.py lê esses valores em   │
-            # │  TODA requisição seguinte para saber quem está  │
-            # │  logado e qual perfil ele tem (CID/COL/GES).    │
+            # │  [!] Salva na sessao (cookie) o ID e o tipo.   │
+            # │  O middleware.py le esses valores em TODA       │
+            # │  requisicao seguinte para saber quem esta        │
+            # │  logado e qual perfil (CID/COL/GES).            │
+            # │  [!] NAO usamos request.user do Django —        │
+            # │      usamos request.portal_user (middleware).   │
             # └─────────────────────────────────────────────────┘
             request.session.cycle_key()                    # Novo sessionid (anti Session Fixation)
-            request.session["usuario_id"] = user.pk       # ID no banco
+            request.session["usuario_id"] = user.pk       # ID no banco (chave primaria)
             request.session["usuario_tipo"] = tipo        # 'cidadao' ou 'servidor'
             # Se o servidor tem senha temporária (primeiro acesso),
             # força a troca antes de usar o sistema

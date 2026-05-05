@@ -1,13 +1,14 @@
 """
-views_gestao.py — Views de Gestão (Portal VG 24H)
+views_gestao.py — Views de Gestao (Portal VG 24H)
 
-Este módulo contém todas as views acessíveis apenas por gestores (GES).
-O decorador @perfis("GES") garante que APENAS usuários com perfil 'GES'
-podem acessar estas rotas. Cidadaos e colaboradores são bloqueados.
+[!] @perfis("GES") — APENAS Gestores acessam. CID e COL sao bloqueados.
+[!] Todas as operacoes usam SQL puro (NEM models Django ORM).
+[!] A view de estatisticas consulta a view SQL vw_estatisticas_chamados
+    (criada por Rafael em 05_views.sql — JOIN LATERAL no ultimo historico).
 
-Operações:
-  - CRUD de Categorias, Serviços, Bairros, Colaboradores e Banners
-  - Visualização de estatísticas via view SQL
+Operacoes:
+  - CRUD de Categorias, Servicos, Bairros, Colaboradores e Banners
+  - Visualizacao de estatisticas via view SQL
 """
 
 from types import SimpleNamespace
