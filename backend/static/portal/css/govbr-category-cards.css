@@ -10,26 +10,24 @@
 
 /* CARD */
 .grid-cards a.card.list-item {
-    background-color: #FFFFFF;
+    background-color: var(--pure-0);
     padding: 30px 20px;
     margin: 22px;
     width: 240px;
     height: 240px;
-    border-radius: 8px;
+    border-radius: var(--surface-rounder-md);
     
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
+    box-shadow: var(--surface-shadow-sm);
+    transition: all var(--duration-fast) var(--animation-ease);
     cursor: pointer;
     text-decoration: none;
     
-    /* Centralização extra para garantir alinhamento perfeito do conteúdo */
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     
-    /* Configurações para comportar o overlay de hover */
     position: relative;
     overflow: hidden;
 }
@@ -41,13 +39,13 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #555555; /* Fundo cinza escuro conforme modelo gov.br */
-    color: #FFFFFF;
+    background-color: var(--gray-70);
+    color: var(--pure-0);
     padding: 30px 20px;
-    font-family: rawline, helvetica, arial, sans-serif;
-    font-size: 16px;
-    font-weight: 400; 
-    text-align: left; /* Alinhado à esquerda conforme imagem */
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-scale-up-01);
+    font-weight: var(--font-weight-regular);
+    text-align: left;
     
     display: flex;
     flex-direction: column;
@@ -56,7 +54,7 @@
     
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition: opacity var(--duration-fast) var(--animation-ease), visibility var(--duration-fast) var(--animation-ease);
     z-index: 10;
 }
 
@@ -67,14 +65,14 @@
 
 /* HOVER DO CARTÃO (MANTÉM APENAS OVERLAY, REMOVE O PULO FÍSICO) */
 .grid-cards a.card.list-item:hover {
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    box-shadow: var(--surface-shadow-md);
 }
 
 /* ÍCONE */
 .grid-cards a.card.list-item span.fas {
     font-size: 50px;
-    color: #2d6cdf;
-    margin: 0 0 20px 0; /* Zera margens laterais que podem ter vazado do CSS global */
+    color: var(--blue-warm-vivid-50);
+    margin: 0 0 20px 0;
     padding: 0;
     display: flex;
     justify-content: center;
@@ -84,10 +82,10 @@
 
 /* TEXTO */
 .grid-cards a.card.list-item span.titulo {
-    font-family: rawline, helvetica, arial, sans-serif;
-    font-size: 20px;
-    color: #0C326F;
-    font-weight: 700;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-scale-up-03);
+    color: var(--blue-warm-vivid-80);
+    font-weight: var(--font-weight-bold);
     margin: 0;
     line-height: 1.4;
     text-transform: uppercase;

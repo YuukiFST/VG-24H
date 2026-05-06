@@ -13,7 +13,7 @@
 <div class="dashboard-content">
   <!-- Breadcrumb -->
   <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
-    <div class="br-breadcrumb-list">
+    <div class="crumb-list">
       <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
       <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
       <span class="crumb"><a href="{% url 'portal:cidadao_chamados' %}">Meus Chamados</a></span>
@@ -27,7 +27,7 @@
     <div>
 
       <!-- CARD 1: Detalhes do Chamado -->
-      <div class="ticket-info-card mb-3">
+      <div class="ticket-info-card mb-3x">
         <h2><i class="fas fa-clipboard-check mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Detalhes do Chamado</h2>
         <div class="info-row">
           <span class="info-label">Protocolo</span>
@@ -40,7 +40,7 @@
         <div class="info-row">
           <span class="info-label">Status</span>
           <span class="info-value">
-            <span class="br-tag status-{{ sigla_status|lower }}">{{ ch.status_atual.descricao }}</span>
+            <span class="br-tag count {% with s=sigla_status|lower %}{% if s == 'ab' %}info{% elif s == 'ea' or s == 'ee' %}warning{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ ch.status_atual.descricao }}</span>
           </span>
         </div>
         <div class="info-row">
@@ -56,7 +56,7 @@
           <span class="info-value">{{ ch.descricao }}</span>
         </div>
         {% if ch.resolucao %}
-        <div class="info-row mt-3 p-2" style="background:#f0f6ff; border-left: 3px solid var(--vg-primary); border-radius:4px;">
+        <div class="info-row mt-3x p-2" style="background:#f0f6ff; border-left: 3px solid var(--vg-primary); border-radius:4px;">
           <span class="info-label">Resolução Final</span>
           <span class="info-value"><strong>{{ ch.resolucao }}</strong></span>
         </div>
@@ -64,7 +64,7 @@
       </div>
 
       <!-- CARD 2: Observações -->
-      <div class="ticket-info-card mb-3">
+      <div class="ticket-info-card mb-3x">
         <h2><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Observações</h2>
         <div class="observations-list">
           {% for obs in observacoes %}
@@ -82,7 +82,7 @@
         </div>
         
         {% if pode_obs_foto %}
-        <form action="{% url 'portal:cidadao_chamado' ch.pk %}" method="post" class="mt-4">
+        <form action="{% url 'portal:cidadao_chamado' ch.pk %}" method="post" class="mt-4x">
           {% csrf_token %}
           <input type="hidden" name="acao" value="obs">
           <div style="display:flex; gap:8px;">
@@ -98,11 +98,11 @@
       </div>
 
       <!-- CARD 3: Fotos do Chamado -->
-      <div class="ticket-info-card mb-3">
+      <div class="ticket-info-card mb-3x">
         <h2><i class="fas fa-images mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Fotos do Chamado</h2>
         <div class="row">
           {% for foto in fotos %}
-            <div class="col-sm-4 mb-3">
+            <div class="col-sm-4 mb-3x">
               <a href="{{ foto.url_foto }}" target="_blank" class="d-block">
                 <img src="{{ foto.url_foto }}" alt="Foto do chamado" class="img-fluid rounded shadow-sm" style="height:120px; width:100%; object-fit:cover;">
               </a>
@@ -128,7 +128,7 @@
     <!-- ============ RIGHT COLUMN ============ -->
     <div>
       <!-- Status Timeline -->
-      <div class="ticket-info-card mb-3">
+      <div class="ticket-info-card mb-3x">
         <h2><i class="fas fa-route mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Status</h2>
         <div class="timeline">
           {% for h in historicos %}
@@ -152,7 +152,7 @@
 
       <!-- Actions -->
       {% if pode_cancelar %}
-      <div class="mb-3">
+      <div class="mb-3x">
         <button class="br-button danger w-100" type="button" data-toggle="modal" data-target="#modal-cancel">
           <i class="fas fa-times-circle mr-1"></i> Cancelar Chamado
         </button>
@@ -165,8 +165,8 @@
         <h2><i class="fas fa-star mr-2" style="color:var(--vg-warning);" aria-hidden="true"></i> Sua Avaliação</h2>
         
         {% if ch.nota_avaliacao %}
-          <div class="rating-display mb-3">
-            <div class="text-warning mb-2">
+          <div class="rating-display mb-3x">
+            <div class="text-warning mb-2x">
               {% for i in "12345"|make_list %}
                 <i class="fas fa-star {% if forloop.counter <= ch.nota_avaliacao %}text-warning{% else %}text-muted{% endif %}"></i>
               {% endfor %}
@@ -180,7 +180,7 @@
             <input type="hidden" name="acao" value="avaliar">
             <input type="hidden" name="nota" id="input-rating" value="5">
             
-            <div class="rating-stars mb-3">
+            <div class="rating-stars mb-3x">
               <span class="star selected" data-value="1"><i class="fas fa-star"></i></span>
               <span class="star selected" data-value="2"><i class="fas fa-star"></i></span>
               <span class="star selected" data-value="3"><i class="fas fa-star"></i></span>
@@ -188,7 +188,7 @@
               <span class="star selected" data-value="5"><i class="fas fa-star"></i></span>
             </div>
             
-            <div class="form-group mb-3">
+            <div class="form-group mb-3x">
               <div class="br-input">
                 <label for="rating-comment">Comentário (opcional)</label>
                 <textarea id="rating-comment" name="comentario" rows="3" placeholder="Como foi o atendimento?"></textarea>
@@ -208,26 +208,24 @@
 {% if pode_cancelar %}
 <!-- Modal Cancelamento -->
 <div class="br-modal" id="modal-cancel">
-  <div class="container-fluid p-4">
-    <div class="br-modal-body">
-      <div class="br-modal-header">
-        <div class="br-modal-title">Confirmar Cancelamento</div>
-        <button class="br-button circle small" type="button" data-dismiss="modal" aria-label="Fechar"><i class="fas fa-times"></i></button>
+  <div class="br-modal-header">
+    <div class="modal-title">Confirmar Cancelamento</div>
+    <button class="close" type="button" data-dismiss="modal" aria-label="Fechar"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="br-modal-body">
+    <p>Deseja realmente cancelar este chamado? Explique o motivo.</p>
+    <form action="{% url 'portal:cidadao_chamado' ch.pk %}" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="acao" value="cancelar">
+      <div class="br-input mt-3x">
+        <label for="cancel-motivo">Motivo do cancelamento *</label>
+        <textarea id="cancel-motivo" name="motivo" rows="3" required></textarea>
       </div>
-      <p>Deseja realmente cancelar este chamado? Explique o motivo.</p>
-      <form action="{% url 'portal:cidadao_chamado' ch.pk %}" method="post">
-        {% csrf_token %}
-        <input type="hidden" name="acao" value="cancelar">
-        <div class="br-input mt-3">
-          <label for="cancel-motivo">Motivo do cancelamento *</label>
-          <textarea id="cancel-motivo" name="motivo" rows="3" required></textarea>
-        </div>
-        <div class="br-modal-footer justify-content-end mt-4">
-          <button class="br-button secondary mr-2" type="button" data-dismiss="modal">Fechar</button>
-          <button class="br-button danger" type="submit">Sim, Cancelar</button>
-        </div>
-      </form>
-    </div>
+      <div class="br-modal-footer justify-content-end mt-4x">
+        <button class="br-button secondary mr-2" type="button" data-dismiss="modal">Fechar</button>
+        <button class="br-button danger" type="submit">Sim, Cancelar</button>
+      </div>
+    </form>
   </div>
 </div>
 {% endif %}

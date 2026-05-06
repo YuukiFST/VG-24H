@@ -13,7 +13,7 @@
 <div class="dashboard-content">
   <!-- Breadcrumb -->
   <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
-    <div class="br-breadcrumb-list">
+    <div class="crumb-list">
       <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
       <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
       <span class="crumb"><a href="{% url 'portal:equipe_chamados' %}">Gestão de Chamados</a></span>
@@ -27,7 +27,7 @@
     <div>
 
       <!-- CARD 1: Informações do Chamado (sempre visível) -->
-      <div class="ticket-info-card mb-3">
+      <div class="ticket-info-card mb-3x">
         <h2><i class="fas fa-clipboard-check mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Detalhes do Chamado</h2>
         <div class="info-row">
           <span class="info-label">Cidadão</span>
@@ -48,7 +48,7 @@
         <div class="info-row">
           <span class="info-label">Status Atual</span>
           <span class="info-value">
-            <span class="br-tag status-{{ sigla_status|lower }}">{{ ch.status_atual.descricao }}</span>
+            <span class="br-tag count {% with s=sigla_status|lower %}{% if s == 'ab' %}info{% elif s == 'ea' or s == 'ee' %}warning{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ ch.status_atual.descricao }}</span>
           </span>
         </div>
         <div class="info-row">
@@ -74,7 +74,7 @@
           <span class="info-value">{{ ch.descricao }}</span>
         </div>
         {% if ch.resolucao %}
-        <div class="info-row mt-3 p-2" style="background:#f0f6ff; border-left: 3px solid var(--vg-primary); border-radius:4px;">
+        <div class="info-row mt-3x p-2" style="background:#f0f6ff; border-left: 3px solid var(--vg-primary); border-radius:4px;">
           <span class="info-label">Resolução Final</span>
           <span class="info-value"><strong>{{ ch.resolucao }}</strong></span>
         </div>
@@ -93,7 +93,7 @@
       </div>
 
       <!-- CARD 2: Observações (sempre visível) -->
-      <div class="ticket-info-card mb-3">
+      <div class="ticket-info-card mb-3x">
         <h2><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Observações</h2>
         <div class="observations-list">
           {% for obs in observacoes %}
@@ -110,10 +110,10 @@
           {% endfor %}
         </div>
         
-        <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post" class="mt-4">
+        <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post" class="mt-4x">
           {% csrf_token %}
           <input type="hidden" name="acao" value="obs">
-          <div class="br-input mb-2">
+          <div class="br-input mb-2x">
             <textarea name="texto" rows="3" placeholder="Escreva uma observação interna ou para o cidadão..." required></textarea>
           </div>
           <button class="br-button primary" type="submit">
@@ -123,11 +123,11 @@
       </div>
 
       <!-- CARD 3: Fotos (sempre visível) -->
-      <div class="ticket-info-card mb-3">
+      <div class="ticket-info-card mb-3x">
         <h2><i class="fas fa-images mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Fotos do Chamado</h2>
         <div class="row">
           {% for foto in fotos %}
-            <div class="col-sm-4 mb-3">
+            <div class="col-sm-4 mb-3x">
               <a href="{{ foto.url_foto }}" target="_blank" class="d-block">
                 <img src="{{ foto.url_foto }}" alt="Foto do chamado" class="img-fluid rounded shadow-sm" style="height:120px; width:100%; object-fit:cover;">
               </a>
@@ -153,7 +153,7 @@
     <!-- ============ RIGHT COLUMN ============ -->
     <div>
       <!-- Status Management -->
-      <div class="ticket-info-card mb-3">
+      <div class="ticket-info-card mb-3x">
         <h2><i class="fas fa-tasks mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Gestão de Status</h2>
         
         {% if pode_status %}
@@ -161,10 +161,10 @@
             {% csrf_token %}
             <input type="hidden" name="acao" value="status">
             
-            <div class="form-group mb-3">
-              <label for="status-select">Alterar para:</label>
+            <div class="form-group mb-3x">
               <div class="br-input">
-                <select id="status-select" name="id_status" class="w-100" style="height:40px; border:1px solid #888; border-radius:4px;" required>
+                <label for="status-select">Alterar para:</label>
+                <select id="status-select" name="id_status" required>
                   {% for code, label in form_status.fields.id_status.choices %}
                     {% if code %}
                       <option value="{{ code }}" {% if ch.status_atual.pk == code %}selected{% endif %}>{{ label }}</option>
@@ -174,10 +174,10 @@
               </div>
             </div>
 
-            <div class="form-group mb-3">
-              <label for="prioridade-select">Prioridade (0 = sem classificação):</label>
+            <div class="form-group mb-3x">
               <div class="br-input">
-                <select id="prioridade-select" name="prioridade" class="w-100" style="height:40px; border:1px solid #888; border-radius:4px;">
+                <label for="prioridade-select">Prioridade (0 = sem classificação):</label>
+                <select id="prioridade-select" name="prioridade">
                   {% for val, lbl in prioridades %}
                     <option value="{{ val }}" {% if ch.prioridade == val %}selected{% endif %}>{{ lbl }}</option>
                   {% endfor %}
@@ -185,7 +185,7 @@
               </div>
             </div>
 
-            <div class="form-group mb-3">
+            <div class="form-group mb-3x">
               <div class="br-input">
                 <label for="resolucao-text">Resolução Final / Motivo</label>
                 <textarea id="resolucao-text" name="resolucao" rows="4" placeholder="Obrigatório para concluir ou cancelar.">{{ ch.resolucao|default:'' }}</textarea>

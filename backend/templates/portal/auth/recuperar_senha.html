@@ -2,10 +2,10 @@
 {# RECUPERAR SENHA — Formulario de email. Gera token criptografado (3 dias de validade). #}
 {% block title %}Recuperar senha{% endblock %}
 {% block content %}
-  <h1 class="mb-4">Recuperar senha</h1>
+  <h1 class="mb-4x">Recuperar senha</h1>
   <form method="post" class="col-md-6">
     {% csrf_token %}
-    <div class="br-input mb-3">
+    <div class="br-input mb-3x">
       <label for="id_email">{{ form.email.label }}</label>
       {{ form.email.errors }}
       {{ form.email }}

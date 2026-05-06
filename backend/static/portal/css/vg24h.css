@@ -11,20 +11,20 @@
        - Animated on scroll
    =================================================================== */
 
-/* ---- CSS Variables (project-level tokens) ---- */
+/* ---- CSS Variables (project-level tokens, mapped to GOV.BR DS) ---- */
 :root {
-  --vg-primary: #1351b4;
-  --vg-primary-dark: #071d41;
-  --vg-primary-light: #2670e8;
-  --vg-accent: #168821;
-  --vg-danger: #e52207;
-  --vg-warning: #ffcd07;
-  --vg-orange: #ff8c00;
-  --vg-bg-alt: #f0f0f0;
-  --vg-radius: 8px;
-  --vg-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --vg-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
-  --vg-transition: 0.25s ease;
+  --vg-primary: var(--interactive);
+  --vg-primary-dark: var(--blue-warm-vivid-90);
+  --vg-primary-light: var(--selected);
+  --vg-accent: var(--success);
+  --vg-danger: var(--danger);
+  --vg-warning: var(--warning);
+  --vg-orange: var(--orange-vivid-30);
+  --vg-bg-alt: var(--background-alternative);
+  --vg-radius: var(--surface-rounder-md);
+  --vg-shadow: var(--surface-shadow-sm);
+  --vg-shadow-lg: var(--surface-shadow-xl);
+  --vg-transition: var(--duration-fast) var(--animation-ease);
 }
 
 /* ---- Global Resets ---- */
@@ -58,74 +58,15 @@ img {
   height: auto;
 }
 
-/* ---- Utility Classes ---- */
-.text-center {
-  text-align: center;
-}
+/* ---- Utility Classes (custom, non-DS) ---- */
 .text-white {
-  color: #fff !important;
-}
-.mt-0 {
-  margin-top: 0;
-}
-.mb-0 {
-  margin-bottom: 0;
-}
-.mb-1 {
-  margin-bottom: 8px;
-}
-.mb-2 {
-  margin-bottom: 16px;
-}
-.mb-3 {
-  margin-bottom: 24px;
-}
-.mb-4 {
-  margin-bottom: 32px;
-}
-.mb-5 {
-  margin-bottom: 48px;
-}
-.mt-3 {
-  margin-top: 24px;
-}
-.mt-4 {
-  margin-top: 32px;
-}
-.mt-5 {
-  margin-top: 48px;
-}
-.pt-3 {
-  padding-top: 24px;
-}
-.pt-4 {
-  padding-top: 32px;
-}
-.pt-5 {
-  padding-top: 48px;
-}
-.pb-3 {
-  padding-bottom: 24px;
-}
-.pb-4 {
-  padding-bottom: 32px;
-}
-.pb-5 {
-  padding-bottom: 48px;
-}
-.px-3 {
-  padding-left: 24px;
-  padding-right: 24px;
-}
-.py-5 {
-  padding-top: 48px;
-  padding-bottom: 48px;
+  color: var(--pure-0) !important;
 }
 
 .container-custom {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 var(--spacing-scale-base);
 }
 
 /* ===================================================================
@@ -305,7 +246,7 @@ img {
 .service-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--vg-shadow-lg);
-  border-color: rgba(var(--rgb-primary-default), 0.15);
+  border-color: rgba(19, 81, 180, 0.15);
 }
 
 .service-card:hover::before {
@@ -390,7 +331,7 @@ img {
   align-items: center;
   justify-content: center;
   margin: 0 auto 20px;
-  box-shadow: 0 4px 20px rgba(var(--rgb-primary-default), 0.25);
+  box-shadow: 0 4px 20px rgba(19, 81, 180, 0.25);
   transition: transform var(--vg-transition);
 }
 
@@ -700,46 +641,9 @@ img {
 }
 
 /* ===================================================================
-   STATUS TAGS
+   STATUS TAGS — now using GOV native .br-tag.count + color classes
+   (.info, .warning, .success, .danger). Custom status-* classes removed.
    =================================================================== */
-.status-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 12px;
-  border-radius: 100px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
-.status-tag.ab {
-  background: #d4e5ff;
-  color: #0c326f;
-}
-.status-tag.ea {
-  background: #fff5c2;
-  color: #5c4809;
-}
-.status-tag.ee {
-  background: #fce2c5;
-  color: #5f3617;
-}
-.status-tag.co {
-  background: #e3f5e1;
-  color: #154c21;
-}
-.status-tag.ca {
-  background: #fde0db;
-  color: #5c1111;
-}
-
-/* br-tag status variants (used in dashboards) */
-.br-tag.status-ab { background: #d4e5ff; color: #0c326f; }
-.br-tag.status-ea { background: #fff5c2; color: #5c4809; }
-.br-tag.status-ee { background: #fce2c5; color: #5f3617; }
-.br-tag.status-co { background: #e3f5e1; color: #154c21; }
-.br-tag.status-ca { background: #fde0db; color: #5c1111; }
 
 /* ===================================================================
    HEADER AVATAR DROPDOWN FIX
@@ -961,7 +865,7 @@ img {
 .rating-stars .star {
   cursor: pointer;
   color: var(--gray-20, #ccc);
-  transition: color 0.15s;
+  transition: color var(--duration-very-fast);
 }
 
 .rating-stars .star.active,
@@ -980,7 +884,7 @@ img {
 
 .wizard-step {
   display: none;
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn var(--duration-fast) var(--animation-ease);
 }
 
 .wizard-step.active {
@@ -1073,7 +977,7 @@ img {
 
 .tab-content.active {
   display: block;
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn var(--duration-fast) var(--animation-ease);
 }
 
 /* ===================================================================
@@ -1103,7 +1007,7 @@ img {
   max-height: 90vh;
   overflow-y: auto;
   padding: 32px;
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn var(--duration-very-fast) var(--animation-ease);
 }
 
 .vg-modal h2 {
@@ -1119,10 +1023,7 @@ img {
 .page-breadcrumb {
   margin-bottom: 24px;
 }
-.br-breadcrumb .br-breadcrumb-list,
 .br-breadcrumb .crumb-list {
-  display: flex !important;
-  flex-direction: row !important;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;

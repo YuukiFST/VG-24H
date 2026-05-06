@@ -6,7 +6,7 @@
 {% block content %}
 <div class="dashboard-content">
   <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
-    <div class="br-breadcrumb-list">
+    <div class="crumb-list">
       <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
       <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
       <span class="crumb"><a href="{% url 'portal:gestao_estatisticas' %}">Administração</a></span>
@@ -15,7 +15,7 @@
     </div>
   </nav>
 
-  <div class="dashboard-header d-flex justify-content-between align-items-center mb-4">
+  <div class="dashboard-header d-flex justify-content-between align-items-center mb-4x">
     <div>
       <h1>Equipe Técnica e Colaboradores</h1>
       <p class="text-muted">Gerencie as contas de acesso para a equipe da Prefeitura.</p>
@@ -28,7 +28,12 @@
   <div class="br-card p-4">
     <div class="vg-table-wrapper">
       <div class="br-table">
-        <table class="table">
+        <div class="table-header">
+          <div class="top-bar">
+            <div class="table-title">Colaboradores</div>
+          </div>
+        </div>
+        <table>
           <thead>
             <tr>
               <th>Nome Completo</th>
@@ -78,56 +83,54 @@
 
 <!-- Modal Adicionar Colaborador -->
 <div class="br-modal" id="modal-add-colab">
-  <div class="container-fluid p-4">
-    <div class="br-modal-body">
-      <div class="br-modal-header">
-        <div class="br-modal-title">Novo Colaborador</div>
-        <button class="br-button circle small" type="button" data-dismiss="modal"><i class="fas fa-times"></i></button>
+  <div class="br-modal-header">
+    <div class="modal-title">Novo Colaborador</div>
+    <button class="close" type="button" data-dismiss="modal"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="br-modal-body">
+    <form action="{% url 'portal:gestao_colaboradores' %}" method="post">
+      {% csrf_token %}
+      <div class="br-input mt-3x">
+        <label for="id_nome_c">Nome Completo *</label>
+        <input id="id_nome_c" name="nome_completo" type="text" required />
       </div>
-      <form action="{% url 'portal:gestao_colaboradores' %}" method="post">
-        {% csrf_token %}
-        <div class="br-input mt-3">
-          <label for="id_nome_c">Nome Completo *</label>
-          <input id="id_nome_c" name="nome_completo" type="text" required />
-        </div>
-        <div class="form-row">
-          <div class="col-6">
-            <div class="br-input mb-3">
-              <label for="id_cpf_c">CPF *</label>
-              <input id="id_cpf_c" name="cpf" type="text" maxlength="11" placeholder="Somente números" required />
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="br-input mb-3">
-              <label for="id_nasc">Dt. Nascimento *</label>
-              <input id="id_nasc" name="dt_nascimento" type="date" required />
-            </div>
+      <div class="form-row">
+        <div class="col-6">
+          <div class="br-input mb-3x">
+            <label for="id_cpf_c">CPF *</label>
+            <input id="id_cpf_c" name="cpf" type="text" maxlength="11" placeholder="Somente números" required />
           </div>
         </div>
-        <div class="br-input mb-3">
-          <label for="id_email_c">E-mail *</label>
-          <input id="id_email_c" name="email" type="email" required />
-        </div>
-        <div class="form-row">
-          <div class="col-6">
-            <div class="br-input mb-3">
-              <label for="id_tel">Telefone *</label>
-              <input id="id_tel" name="telefone" type="text" required />
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="br-input mb-3">
-              <label for="id_pass">Senha Provisória *</label>
-              <input id="id_pass" name="senha_provisoria" type="password" required />
-            </div>
+        <div class="col-6">
+          <div class="br-input mb-3x">
+            <label for="id_nasc">Dt. Nascimento *</label>
+            <input id="id_nasc" name="dt_nascimento" type="date" required />
           </div>
         </div>
-        <div class="br-modal-footer justify-content-end mt-4">
-          <button class="br-button secondary mr-2" type="button" data-dismiss="modal">Cancelar</button>
-          <button class="br-button primary" type="submit">Criar Conta</button>
+      </div>
+      <div class="br-input mb-3x">
+        <label for="id_email_c">E-mail *</label>
+        <input id="id_email_c" name="email" type="email" required />
+      </div>
+      <div class="form-row">
+        <div class="col-6">
+          <div class="br-input mb-3x">
+            <label for="id_tel">Telefone *</label>
+            <input id="id_tel" name="telefone" type="text" required />
+          </div>
         </div>
-      </form>
-    </div>
+        <div class="col-6">
+          <div class="br-input mb-3x">
+            <label for="id_pass">Senha Provisória *</label>
+            <input id="id_pass" name="senha_provisoria" type="password" required />
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="br-modal-footer justify-content-end mt-4x">
+    <button class="br-button secondary mr-2" type="button" data-dismiss="modal">Cancelar</button>
+    <button class="br-button primary" type="submit">Criar Conta</button>
   </div>
 </div>
 {% endblock %}

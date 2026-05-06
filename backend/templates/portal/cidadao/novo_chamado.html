@@ -12,7 +12,7 @@
 <div class="dashboard-content">
   <!-- Breadcrumb -->
   <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
-    <div class="br-breadcrumb-list">
+    <div class="crumb-list">
       <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
       <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
       <span class="crumb"><a href="{% url 'portal:cidadao_chamados' %}">Meus Chamados</a></span>
@@ -21,17 +21,17 @@
     </div>
   </nav>
 
-  <h1 class="section-title mb-2" style="text-align:left;">Abrir Novo Chamado</h1>
-  <p class="mb-4" style="color:var(--gray-60);">Siga os passos abaixo para reportar um problema urbano.</p>
+  <h1 class="section-title mb-2x" style="text-align:left;">Abrir Novo Chamado</h1>
+  <p class="mb-4x" style="color:var(--gray-60);">Siga os passos abaixo para reportar um problema urbano.</p>
 
   <!-- Step Indicator -->
-  <div class="br-step mb-4" data-type="simple">
+  <div class="br-step mb-4x" data-type="simple">
     <div class="step-progress">
-      <div class="step-progress-btn" step-num="1" active title="Serviço"><span class="step-info">Serviço</span></div>
-      <div class="step-progress-btn" step-num="2" title="Detalhes"><span class="step-info">Detalhes</span></div>
-      <div class="step-progress-btn" step-num="3" title="Endereço"><span class="step-info">Endereço</span></div>
-      <div class="step-progress-btn" step-num="4" title="Foto"><span class="step-info">Foto</span></div>
-      <div class="step-progress-btn" step-num="5" title="Confirmação"><span class="step-info">Confirmar</span></div>
+      <button class="step-progress-btn" type="button" step-num="1" active title="Serviço"><span class="step-info">Serviço</span></button>
+      <button class="step-progress-btn" type="button" step-num="2" title="Detalhes"><span class="step-info">Detalhes</span></button>
+      <button class="step-progress-btn" type="button" step-num="3" title="Endereço"><span class="step-info">Endereço</span></button>
+      <button class="step-progress-btn" type="button" step-num="4" title="Foto"><span class="step-info">Foto</span></button>
+      <button class="step-progress-btn" type="button" step-num="5" title="Confirmação"><span class="step-info">Confirmar</span></button>
     </div>
   </div>
 
@@ -43,13 +43,13 @@
 
       <!-- STEP 1 — Categoria/Serviço -->
       <div class="wizard-step active" id="step-categoria">
-        <h2 class="mb-3" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
+        <h2 class="mb-3x" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
           Qual serviço você deseja solicitar?
         </h2>
         
         {% for cat in categorias %}
-          <div class="category-group mb-4">
-            <h3 class="h6 mb-2 text-uppercase text-muted" style="font-size:0.75rem; letter-spacing:1px; font-weight:700;">{{ cat.nome }}</h3>
+          <div class="category-group mb-4x">
+            <h3 class="h6 mb-2x text-uppercase text-muted" style="font-size:0.75rem; letter-spacing:1px; font-weight:700;">{{ cat.nome }}</h3>
             <div class="selection-grid">
               {% for svc in cat.servicos.all %}
                 <div class="selection-card {% if form.id_servico.value|add:0 == svc.id_servico %}selected{% endif %}" data-value="{{ svc.id_servico }}">
@@ -71,7 +71,7 @@
 
       <!-- STEP 2 — Detalhes -->
       <div class="wizard-step" id="step-detalhes">
-        <h2 class="mb-3" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
+        <h2 class="mb-3x" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
           Descreva o problema
         </h2>
         <div class="form-group">
@@ -100,19 +100,21 @@
 
       <!-- STEP 3 — Bairro -->
       <div class="wizard-step" id="step-endereco">
-        <h2 class="mb-3" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
+        <h2 class="mb-3x" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
           Localização do problema
         </h2>
         <div class="form-group">
-          <label for="chamado-bairro" style="display:block; font-size:.875rem; font-weight:600; margin-bottom:6px;">Bairro *</label>
-          <select id="chamado-bairro" name="id_bairro" style="width:100%; padding:10px; border:1px solid #888; border-radius:4px; font-family:inherit;" required>
-            <option value="">Selecione o bairro</option>
-            {% for bairro in bairros %}
-              <option value="{{ bairro.id_bairro }}" {% if form.id_bairro.value|add:0 == bairro.id_bairro %}selected{% endif %}>{{ bairro.nome_bairro }}</option>
-            {% endfor %}
-          </select>
+          <div class="br-input">
+            <label for="chamado-bairro">Bairro *</label>
+            <select id="chamado-bairro" name="id_bairro" required>
+              <option value="">Selecione o bairro</option>
+              {% for bairro in bairros %}
+                <option value="{{ bairro.id_bairro }}" {% if form.id_bairro.value|add:0 == bairro.id_bairro %}selected{% endif %}>{{ bairro.nome_bairro }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
-        <div class="form-group mt-3">
+        <div class="form-group mt-3x">
           <div class="br-input">
             <label for="chamado-ponto-ref">Ponto de referência (opcional)</label>
             <input
@@ -137,10 +139,10 @@
 
       <!-- STEP 4 — Foto -->
       <div class="wizard-step" id="step-foto">
-        <h2 class="mb-3" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
+        <h2 class="mb-3x" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
           Anexar foto do problema *
         </h2>
-        <p class="mb-3" style="color:var(--gray-60); font-size:.9375rem;">
+        <p class="mb-3x" style="color:var(--gray-60); font-size:.9375rem;">
           Uma foto é essencial para que a equipe identifique o problema e agilize o atendimento.
         </p>
         <div class="upload-area" id="upload-area" onclick="document.getElementById('chamado-foto').click();">
@@ -170,10 +172,10 @@
 
       <!-- STEP 5 — Confirmação -->
       <div class="wizard-step" id="step-confirmar">
-        <h2 class="mb-3" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
+        <h2 class="mb-3x" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
           Revise seus dados
         </h2>
-        <div class="summary-card mb-4">
+        <div class="summary-card mb-4x">
           <div class="summary-row">
             <span class="summary-label">Serviço</span>
             <span id="sum-servico">—</span>

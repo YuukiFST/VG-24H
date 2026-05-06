@@ -1,42 +1,51 @@
 {% extends "portal/base.html" %}
 {% block title %}Chamados — equipe{% endblock %}
 {% block content %}
-  <h1 class="mb-3">Chamados</h1>
-  <form method="get" class="row g-2 mb-4" aria-label="Filtros">
+  <h1 class="mb-3x">Chamados</h1>
+  <form method="get" class="row g-2 mb-4x" aria-label="Filtros">
     <div class="col-md-3">
       <label for="f_bairro">Bairro</label>
-      <select name="bairro" id="f_bairro" class="input">
-        <option value="">Todos</option>
-        {% for b in bairros %}
-        <option value="{{ b.pk }}" {% if filtro_bairro == b.pk %}selected{% endif %}>{{ b.nome }}</option>
-        {% endfor %}
-      </select>
+      <div class="br-input">
+        <select name="bairro" id="f_bairro">
+          <option value="">Todos</option>
+          {% for b in bairros %}
+          <option value="{{ b.pk }}" {% if filtro_bairro == b.pk %}selected{% endif %}>{{ b.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
     <div class="col-md-3">
       <label for="f_status">Status</label>
-      <select name="status" id="f_status" class="input">
-        <option value="">Todos</option>
-        {% for s in statuses %}
-        <option value="{{ s.pk }}" {% if filtro_status == s.pk %}selected{% endif %}>{{ s.sigla }} — {{ s.descricao }}</option>
-        {% endfor %}
-      </select>
+      <div class="br-input">
+        <select name="status" id="f_status">
+          <option value="">Todos</option>
+          {% for s in statuses %}
+          <option value="{{ s.pk }}" {% if filtro_status == s.pk %}selected{% endif %}>{{ s.sigla }} — {{ s.descricao }}</option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
     <div class="col-md-2">
       <label for="f_de">De</label>
-      <input type="date" name="de" id="f_de" value="{{ filtro_de }}" class="input" />
+      <div class="br-input"><input type="date" name="de" id="f_de" value="{{ filtro_de }}" /></div>
     </div>
     <div class="col-md-2">
       <label for="f_ate">Até</label>
-      <input type="date" name="ate" id="f_ate" value="{{ filtro_ate }}" class="input" />
+      <div class="br-input"><input type="date" name="ate" id="f_ate" value="{{ filtro_ate }}" /></div>
     </div>
     <div class="col-md-2 d-flex align-items-end">
       <button type="submit" class="br-button primary">Filtrar</button>
     </div>
   </form>
 
-  <div class="table-responsive">
-    <table class="table">
-      <caption class="sr-only">Chamados com indicador de prazo</caption>
+  <div class="br-table">
+    <div class="table-header">
+      <div class="top-bar">
+        <div class="table-title">Chamados</div>
+      </div>
+    </div>
+    <table>
+      <caption>Chamados com indicador de prazo</caption>
       <thead>
         <tr>
           <th scope="col">Semáforo</th>

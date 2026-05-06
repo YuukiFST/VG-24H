@@ -38,8 +38,8 @@
         {# ====== Skip Links (acessibilidade GOV.BR) ====== #}
         <nav class="br-skiplink" role="menubar">
             <a class="br-item" href="#main-content" role="menuitem" accesskey="1">Ir para o conteudo <span aria-hidden="true">(1/4)</span><span aria-hidden="true" class="br-tag text ml-1">1</span></a>
-            <a class="br-item" href="#header-navigation" role="menuitem" accesskey="2">Ir para o menu <span aria-hidden="true">(2/4)</span><span aria-hidden="true" class="br-tag text ml-1">2</span></a>
-            <a class="br-item" href="#main-searchbox" role="menuitem" accesskey="3">Ir para a busca <span aria-hidden="true">(3/4)</span><span aria-hidden="true" class="br-tag text ml-1">3</span></a>
+            <a class="br-item" href="#main-navigation" role="menuitem" accesskey="2">Ir para o menu <span aria-hidden="true">(2/4)</span><span aria-hidden="true" class="br-tag text ml-1">2</span></a>
+            <a class="br-item" href="#header" role="menuitem" accesskey="3">Ir para o cabecalho <span aria-hidden="true">(3/4)</span><span aria-hidden="true" class="br-tag text ml-1">3</span></a>
             <a class="br-item" href="#footer" role="menuitem" accesskey="4">Ir para o rodape <span aria-hidden="true">(4/4)</span><span aria-hidden="true" class="br-tag text ml-1">4</span></a>
         </nav>
 
@@ -54,6 +54,7 @@
                             <div class="header-sign">
                                 <a href="https://www.varzeagrande.mt.gov.br/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">Prefeitura de Varzea Grande</a> — VG 24H
                             </div>
+                        </a>
                     </div>
                     <div class="header-actions">
                         {# [!] notif_count vem do context_processors.navegacao (SQL count) #}
@@ -70,24 +71,24 @@
                         {# [!] Menu do usuario com nome + link de logout #}
                         <div class="header-login">
                             {% if request.portal_user %}
-                            <div class="header-avatar">
-                                <button class="br-button circle small" type="button" aria-label="Menu do usuario" data-toggle="dropdown">
-                                    <i class="fas fa-user-circle" aria-hidden="true" style="font-size:1.5rem; color:var(--vg-primary);"></i>
-                                </button>
-                                <div class="br-list">
-                                    <div class="header">
-                                        <div class="title">{{ request.portal_user.nome_completo|truncatechars:20 }}</div>
+                            <div class="header-avatar dropdown">
+                                    <button class="br-button circle small" type="button" aria-label="Menu do usuario" data-toggle="dropdown" data-target="avatar-menu">
+                                        <i class="fas fa-user-circle" aria-hidden="true" style="font-size:1.5rem; color:var(--vg-primary);"></i>
+                                    </button>
+                                    <div class="br-list" id="avatar-menu" hidden role="menu">
+                                        <div class="header">
+                                            <div class="title">{{ request.portal_user.nome_completo|truncatechars:20 }}</div>
+                                        </div>
+                                        {% if request.portal_user.perfil == 'CID' %}
+                                        <a class="br-item" href="{% url 'portal:cidadao_chamados' %}" role="menuitem">Meu Painel</a>
+                                        {% else %}
+                                        <a class="br-item" href="{% url 'portal:equipe_chamados' %}" role="menuitem">Meu Painel</a>
+                                        {% endif %}
+                                        <form action="{% url 'portal:logout' %}" method="post" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="br-item w-100 text-left border-0 bg-transparent" role="menuitem">Sair</button>
+                                        </form>
                                     </div>
-                                    {% if request.portal_user.perfil == 'CID' %}
-                                    <a class="br-item" href="{% url 'portal:cidadao_chamados' %}">Meu Painel</a>
-                                    {% else %}
-                                    <a class="br-item" href="{% url 'portal:equipe_chamados' %}">Meu Painel</a>
-                                    {% endif %}
-                                    <form action="{% url 'portal:logout' %}" method="post" style="display:inline;">
-                                        {% csrf_token %}
-                                        <button type="submit" class="br-item w-100 text-left border-0 bg-transparent">Sair</button>
-                                    </form>
-                                </div>
                             </div>
                             {% else %}
                             <div class="header-sign-in">
@@ -162,12 +163,12 @@
                                 <span class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
                             </a>
                             <ul>
-                                <li><a class="menu-item" href="{% url 'portal:gestao_estatisticas' %}"><span class="content text-sm">Estatisticas</span></a></li>
-                                <li><a class="menu-item" href="{% url 'portal:gestao_categorias' %}"><span class="content text-sm">Categorias</span></a></li>
-                                <li><a class="menu-item" href="{% url 'portal:gestao_servicos' %}"><span class="content text-sm">Servicos</span></a></li>
-                                <li><a class="menu-item" href="{% url 'portal:gestao_bairros' %}"><span class="content text-sm">Bairros</span></a></li>
-                                <li><a class="menu-item" href="{% url 'portal:gestao_colaboradores' %}"><span class="content text-sm">Colaboradores</span></a></li>
-                                <li><a class="menu-item" href="{% url 'portal:gestao_banners' %}"><span class="content text-sm">Banners</span></a></li>
+                                <li><a class="menu-item" href="{% url 'portal:gestao_estatisticas' %}"><span class="icon"></span><span class="content text-sm">Estatisticas</span></a></li>
+                                <li><a class="menu-item" href="{% url 'portal:gestao_categorias' %}"><span class="icon"></span><span class="content text-sm">Categorias</span></a></li>
+                                <li><a class="menu-item" href="{% url 'portal:gestao_servicos' %}"><span class="icon"></span><span class="content text-sm">Servicos</span></a></li>
+                                <li><a class="menu-item" href="{% url 'portal:gestao_bairros' %}"><span class="icon"></span><span class="content text-sm">Bairros</span></a></li>
+                                <li><a class="menu-item" href="{% url 'portal:gestao_colaboradores' %}"><span class="icon"></span><span class="content text-sm">Colaboradores</span></a></li>
+                                <li><a class="menu-item" href="{% url 'portal:gestao_banners' %}"><span class="icon"></span><span class="content text-sm">Banners</span></a></li>
                             </ul>
                         </div>
                         {% endif %}
@@ -182,7 +183,7 @@
         {# ====== MAIN CONTENT (mensagens + bloco content) ====== #}
         <main id="main-content">
             {% if messages %}
-            <div class="container-lg mt-3">
+            <div class="container-lg mt-3x">
                 {% for message in messages %}
                 {# mapeia 'error' do Django para 'danger' do GOV.br #}
                 {% if message.tags == 'error' %}
@@ -281,7 +282,7 @@
                     </div>
                 </div>
                 <div class="d-none d-sm-block">
-                    <div class="row align-items-end justify-content-between py-5">
+                    <div class="row align-items-end justify-content-between py-6x">
                         <div class="col">
                             <div class="social-network">
                                 <div class="social-network-title">Redes Sociais</div>
@@ -297,10 +298,10 @@
                     </div>
                 </div>
             </div>
-            <span class="br-divider my-3"></span>
+            <span class="br-divider"></span>
             <div class="container-lg">
                 <div class="info">
-                    <div class="text-down-01 text-medium pb-3">
+                    <div class="text-down-01 text-medium pb-3x">
                         Todo o conteudo deste site esta publicado sob a licenca
                         <strong>Creative Commons Atribuicao-SemDerivacoes 3.0.</strong>
                     </div>
@@ -308,12 +309,14 @@
             </div>
         </footer>
 
-        {% block extra_js %}{% endblock %}
     </div>
 
     {# JS do Design System GOV.BR + custom VG 24H #}
     <script src="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core-init.min.js"></script>
     <script src="{% static 'portal/js/vg24h.js' %}"></script>
+    <script src="{% static 'portal/govbr-message-close.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
 
     {# Instanciacao do footer accordion para mobile #}
     <script>

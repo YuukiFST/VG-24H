@@ -4,11 +4,11 @@
 <li class="crumb" data-active="active"><i class="icon fas fa-chevron-right" aria-hidden="true"></i><span tabindex="0" aria-current="page">Categorias e serviços</span></li>
 {% endblock %}
 {% block content %}
-  <h1 class="mb-3">Categorias e serviços oferecidos</h1>
+  <h1 class="mb-3x">Categorias e serviços oferecidos</h1>
   {% if q %}
-  <p class="text-down-01 mb-3" role="status">Resultados para “{{ q }}”. <a href="{% url 'portal:catalogo_servicos' %}">Limpar busca</a></p>
+  <p class="text-down-01 mb-3x" role="status">Resultados para “{{ q }}”. <a href="{% url 'portal:catalogo_servicos' %}">Limpar busca</a></p>
   {% endif %}
-  <p class="text-down-01 mb-4">
+  <p class="text-down-01 mb-4x">
     Consulte os tipos de solicitação disponíveis. Para registrar um problema, use
     {% if nav_user and nav_perfil == "CID" %}
     <a href="{% url 'portal:cidadao_chamado_novo' %}">Abrir chamado</a>.
@@ -17,9 +17,9 @@
     {% endif %}
   </p>
   {% for cat, servicos in blocos %}
-  <section class="mb-4" aria-labelledby="cat-{{ cat.pk }}">
-    <h2 class="h5 mb-2" id="cat-{{ cat.pk }}">{{ cat.nome }}</h2>
-    {% if cat.descricao %}<p class="text-down-01 mb-2">{{ cat.descricao }}</p>{% endif %}
+  <section class="mb-4x" aria-labelledby="cat-{{ cat.pk }}">
+    <h2 class="h5 mb-2x" id="cat-{{ cat.pk }}">{{ cat.nome }}</h2>
+    {% if cat.descricao %}<p class="text-down-01 mb-2x">{{ cat.descricao }}</p>{% endif %}
     <ul class="mb-0">
       {% for s in servicos %}
       <li><strong>{{ s.nome }}</strong>{% if s.descricao %} — {{ s.descricao }}{% endif %}</li>

@@ -21,51 +21,51 @@
 {% endblock %}
 
 {% block content %}
-<main id="main-content" class="py-5">
+<main id="main-content" class="py-6x">
   <div class="auth-card" style="margin: 0 auto; max-width: 600px;">
-    <div class="auth-logo text-center mb-4">
+    <div class="auth-logo text-center mb-4x">
       <img src="{% static 'img/logo.png' %}" alt="Logo Prefeitura de Várzea Grande" style="height:40px;" />
       <span style="font-size: 1.5rem; font-weight: bold; margin-left: 10px; vertical-align: middle;">VG 24H</span>
     </div>
 
     <h1 class="auth-title text-center">Criar sua conta</h1>
-    <p class="auth-subtitle text-center mb-4">Preencha os dados abaixo para se cadastrar como cidadão.</p>
+    <p class="auth-subtitle text-center mb-4x">Preencha os dados abaixo para se cadastrar como cidadão.</p>
 
     <form id="cadastro-form" action="{% url 'portal:cadastro' %}" method="post">
       {% csrf_token %}
       
       <!-- Dados Pessoais -->
-      <h3 class="mb-3 mt-4" style="font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 8px;">Dados Pessoais</h3>
+      <h3 class="mb-3x mt-4x" style="font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 8px;">Dados Pessoais</h3>
 
-      <div class="form-group mb-3">
+      <div class="form-group mb-3x">
         <div class="br-input">
           <label for="cad-nome">Nome completo <i class="fas fa-question-circle help-icon" title="Ex: Maria da Silva Oliveira"></i></label>
           <input id="cad-nome" name="nome_completo" type="text" placeholder="Seu nome completo" required />
         </div>
       </div>
 
-      <div class="form-group mb-3">
+      <div class="form-group mb-3x">
         <div class="br-input">
           <label for="cad-cpf">CPF <i class="fas fa-question-circle help-icon" title="Apenas números"></i></label>
           <input id="cad-cpf" name="cpf" type="text" placeholder="000.000.000-00" required maxlength="14" oninput="maskCPF(this)" />
         </div>
       </div>
 
-      <div class="form-group mb-3">
+      <div class="form-group mb-3x">
         <div class="br-input">
           <label for="cad-nascimento">Data de nascimento</label>
           <input id="cad-nascimento" name="dt_nascimento" type="date" required />
         </div>
       </div>
 
-      <div class="form-group mb-3">
+      <div class="form-group mb-3x">
         <div class="br-input">
           <label for="cad-telefone">Telefone <i class="fas fa-question-circle help-icon" title="Ex: (65) 99123-4567"></i></label>
           <input id="cad-telefone" name="telefone" type="tel" placeholder="(65) 99999-0000" required />
         </div>
       </div>
 
-      <div class="form-group mb-3">
+      <div class="form-group mb-3x">
         <div class="br-input">
           <label for="cad-email">E-mail <i class="fas fa-question-circle help-icon" title="Ex: maria.silva@gmail.com"></i></label>
           <input id="cad-email" name="email" type="email" placeholder="seu.email@exemplo.com" required />
@@ -73,16 +73,16 @@
       </div>
 
       <!-- Endereço -->
-      <h3 class="mb-3 mt-5" style="font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 8px;">Endereço</h3>
+      <h3 class="mb-3x mt-6x" style="font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 8px;">Endereço</h3>
 
       <div class="form-row">
-        <div class="form-group mb-3">
+        <div class="form-group mb-3x">
           <div class="br-input">
             <label for="cad-rua">Rua (opcional)</label>
             <input id="cad-rua" name="rua" type="text" placeholder="Nome da rua" />
           </div>
         </div>
-        <div class="form-group mb-3">
+        <div class="form-group mb-3x">
           <div class="br-input">
             <label for="cad-numero">Número (opcional)</label>
             <input id="cad-numero" name="num_endereco" type="text" placeholder="Nº" />
@@ -90,24 +90,26 @@
         </div>
       </div>
 
-      <div class="form-group mb-3">
+      <div class="form-group mb-3x">
         <div class="br-input">
           <label for="cad-complemento">Complemento (opcional) <i class="fas fa-question-circle help-icon" title="Ex: Apto 302, Bloco B"></i></label>
           <input id="cad-complemento" name="complemento_endereco" type="text" placeholder="Apto, bloco, etc." />
         </div>
       </div>
 
-      <div class="form-group mb-3">
+      <div class="form-group mb-3x">
         <label for="cad-bairro" style="display:block; font-size:.875rem; font-weight:600; margin-bottom:6px;">Bairro (opcional) <i class="fas fa-question-circle help-icon" title="Preencher ajuda a direcionar seu chamado à equipe responsável pelo bairro."></i></label>
-        <select id="cad-bairro" name="bairro_endereco" class="br-input" style="width:100%; padding:10px; border:1px solid #888; border-radius:4px; font-family:inherit;">
-          <option value="">Selecione o bairro</option>
-          {% for bairro in bairros %}
-            <option value="{{ bairro.nome_bairro }}">{{ bairro.nome_bairro }}</option>
-          {% endfor %}
-        </select>
+        <div class="br-input">
+          <select id="cad-bairro" name="bairro_endereco">
+            <option value="">Selecione o bairro</option>
+            {% for bairro in bairros %}
+              <option value="{{ bairro.nome_bairro }}">{{ bairro.nome_bairro }}</option>
+            {% endfor %}
+          </select>
+        </div>
       </div>
 
-      <div class="form-group mb-3">
+      <div class="form-group mb-3x">
         <div class="br-input">
           <label for="cad-cep">CEP (opcional)</label>
           <input id="cad-cep" name="cep_endereco" type="text" placeholder="78000-000" />
@@ -115,10 +117,10 @@
       </div>
 
       <!-- Segurança -->
-      <h3 class="mb-3 mt-5" style="font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 8px;">Segurança</h3>
+      <h3 class="mb-3x mt-6x" style="font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 8px;">Segurança</h3>
 
-      <div class="form-group mb-3">
-        <div class="br-input has-icon">
+      <div class="form-group mb-3x">
+        <div class="br-input input-button">
           <label for="cad-senha">Senha <i class="fas fa-question-circle help-icon" title="Mínimo de 6 caracteres"></i></label>
           <input id="cad-senha" name="senha" type="password" placeholder="Crie uma senha segura" required />
           <button class="br-button circle small" type="button" aria-label="Mostrar senha" onclick="togglePassword(this)">
@@ -127,8 +129,8 @@
         </div>
       </div>
 
-      <div class="form-group mb-4">
-        <div class="br-input has-icon">
+      <div class="form-group mb-4x">
+        <div class="br-input input-button">
           <label for="cad-senha-confirm">Confirmar senha</label>
           <input id="cad-senha-confirm" name="senha2" type="password" placeholder="Repita a senha" required />
           <button class="br-button circle small" type="button" aria-label="Mostrar senha" onclick="togglePassword(this)">
@@ -137,7 +139,7 @@
         </div>
       </div>
 
-      <div class="form-group mb-4">
+      <div class="form-group mb-4x">
         <div class="br-checkbox">
           <input type="checkbox" id="cad-termos" name="aceite_lgpd" required aria-label="Li e concordo com os Termos de Uso e a Política de Privacidade" />
           <label for="cad-termos">

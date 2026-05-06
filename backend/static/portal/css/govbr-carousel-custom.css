@@ -5,10 +5,11 @@
    =================================================================== */
 .br-carousel {
   --carousel-button-margin: var(--spacing-scale-default);
-  --carousel-buton-icon-size: var(--icon-size-base);
+  --carousel-button-icon-size: var(--icon-size-base);
   --carousel-step-height: 40px;
   --carousel-step-progress-min-height: 32px;
   --carousel-full-size: 100%;
+  --carousel-full-width: 100%;
   --carousel-min-height: 400px;
   --carousel-button-fix-height: 52px;
   --carousel-button-fix-width: 100px;
@@ -40,21 +41,21 @@
   overflow: hidden;
   position: absolute;
   top: 0;
-  transition-delay: 0s;
-  transition-duration: 0.5s;
-  transition-property: all;
-  transition-timing-function: ease-in-out;
-  visibility: hidden;
+   transition-delay: 0s;
+   transition-duration: var(--duration-moderate);
+   transition-property: all;
+   transition-timing-function: var(--animation-ease-in-out);
+   visibility: hidden;
   width: var(--carousel-full-size);
 }
 .br-carousel .carousel-stage .carousel-page[active] {
-  height: var(--carousel-full-size);
-  left: 0 !important;
-  opacity: 1;
-  transition-delay: 0s;
-  transition-duration: 0.5s;
-  transition-property: all;
-  transition-timing-function: ease-in-out;
+   height: var(--carousel-full-size);
+   left: 0 !important;
+   opacity: 1;
+   transition-delay: 0s;
+   transition-duration: var(--duration-moderate);
+   transition-property: all;
+   transition-timing-function: var(--animation-ease-in-out);
   visibility: visible;
 }
 .br-carousel .carousel-stage .carousel-page .carousel-content {
@@ -91,9 +92,6 @@
   cursor: default;
   margin: 0;
 }
-.br-carousel .carousel-step .br-step[data-type=text] .step-progress .step-progress-btn.focus-visible::before {
-  outline-color: transparent !important;
-}
 .br-carousel .carousel-button {
   align-items: center;
   display: flex;
@@ -115,7 +113,7 @@
 }
 .br-carousel .carousel-button .carousel-btn-next i.fas,
 .br-carousel .carousel-button .carousel-btn-prev i.fas {
-  font-size: var(--carousel-buton-icon-size);
+  font-size: var(--carousel-button-icon-size);
 }
 .br-carousel[data-stage=in] .carousel-button {
   height: var(--carousel-full-size);
