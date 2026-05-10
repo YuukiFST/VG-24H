@@ -101,6 +101,20 @@
                         </div>
                     </div>
                 </div>
+                {# [!] GOV.BR DS: header-bottom contem o acionador do Menu e titulo #}
+                <div class="header-bottom">
+                    <div class="header-menu">
+                        <div class="header-menu-trigger">
+                            <button class="br-button small circle" type="button" aria-label="Menu Principal" data-toggle="menu" data-target="#main-navigation" id="navigation-trigger">
+                                <i class="fas fa-bars" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div class="header-info">
+                            <div class="header-title">VG 24H</div>
+                            <div class="header-subtitle">Portal de Servicos Publicos</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -111,7 +125,7 @@
                 <div class="menu-panel">
                     <div class="menu-header">
                         <div class="menu-title">
-                            <img src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-positive.png" alt="logo gov.br" />
+                            <img src="{% static 'img/logo.png' %}" alt="Prefeitura de Varzea Grande" style="max-height:32px;" />
                             <span>VG 24H</span>
                         </div>
                         <div class="menu-close">
@@ -147,30 +161,23 @@
                             <span class="content">Meus Chamados</span>
                         </a>
                         {% endif %}
-                        {# Logado como COL ou GES: gestao de chamados #}
+                        {# Logado como COL ou GES: Dashboard + gestao de chamados #}
                         {% if request.portal_user.perfil == 'COL' or request.portal_user.perfil == 'GES' %}
+                        <a class="menu-item divider" href="{% url 'portal:equipe_dashboard' %}" role="treeitem">
+                            <span class="icon"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
+                            <span class="content">Dashboard</span>
+                        </a>
                         <a class="menu-item divider" href="{% url 'portal:equipe_chamados' %}" role="treeitem">
                             <span class="icon"><i class="fas fa-tasks" aria-hidden="true"></i></span>
                             <span class="content">Gestao de Chamados</span>
                         </a>
                         {% endif %}
-                        {# [!] APENAS GES: submenu de administracao #}
+                        {# [!] APENAS GES: link direto para gestao de banners #}
                         {% if request.portal_user.perfil == 'GES' %}
-                        <div class="menu-folder">
-                            <a class="menu-item" href="javascript:void(0)" role="treeitem">
-                                <span class="icon"><i class="fas fa-shield-alt" aria-hidden="true"></i></span>
-                                <span class="content">Administracao</span>
-                                <span class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
-                            </a>
-                            <ul>
-                                <li><a class="menu-item" href="{% url 'portal:gestao_estatisticas' %}"><span class="icon"></span><span class="content text-sm">Estatisticas</span></a></li>
-                                <li><a class="menu-item" href="{% url 'portal:gestao_categorias' %}"><span class="icon"></span><span class="content text-sm">Categorias</span></a></li>
-                                <li><a class="menu-item" href="{% url 'portal:gestao_servicos' %}"><span class="icon"></span><span class="content text-sm">Servicos</span></a></li>
-                                <li><a class="menu-item" href="{% url 'portal:gestao_bairros' %}"><span class="icon"></span><span class="content text-sm">Bairros</span></a></li>
-                                <li><a class="menu-item" href="{% url 'portal:gestao_colaboradores' %}"><span class="icon"></span><span class="content text-sm">Colaboradores</span></a></li>
-                                <li><a class="menu-item" href="{% url 'portal:gestao_banners' %}"><span class="icon"></span><span class="content text-sm">Banners</span></a></li>
-                            </ul>
-                        </div>
+                        <a class="menu-item divider" href="{% url 'portal:gestao_banners' %}" role="treeitem">
+                            <span class="icon"><i class="fas fa-image" aria-hidden="true"></i></span>
+                            <span class="content">Banners</span>
+                        </a>
                         {% endif %}
                         {% endif %}
                     </nav>
@@ -318,13 +325,22 @@
 
     {% block extra_js %}{% endblock %}
 
-    {# Instanciacao do footer accordion para mobile #}
+    {# Instanciacao dos componentes GOV.BR (Menu + Footer) #}
     <script>
-        if (typeof core !== 'undefined' && core.BRFooter) {
-            document.querySelectorAll('.br-footer').forEach(function (el) {
-                new core.BRFooter('br-footer', el);
-            });
-        }
+        document.addEventListener('DOMContentLoaded', function () {
+            /* [!] BRMenu — instancia o menu lateral com toggle/scrim/folders */
+            if (typeof core !== 'undefined' && core.BRMenu) {
+                document.querySelectorAll('.br-menu').forEach(function (el) {
+                    new core.BRMenu('br-menu', el);
+                });
+            }
+            /* [!] BRFooter — accordion do rodape em mobile */
+            if (typeof core !== 'undefined' && core.BRFooter) {
+                document.querySelectorAll('.br-footer').forEach(function (el) {
+                    new core.BRFooter('br-footer', el);
+                });
+            }
+        });
     </script>
 </body>
 </html>

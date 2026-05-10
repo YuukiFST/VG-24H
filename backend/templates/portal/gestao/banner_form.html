@@ -1,44 +1,109 @@
 {% extends "portal/base.html" %}
+{% load static %}
 {% block title %}{% if banner %}Editar Banner{% else %}Novo Banner{% endif %} — Gestão{% endblock %}
-{% block content %}
-<div class="dashboard-content">
-  <h1 class="h3 mb-4x">{% if banner %}Editar Banner: {{ banner.titulo }}{% else %}Novo Banner{% endif %}</h1>
 
-  <form method="post" enctype="multipart/form-data" class="col-lg-8">
+{% block content %}
+<div class="container-lg py-5">
+
+  {# ====== Breadcrumb (GOV.BR DS) ====== #}
+  <div class="br-breadcrumb mb-4x" aria-label="Navegação estrutural">
+    <ul>
+      <li><a class="br-item" href="{% url 'portal:equipe_chamados' %}">Painel</a></li>
+      <li><a class="br-item" href="{% url 'portal:gestao_banners' %}">Banners</a></li>
+      <li><span class="br-item active" aria-current="page">{% if banner %}Editar{% else %}Novo{% endif %}</span></li>
+    </ul>
+  </div>
+
+  {# ====== Título da página (tipografia h3 GOV.BR) ====== #}
+  <h1 class="h3 text-weight-semi-bold mb-1x">
+    {% if banner %}Editar Banner{% else %}Novo Banner{% endif %}
+  </h1>
+  <p class="text-down-01 mb-5x" style="color:var(--gray-60);">
+    {% if banner %}Atualize as informações do banner exibido na página inicial.{% else %}Preencha os campos abaixo para criar um novo banner na página inicial.{% endif %}
+  </p>
+
+  <form method="post" enctype="multipart/form-data" class="col-lg-8 col-md-10">
     {% csrf_token %}
-    <div class="br-input mb-3x">
-      <label for="titulo">Título *</label>
-      <input id="titulo" name="titulo" type="text" maxlength="100" required value="{{ banner.titulo|default:'' }}" />
+
+    {# ── Campo: Título (br-input — obrigatório) ── #}
+    <div class="br-input mb-4x" id="field-titulo">
+      <label for="titulo">Título</label>
+      <input id="titulo" name="titulo" type="text" maxlength="100" required
+             placeholder="Informe o título do banner"
+             value="{{ banner.titulo|default:'' }}" />
+      <p class="text-down-02 mt-half" style="color:var(--gray-50);">
+        Texto exibido como identificação do banner. Máximo de 100 caracteres.
+      </p>
     </div>
-    <div class="br-input mb-3x">
-      <label for="descricao">Descrição (até 300 caracteres)</label>
-      <textarea id="descricao" name="descricao" rows="3" maxlength="300">{{ banner.descricao|default:'' }}</textarea>
+
+    {# ── Campo: Descrição (br-textarea — opcional) ── #}
+    <div class="br-textarea mb-4x" id="field-descricao">
+      <label for="descricao">Descrição</label>
+      <textarea id="descricao" name="descricao" rows="4" maxlength="300"
+                placeholder="Descreva brevemente o conteúdo do banner">{{ banner.descricao|default:'' }}</textarea>
+      <p class="text-down-02 mt-half" style="color:var(--gray-50);">
+        Texto de apoio para o banner. Máximo de 300 caracteres. Campo opcional.
+      </p>
     </div>
-    <div class="br-input mb-3x">
-      <label for="link">Link (opcional — abre em nova aba ao clicar no banner)</label>
-      <input id="link" name="link" type="url" maxlength="500" value="{{ banner.link|default:'' }}" />
+
+    {# ── Campo: Link (br-input — opcional) ── #}
+    <div class="br-input mb-4x" id="field-link">
+      <label for="link">Link de destino</label>
+      <input id="link" name="link" type="url" maxlength="500"
+             placeholder="https://exemplo.gov.br/pagina"
+             value="{{ banner.link|default:'' }}" />
+      <p class="text-down-02 mt-half" style="color:var(--gray-50);">
+        Endereço que será aberto em nova aba ao clicar no banner. Campo opcional.
+      </p>
     </div>
-    <div class="br-input mb-3x">
-      <label for="ordem">Ordem de exibição (menor = primeiro)</label>
-      <input id="ordem" name="ordem" type="number" min="0" value="{{ banner.ordem|default:0 }}" />
+
+    {# ── Campo: Ordem (br-input — numérico) ── #}
+    <div class="br-input mb-4x" id="field-ordem">
+      <label for="ordem">Ordem de exibição</label>
+      <input id="ordem" name="ordem" type="number" min="0"
+             placeholder="0"
+             value="{{ banner.ordem|default:0 }}" />
+      <p class="text-down-02 mt-half" style="color:var(--gray-50);">
+        Banners com menor valor aparecem primeiro no carrossel.
+      </p>
     </div>
-    <div class="br-input mb-3x">
-      <label for="imagem">
-        Imagem{% if not banner %} *{% endif %}
+
+    {# ── Imagem atual (apenas edição) ── #}
+    {% if banner and banner.url_imagem %}
+    <div class="mb-4x">
+      <p class="text-weight-semi-bold text-down-01 mb-1x">Imagem atual</p>
+      <img src="{{ banner.url_imagem }}" alt="Imagem atual do banner: {{ banner.titulo }}"
+           style="max-width:360px; border-radius:var(--surface-rounder-sm); border:1px solid var(--gray-10);" />
+      <p class="text-down-02 mt-1x" style="color:var(--gray-50);">
+        Selecione uma nova imagem abaixo para substituir a atual.
+      </p>
+    </div>
+    {% endif %}
+
+    {# ── Campo: Upload de imagem (br-upload — GOV.BR DS) ── #}
+    <div class="br-upload mb-5x" id="field-imagem">
+      <label class="upload-label" for="imagem">
+        <span>Envio de imagem{% if not banner %} (obrigatório){% endif %}</span>
       </label>
-      {% if banner and banner.url_imagem %}
-        <div class="mb-2x">
-          <img src="{{ banner.url_imagem }}" alt="Imagem atual" style="max-width:300px;border-radius:8px;" />
-          <p class="text-muted" style="font-size:.8125rem;">Selecione uma nova imagem para substituir a atual.</p>
-        </div>
-      {% endif %}
-      <input id="imagem" name="imagem" type="file" accept="image/*" {% if not banner %}required{% endif %} />
+      <input class="upload-input" id="imagem" name="imagem"
+             type="file" accept="image/*"
+             aria-label="Enviar imagem do banner"
+             {% if not banner %}required{% endif %} />
+      <div class="upload-list"></div>
+      <p class="text-down-02 mt-half" style="color:var(--gray-50);">
+        Formatos aceitos: JPG, PNG, WebP. Resolução recomendada: 1120×240 pixels.
+      </p>
     </div>
-    <div class="d-flex gap-2 mt-4x">
+
+    {# ── Botões de ação (GOV.BR DS — UX Writing: iniciais maiúsculas) ── #}
+    <div class="d-flex mt-3x" style="gap:var(--spacing-scale-2x);">
       <button type="submit" class="br-button primary">
-        <i class="fas fa-save" aria-hidden="true"></i> Salvar
+        <i class="fas fa-save" aria-hidden="true"></i>
+        {% if banner %}Salvar Alterações{% else %}Criar Banner{% endif %}
       </button>
-      <a href="{% url 'portal:gestao_banners' %}" class="br-button secondary">Cancelar</a>
+      <a href="{% url 'portal:gestao_banners' %}" class="br-button secondary">
+        Cancelar
+      </a>
     </div>
   </form>
 </div>

@@ -23,49 +23,32 @@ Start-Sleep 1
 
 "--- Servidor iniciado em $(Get-Date) ---" | Out-File $LogFile -Encoding UTF8
 
-# Inicia o servidor Django como processo independente
-$psi = New-Object System.Diagnostics.ProcessStartInfo
-$psi.FileName = "uv"
-$psi.Arguments = "run --project . python manage.py runserver 0.0.0.0:$Port --noreload"
-$psi.WorkingDirectory = $BackendDir
-$psi.UseShellExecute = $false
-$psi.RedirectStandardOutput = $true
-$psi.RedirectStandardError = $true
-$psi.CreateNoWindow = $true
-
-$proc = [System.Diagnostics.Process]::Start($psi)
-
-# Le a saida em tempo real procurando a mensagem de startup
-$reader = $proc.StandardOutput
-$timeout = 30
-$started = $false
+# Inicia o servidor Django redirecionando a saida direto para o log
+$pythonExe = Join-Path $BackendDir ".venv\Scripts\python.exe"
+$args = "-u manage.py runserver 0.0.0.0:$Port --noreload"
+$cmdArgs = "/c `"$pythonExe -u manage.py runserver 0.0.0.0:$Port --noreload > `"$LogFile`" 2>&1`""
+$proc = Start-Process -FilePath "cmd.exe" -ArgumentList $cmdArgs -WorkingDirectory $BackendDir -WindowStyle Hidden -PassThru
 
 Write-Host "Aguardando servidor iniciar" -NoNewline
 
+$timeout = 30
+$started = $false
+
 while ($timeout -gt 0) {
-    $line = $reader.ReadLine()
-    if ($line -ne $null) {
-        Add-Content $LogFile $line -Encoding UTF8
-        if ($line -like "*Starting development server*") {
+    if (Test-Path $LogFile) {
+        # Le o conteudo do arquivo log sem travar
+        $content = Get-Content $LogFile -ErrorAction SilentlyContinue
+        if ($content -match "Starting development server") {
             $started = $true
             Write-Host " OK!" -ForegroundColor Green
             break
         }
-    } else {
-        Write-Host "." -NoNewline
-        Start-Sleep 1
-        $timeout--
     }
+    
+    Write-Host "." -NoNewline
+    Start-Sleep 1
+    $timeout--
 }
-
-# Le o restante da saida em background
-Start-Job -Name "vg24h_log" -ScriptBlock {
-    param($r, $log)
-    while (-not $r.EndOfStream) {
-        $l = $r.ReadLine()
-        if ($l) { Add-Content $log $l -Encoding UTF8 }
-    }
-} -ArgumentList $reader, $LogFile | Out-Null
 
 if (-not $started) {
     Write-Host " TIMEOUT" -ForegroundColor Red
@@ -74,14 +57,28 @@ if (-not $started) {
 }
 
 Write-Host ""
-Write-Host "Servidor rodando em: http://127.0.0.1:$Port/" -ForegroundColor Green
-Write-Host "Log: $LogFile" -ForegroundColor DarkGray
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "  Servidor VG 24H iniciado!" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
+Write-Host ""
+Write-Host "  Local:   http://127.0.0.1:$Port/" -ForegroundColor Cyan
+
+# Mostra o IP da rede local para acesso por outros dispositivos
+$lanIp = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.PrefixOrigin -eq 'Dhcp' -or $_.PrefixOrigin -eq 'Manual' } | Select-Object -First 1).IPAddress
+if ($lanIp) {
+    Write-Host "  Rede:    http://${lanIp}:$Port/" -ForegroundColor Cyan
+}
+
+Write-Host ""
+Write-Host "  Log:     $LogFile" -ForegroundColor DarkGray
 Write-Host ""
 
 if (-not $NoBrowser) {
     Start-Process "http://127.0.0.1:$Port/"
+    Write-Host "  Navegador aberto automaticamente." -ForegroundColor DarkGray
 }
 
+Write-Host ""
 Write-Host "Para parar o servidor, feche este terminal ou pressione Ctrl+C" -ForegroundColor Yellow
 Write-Host ""
 

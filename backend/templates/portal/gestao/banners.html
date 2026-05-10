@@ -1,37 +1,52 @@
 {% extends "portal/base.html" %}
 {% block title %}Banners — Gestão{% endblock %}
 {% block content %}
-<div class="dashboard-content">
-  <div class="d-flex justify-content-between align-items-center mb-4x">
-    <h1 class="h3">Banners da Página Inicial</h1>
+<div class="container-lg py-5">
+
+  {# ====== Cabeçalho da página ====== #}
+  <div class="d-flex justify-content-between align-items-center mb-2x">
+    <div>
+      <h1 class="h3 text-weight-semi-bold mb-half">Banners da Página Inicial</h1>
+      <p class="text-down-01" style="color:var(--gray-60);">
+        Gerencie os banners exibidos no carrossel da página inicial do portal.
+      </p>
+    </div>
     <a href="{% url 'portal:gestao_banner_novo' %}" class="br-button primary small">
       <i class="fas fa-plus" aria-hidden="true"></i> Novo Banner
     </a>
   </div>
 
   {% if banners %}
-  <div class="br-table">
+  <div class="br-table" data-search="off" data-selection="off">
     <div class="table-header">
       <div class="top-bar">
-        <div class="table-title">Banners</div>
+        <div class="table-title" aria-label="Tabela de banners cadastrados">Banners cadastrados</div>
       </div>
     </div>
     <table>
       <thead>
         <tr>
-          <th>Ordem</th>
-          <th>Imagem</th>
-          <th>Título</th>
-          <th>Status</th>
-          <th style="text-align:right;">Ações</th>
+          <th scope="col">Ordem</th>
+          <th scope="col">Imagem</th>
+          <th scope="col">Título</th>
+          <th scope="col">Status</th>
+          <th scope="col" style="text-align:right;">Ações</th>
         </tr>
       </thead>
       <tbody>
         {% for b in banners %}
         <tr>
           <td>{{ b.ordem }}</td>
-          <td><img src="{{ b.url_imagem }}" alt="{{ b.titulo }}" style="width:120px;height:60px;object-fit:cover;border-radius:4px;"></td>
-          <td><strong>{{ b.titulo }}</strong>{% if b.descricao %}<br><small class="text-muted">{{ b.descricao|truncatechars:60 }}</small>{% endif %}</td>
+          <td>
+            <img src="{{ b.url_imagem }}" alt="Miniatura do banner: {{ b.titulo }}"
+                 style="width:120px; height:60px; object-fit:cover; border-radius:var(--surface-rounder-sm);" />
+          </td>
+          <td>
+            <strong class="text-weight-semi-bold">{{ b.titulo }}</strong>
+            {% if b.descricao %}
+              <br><span class="text-down-02" style="color:var(--gray-50);">{{ b.descricao|truncatechars:60 }}</span>
+            {% endif %}
+          </td>
           <td>
             {% if b.ativo %}
               <span class="br-tag success small">Ativo</span>
@@ -40,12 +55,16 @@
             {% endif %}
           </td>
           <td style="text-align:right;">
-            <a href="{% url 'portal:gestao_banner_editar' b.pk %}" class="br-button small secondary" title="Editar">
+            <a href="{% url 'portal:gestao_banner_editar' b.pk %}" class="br-button small secondary"
+               aria-label="Editar banner {{ b.titulo }}">
               <i class="fas fa-edit" aria-hidden="true"></i>
             </a>
-            <form action="{% url 'portal:gestao_banner_excluir' b.pk %}" method="post" style="display:inline;" onsubmit="return confirm('Excluir este banner?')">
+            <form action="{% url 'portal:gestao_banner_excluir' b.pk %}" method="post"
+                  style="display:inline;"
+                  onsubmit="return confirm('Tem certeza que deseja excluir o banner &quot;{{ b.titulo }}&quot;?')">
               {% csrf_token %}
-              <button type="submit" class="br-button small danger" title="Excluir">
+              <button type="submit" class="br-button small danger"
+                      aria-label="Excluir banner {{ b.titulo }}">
                 <i class="fas fa-trash" aria-hidden="true"></i>
               </button>
             </form>
@@ -55,10 +74,23 @@
       </tbody>
     </table>
   </div>
+
   {% else %}
-  <div class="br-message info" role="alert">
+
+  {# ====== Empty State (Gov.br microcopy: orientação útil) ====== #}
+  <div class="br-message info mt-4x" role="alert">
     <div class="icon"><i class="fas fa-info-circle fa-lg" aria-hidden="true"></i></div>
-    <div class="content">Nenhum banner cadastrado. Clique em "Novo Banner" para adicionar.</div>
+    <div class="content">
+      <span class="message-title">Nenhum banner cadastrado.</span>
+      <span class="message-body">
+        Para adicionar banners à página inicial, utilize o botão "Novo Banner" acima.
+      </span>
+    </div>
+    <div class="close">
+      <button class="br-button circle small" type="button" aria-label="Fechar alerta" data-dismiss="alert">
+        <i class="fas fa-times" aria-hidden="true"></i>
+      </button>
+    </div>
   </div>
   {% endif %}
 </div>
