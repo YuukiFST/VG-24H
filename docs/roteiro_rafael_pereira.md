@@ -125,10 +125,8 @@ O model `HistoricoChamado` agora tem `related_name="historicos"` para facilitar 
 
 | Função | O que faz |
 |---|---|
-| `proximo_protocolo()` | Gera protocolo `20260001` |
-| `salvar_foto_upload()` | Cloudinary ou local |
-| `sigla_status(chamado)` | Retorna `chamado.sigla_status` (property do model) |
-| `cor_semaforo(chamado)` | verde/amarelo/vermelho |
+| `proximo_protocolo()` | Gera protocolo `20260001` via SQL puro (`SELECT MAX(num_protocolo)...`) |
+| `salvar_foto_upload()` | Upload de foto para Cloudinary ou local |
 
 ### 7. Infraestrutura
 
@@ -157,10 +155,11 @@ O model `HistoricoChamado` agora tem `related_name="historicos"` para facilitar 
 
 | Arquivo | Conteúdo |
 |---|---|
-| `models.py` | 12 classes para estrutura. `Chamado` com properties `status_atual`, `sigla_status` |
-| `middleware.py` | Autenticação dual + `set_config` PG |
+| `models.py` | 12 classes para estrutura. `Chamado` com properties `status_atual`, `sigla_status`, `cor_semaforo` |
+| `db.py` | **Camada de acesso a dados** — 14 funções SQL puro centralizadas (buscar chamado, históricos, fotos, status, semáforo, paginação). Usado por todas as views |
+| `middleware.py` | Autenticação dual via `db.py` + `set_config` PG |
 | `decorators.py` | `@perfis()` |
-| `utils.py` | Protocolo, upload, semáforo |
+| `utils.py` | Protocolo (`proximo_protocolo`), upload de foto (`salvar_foto_upload`) |
 | `context_processors.py` | `nav_user`, `nav_perfil`, `notif_count` |
 | `migrations/0001_initial.py` | Migration inicial |
 

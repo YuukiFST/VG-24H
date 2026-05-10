@@ -53,7 +53,7 @@ Bruno é responsável por toda a **experiência do cidadão** no portal: desde o
 
 ### 3. Módulo do Cidadão (Plano §3.1 — Módulo do Cidadão)
 
-> Todas as views do cidadão usam o decorator `@perfis("CID")`. O **status do chamado NÃO é um campo direto** — ele vem do **último registro de `historico_chamado`** via a property `ch.status_atual` / `ch.sigla_status`.
+> Todas as views do cidadão usam o decorator `@perfis("CID")`. O **status do chamado NÃO é um campo direto** — ele vem do **último registro de `historico_chamado`** calculado pela função `db.popular_status(ch)` (em `portal/db.py`), que popula `ch.status_atual`, `ch.sigla_status` e `ch.cor_semaforo` via SQL puro.
 
 **Siglas de status:**
 - `AB` = Aberto, `EA` = Em Análise, `EE` = Em Execução, `CO` = Concluído, `CA` = Cancelado
@@ -122,6 +122,7 @@ Bruno é responsável por toda a **experiência do cidadão** no portal: desde o
 | `views_auth.py` | `backend/portal/views_auth.py` | Login dual, cadastro, recuperação, troca de senha, logout |
 | `views_cidadao.py` | `backend/portal/views_cidadao.py` | Dashboard, novo chamado, detalhe (obs/foto/cancelar/avaliar), notificações |
 | `views_root.py` | `backend/portal/views_root.py` | Homepage + catálogo de serviços |
+| `db.py` | `backend/portal/db.py` | **Camada de acesso a dados** — centraliza TODAS as queries SQL puro (buscar chamado, históricos, fotos, status, semáforo, paginação) |
 | `forms.py` | `backend/portal/forms.py` | Todos os formulários de validação do cidadão |
 | `urls.py` | `backend/portal/urls.py` | Suas rotas: `accounts/*`, `cidadao/*`, raiz (`""`, `servicos/`) |
 

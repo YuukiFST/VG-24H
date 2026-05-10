@@ -13,7 +13,7 @@ backend/
 │   ├── root.html               ← Homepage pública
 │   ├── auth/                   ← Telas de autenticação (5 arquivos)
 │   ├── cidadao/                ← Telas do cidadão (7 arquivos)
-│   ├── equipe/                 ← Telas da equipe COL/GES (3 arquivos)
+│   ├── equipe/                 ← Telas da equipe COL/GES (4 arquivos)
 │   ├── gestao/                 ← Telas do gestor GES (10 arquivos)
 │   └── public/                 ← Telas públicas (2 arquivos)
 │
@@ -22,7 +22,9 @@ backend/
 │   │   └── logo.png            ← Logo do sistema
 │   └── portal/
 │       ├── css/
-│       │   └── vg24h.css       ← CSS principal (todos os estilos customizados)
+│       │   ├── vg24h.css                ← CSS principal (todos os estilos customizados)
+│       │   ├── govbr-carousel-custom.css ← Estilos do carousel Gov.br
+│       │   └── govbr-category-cards.css  ← Estilos dos cards de categoria
 │       ├── js/
 │       │   └── vg24h.js        ← JavaScript principal (carousel, menus, forms)
 │       ├── govbr-layout.css    ← Ajustes layout Gov.br
@@ -138,9 +140,10 @@ backend/
 
 | Arquivo | URL | O que faz |
 |---|---|---|
-| `dashboard.html` (7 KB) | `/equipe/chamados/` | **Dashboard Semáforo**: cards verde/amarelo/vermelho + tabela de chamados com filtros (bairro, status, data). |
-| `chamados_lista.html` (3 KB) | — | Lista de chamados tabular (pode ser include). |
+| `dashboard.html` (7 KB) | `/equipe/` | **Dashboard Semáforo**: cards verde/amarelo/vermelho + gráficos Chart.js + resumo geral. |
+| `chamados_lista.html` (3 KB) | `/equipe/chamados/` | Lista de chamados tabular com filtros (bairro, status, data). |
 | `chamado_detalhe.html` (11 KB) | `/equipe/chamados/<id>/` | Detalhe para equipe: alterar status (dropdown), definir prioridade (0-5), adicionar observação, upload de foto de comprovação. |
+| `estatisticas_graficos.html` | — | Partial com gráficos Chart.js (incluído pelo dashboard). |
 
 ### Perguntas frequentes:
 

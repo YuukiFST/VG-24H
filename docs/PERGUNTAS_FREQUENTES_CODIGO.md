@@ -11,18 +11,16 @@ Este documento reúne perguntas frequentes sobre "Onde acontece tal coisa no có
 Quando o usuário digita e-mail e senha e clica em "Entrar", os dados são enviados para a `login_view`. Para atender a exigência da disciplina, o sistema utiliza **SQL puro** (via `connection.cursor()`) em todas as operações de banco de dados. Como existem as tabelas separadas `Cidadao` e `Servidor`, ocorre uma **busca dual**:
 
 ```python
-with connection.cursor() as cursor:
-    # SELECT na tabela 'cidadao' — busca pelo email informado
-    cursor.execute(
-        "SELECT id_cidadao, nome_completo, senha_hash, perfil, senha_temporaria "
-        "FROM cidadao "
-        "WHERE LOWER(email) = %s AND ativo = TRUE",
-        [email],
-    )
-    row = cursor.fetchone()
-    # Se não encontrar, faz um SELECT na tabela 'servidor'...
+# views_auth.py — delega a busca SQL para o modulo db.py
+# db.py centraliza TODAS as queries SQL do projeto.
+user = db.buscar_cidadao_por_email(email)
+tipo = "cidadao"
+if not user:
+    user = db.buscar_servidor_por_email(email)
+    tipo = "servidor"
+# Se nenhuma das buscas retornar resultado, user continua None.
 ```
-*Exatamente como escrito no código:* A consulta é feita usando `SELECT` explícito para a tabela `cidadao`. Se não retornar nada, uma nova consulta `SELECT` é feita na tabela `servidor`.
+*Internamente,* `db.buscar_cidadao_por_email()` executa um `SELECT` explícito com `cursor.execute()` na tabela `cidadao`. Se não retornar nada, `db.buscar_servidor_por_email()` faz o mesmo na tabela `servidor`. O SQL puro fica centralizado no arquivo `backend/portal/db.py`.
 
 ---
 
@@ -104,7 +102,7 @@ No BD caem *hashes* parecidos com: `pbkdf2_sha256$720000$....`. A senha real **n
 
 > **Arquivo:** `backend/portal/middleware.py`
 
-Quando o usuário efetua login, ganha apenas a sessão salva (visto na pergunta 3). Cada vez que ele acessa uma rota como `/cidadao/chamados`, o `PortalUserMiddleware` é acionado **antes de mostrar a tela (Request)**. Ele executa a rotina `_usuario_da_sessao` que puxa toda a ficha baseada em sua ID em background.
+Quando o usuário efetua login, ganha apenas a sessão salva (visto na pergunta 3). Cada vez que ele acessa uma rota como `/cidadao/chamados`, o `PortalUserMiddleware` é acionado **antes de mostrar a tela (Request)**. Ele executa a rotina `_usuario_da_sessao` que delega a busca ao módulo `db.py`:
 
 ```python
 def _usuario_da_sessao(request):
@@ -113,18 +111,14 @@ def _usuario_da_sessao(request):
     if not uid or not tipo:
         return None  # não está logado
     if tipo == "servidor":
-        # SQL: SELECT * FROM servidor WHERE id_servidor = uid AND ativo = true
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT ... FROM servidor WHERE id_servidor = %s AND ativo = TRUE", [uid])
-            # ... monta e retorna o objeto Servidor
+        # db.py executa: SELECT * FROM servidor WHERE id_servidor = uid AND ativo = TRUE
+        return db.buscar_servidor_por_id(uid)
     else:
-        # SQL: SELECT * FROM cidadao WHERE id_cidadao = uid AND ativo = true
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT ... FROM cidadao WHERE id_cidadao = %s AND ativo = TRUE", [uid])
-            # ... monta e retorna o objeto Cidadao
+        # db.py executa: SELECT * FROM cidadao WHERE id_cidadao = uid AND ativo = TRUE
+        return db.buscar_cidadao_por_id(uid)
 ```
 
-Isso é convertido na variável `request.portal_user` disponibilizando informações para toda a regra Python.
+Isso é convertido na variável `request.portal_user` disponibilizando informações para toda a regra Python. O SQL puro real fica centralizado em `backend/portal/db.py`.
 
 ---
 
@@ -147,21 +141,26 @@ def _postgres_sessao(perfil, id_acao):
 
 ## 8. Como a cor do semáforo do prazo é calculada?
 
-> **Arquivo:** `backend/portal/models.py` (propriedade `cor_semaforo` na classe `Chamado`)
+> **Arquivos:** `backend/portal/db.py` (função `popular_status`) e `backend/portal/models.py` (property `cor_semaforo`)
 
-Criou-se a propriedade reutilizável `cor_semaforo` dentro do model `Chamado`:
+A lógica do semáforo está centralizada na função `db.popular_status(ch)` que é chamada pelas views. Ela calcula e atribui `ch.cor_semaforo` diretamente no objeto:
 
 ```python
-@property
-def cor_semaforo(self):
-    s = self.id_servico                          # Faz JOIN com tabela servico
-    dias = (timezone.now() - self.dt_abertura).days
-    if dias >= s.prazo_vermelho_dias: return "vermelho"
-    if dias >= s.prazo_amarelo_dias:  return "amarelo"
-    return "verde"
+# portal/db.py — função popular_status(ch)
+def popular_status(ch):
+    # ... busca o último status via SQL puro ...
+    dias = (timezone.now() - ch.dt_abertura).days
+    if dias >= ch.id_servico.prazo_vermelho_dias:
+        ch.cor_semaforo = "vermelho"
+    elif dias >= ch.id_servico.prazo_amarelo_dias:
+        ch.cor_semaforo = "amarelo"
+    else:
+        ch.cor_semaforo = "verde"
 ```
 
-Isso varre dinamicamente a data exata daquele minuto subtraindo pela data de abertura, tudo sem salvar essas contagens no BD. A view `equipe_chamados_lista` em `views_equipe.py` chama `ch.cor_semaforo` e passa para o template HTML.
+O model `Chamado` em `models.py` também possui uma property `cor_semaforo` equivalente (usada quando se trabalha via ORM), mas as views usam `db.popular_status()` com SQL puro.
+
+Isso varre dinamicamente a data exata daquele minuto subtraindo pela data de abertura, tudo sem salvar essas contagens no BD.
 
 ---
 
@@ -380,10 +379,10 @@ CREATE INDEX ix_notificacao_chamado ON notificacao (id_chamado);
 
 ## 18. Como é feito o JOIN para pegar os dados relacionados de um chamado?
 
-No sistema, usamos SQL puro para trazer dados de múltiplas tabelas em uma única consulta:
+No sistema, usamos SQL puro para trazer dados de múltiplas tabelas em uma única consulta. As queries SQL ficam centralizadas no módulo `backend/portal/db.py`, que é a camada de acesso a dados do projeto:
 
 ```python
-# views_equipe.py — Dashboard da equipe
+# portal/db.py — função buscar_chamado(pk)
 with connection.cursor() as cursor:
     cursor.execute(
         "SELECT c.id_chamado, c.num_protocolo, "
@@ -391,12 +390,14 @@ with connection.cursor() as cursor:
         "FROM chamado c "
         "JOIN servico s ON c.id_servico = s.id_servico "
         "JOIN bairro b ON c.id_bairro = b.id_bairro "
-        "WHERE TRUE "
-        "ORDER BY c.dt_abertura DESC"
+        "WHERE c.id_chamado = %s",
+        [pk],
     )
 ```
 
 **Por que fazemos o JOIN manualmente?** Como usamos apenas SQL puro, em vez de fazer várias consultas separadas (`SELECT` na tabela servico e bairro para cada chamado), montamos um único `SELECT` com `JOIN` para evitar lentidão e múltiplas idas ao banco.
+
+**Por que centralizar em `db.py`?** Para evitar duplicação — a mesma query de chamado com JOINs era copiada em 4+ views. Com `db.py`, cada view chama `db.buscar_chamado(pk)` e recebe o objeto pronto.
 
 ---
 

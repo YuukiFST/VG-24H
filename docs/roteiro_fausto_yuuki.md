@@ -29,18 +29,23 @@ Fausto é responsável pelos **módulos administrativos** (Colaborador e Gestor)
 **Siglas de status:** `AB` = Aberto, `EA` = Em Análise, `EE` = Em Execução, `CO` = Concluído, `CA` = Cancelado
 
 - **Dashboard Semáforo + Lista** — função `equipe_chamados_lista` em `views_equipe.py`:
-  - Carrega TODOS os chamados com `prefetch_related("historicos__id_status")`
-  - Semáforo: verde/amarelo/vermelho via `cor_semaforo()` (compara `prazo_amarelo_dias` / `prazo_vermelho_dias`)
-  - Filtro de status usa `Subquery` no último `historico_chamado`
+  - Carrega TODOS os chamados com SQL puro (`cursor.execute` com JOINs em servico, bairro e subquery no último histórico)
+  - Semáforo: verde/amarelo/vermelho via `db.calcular_stats_semaforo()` (compara `prazo_amarelo_dias` / `prazo_vermelho_dias`)
+  - Filtro de status usa subquery SQL no último `historico_chamado`
+  - Renderiza `equipe/chamados_lista.html`
+
+- **Dashboard com Gráficos** — função `equipe_dashboard` em `views_equipe.py`:
+  - Rota `/equipe/` — painel principal com gráficos Chart.js
   - Renderiza `equipe/dashboard.html`
 
 - **Detalhe do Chamado** — função `equipe_chamado_detalhe`:
-  - Status via `sigla_status(ch)` → property `ch.sigla_status`
+  - Status via `db.popular_status(ch)` — SQL puro que popula `ch.sigla_status`
+  - Históricos e fotos via `db.buscar_historicos(pk)` e `db.buscar_fotos(pk)`
   - Bloqueio: COL com CO/CA → `pode_status = False`; GES sempre pode
   - **3 ações POST** (campo `acao`):
-    - `"status"` → **insere `HistoricoChamado` com novo status** + salva resolução e prioridade no chamado
-    - `"obs"` → insere em `historico_chamado` com `id_status=ch.status_atual`
-    - `"foto"` → upload via `salvar_foto_upload()` → cria `FotoChamado`
+    - `"status"` → **insere em `historico_chamado` via SQL puro** (`cursor.execute("INSERT INTO historico_chamado...")`) + salva resolução e prioridade no chamado
+    - `"obs"` → insere em `historico_chamado` com `id_status=ch.status_atual` via SQL puro
+    - `"foto"` → upload via `salvar_foto_upload()` → insere em `foto_chamado` via SQL puro
   - Renderiza `equipe/chamado_detalhe.html`
 
 ### 3. Módulo do Gestor — GES (Plano §3.1 — Módulo do Administrador)
@@ -62,8 +67,9 @@ Fausto é responsável pelos **módulos administrativos** (Colaborador e Gestor)
 
 | Arquivo | Caminho | Conteúdo |
 |---|---|---|
-| `views_equipe.py` | `backend/portal/views_equipe.py` | Dashboard semáforo, detalhe (COL + GES) |
+| `views_equipe.py` | `backend/portal/views_equipe.py` | Dashboard semáforo, lista de chamados, detalhe (COL + GES) |
 | `views_gestao.py` | `backend/portal/views_gestao.py` | CRUD categorias, serviços, bairros, colaboradores, banners, estatísticas |
+| `db.py` | `backend/portal/db.py` | **Camada de acesso a dados** — centraliza queries SQL (semáforo, status, históricos, fotos, paginação) |
 | `forms.py` | `backend/portal/forms.py` | `EquipeStatusForm`, `CategoriaForm`, `ServicoForm`, etc. |
 | `urls.py` | `backend/portal/urls.py` | Rotas `equipe/*` e `gestao/*` |
 
@@ -98,6 +104,7 @@ Fausto é responsável pelos **módulos administrativos** (Colaborador e Gestor)
 
 | Rota | View | Name |
 |---|---|---|
+| `equipe/` | `equipe_dashboard` | `equipe_dashboard` |
 | `equipe/chamados/` | `equipe_chamados_lista` | `equipe_chamados` |
 | `equipe/chamados/<pk>/` | `equipe_chamado_detalhe` | `equipe_chamado` |
 | `gestao/estatisticas/` | `gestao_estatisticas` | `gestao_estatisticas` |
@@ -123,8 +130,8 @@ Fausto é responsável pelos **módulos administrativos** (Colaborador e Gestor)
 1. **Mostre `base.html`** — herança de templates, menu dinâmico por perfil
 2. **Explique a mudança arquitetural**: status não é campo direto, vem do último `historico_chamado`. Mudar status = INSERT em `historico_chamado`
 3. **Painel do Gestor ao vivo**: crie colaborador, serviço com prazos, banner
-4. **Dashboard Semáforo**: explique verde/amarelo/vermelho e `cor_semaforo()`
-5. **Altere status de um chamado**: insere em historico → Trigger 2B gera notificação + `dt_conclusao`
+4. **Dashboard Semáforo**: explique verde/amarelo/vermelho e `db.calcular_stats_semaforo()`
+5. **Altere status de um chamado**: insere em historico via SQL puro → Trigger 2B gera notificação + `dt_conclusao`
 6. **Tente fechar sem resolução**: `EquipeStatusForm.clean()` impede
 7. **COL vs GES**: COL bloqueado em CO/CA, GES livre
 8. **Controle de acesso**: COL acessando `/gestao/` → "Sem permissão"
@@ -137,7 +144,7 @@ Fausto é responsável pelos **módulos administrativos** (Colaborador e Gestor)
 1. **Ao mostrar a Herança de Templates (`base.html`):**
    - *O que falar:* "Professora, para não repetir código, o cabeçalho, menu lateral e rodapé estão todos em um único arquivo: `base.html`. As outras telas só 'injetam' o miolo. Além disso, o menu é inteligente: usamos um `IF` (`{% if nav_perfil == 'GES' %}`) para mostrar os links de Gestão apenas se quem está logado for Gestor."
 2. **Ao explicar a regra do Status (Arquitetura):**
-   - *O que falar:* "Nós tomamos a decisão de não ter a coluna 'status' na tabela Chamado. Para o colaborador mudar o status para 'Em Análise', nossa view não faz um UPDATE no chamado, ela faz um `INSERT INTO historico_chamado`. O status atual que o usuário vê na tela é sempre calculado dinamicamente puxando o último registro desse histórico."
+   - *O que falar:* "Nós tomamos a decisão de não ter a coluna 'status' na tabela Chamado. Para o colaborador mudar o status para 'Em Análise', nossa view não faz um UPDATE no chamado, ela faz um `INSERT INTO historico_chamado` via SQL puro. O status atual que o usuário vê na tela é sempre calculado dinamicamente pela função `db.popular_status()` que puxa o último registro desse histórico."
 3. **Ao demonstrar as restrições COL vs GES:**
    - *Ação:* Logue como Colaborador (COL) e tente acessar `/gestao/categorias/` forçando a URL no navegador.
    - *O que falar:* "Temos uma camada de segurança usando o decorator `@perfis('GES')` nas views em Python. Se o COL tentar burlar clicando ou digitando a URL do gestor, o backend bloqueia e devolve um erro de permissão."
