@@ -6,6 +6,14 @@ forms.py — Formularios do Portal VG 24H
     RedefinirSenhaForm, TrocaSenhaObrigatoriaForm, FotoForm
 [!] [FAUSTO] Formularios de gestao: EquipeStatusForm, CategoriaForm,
     ServicoForm, BairroForm, ColaboradorNovoForm
+
+[!] NOTA SOBRE ORM NOS FORMULARIOS:
+    Os formularios usam ModelChoiceField/ModelForm do Django para validacao
+    de Foreign Keys (ex: id_servico, id_status, id_categoria). Isso e
+    INTENCIONAL — o Django valida automaticamente que o valor selecionado
+    existe na tabela referenciada, evitando erro de FK no banco.
+    As views, por sua vez, usam SQL puro para todas as operacoes de
+    leitura e escrita (INSERT, UPDATE, SELECT, DELETE).
 """
 
 from django import forms

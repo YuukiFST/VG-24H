@@ -22,6 +22,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
+from portal import db
 from portal.decorators import autenticado, perfis
 from portal.forms import (
     AvaliacaoForm,
@@ -32,118 +33,19 @@ from portal.forms import (
 )
 from portal.utils import proximo_protocolo, salvar_foto_upload
 
-
-# ─── Helpers SQL ─────────────────────────────────────────────
-def _buscar_chamado_por_pk(pk):
-    """SQL puro: busca um chamado pelo ID com dados do serviço e bairro (JOIN)."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT c.id_chamado, c.num_protocolo, c.prioridade, "
-            "c.ponto_de_referencia, c.descricao, c.resolucao, "
-            "c.nota_avaliacao, c.comentario_avaliacao, "
-            "c.dt_abertura, c.dt_conclusao, c.dt_avaliacao, c.atualizado_em, "
-            "c.id_servico, c.id_bairro, c.id_cidadao, "
-            "s.nome AS servico_nome, s.descricao AS servico_descricao, "
-            "s.prazo_amarelo_dias, s.prazo_vermelho_dias, "
-            "b.nome_bairro "
-            "FROM chamado c "
-            "JOIN servico s ON c.id_servico = s.id_servico "
-            "JOIN bairro b ON c.id_bairro = b.id_bairro "
-            "WHERE c.id_chamado = %s",
-            [pk],
-        )
-        row = cursor.fetchone()
-    if not row:
-        return None
-    ch = SimpleNamespace(
-        id_chamado=row[0], pk=row[0], num_protocolo=row[1], prioridade=row[2],
-        ponto_de_referencia=row[3], descricao=row[4], resolucao=row[5],
-        nota_avaliacao=row[6], comentario_avaliacao=row[7],
-        dt_abertura=row[8], dt_conclusao=row[9], dt_avaliacao=row[10],
-        atualizado_em=row[11], id_cidadao_id=row[14],
-        id_servico=SimpleNamespace(
-            id_servico=row[12], pk=row[12], nome=row[15],
-            descricao=row[16], prazo_amarelo_dias=row[17],
-            prazo_vermelho_dias=row[18],
-        ),
-        id_bairro=SimpleNamespace(id_bairro=row[13], pk=row[13], nome_bairro=row[19]),
-    )
-    # Calcula status atual e cor do semáforo
-    _popular_status(ch)
-    return ch
-
-
-def _popular_status(ch):
-    """
-    [!] SQL puro: busca o status ATUAL do chamado via ULTIMO historico.
-    Equivalente funcional da property status_atual em models.py (usada em Rafael).
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT sc.id_status, sc.sigla, sc.descricao "
-            "FROM historico_chamado hc "
-            "JOIN status_chamado sc ON hc.id_status = sc.id_status "
-            "WHERE hc.id_chamado = %s "
-            "ORDER BY hc.dt_alteracao DESC LIMIT 1",  # [!] Pega o registro mais recente
-            [ch.pk],
-        )
-        row = cursor.fetchone()
-    if row:
-        ch.status_atual = SimpleNamespace(id_status=row[0], pk=row[0], sigla=row[1], descricao=row[2])
-        ch.sigla_status = (row[1] or "").strip()     # Ex: 'AB', 'CO'
-    else:
-        ch.status_atual = None
-        ch.sigla_status = ""
-    # Semáforo
-    dias = (timezone.now() - ch.dt_abertura).days
-    if dias >= ch.id_servico.prazo_vermelho_dias:
-        ch.cor_semaforo = "vermelho"
-    elif dias >= ch.id_servico.prazo_amarelo_dias:
-        ch.cor_semaforo = "amarelo"
-    else:
-        ch.cor_semaforo = "verde"
-
+# ─── Helpers ─────────────────────────────────────────────────
 
 # FUNCAO AUXILIAR DE SEGURANCA:
 # [!] Verifica se o chamado pertence ao cidadao logado.
 # Impede que um cidadao acesse chamados de outros cidadaos pela URL.
 # Retorna 404 (em vez de 403) para nao revelar se o chamado existe.
 def _chamado_do_cidadao(request, pk):
-    ch = _buscar_chamado_por_pk(pk)
+    ch = db.buscar_chamado(pk)
     if not ch:
         raise Http404()
     if ch.id_cidadao_id != request.portal_user.pk:
         raise Http404()
     return ch
-
-
-def _calcular_stats_sql(cidadao_id=None):
-    """SQL puro: calcula estatísticas do semáforo (no_prazo, atencao, critico)."""
-    where = ""
-    params = []
-    if cidadao_id:
-        where = "WHERE c.id_cidadao = %s"
-        params = [cidadao_id]
-    with connection.cursor() as cursor:
-        cursor.execute(
-            f"SELECT c.id_chamado, c.dt_abertura, "
-            f"s.prazo_amarelo_dias, s.prazo_vermelho_dias "
-            f"FROM chamado c "
-            f"JOIN servico s ON c.id_servico = s.id_servico "
-            f"{where}",
-            params,
-        )
-        stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
-        now = timezone.now()
-        for row in cursor.fetchall():
-            dias = (now - row[1]).days
-            if dias >= row[3]:
-                stats["critico"] += 1
-            elif dias >= row[2]:
-                stats["atencao"] += 1
-            else:
-                stats["no_prazo"] += 1
-    return stats
 
 
 # LISTAR CHAMADOS DO CIDADÃO — Rota: /cidadao/chamados/
@@ -220,34 +122,13 @@ def cidadao_chamados_lista(request):
             sigla_status=r[12] or "", cor_semaforo=cor,
         ))
 
-    # Paginação manual
-    total_count = len(chamados)
-    per_page = 15
-    try:
-        page_number = int(request.GET.get("pagina", 1))
-    except (ValueError, TypeError):
-        page_number = 1
-    total_pages = max(1, (total_count + per_page - 1) // per_page)
-    page_number = max(1, min(page_number, total_pages))
-    start = (page_number - 1) * per_page
-    end = start + per_page
-    page_items = chamados[start:end]
-
-    page_obj = SimpleNamespace(
-        object_list=page_items,
-        number=page_number,
-        paginator=SimpleNamespace(num_pages=total_pages, page_range=range(1, total_pages + 1)),
-        has_previous=page_number > 1,
-        has_next=page_number < total_pages,
-        previous_page_number=page_number - 1 if page_number > 1 else None,
-        next_page_number=page_number + 1 if page_number < total_pages else None,
+    # Paginacao (via db.paginar)
+    page_obj, total_count = db.paginar(
+        chamados, request.GET.get("pagina", 1), por_pagina=15,
     )
-    # Tornar page_obj iterável (para {% for ch in lista %})
-    page_obj.__iter__ = lambda self: iter(self.object_list)
-    page_obj.__len__ = lambda self: len(self.object_list)
 
-    # Stats (Semáforo)
-    stats = _calcular_stats_sql(cidadao_id=uid)
+    # Stats (Semáforo) — via db.calcular_stats_semaforo
+    stats = db.calcular_stats_semaforo(cidadao_id=uid)
 
     return render(
         request,
@@ -449,41 +330,9 @@ def cidadao_chamado_detalhe(request, pk):
                 messages.success(request, "Avaliação registrada.")
             return redirect("portal:cidadao_chamado", pk=pk)
 
-    # SQL puro: busca históricos do chamado com JOIN em servidor e status
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT hc.id_historico_chamado, hc.dt_alteracao, hc.observacao, "
-            "hc.id_servidor, hc.id_status, "
-            "sv.nome_completo AS servidor_nome, "
-            "sc.sigla AS status_sigla, sc.descricao AS status_descricao "
-            "FROM historico_chamado hc "
-            "LEFT JOIN servidor sv ON hc.id_servidor = sv.id_servidor "
-            "JOIN status_chamado sc ON hc.id_status = sc.id_status "
-            "WHERE hc.id_chamado = %s "
-            "ORDER BY hc.dt_alteracao",
-            [pk],
-        )
-        historicos = [
-            SimpleNamespace(
-                id_historico_chamado=r[0], pk=r[0], dt_alteracao=r[1],
-                observacao=r[2], id_servidor_id=r[3],
-                id_servidor=SimpleNamespace(nome_completo=r[5]) if r[3] else None,
-                id_status=SimpleNamespace(id_status=r[4], sigla=r[6], descricao=r[7]),
-            )
-            for r in cursor.fetchall()
-        ]
-
-        # SQL puro: busca fotos do chamado
-        cursor.execute(
-            "SELECT id_foto, url_foto, dt_upload "
-            "FROM foto_chamado WHERE id_chamado = %s "
-            "ORDER BY dt_upload",
-            [pk],
-        )
-        fotos = [
-            SimpleNamespace(id_foto=r[0], pk=r[0], url_foto=r[1], dt_upload=r[2])
-            for r in cursor.fetchall()
-        ]
+    # SQL puro: busca historicos e fotos (via db.py)
+    historicos = db.buscar_historicos(pk)
+    fotos = db.buscar_fotos(pk)
 
     # Observações = registros com observacao preenchida
     observacoes = [h for h in historicos if h.observacao]

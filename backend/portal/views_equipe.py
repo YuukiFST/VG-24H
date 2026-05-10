@@ -23,6 +23,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
+from portal import db
 from portal.decorators import perfil_codigo, perfis
 from portal.forms import EquipeStatusForm, FotoForm, ObservacaoForm
 from portal.utils import salvar_foto_upload
@@ -37,35 +38,14 @@ def _int_none(v):
         return None
 
 
-def _calcular_stats_sql():
-    """SQL puro: calcula estatísticas do semáforo para TODOS os chamados."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT c.id_chamado, c.dt_abertura, "
-            "s.prazo_amarelo_dias, s.prazo_vermelho_dias "
-            "FROM chamado c "
-            "JOIN servico s ON c.id_servico = s.id_servico"
-        )
-        stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
-        now = timezone.now()
-        for row in cursor.fetchall():
-            dias = (now - row[1]).days
-            if dias >= row[3]:
-                stats["critico"] += 1
-            elif dias >= row[2]:
-                stats["atencao"] += 1
-            else:
-                stats["no_prazo"] += 1
-    return stats
-
 
 # LISTAR TODOS OS CHAMADOS — Rota: /equipe/chamados/
 # @perfis("COL", "GES") = SÓ colaboradores e gestores podem acessar
 # Diferença do cidadão: aqui NÃO filtra por id_cidadao (vê TODOS os chamados)
 @perfis("COL", "GES")
 def equipe_chamados_lista(request):
-    # Stats (Semáforo) — antes de aplicar filtros
-    stats = _calcular_stats_sql()
+    # Stats (Semáforo) — antes de aplicar filtros (via db.py)
+    stats = db.calcular_stats_semaforo()
 
     # SQL puro: SELECT todos os chamados com JOINs
     sql = (
@@ -229,32 +209,8 @@ def equipe_chamado_detalhe(request, pk):
         ),
     )
 
-    # Busca status atual
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT sc.id_status, sc.sigla, sc.descricao "
-            "FROM historico_chamado hc "
-            "JOIN status_chamado sc ON hc.id_status = sc.id_status "
-            "WHERE hc.id_chamado = %s "
-            "ORDER BY hc.dt_alteracao DESC LIMIT 1",
-            [pk],
-        )
-        st_row = cursor.fetchone()
-    if st_row:
-        ch.status_atual = SimpleNamespace(id_status=st_row[0], pk=st_row[0], sigla=st_row[1], descricao=st_row[2])
-        ch.sigla_status = (st_row[1] or "").strip()
-    else:
-        ch.status_atual = None
-        ch.sigla_status = ""
-
-    # Semáforo
-    dias = (timezone.now() - ch.dt_abertura).days
-    if dias >= ch.id_servico.prazo_vermelho_dias:
-        ch.cor_semaforo = "vermelho"
-    elif dias >= ch.id_servico.prazo_amarelo_dias:
-        ch.cor_semaforo = "amarelo"
-    else:
-        ch.cor_semaforo = "verde"
+    # Busca status atual e semaforo (via db.py — logica centralizada)
+    db.popular_status(ch)
 
     # [!] REGRA DE NEGOCIO: COL nao pode alterar status de chamado encerrado (CO/CA)
     #     GES pode sempre (isento). Essa validacao e feita na view (Python),
@@ -338,41 +294,9 @@ def equipe_chamado_detalhe(request, pk):
                 messages.error(request, "Selecione uma imagem.")
             return redirect("portal:equipe_chamado", pk=pk)
 
-    # SQL puro: busca históricos do chamado com JOINs
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT hc.id_historico_chamado, hc.dt_alteracao, hc.observacao, "
-            "hc.id_servidor, hc.id_status, "
-            "sv.nome_completo AS servidor_nome, "
-            "sc.sigla AS status_sigla, sc.descricao AS status_descricao "
-            "FROM historico_chamado hc "
-            "LEFT JOIN servidor sv ON hc.id_servidor = sv.id_servidor "
-            "JOIN status_chamado sc ON hc.id_status = sc.id_status "
-            "WHERE hc.id_chamado = %s "
-            "ORDER BY hc.dt_alteracao",
-            [pk],
-        )
-        historicos = [
-            SimpleNamespace(
-                id_historico_chamado=r[0], pk=r[0], dt_alteracao=r[1],
-                observacao=r[2], id_servidor_id=r[3],
-                id_servidor=SimpleNamespace(nome_completo=r[5]) if r[3] else None,
-                id_status=SimpleNamespace(id_status=r[4], sigla=r[6], descricao=r[7]),
-            )
-            for r in cursor.fetchall()
-        ]
-
-        # SQL puro: busca fotos
-        cursor.execute(
-            "SELECT id_foto, url_foto, dt_upload "
-            "FROM foto_chamado WHERE id_chamado = %s "
-            "ORDER BY dt_upload",
-            [pk],
-        )
-        fotos = [
-            SimpleNamespace(id_foto=r[0], pk=r[0], url_foto=r[1], dt_upload=r[2])
-            for r in cursor.fetchall()
-        ]
+    # SQL puro: busca historicos e fotos (via db.py)
+    historicos = db.buscar_historicos(pk)
+    fotos = db.buscar_fotos(pk)
 
     observacoes = [h for h in historicos if h.observacao]
 

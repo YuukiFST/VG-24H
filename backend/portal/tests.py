@@ -27,31 +27,44 @@ from portal.utils import proximo_protocolo
 # SLICE 1: Protocolo
 # ═══════════════════════════════════════════════════════════════
 class ProximoProtocoloTests(TestCase):
-    """Testa a geração sequencial de números de protocolo."""
+    """Testa a geração sequencial de números de protocolo.
 
-    @patch("portal.utils.Chamado")
-    def test_primeiro_protocolo_do_ano(self, MockChamado):
+    [!] proximo_protocolo() usa SQL puro (cursor.execute + MAX),
+        não ORM. Os testes mockam connection.cursor para simular
+        o retorno do banco.
+    """
+
+    @patch("portal.utils.connection")
+    def test_primeiro_protocolo_do_ano(self, mock_conn):
         """Quando não há chamados no ano, retorna 000001.
 
         >>> proximo_protocolo()
         '2026000001'
         """
-        MockChamado.objects.filter.return_value.aggregate.return_value = {"m": None}
+        # Simula cursor retornando None (nenhum protocolo existente)
+        mock_cursor = MagicMock()
+        mock_cursor.fetchone.return_value = (None,)
+        mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
+
         resultado = proximo_protocolo()
         ano = str(timezone.now().year)
         self.assertEqual(resultado, f"{ano}000001")
 
-    @patch("portal.utils.Chamado")
-    def test_protocolo_incrementa_sequencia(self, MockChamado):
+    @patch("portal.utils.connection")
+    def test_protocolo_incrementa_sequencia(self, mock_conn):
         """Quando o último protocolo é 000005, retorna 000006.
 
         >>> proximo_protocolo()
         '2026000006'
         """
         ano = str(timezone.now().year)
-        MockChamado.objects.filter.return_value.aggregate.return_value = {
-            "m": f"{ano}000005"
-        }
+        # Simula cursor retornando o ultimo protocolo existente
+        mock_cursor = MagicMock()
+        mock_cursor.fetchone.return_value = (f"{ano}000005",)
+        mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
+
         resultado = proximo_protocolo()
         self.assertEqual(resultado, f"{ano}000006")
 

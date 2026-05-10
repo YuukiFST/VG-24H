@@ -26,6 +26,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
+from portal import db
 from portal.decorators import anonimo, autenticado, perfil_codigo
 from portal.forms import (
     CadastroCidadaoForm,        # Formulario de cadastro (wizard 3 etapas)
@@ -33,10 +34,6 @@ from portal.forms import (
     RedefinirSenhaForm,
     TrocaSenhaObrigatoriaForm,  # Formulario para 1o acesso de servidor
 )
-# Cidadao e Servidor: as duas tabelas de usuarios do sistema
-# O sistema verifica em qual tabela o email existe para determinar o tipo
-# [!] LOGIN DUAL: a view faz SELECT primeiro em cidadao, depois em servidor
-from portal.models import Bairro, Cidadao, Servidor
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -63,50 +60,14 @@ def login_view(request):
         user = None
         tipo = None
 
-        # BUSCA NO BANCO DE DADOS (SELECT)                  
+        # BUSCA NO BANCO DE DADOS (SELECT via db.py)
         # [!] LOGIN DUAL: primeiro tenta em cidadao, depois em servidor.
         #     Se o email existe em cidadao, usuario e cidadao (CID).
         #     Se nao, tenta em servidor (COL ou GES).
         #     Se nao encontrar em nenhuma → erro "E-mail ou senha incorretos."
-        with connection.cursor() as cursor:
-            # SELECT na tabela 'cidadao' — busca pelo email informado
-            cursor.execute(
-                "SELECT id_cidadao, nome_completo, senha_hash, perfil, senha_temporaria "
-                "FROM cidadao "
-                "WHERE LOWER(email) = %s AND ativo = TRUE",
-                [email],
-            )
-            row = cursor.fetchone()
-
-            if row:
-                # Encontrou na tabela cidadao → monta o objeto manualmente
-                user = Cidadao()
-                user.id_cidadao = row[0]
-                user.nome_completo = row[1]
-                user.senha_hash = row[2]       # Hash bcrypt armazenado no banco
-                user.perfil = row[3]           # 'CID' ou 'VER'
-                user.senha_temporaria = row[4]
-                user._state.adding = False     # Informa ao Django que o objeto existe
-                tipo = "cidadao"
-            else:
-                # Nao encontrou em cidadao → tenta SELECT na tabela 'servidor'
-                cursor.execute(
-                    "SELECT id_servidor, nome_completo, senha_hash, perfil, senha_temporaria "
-                    "FROM servidor "
-                    "WHERE LOWER(email) = %s AND ativo = TRUE",
-                    [email],
-                )
-                row = cursor.fetchone()
-                if row:
-                    # Encontrou na tabela servidor
-                    user = Servidor()
-                    user.id_servidor = row[0]
-                    user.nome_completo = row[1]
-                    user.senha_hash = row[2]
-                    user.perfil = row[3]       # 'COL' ou 'GES'
-                    user.senha_temporaria = row[4]
-                    user._state.adding = False
-                    tipo = "servidor"
+        user, tipo = db.buscar_cidadao_por_email(email)
+        if not user:
+            user, tipo = db.buscar_servidor_por_email(email)
 
         # ┌─────────────────────────────────────────────────────┐
         # │  TRATAMENTO DE ERRO — Usuário NÃO encontrado       │
@@ -181,32 +142,11 @@ def logout_view(request):
 @anonimo
 @require_http_methods(["GET", "POST"])
 def cadastro_view(request):
-    # SQL puro: SELECT * FROM bairro WHERE ativo = true ORDER BY nome_bairro
-    # Carrega os bairros para o formulário de endereço
-    bairros = []
+    # SQL puro: SELECT bairros ativos para o formulario de endereco (via db.py)
     try:
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
-                "FROM bairro "
-                "WHERE ativo = TRUE "
-                "ORDER BY nome_bairro"
-            )
-            for row in cursor.fetchall():
-                b = Bairro()
-                b.id_bairro = row[0]
-                b.nome_bairro = row[1]
-                b.cep = row[2]
-                b.regiao = row[3]
-                b.ativo = row[4]
-                b._state.adding = False
-                bairros.append(b)
+        bairros = db.listar_bairros_ativos()
     except Exception:
-        class MockBairro:
-            def __init__(self, id, n):
-                self.pk = id
-                self.nome_bairro = n
-        bairros = [MockBairro(1, "Centro"), MockBairro(2, "Cristo Rei"), MockBairro(3, "Vila Arthur")]
+        bairros = []
 
     if request.method == "POST":
         form = CadastroCidadaoForm(request.POST)

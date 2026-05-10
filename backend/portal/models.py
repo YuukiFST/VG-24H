@@ -188,8 +188,13 @@ class Servidor(models.Model):
     """
     Mapeamento da tabela servidor.
     Colaboradores e gestores da prefeitura.
-    [!] Perfis: 'COL' = Colaborador, 'GES' = Gestor (acesso total).
-    FK → Secretaria. FK apontada por: HistoricoChamado.id_servidor.
+
+    [!] Perfis (campo 'perfil'):
+        'GES' = Gestor (acesso total a todas as funcionalidades)
+        'COL' = Colaborador (acesso parcial — atende chamados)
+
+    FK → Secretaria (qual secretaria ele pertence).
+    FK apontada por: HistoricoChamado.id_servidor (quem alterou o status).
     """
     id_servidor = models.AutoField(primary_key=True)
     nome_completo = models.CharField(max_length=200)
@@ -200,39 +205,6 @@ class Servidor(models.Model):
     senha_hash = models.CharField(max_length=255)
     senha_temporaria = models.CharField(max_length=200, blank=True, null=True)
     perfil = models.CharField(max_length=3)                     # 'GES' ou 'COL'
-    dt_cadastro = models.DateTimeField()
-    ativo = models.BooleanField(default=True)
-    id_secretaria = models.ForeignKey(
-        Secretaria,
-        models.DO_NOTHING,          # CASCADE gerenciado pelo banco
-        db_column="id_secretaria",
-    )
-
-    class Meta:
-        managed = False
-        db_table = "servidor"
-
-    def __str__(self):
-        return self.nome_completo
-
-
-# ============================================================
-# TABELA: servidor
-# Colaboradores e gestores da prefeitura.
-# O campo 'perfil' define o nível de acesso:
-#   'GES' = Gestor (acesso total)    'COL' = Colaborador (acesso parcial)
-# Possui FOREIGN KEY para secretaria (qual secretaria ele pertence).
-# ============================================================
-class Servidor(models.Model):
-    id_servidor = models.AutoField(primary_key=True)
-    nome_completo = models.CharField(max_length=200)
-    cpf = models.CharField(max_length=11, unique=True)
-    dt_nascimento = models.DateField()
-    telefone = models.CharField(max_length=20)
-    email = models.CharField(max_length=255, unique=True)
-    senha_hash = models.CharField(max_length=255)
-    senha_temporaria = models.CharField(max_length=200, blank=True, null=True)
-    perfil = models.CharField(max_length=3)  # 'GES' ou 'COL'
     dt_cadastro = models.DateTimeField()
     ativo = models.BooleanField(default=True)
     # FOREIGN KEY: REFERENCES secretaria(id_secretaria)

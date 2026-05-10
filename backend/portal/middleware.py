@@ -15,15 +15,16 @@ Fluxo:
 
 from django.db import connection
 
-from portal.models import Cidadao, Servidor
+from portal import db
 
 
 def _usuario_da_sessao(request):
     """
     Le o cookie de sessao e busca o usuario correspondente no banco via SQL puro.
     Retorna um objeto Cidadao ou Servidor, ou None se nao estiver logado.
-    [!] Usa SQL puro (nao ORM) porque o login e baseado em sessao Django,
-        nao em django.contrib.auth.
+
+    [!] Delega para db.buscar_cidadao_por_id / db.buscar_servidor_por_id
+        que executam SELECT SQL puro e montam o objeto manualmente.
     """
     uid = request.session.get("usuario_id")         # ID salvo no login
     tipo = request.session.get("usuario_tipo")      # 'cidadao' ou 'servidor'
@@ -31,73 +32,14 @@ def _usuario_da_sessao(request):
         return None                                 # Nao esta logado
 
     try:
-        with connection.cursor() as cursor:
-            if tipo == "servidor":
-                # SELECT na tabela servidor — busca pelo ID armazenado na sessao
-                # [!] SQL puro porque o model Servidor e managed = False
-                cursor.execute(
-                    "SELECT id_servidor, nome_completo, cpf, dt_nascimento, "
-                    "telefone, email, senha_hash, senha_temporaria, perfil, "
-                    "dt_cadastro, ativo, id_secretaria "
-                    "FROM servidor "
-                    "WHERE id_servidor = %s AND ativo = TRUE",
-                    [uid],
-                )
-                row = cursor.fetchone()
-                if not row:
-                    request.session.flush()         # Sessao invalida
-                    return None
-                # Monta o objeto Servidor manualmente (sem ORM)
-                user = Servidor()
-                user.id_servidor = row[0]
-                user.nome_completo = row[1]
-                user.cpf = row[2]
-                user.dt_nascimento = row[3]
-                user.telefone = row[4]
-                user.email = row[5]
-                user.senha_hash = row[6]
-                user.senha_temporaria = row[7]
-                user.perfil = row[8]
-                user.dt_cadastro = row[9]
-                user.ativo = row[10]
-                user.id_secretaria_id = row[11]
-                user._state.adding = False          # Informa ao Django que o objeto existe no banco
-                return user
-            else:
-                # SELECT na tabela cidadao — busca pelo ID armazenado na sessao
-                cursor.execute(
-                    "SELECT id_cidadao, nome_completo, cpf, dt_nascimento, "
-                    "telefone, email, senha_hash, senha_temporaria, perfil, "
-                    "rua, num_endereco, complemento_endereco, bairro_endereco, "
-                    "cep_endereco, dt_cadastro, ativo "
-                    "FROM cidadao "
-                    "WHERE id_cidadao = %s AND ativo = TRUE",
-                    [uid],
-                )
-                row = cursor.fetchone()
-                if not row:
-                    request.session.flush()
-                    return None
-                # Monta o objeto Cidadao manualmente
-                user = Cidadao()
-                user.id_cidadao = row[0]
-                user.nome_completo = row[1]
-                user.cpf = row[2]
-                user.dt_nascimento = row[3]
-                user.telefone = row[4]
-                user.email = row[5]
-                user.senha_hash = row[6]
-                user.senha_temporaria = row[7]
-                user.perfil = row[8]
-                user.rua = row[9]
-                user.num_endereco = row[10]
-                user.complemento_endereco = row[11]
-                user.bairro_endereco = row[12]
-                user.cep_endereco = row[13]
-                user.dt_cadastro = row[14]
-                user.ativo = row[15]
-                user._state.adding = False
-                return user
+        if tipo == "servidor":
+            user = db.buscar_servidor_por_id(uid)
+        else:
+            user = db.buscar_cidadao_por_id(uid)
+
+        if not user:
+            request.session.flush()                 # Sessao invalida — limpa cookie
+        return user
     except Exception:
         # Usuario foi desativado ou removido? Limpa a sessao
         request.session.flush()
