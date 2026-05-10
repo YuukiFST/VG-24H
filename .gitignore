@@ -64,5 +64,9 @@ error_log.txt
 # Custom
 # =========================
 .skills/
+.gemini/
+.antigravity/
+.agents/
+.git_backup2/
 rewrite*.sh
 

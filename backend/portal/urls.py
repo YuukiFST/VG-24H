@@ -39,6 +39,7 @@ urlpatterns = [
     # ═══════════════════════════════════════════════════════════════
     # [FAUSTO] Equipe (equipe/*)
     # ═══════════════════════════════════════════════════════════════
+    path("equipe/", views_equipe.equipe_dashboard, name="equipe_dashboard"),
     path("equipe/chamados/", views_equipe.equipe_chamados_lista, name="equipe_chamados"),
     path("equipe/chamados/<int:pk>/", views_equipe.equipe_chamado_detalhe, name="equipe_chamado"),
 

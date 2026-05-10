@@ -149,10 +149,11 @@ def login_view(request):
             # │  e cada view usa @perfis() para controlar quem  │
             # │  pode acessar. Veja decorators.py para detalhes.│
             # │                                                 │
-            # │  CID → /cidadao/chamados/ (meus chamados)       │
-            # │  COL → /equipe/chamados/ (dashboard equipe)     │
-            # │  GES → /equipe/chamados/ + /gestao/ (admin)     │
+            # │  CID → / (home) ou /cidadao/chamados/           │
+            # │  COL/GES → /equipe/ (estatísticas gráficos)     │
             # └─────────────────────────────────────────────────┘
+            if tipo == "servidor":
+                return redirect("portal:equipe_dashboard")
             return redirect("portal:root")
         else:
             # ┌─────────────────────────────────────────────────┐

@@ -13,6 +13,9 @@ Diferenca chave:
 
 from types import SimpleNamespace
 
+import json
+from datetime import timedelta
+
 from django.contrib import messages
 from django.db import connection
 from django.http import Http404
@@ -475,3 +478,81 @@ def gestao_chamado_excluir(request, pk):
 
     messages.success(request, f"Chamado {protocolo} excluído com sucesso.")
     return redirect("portal:equipe_chamados")
+
+
+@perfis("COL", "GES")
+@require_http_methods(["GET"])
+def equipe_dashboard(request):
+    agora = timezone.now()
+    hoje = agora.date()
+    inicio_semana = hoje - timedelta(days=7)
+
+    with connection.cursor() as cursor:
+        # Atendidas hoje
+        cursor.execute('''
+            SELECT COUNT(*) FROM chamado c
+            WHERE (
+                SELECT sc.sigla FROM historico_chamado hc
+                JOIN status_chamado sc ON hc.id_status = sc.id_status
+                WHERE hc.id_chamado = c.id_chamado
+                ORDER BY hc.dt_alteracao DESC LIMIT 1
+            ) = 'CO'
+            AND c.dt_conclusao::date = %s
+        ''', [hoje])
+        atendidas_hoje_row = cursor.fetchone()
+        atendidas_hoje = atendidas_hoje_row[0] if atendidas_hoje_row else 0
+
+        # Atendidas semana
+        cursor.execute('''
+            SELECT COUNT(*) FROM chamado c
+            WHERE (
+                SELECT sc.sigla FROM historico_chamado hc
+                JOIN status_chamado sc ON hc.id_status = sc.id_status
+                WHERE hc.id_chamado = c.id_chamado
+                ORDER BY hc.dt_alteracao DESC LIMIT 1
+            ) = 'CO'
+            AND c.dt_conclusao::date >= %s
+        ''', [inicio_semana])
+        atendidas_semana_row = cursor.fetchone()
+        atendidas_semana = atendidas_semana_row[0] if atendidas_semana_row else 0
+
+        # Status geral
+        cursor.execute('''
+            SELECT sc.descricao, COUNT(c.id_chamado) 
+            FROM chamado c
+            JOIN historico_chamado hc ON hc.id_chamado = c.id_chamado
+            JOIN status_chamado sc ON sc.id_status = hc.id_status
+            WHERE hc.id_historico_chamado = (
+                SELECT id_historico_chamado FROM historico_chamado 
+                WHERE id_chamado = c.id_chamado 
+                ORDER BY dt_alteracao DESC LIMIT 1
+            )
+            GROUP BY sc.descricao
+        ''')
+        status_geral_rows = cursor.fetchall()
+        status_labels = [row[0] for row in status_geral_rows]
+        status_data = [row[1] for row in status_geral_rows]
+
+        # Distribuição de bairros
+        cursor.execute('''
+            SELECT b.nome_bairro, COUNT(c.id_chamado) as qtd
+            FROM chamado c
+            JOIN bairro b ON c.id_bairro = b.id_bairro
+            GROUP BY b.nome_bairro
+            ORDER BY qtd DESC
+            LIMIT 10
+        ''')
+        bairros_rows = cursor.fetchall()
+        bairros_labels = [row[0] for row in bairros_rows]
+        bairros_data = [row[1] for row in bairros_rows]
+
+    context = {
+        'atendidas_hoje': atendidas_hoje,
+        'atendidas_semana': atendidas_semana,
+        'status_labels_json': json.dumps(status_labels),
+        'status_data_json': json.dumps(status_data),
+        'bairros_labels_json': json.dumps(bairros_labels),
+        'bairros_data_json': json.dumps(bairros_data),
+    }
+
+    return render(request, "portal/equipe/estatisticas_graficos.html", context)
