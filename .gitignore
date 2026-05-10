@@ -68,5 +68,8 @@ error_log.txt
 .antigravity/
 .agents/
 .git_backup2/
+AGENTS.md
+skills-lock.json
+CONTEXT.md
 rewrite*.sh
 
