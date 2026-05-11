@@ -4,176 +4,191 @@
 
 {% block content %}
 <div class="container-lg py-4">
-  <!-- Breadcrumb -->
-  <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
-    <div class="crumb-list">
-      <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
-      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
-      <span class="crumb"><span>Estatísticas (Gestão de Demandas)</span></span>
-    </div>
-  </nav>
-
-  <div class="d-flex justify-content-between align-items-center mb-4x mt-3">
-    <div>
-      <h1 class="h3 mb-0">Estatísticas dos Chamados</h1>
-      <p class="text-muted mb-0">Acompanhe o desempenho e a distribuição dos chamados no sistema.</p>
-    </div>
-    <div>
-        <a href="{% url 'portal:equipe_chamados' %}" class="br-button secondary">
-            <i class="fas fa-list mr-1"></i> Lista de Chamados
-        </a>
-    </div>
-  </div>
-
-  <div class="row mb-4x">
-    <!-- Atendimentos de Hoje -->
-    <div class="col-sm-6 mb-3x">
-      <!-- Utilitários de Borda do Gov DS: br-border-top border-interactive -->
-      <div class="br-card p-4 h-100 text-center d-flex flex-column justify-content-center align-items-center" style="border-top: 4px solid #1351b4;">
-        <h2 class="text-up-02 mb-3 text-muted text-weight-regular">Chamados Atendidos Hoje</h2>
-        <div class="text-up-06 text-interactive text-weight-bold">{{ atendidas_hoje }}</div>
-      </div>
-    </div>
-    
-    <!-- Atendimentos na Semana -->
-    <div class="col-sm-6 mb-3x">
-      <!-- Utilitários de Borda do Gov DS: br-border-top border-success -->
-      <div class="br-card p-4 h-100 text-center d-flex flex-column justify-content-center align-items-center" style="border-top: 4px solid #168821;">
-        <h2 class="text-up-02 mb-3 text-muted text-weight-regular">Chamados Atendidos na Semana</h2>
-        <div class="text-up-06 text-success text-weight-bold">{{ atendidas_semana }}</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row mb-4x">
-    <!-- Gráfico de Rosca: Status -->
-    <div class="col-md-6 mb-3x">
-      <div class="br-card h-100 p-3">
-        <div class="card-header border-bottom-0 pb-0">
-          <div class="d-flex align-items-center">
-            <span class="br-avatar mr-3"><i class="fas fa-chart-pie text-interactive" aria-hidden="true"></i></span>
-            <div class="content"><h2 class="text-weight-semi-bold text-up-02 mb-0">Status Geral dos Chamados</h2></div>
-          </div>
+    <!-- Breadcrumb -->
+    <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
+        <div class="crumb-list">
+            <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home"
+                        aria-hidden="true"></i></a></span>
+            <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+            <span class="crumb"><span>Estatísticas (Gestão de Demandas)</span></span>
         </div>
-        <div class="card-content d-flex justify-content-center mt-3 position-relative" style="height:320px; width:100%">
-          <canvas id="chartStatus" aria-label="Gráfico de Rosca apresentando o total de chamados agrupados por status de atendimento." role="img"></canvas>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4x mt-3">
+        <div>
+            <h1 class="h3 mb-0">Estatísticas dos Chamados</h1>
+            <p class="text-muted mb-0">Acompanhe o desempenho e a distribuição dos chamados no sistema.</p>
         </div>
-        <div class="card-footer border-top-0 pt-3">
-          <span class="text-down-01 text-muted">Fonte: Base de Dados VG 24H</span>
+        <div>
+            <a href="{% url 'portal:equipe_chamados' %}" class="br-button secondary">
+                <i class="fas fa-list mr-1"></i> Lista de Chamados
+            </a>
         </div>
-      </div>
     </div>
 
-    <!-- Gráfico de Barras: Distribuição por Bairros -->
-    <div class="col-md-6 mb-3x">
-      <div class="br-card h-100 p-3">
-        <div class="card-header border-bottom-0 pb-0">
-          <div class="d-flex align-items-center">
-            <span class="br-avatar mr-3"><i class="fas fa-chart-bar text-interactive" aria-hidden="true"></i></span>
-            <div class="content"><h2 class="text-weight-semi-bold text-up-02 mb-0">Distribuição de Chamados por Bairro</h2></div>
-          </div>
+    <div class="row mb-4x">
+        <!-- Atendimentos de Hoje -->
+        <div class="col-sm-6 mb-3x">
+            <!-- Utilitários de Borda do Gov DS: br-border-top border-interactive -->
+            <div class="br-card p-4 h-100 text-center d-flex flex-column justify-content-center align-items-center"
+                style="border-top: 4px solid #1351b4;">
+                <h2 class="text-up-02 mb-3 text-muted text-weight-regular">Chamados Atendidos Hoje</h2>
+                <div class="text-up-06 text-interactive text-weight-bold">{{ atendidas_hoje }}</div>
+            </div>
         </div>
-        <div class="card-content d-flex justify-content-center mt-3 position-relative" style="height:320px; width:100%">
-          <canvas id="chartBairros" aria-label="Gráfico de Barras apresentando a quantidade de chamados registrados por bairro." role="img"></canvas>
+
+        <!-- Atendimentos na Semana -->
+        <div class="col-sm-6 mb-3x">
+            <!-- Utilitários de Borda do Gov DS: br-border-top border-success -->
+            <div class="br-card p-4 h-100 text-center d-flex flex-column justify-content-center align-items-center"
+                style="border-top: 4px solid #168821;">
+                <h2 class="text-up-02 mb-3 text-muted text-weight-regular">Chamados Atendidos na Semana</h2>
+                <div class="text-up-06 text-success text-weight-bold">{{ atendidas_semana }}</div>
+            </div>
         </div>
-        <div class="card-footer border-top-0 pt-3">
-          <span class="text-down-01 text-muted">Fonte: Base de Dados VG 24H</span>
-        </div>
-      </div>
     </div>
-  </div>
+
+    <div class="row mb-4x">
+        <!-- Gráfico de Rosca: Status -->
+        <div class="col-md-6 mb-3x">
+            <div class="br-card h-100 p-3">
+                <div class="card-header border-bottom-0 pb-0">
+                    <div class="d-flex align-items-center">
+                        <span class="br-avatar mr-3"><i class="fas fa-chart-pie text-interactive"
+                                aria-hidden="true"></i></span>
+                        <div class="content">
+                            <h2 class="text-weight-semi-bold text-up-02 mb-0">Status Geral dos Chamados</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-content d-flex justify-content-center mt-3 position-relative"
+                    style="height:320px; width:100%">
+                    <canvas id="chartStatus"
+                        aria-label="Gráfico de Rosca apresentando o total de chamados agrupados por status de atendimento."
+                        role="img"></canvas>
+                </div>
+                <div class="card-footer border-top-0 pt-3">
+                    <span class="text-down-01 text-muted">Fonte: Base de Dados VG Smart</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico de Barras: Distribuição por Bairros -->
+        <div class="col-md-6 mb-3x">
+            <div class="br-card h-100 p-3">
+                <div class="card-header border-bottom-0 pb-0">
+                    <div class="d-flex align-items-center">
+                        <span class="br-avatar mr-3"><i class="fas fa-chart-bar text-interactive"
+                                aria-hidden="true"></i></span>
+                        <div class="content">
+                            <h2 class="text-weight-semi-bold text-up-02 mb-0">Distribuição de Chamados por Bairro</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-content d-flex justify-content-center mt-3 position-relative"
+                    style="height:320px; width:100%">
+                    <canvas id="chartBairros"
+                        aria-label="Gráfico de Barras apresentando a quantidade de chamados registrados por bairro."
+                        role="img"></canvas>
+                </div>
+                <div class="card-footer border-top-0 pt-3">
+                    <span class="text-down-01 text-muted">Fonte: Base de Dados VG Smart</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
 <!-- Importação do Chart.js via CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Cores padronizadas do Gov.br
-    const colorsGov = [
-        '#1351b4', // Azul Principal (interactive)
-        '#168821', // Verde Sucesso (success)
-        '#ffcd07', // Amarelo Alerta (warning)
-        '#e52207', // Vermelho Perigo (danger)
-        '#2670e8', // Azul Claro
-        '#0c326f', // Azul Escuro
-        '#1f7a1f', // Verde Escuro
-        '#e6b800', // Amarelo Escuro
-        '#991705'  // Vermelho Escuro
-    ];
+<!-- Dados injetados pelo Django (o IDE não valida type="application/json") -->
+<script id="statusLabelsData" type="application/json">{{ status_labels_json|safe }}</script>
+<script id="statusDataData" type="application/json">{{ status_data_json|safe }}</script>
+<script id="bairrosLabelsData" type="application/json">{{ bairros_labels_json|safe }}</script>
+<script id="bairrosDataData" type="application/json">{{ bairros_data_json|safe }}</script>
 
-    // Status Geral (Rosca)
-    const ctxStatus = document.getElementById('chartStatus');
-    const statusLabels = {{ status_labels_json|safe }};
-    const statusData = {{ status_data_json|safe }};
-    
-    if (statusData.length > 0) {
-        new Chart(ctxStatus.getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: statusLabels,
-                datasets: [{
-                    data: statusData,
-                    backgroundColor: colorsGov,
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { 
-                        position: 'bottom',
-                        labels: {
-                            font: { family: 'Rawline, Raleway, sans-serif', size: 14 }
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Cores padronizadas do Gov.br
+        const colorsGov = [
+            '#1351b4', '#168821', '#ffcd07', '#e52207',
+            '#2670e8', '#0c326f', '#1f7a1f', '#e6b800', '#991705'
+        ];
+
+        // Lê os dados dos blocos JSON (sem template tags no JS)
+        const statusLabels = JSON.parse(document.getElementById('statusLabelsData').textContent);
+        const statusData = JSON.parse(document.getElementById('statusDataData').textContent);
+
+        // Status Geral (Rosca)
+        const ctxStatus = document.getElementById('chartStatus');
+
+        if (statusData.length > 0) {
+            new Chart(ctxStatus.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        data: statusData,
+                        backgroundColor: colorsGov,
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Rawline, Raleway, sans-serif', size: 14 }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        } else {
+            ctxStatus.outerHTML = '<div class="d-flex flex-column align-items-center justify-content-center h-100 text-center"><i class="fas fa-folder-open text-up-06 text-muted mb-3" aria-hidden="true"></i><p class="text-up-01 text-muted text-weight-semi-bold">Não há chamados para exibir</p></div>';
+        }
+
+        // Distribuição por Bairros (Barras)
+        const ctxBairros = document.getElementById('chartBairros');
+        const bairrosLabels = JSON.parse(document.getElementById('bairrosLabelsData').textContent);
+        const bairrosData = JSON.parse(document.getElementById('bairrosDataData').textContent);
+
+        if (bairrosData.length > 0) {
+            new Chart(ctxBairros.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: bairrosLabels,
+                    datasets: [{
+                        label: 'Chamados',
+                        data: bairrosData,
+                        backgroundColor: '#1351b4',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { font: { family: 'Rawline, Raleway, sans-serif' } }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { font: { family: 'Rawline, Raleway, sans-serif' }, stepSize: 1 }
                         }
                     }
-                },
-                cutout: '65%'
-            }
-        });
-    } else {
-        // Empty State Status
-        ctxStatus.outerHTML = '<div class="d-flex flex-column align-items-center justify-content-center h-100 text-center"><i class="fas fa-folder-open text-up-06 text-muted mb-3" aria-hidden="true"></i><p class="text-up-01 text-muted text-weight-semi-bold">Não há chamados para exibir</p></div>';
-    }
-
-    // Distribuição por Bairros (Barras)
-    const ctxBairros = document.getElementById('chartBairros');
-    const bairrosLabels = {{ bairros_labels_json|safe }};
-    const bairrosData = {{ bairros_data_json|safe }};
-
-    if (bairrosData.length > 0) {
-        new Chart(ctxBairros.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: bairrosLabels,
-                datasets: [{
-                    label: 'Chamados',
-                    data: bairrosData,
-                    backgroundColor: '#1351b4', // Cor interativa padrão DS
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    x: {
-                        ticks: { font: { family: 'Rawline, Raleway, sans-serif' } }
-                    },
-                    y: { 
-                        beginAtZero: true,
-                        ticks: { font: { family: 'Rawline, Raleway, sans-serif', stepSize: 1 } }
-                    }
                 }
-            }
-        });
-    } else {
-        // Empty State Bairros
-        ctxBairros.outerHTML = '<div class="d-flex flex-column align-items-center justify-content-center h-100 text-center"><i class="fas fa-folder-open text-up-06 text-muted mb-3" aria-hidden="true"></i><p class="text-up-01 text-muted text-weight-semi-bold">Não há registros geográficos</p></div>';
-    }
-});
+            });
+        } else {
+            ctxBairros.outerHTML = '<div class="d-flex flex-column align-items-center justify-content-center h-100 text-center"><i class="fas fa-folder-open text-up-06 text-muted mb-3" aria-hidden="true"></i><p class="text-up-01 text-muted text-weight-semi-bold">Não há registros geográficos</p></div>';
+        }
+    });
 </script>
 {% endblock %}
