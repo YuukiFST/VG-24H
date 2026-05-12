@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rafael Pereira — Guia de Estudo BD</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --accent: #38bdf8; --accent2: #818cf8; --text: #f1f5f9; --text2: #94a3b8;
+    --green: #4ade80; --yellow: #facc15; --red: #f87171; --orange: #fb923c;
+    --radius: 12px; --shadow: 0 4px 24px rgba(0,0,0,.3);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text);
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    background: var(--surface); padding: 12px 24px; display: flex;
+    align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    border-bottom: 2px solid var(--accent); position: sticky; top: 0; z-index: 100;
+  }
+  .topbar h1 { font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+  .topbar h1 span { color: var(--accent); }
+  .topbar .badge { font-size: .7rem; background: var(--accent2); color: #fff; padding: 2px 10px; border-radius: 20px; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .progress-wrap { display: flex; align-items: center; gap: 8px; font-size: .8rem; color: var(--text2); }
+  .progress-bar { width: 120px; height: 6px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .3s; border-radius: 4px; }
+  .btn { padding: 6px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: .8rem; font-weight: 600; transition: all .2s; }
+  .btn-primary { background: var(--accent); color: #0f172a; }
+  .btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+  .btn-outline { background: transparent; border: 1px solid var(--surface2); color: var(--text2); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm { padding: 4px 12px; font-size: .75rem; }
+
+  /* ─── LAYOUT ─── */
+  .app { display: flex; flex: 1; }
+  .sidebar {
+    width: 240px; background: var(--surface); padding: 16px 0; flex-shrink: 0;
+    overflow-y: auto; max-height: calc(100vh - 60px); border-right: 1px solid var(--surface2);
+  }
+  .sidebar .nav-section { margin-bottom: 4px; }
+  .sidebar .nav-header {
+    padding: 8px 20px; font-size: .7rem; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text2); cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    transition: color .2s;
+  }
+  .sidebar .nav-header:hover { color: var(--accent); }
+  .sidebar .nav-header .arrow { font-size: .6rem; transition: transform .2s; }
+  .sidebar .nav-header.collapsed .arrow { transform: rotate(-90deg); }
+  .sidebar .nav-items { list-style: none; }
+  .sidebar .nav-items.collapsed { display: none; }
+  .sidebar .nav-item {
+    padding: 6px 20px 6px 28px; font-size: .82rem; color: var(--text2); cursor: pointer;
+    border-left: 3px solid transparent; transition: all .2s; position: relative;
+  }
+  .sidebar .nav-item:hover { color: var(--text); background: rgba(255,255,255,.04); }
+  .sidebar .nav-item.active {
+    color: var(--accent); border-left-color: var(--accent); background: rgba(56,189,248,.08);
+  }
+  .sidebar .nav-item .check { position: absolute; right: 16px; color: var(--green); font-size: .7rem; }
+
+  .main { flex: 1; padding: 32px 40px; overflow-y: auto; max-height: calc(100vh - 60px); }
+
+  /* ─── CONTENT ─── */
+  .section { display: none; animation: fadeIn .3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .section h2 { font-size: 1.6rem; margin-bottom: 4px; color: var(--accent); }
+  .section .subtitle { color: var(--text2); margin-bottom: 24px; font-size: .9rem; }
+
+  .card { background: var(--surface); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px; border: 1px solid var(--surface2); transition: border-color .2s; }
+  .card:hover { border-color: #475569; }
+  .card h3 { font-size: 1rem; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .card h3 .tag { font-size: .65rem; background: var(--accent2); color: #fff; padding: 1px 8px; border-radius: 10px; text-transform: uppercase; }
+  .card p, .card li { font-size: .88rem; line-height: 1.6; color: var(--text2); }
+  .card ul { padding-left: 20px; }
+  .card strong { color: var(--text); }
+
+  .highlight { background: rgba(56,189,248,.12); border-left: 3px solid var(--accent); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 12px 0; font-size: .85rem; }
+  .highlight.warn { border-left-color: var(--yellow); background: rgba(250,204,21,.08); }
+  .highlight.err { border-left-color: var(--red); background: rgba(248,113,113,.08); }
+  .highlight.ok { border-left-color: var(--green); background: rgba(74,222,128,.08); }
+
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; margin: 12px 0; }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--surface2); }
+  th { color: var(--accent); font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; }
+  td { color: var(--text2); }
+  tr:hover td { background: rgba(255,255,255,.03); }
+
+  code { background: #1e1e2e; color: #cdd6f4; padding: 1px 6px; border-radius: 4px; font-size: .8rem; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  pre { background: #1e1e2e; border-radius: var(--radius); padding: 16px 20px; overflow-x: auto; margin: 12px 0; font-size: .8rem; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  .stat { text-align: center; padding: 20px; }
+  .stat .num { font-size: 2rem; font-weight: 700; color: var(--accent); }
+  .stat .label { font-size: .75rem; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+
+  /* ─── FLASHCARD ─── */
+  .flashcard-area { display: none; }
+  .flashcard-area.active { display: block; }
+  .flashcard {
+    background: var(--surface); border-radius: var(--radius); padding: 40px; text-align: center;
+    border: 2px solid var(--surface2); cursor: pointer; min-height: 200px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: all .3s; user-select: none; margin-bottom: 16px;
+  }
+  .flashcard:hover { border-color: var(--accent); transform: scale(1.01); }
+  .flashcard .front { font-size: 1.2rem; color: var(--accent); font-weight: 600; }
+  .flashcard .back { font-size: 1rem; color: var(--text2); line-height: 1.6; }
+  .flashcard .hint { font-size: .75rem; color: var(--text2); margin-top: 16px; opacity: .5; }
+
+  .fc-controls { display: flex; justify-content: center; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+
+  /* ─── SEARCH ─── */
+  .search-box { position: relative; margin-bottom: 24px; }
+  .search-box input {
+    width: 100%; padding: 10px 16px 10px 40px; border-radius: 10px; border: 1px solid var(--surface2);
+    background: var(--surface); color: var(--text); font-size: .9rem; outline: none; transition: border .2s;
+  }
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box .ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text2); }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { padding: 16px; }
+    .topbar { padding: 10px 16px; }
+    .topbar h1 { font-size: 1rem; }
+  }
+  .sidebar-toggle { display: none; background: none; border: none; color: var(--text); font-size: 1.2rem; cursor: pointer; }
+  @media (max-width: 768px) {
+    .sidebar-toggle { display: block; }
+    .sidebar.open { display: block; position: fixed; top: 60px; left: 0; bottom: 0; z-index: 99; width: 280px; }
+  }
+
+  .siglas { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+  .sigla { padding: 4px 14px; border-radius: 20px; font-size: .8rem; font-weight: 700; }
+  .sigla.ab { background: #3b82f6; color: #fff; }
+  .sigla.ea { background: #f59e0b; color: #fff; }
+  .sigla.ee { background: #8b5cf6; color: #fff; }
+  .sigla.co { background: #10b981; color: #fff; }
+  .sigla.ca { background: #ef4444; color: #fff; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab { padding: 8px 16px; border-radius: 8px; background: var(--surface2); color: var(--text2); cursor: pointer; font-size: .8rem; transition: all .2s; border: none; }
+  .tab:hover { background: #475569; }
+  .tab.active { background: var(--accent); color: #0f172a; font-weight: 600; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .mnemonic { background: rgba(129,140,248,.1); border: 1px dashed var(--accent2); border-radius: var(--radius); padding: 16px 20px; margin: 12px 0; }
+  .mnemonic strong { color: var(--accent2); }
+
+  .btn-ghost { background: transparent; border: 1px dashed var(--surface2); color: var(--text2); padding: 6px 16px; border-radius: 8px; cursor: pointer; font-size: .8rem; transition: all .2s; }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  .progress-dots { display: flex; gap: 6px; flex-wrap: wrap; margin: 16px 0; }
+  .progress-dots .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--surface2); cursor: pointer; transition: all .2s; }
+  .progress-dots .dot.done { background: var(--green); }
+  .progress-dots .dot.current { background: var(--accent); box-shadow: 0 0 0 3px rgba(56,189,248,.3); }
+
+  .card pre { max-height: 300px; overflow-y: auto; }
+</style>
+</head>
+<body>
+
+<!-- ─── TOPBAR ─── -->
+<header class="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+    <h1>📘 <span>Rafael Pereira</span> <small style="font-weight:400;color:var(--text2);font-size:.8rem">— Guia de Estudo</small></h1>
+    <span class="badge">Banco de Dados</span>
+  </div>
+  <div class="topbar-right">
+    <div class="progress-wrap">
+      <span id="progressPct">0%</span>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="toggleQuiz()">🎯 Quiz Rápido</button>
+    <button class="btn btn-primary btn-sm" onclick="resetChecks()">↻ Resetar</button>
+  </div>
+</header>
+
+<div class="app">
+  <!-- ─── SIDEBAR ─── -->
+  <nav class="sidebar" id="sidebar">
+    <div id="sidebarNav"></div>
+  </nav>
+
+  <!-- ─── MAIN ─── -->
+  <main class="main" id="mainContent"></main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DATA — conteúdo completo estruturado
+// ═══════════════════════════════════════════════════════════
+
+const DATA = {
+  overview: {
+    title: "Visão Geral",
+    subtitle: "O que você precisa saber — visão de 30 segundos",
+    content: `
+      <div class="grid-3">
+        <div class="card stat"><div class="num">11</div><div class="label">Tabelas</div></div>
+        <div class="card stat"><div class="num">6</div><div class="label">Scripts SQL</div></div>
+        <div class="card stat"><div class="num">7</div><div class="label">Triggers + Rules</div></div>
+      </div>
+      <div class="card">
+        <h3>🎯 Sua responsabilidade</h3>
+        <p><strong>Banco de Dados + Backend Core</strong> — schema, triggers, rules, views, seed, models, middleware, decorators, utils, config.</p>
+      </div>
+      <div class="card">
+        <h3>⚡ Decisão arquitetural mais importante</h3>
+        <div class="highlight">
+          <strong>Status do chamado NÃO é campo direto</strong> na tabela <code>chamado</code>. Ele é determinado pelo <strong>último registro de <code>historico_chamado</code></strong>. Todo histórico de status fica rastreável.
+        </div>
+        <p>No model Django, usamos <strong>3 properties</strong> em vez de um campo <code>id_status</code>:</p>
+        <ul>
+          <li><code>status_atual</code> → retorna o <code>StatusChamado</code> do último histórico</li>
+          <li><code>sigla_status</code> → retorna a sigla (AB, EA, EE, CO, CA)</li>
+          <li><code>atualizado_em</code> → retorna <code>dt_alteracao</code> do último histórico</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>📌 Siglas de Status</h3>
+        <div class="siglas">
+          <span class="sigla ab">AB = Aberto</span>
+          <span class="sigla ea">EA = Em Análise</span>
+          <span class="sigla ee">EE = Em Execução</span>
+          <span class="sigla co">CO = Concluído</span>
+          <span class="sigla ca">CA = Cancelado</span>
+        </div>
+      </div>
+    `
+  },
+
+  // ─── 1. MODELAGEM ───
+  modelagem: {
+    title: "1. Modelagem de Dados",
+    subtitle: "11 entidades — Seção 5 do Plano",
+    content: `
+      <div class="card">
+        <h3>📊 As 11 Tabelas</h3>
+        <table>
+          <tr><th>#</th><th>Tabela</th><th>Descrição</th></tr>
+          <tr><td>1</td><td><code>cidadao</code></td><td>Cidadãos (<code>perfil = 'CID'</code>)</td></tr>
+          <tr><td>2</td><td><code>servidor</code></td><td>Colaboradores (<code>COL</code>) e Gestores (<code>GES</code>). FK → <code>secretaria</code></td></tr>
+          <tr><td>3</td><td><code>secretaria</code></td><td>Secretarias municipais</td></tr>
+          <tr><td>4</td><td><code>status_chamado</code></td><td>5 status: AB, EA, EE, CO, CA</td></tr>
+          <tr><td>5</td><td><code>categoria_servico</code></td><td>Categorias de serviço. FK → <code>secretaria</code></td></tr>
+          <tr><td>6</td><td><code>servico</code></td><td>Serviços com prazos amarelo/vermelho. FK → <code>categoria_servico</code></td></tr>
+          <tr><td>7</td><td><code>bairro</code></td><td>Bairros de VG com CEP e região</td></tr>
+          <tr><td>8</td><td><code>chamado</code></td><td><strong>Entidade central. SEM <code>id_status</code></strong> — status vem do histórico</td></tr>
+          <tr><td>9</td><td><code>foto_chamado</code></td><td>Fotos (URL Cloudinary). FK → chamado</td></tr>
+          <tr><td>10</td><td><code>historico_chamado</code></td><td><strong>Fonte da verdade para o status atual</strong></td></tr>
+          <tr><td>11</td><td><code>notificacao</code></td><td>Avisos ao cidadão (lida, arquivada)</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>🧠 Mnemônico para decorar as 11 tabelas</h3>
+        <div class="mnemonic">
+          <strong>C</strong>idadao + <strong>S</strong>ervidor + <strong>S</strong>ecretaria = CSS<br>
+          <strong>S</strong>tatus + <strong>C</strong>ategoria + <strong>S</strong>ervico = SCS<br>
+          <strong>B</strong>airro + <strong>C</strong>hamado = BC<br>
+          <strong>F</strong>oto + <strong>H</strong>istorico + <strong>N</strong>otificacao = FHN<br><br>
+          <strong>Frase:</strong> "<em>CSS + SCS + BC + FHN = 3+3+2+3 = 11 tabelas</em>"
+        </div>
+      </div>
+      <div class="card">
+        <h3>🔗 Relacionamentos principais</h3>
+        <ul>
+          <li><code>chamado</code> → FK para <code>cidadao</code>, <code>servidor</code> (opcional), <code>servico</code>, <code>bairro</code></li>
+          <li><code>historico_chamado</code> → FK para <code>chamado</code> e <code>status_chamado</code></li>
+          <li><code>foto_chamado</code> → FK para <code>chamado</code></li>
+          <li><code>notificacao</code> → FK para <code>cidadao</code></li>
+          <li><code>categoria_servico</code> → FK para <code>secretaria</code></li>
+          <li><code>servico</code> → FK para <code>categoria_servico</code></li>
+        </ul>
+      </div>
+    `
+  },
+
+  // ─── 2. SCRIPTS SQL ───
+  scripts: {
+    title: "2. Scripts SQL",
+    subtitle: "O que cada arquivo faz — da pasta database/",
+    content: `
+      <div class="tabs" id="sqlTabs">
+        <button class="tab active" data-tab="schema">01_schema</button>
+        <button class="tab" data-tab="seed">02_seed</button>
+        <button class="tab" data-tab="triggers">03_triggers</button>
+        <button class="tab" data-tab="rules">04_rules</button>
+        <button class="tab" data-tab="views">05_views</button>
+        <button class="tab" data-tab="fix">fix_rules</button>
+      </div>
+
+      <div class="tab-content active" id="tab-schema">
+        <div class="card">
+          <h3>📄 <code>01_schema.sql</code> (191 linhas)</h3>
+          <ul>
+            <li>11 <code>CREATE TABLE</code> com PKs, FKs, constraints</li>
+            <li><strong><code>chamado</code> NÃO tem <code>id_status</code></strong> — FK foi removida. Status = último histórico</li>
+            <li><code>CHECK (sigla IN ('AB', 'EA', 'EE', 'CO', 'CA'))</code> em <code>status_chamado</code></li>
+            <li>6 índices de performance (não existe <code>ix_chamado_status</code>)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-seed">
+        <div class="card">
+          <h3>📄 <code>02_seed.sql</code></h3>
+          <ul>
+            <li>5 status: AB, EA, EE, CO, CA</li>
+            <li>1 secretaria, 2 categorias, 5 serviços, 20 bairros</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-triggers">
+        <div class="card">
+          <h3>📄 <code>03_functions_triggers.sql</code> (107 linhas)</h3>
+
+          <h4 style="margin:16px 0 8px;color:var(--accent)">🔹 Trigger 1 — <code>trg_chamado_after_insert_historico_ab</code></h4>
+          <ul>
+            <li><code>AFTER INSERT</code> em <code>chamado</code></li>
+            <li>Função <code>fn_chamado_after_insert_historico_ab()</code>: insere em <code>historico_chamado</code> com status AB</li>
+            <li><strong>Garante:</strong> todo chamado nasce com ao menos 1 histórico</li>
+          </ul>
+          <pre><code>CREATE OR REPLACE FUNCTION fn_chamado_after_insert_historico_ab()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO historico_chamado (id_chamado, id_status, observacao)
+  VALUES (NEW.id_chamado, (SELECT id_status FROM status_chamado WHERE sigla = 'AB'), 'Chamado aberto');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_chamado_after_insert_historico_ab
+AFTER INSERT ON chamado
+FOR EACH ROW EXECUTE FUNCTION fn_chamado_after_insert_historico_ab();</code></pre>
+
+          <h4 style="margin:16px 0 8px;color:var(--accent)">🔹 Trigger 2A — <code>trg_chamado_before_update_metadados</code></h4>
+          <ul>
+            <li><code>BEFORE UPDATE</code> em <code>chamado</code></li>
+            <li>Função <code>fn_chamado_before_update_metadados()</code>: atualiza <code>atualizado_em = CURRENT_TIMESTAMP</code></li>
+          </ul>
+          <pre><code>CREATE OR REPLACE FUNCTION fn_chamado_before_update_metadados()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.atualizado_em = CURRENT_TIMESTAMP;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;</code></pre>
+
+          <h4 style="margin:16px 0 8px;color:var(--accent)">🔹 Trigger 2B — <code>trg_historico_after_insert_status</code></h4>
+          <div class="highlight">
+            <strong>Mudança importante:</strong> agora é <code>AFTER INSERT</code> em <code>historico_chamado</code> (antes era AFTER UPDATE em chamado).
+          </div>
+          <ul>
+            <li>Função <code>fn_historico_after_insert_status()</code>:</li>
+            <li>1. Busca a sigla e descrição do status inserido</li>
+            <li>2. Se CO ou CA → atualiza <code>dt_conclusao</code> no chamado</li>
+            <li>3. Se AB, EA ou EE → limpa <code>dt_conclusao = NULL</code></li>
+            <li>4. Gera notificação automática: <code>"Chamado XXXX: status alterado para Descrição"</code></li>
+          </ul>
+          <pre><code>CREATE OR REPLACE FUNCTION fn_historico_after_insert_status()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_sigla CHAR(2);
+  v_descricao VARCHAR(50);
+BEGIN
+  SELECT sigla, descricao INTO v_sigla, v_descricao
+  FROM status_chamado WHERE id_status = NEW.id_status;
+
+  IF v_sigla IN ('CO', 'CA') THEN
+    UPDATE chamado SET dt_conclusao = CURRENT_TIMESTAMP WHERE id_chamado = NEW.id_chamado;
+  ELSE
+    UPDATE chamado SET dt_conclusao = NULL WHERE id_chamado = NEW.id_chamado;
+  END IF;
+
+  INSERT INTO notificacao (id_cidadao, mensagem)
+  SELECT id_cidadao, 'Chamado ' || NEW.id_chamado || ': status alterado para ' || v_descricao
+  FROM chamado WHERE id_chamado = NEW.id_chamado;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;</code></pre>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-rules">
+        <div class="card">
+          <h3>📄 <code>04_rules.sql</code> (126 linhas)</h3>
+          <div class="highlight warn">
+            <strong>⚠️ Mudança importante:</strong> R1, R2 e R3 foram <strong>convertidas para Triggers BEFORE</strong> com <code>RAISE EXCEPTION</code> (erro explícito) em vez de <code>DO INSTEAD NOTHING</code> (falha silenciosa).
+          </div>
+          <table>
+            <tr><th>Rule/Trigger</th><th>Tabela</th><th>Tipo</th><th>O que faz</th></tr>
+            <tr>
+              <td><strong>R1 → Trigger</strong> <code>trg_foto_chamado_encerrado</code></td>
+              <td><code>foto_chamado</code></td>
+              <td>BEFORE INSERT</td>
+              <td>Bloqueia se último status é CO/CA. Subquery no último <code>historico_chamado</code>. <code>RAISE EXCEPTION</code></td>
+            </tr>
+            <tr>
+              <td><strong>R2 → Trigger</strong> <code>trg_historico_obs_encerrado</code></td>
+              <td><code>historico_chamado</code></td>
+              <td>BEFORE INSERT</td>
+              <td>Bloqueia observação se último status é CO/CA. <code>RAISE EXCEPTION</code></td>
+            </tr>
+            <tr>
+              <td><strong>R3 → Trigger</strong> <code>trg_avaliacao_imutavel</code></td>
+              <td><code>chamado</code></td>
+              <td>BEFORE UPDATE</td>
+              <td>Bloqueia alteração de avaliação já preenchida. <code>RAISE EXCEPTION</code></td>
+            </tr>
+            <tr>
+              <td><strong>R4</strong> — Removida</td>
+              <td>—</td>
+              <td>—</td>
+              <td>Controle de perfil feito na camada Django (views)</td>
+            </tr>
+            <tr>
+              <td><strong>R5</strong> (Rule)</td>
+              <td><code>historico_chamado</code></td>
+              <td>UPDATE + DELETE</td>
+              <td><code>DO INSTEAD NOTHING</code> — impede modificar ou excluir histórico</td>
+            </tr>
+            <tr>
+              <td><strong>R6</strong> — Removida</td>
+              <td>—</td>
+              <td>—</td>
+              <td>Validação de resolução feita no Django (<code>EquipeStatusForm.clean()</code>)</td>
+            </tr>
+            <tr>
+              <td><strong>Extra</strong> (Rule)</td>
+              <td><code>chamado</code></td>
+              <td>DELETE</td>
+              <td><code>DO INSTEAD NOTHING</code> — impede excluir chamado</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-views">
+        <div class="card">
+          <h3>📄 <code>05_views.sql</code> (30 linhas)</h3>
+          <ul>
+            <li><code>vw_estatisticas_chamados</code>: usa <strong><code>JOIN LATERAL</code></strong> para buscar o último status de cada chamado no <code>historico_chamado</code></li>
+            <li>Agrupa por categoria, bairro, sigla_status, status_descricao → <code>COUNT(*)</code></li>
+          </ul>
+          <pre><code>CREATE OR REPLACE VIEW vw_estatisticas_chamados AS
+SELECT
+  cs.descricao AS categoria,
+  b.nome AS bairro,
+  sc.sigla AS sigla_status,
+  sc.descricao AS status_descricao,
+  COUNT(*) AS total
+FROM chamado c
+JOIN servico s ON c.id_servico = s.id_servico
+JOIN categoria_servico cs ON s.id_categoria = cs.id_categoria
+JOIN bairro b ON c.id_bairro = b.id_bairro
+CROSS JOIN LATERAL (
+  SELECT hc.id_status
+  FROM historico_chamado hc
+  WHERE hc.id_chamado = c.id_chamado
+  ORDER BY hc.dt_alteracao DESC
+  LIMIT 1
+) ult
+JOIN status_chamado sc ON ult.id_status = sc.id_status
+GROUP BY cs.descricao, b.nome, sc.sigla, sc.descricao;</code></pre>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-fix">
+        <div class="card">
+          <h3>📄 <code>fix_rules_to_triggers.sql</code> (84 linhas)</h3>
+          <ul>
+            <li>Script de migração para converter R1, R2, R3 de rules para triggers</li>
+            <li><code>DROP</code> das rules antigas + criação dos triggers equivalentes</li>
+            <li>Para ser executado no <strong>NeonDB SQL Editor</strong> em bancos já existentes</li>
+          </ul>
+        </div>
+      </div>
+    `
+  },
+
+  // ─── 3. MODELS DJANGO ───
+  models: {
+    title: "3. Models Django",
+    subtitle: "models.py — Mapeamento ORM",
+    content: `
+      <div class="card">
+        <h3>📦 Estrutura</h3>
+        <p>12 classes para estrutura. <code>Chamado</code> usa <strong>properties</strong> em vez de campo <code>id_status</code>:</p>
+        <table>
+          <tr><th>Property</th><th>O que faz</th></tr>
+          <tr><td><code>status_atual</code></td><td>Busca o último <code>HistoricoChamado</code> e retorna o <code>StatusChamado</code></td></tr>
+          <tr><td><code>sigla_status</code></td><td>Retorna a sigla do status atual (ex: <code>"AB"</code>, <code>"CO"</code>)</td></tr>
+          <tr><td><code>atualizado_em</code></td><td>Retorna <code>dt_alteracao</code> do último histórico</td></tr>
+        </table>
+        <div class="highlight">
+          <code>HistoricoChamado</code> tem <code>related_name="historicos"</code> para facilitar <code>ch.historicos.all()</code>.
+        </div>
+      </div>
+      <div class="card">
+        <h3>📋 Models com mudanças</h3>
+        <table>
+          <tr><th>Model</th><th><code>db_table</code></th><th>Notas</th></tr>
+          <tr><td><code>Chamado</code></td><td><code>chamado</code></td><td><strong>Sem <code>id_status</code></strong>. Properties <code>status_atual</code>, <code>sigla_status</code></td></tr>
+          <tr><td><code>HistoricoChamado</code></td><td><code>historico_chamado</code></td><td><code>related_name="historicos"</code>. <strong>Fonte da verdade do status</strong></td></tr>
+          <tr><td><code>Servico</code></td><td><code>servico</code></td><td><code>related_name="servicos"</code> na FK <code>id_categoria</code></td></tr>
+          <tr><td>Demais</td><td>—</td><td>Sem mudanças</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>🧠 Pergunta típica de prova</h3>
+        <div class="highlight ok">
+          <strong>P:</strong> "Por que <code>Chamado</code> não tem <code>id_status</code>?"<br>
+          <strong>R:</strong> "Porque o status é determinado pelo <strong>último registro de <code>historico_chamado</code></strong>. Isso mantém todo o histórico de mudanças de status rastreável. Usamos <strong>3 properties</strong> no model para acessar o status atual sem poluir a tabela com dados redundantes."
+        </div>
+      </div>
+    `
+  },
+
+  // ─── 4. MIDDLEWARE ───
+  middleware: {
+    title: "4. Middleware",
+    subtitle: "middleware.py — Autenticação e sessão PG",
+    content: `
+      <div class="card">
+        <h3>🔐 Componentes</h3>
+        <table>
+          <tr><th>Função/Classe</th><th>O que faz</th></tr>
+          <tr><td><code>_usuario_da_sessao()</code></td><td>Busca Cidadão ou Servidor pela sessão Django</td></tr>
+          <tr><td><code>_postgres_sessao()</code></td><td>Define <code>portal.perfil</code> e <code>portal.id_usuario_acao</code> na sessão PG via <code>set_config</code></td></tr>
+          <tr><td><code>PortalUserMiddleware</code></td><td>Injeta <code>request.portal_user</code></td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>💡 O que falar na apresentação</h3>
+        <div class="highlight">
+          <strong>"Como a conexão do Django com o banco tem um usuário unificado, nós injetamos na sessão daquele momento no PostgreSQL as variáveis customizadas como: <code>set_config('portal.perfil', 'CID', true)</code>. Assim, todas as Triggers e Functions que criamos no banco sabem exatamente QUAL perfil de sistema está disparando a ação."</strong>
+        </div>
+      </div>
+      <pre><code>def _postgres_sessao(request):
+    from django.db import connection
+    with connection.cursor() as cursor:
+        cursor.execute("SET SESSION portal.perfil = %s", [request.portal_user.perfil])
+        cursor.execute("SET SESSION portal.id_usuario_acao = %s", [request.portal_user.id])</code></pre>
+    `
+  },
+
+  // ─── 5. DECORATORS ───
+  decorators: {
+    title: "5. Decorators",
+    subtitle: "decorators.py — Controle de perfil",
+    content: `
+      <div class="card">
+        <h3>🎭 Decorators disponíveis</h3>
+        <table>
+          <tr><th>Decorator</th><th>Quem pode</th></tr>
+          <tr><td><code>@perfis("CID")</code></td><td>Só cidadão</td></tr>
+          <tr><td><code>@perfis("COL", "GES")</code></td><td>Equipe (Colaborador + Gestor)</td></tr>
+          <tr><td><code>@perfis("GES")</code></td><td>Só gestor</td></tr>
+        </table>
+      </div>
+      <pre><code>def perfis(*allowed):
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped(request, *args, **kwargs):
+            if not hasattr(request, 'portal_user') or request.portal_user.perfil not in allowed:
+                return HttpResponseForbidden("Acesso negado")
+            return view_func(request, *args, **kwargs)
+        return _wrapped
+    return decorator</code></pre>
+    `
+  },
+
+  // ─── 6. UTILS ───
+  utils: {
+    title: "6. Utils",
+    subtitle: "utils.py — Funções auxiliares",
+    content: `
+      <div class="card">
+        <h3>🔧 Funções</h3>
+        <table>
+          <tr><th>Função</th><th>O que faz</th></tr>
+          <tr><td><code>proximo_protocolo()</code></td><td>Gera protocolo <code>20260001</code> via SQL puro (<code>SELECT MAX(num_protocolo)...</code>)</td></tr>
+          <tr><td><code>salvar_foto_upload()</code></td><td>Upload de foto para Cloudinary ou local</td></tr>
+        </table>
+      </div>
+    `
+  },
+
+  // ─── 7. INFRA ───
+  infra: {
+    title: "7. Infraestrutura",
+    subtitle: "config/settings.py e mais",
+    content: `
+      <div class="card">
+        <h3>⚙️ Stack</h3>
+        <ul>
+          <li><code>config/settings.py</code>: PostgreSQL, WhiteNoise, timezone <code>America/Cuiaba</code></li>
+          <li><code>backend/portal/migrations/0001_initial.py</code>: migration inicial do Django</li>
+          <li><code>uv</code> como gerenciador de pacotes</li>
+          <li><code>database/aplicar_no_neon.sql</code>: script consolidado para Neon</li>
+        </ul>
+      </div>
+    `
+  },
+
+  // ─── 8. PONTOS-CHAVE ───
+  pontos: {
+    title: "8. Pontos-Chave",
+    subtitle: "O que você precisa saber explicar",
+    content: `
+      <div class="card">
+        <h3>🗣️ 8 pontos essenciais</h3>
+        <ol style="padding-left:20px;color:var(--text2);line-height:2">
+          <li><strong>Decisão arquitetural:</strong> status no <code>historico_chamado</code>, não campo direto. Mostra <code>ch.status_atual</code> → property</li>
+          <li><strong>Trigger 1:</strong> INSERT chamado → cria histórico AB automaticamente</li>
+          <li><strong>Trigger 2B:</strong> INSERT em <code>historico_chamado</code> → atualiza <code>dt_conclusao</code> e gera notificação</li>
+          <li><strong>Triggers de integridade:</strong> foto em chamado encerrado → <code>RAISE EXCEPTION</code></li>
+          <li><strong>Rules restantes:</strong> R5 (historico imutável), Extra (chamado sem delete)</li>
+          <li><strong>View</strong> com <code>JOIN LATERAL</code> no último histórico</li>
+          <li><strong>Middleware:</strong> <code>set_config</code> → sessão PG</li>
+          <li><strong>Por que rules foram convertidas:</strong> <code>INSERT RETURNING</code> é incompatível com rules condicionais</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h3>📋 Checklist para apresentação</h3>
+        <div id="checklist">
+          <label style="display:block;padding:4px 0;cursor:pointer"><input type="checkbox" onchange="updateProgress()"> Print do DER (11 entidades, chamado SEM id_status)</label>
+          <label style="display:block;padding:4px 0;cursor:pointer"><input type="checkbox" onchange="updateProgress()"> Print das tabelas no pgAdmin</label>
+          <label style="display:block;padding:4px 0;cursor:pointer"><input type="checkbox" onchange="updateProgress()"> SQL do Trigger 1 — linha a linha</label>
+          <label style="display:block;padding:4px 0;cursor:pointer"><input type="checkbox" onchange="updateProgress()"> SQL do Trigger 2A — linha a linha</label>
+          <label style="display:block;padding:4px 0;cursor:pointer"><input type="checkbox" onchange="updateProgress()"> SQL do Trigger 2B — linha a linha</label>
+          <label style="display:block;padding:4px 0;cursor:pointer"><input type="checkbox" onchange="updateProgress()"> SQL dos Triggers de integridade (R1→T, R2→T, R3→T)</label>
+          <label style="display:block;padding:4px 0;cursor:pointer"><input type="checkbox" onchange="updateProgress()"> SQL da View com JOIN LATERAL</label>
+          <label style="display:block;padding:4px 0;cursor:pointer"><input type="checkbox" onchange="updateProgress()"> Print do models.py — properties status_atual, sigla_status</label>
+          <label style="display:block;padding:4px 0;cursor:pointer"><input type="checkbox" onchange="updateProgress()"> Print do middleware.py — set_config</label>
+          <label style="display:block;padding:4px 0;cursor:pointer"><input type="checkbox" onchange="updateProgress()"> Demonstração: INSERT chamado → Trigger 1</label>
+          <label style="display:block;padding:4px 0;cursor:pointer"><input type="checkbox" onchange="updateProgress()"> Demonstração: INSERT historico → Trigger 2B (notificação + dt_conclusao)</label>
+          <label style="display:block;padding:4px 0;cursor:pointer"><input type="checkbox" onchange="updateProgress()"> Demonstração: violação de cada trigger de integridade → RAISE EXCEPTION</label>
+        </div>
+      </div>
+    `
+  },
+
+  // ─── 9. FALAS PRONTAS ───
+  falas: {
+    title: "9. Falas Prontas",
+    subtitle: "Frases preparadas para cada momento da apresentação",
+    content: `
+      <div class="card">
+        <h3>🎤 Trigger 1 (Chamado → Histórico)</h3>
+        <div class="highlight ok">
+          <strong>"Professora, a aplicação Python deu apenas 1 INSERT, que foi na tabela Chamado. Mas veja aqui no pgAdmin: o registro de histórico 'AB' apareceu automaticamente junto. Isso foi o nosso Trigger 1 (AFTER INSERT) garantindo a integridade dos dados."</strong>
+        </div>
+        <p><strong>Ação:</strong> Abra o pgAdmin na tabela <code>historico_chamado</code>. Peça para o Bruno abrir um chamado no site. Atualize o pgAdmin.</p>
+      </div>
+
+      <div class="card">
+        <h3>🎤 View <code>vw_estatisticas_chamados</code></h3>
+        <div class="highlight ok">
+          <strong>"Para não travar a aplicação do Gestor fazendo dezenas de SELECTs individuais, criei uma View no PostgreSQL. Ela usa um JOIN LATERAL poderoso para buscar exclusivamente qual é o ÚLTIMO status registrado no histórico de cada chamado, e já devolve tudo consolidado agrupando por bairro e categoria."</strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🎤 A Pergunta de Ouro: Por que trocaram Rules por Triggers?</h3>
+        <div class="highlight err">
+          <strong>"Professora, descobrimos na prática que as Rules condicionais (DO INSTEAD NOTHING) matam silenciosamente o comando INSERT. Como o nosso Python usa o comando RETURNING id_chamado para recuperar o ID gerado pelo banco e salvar a foto na sequência, a Rule engolia isso e o Python dava erro de variável vazia. Trocamos para Trigger BEFORE com RAISE EXCEPTION porque o trigger barra a transação no banco da mesma forma, mas cospe um erro explícito que o Python consegue ler e tratar."</strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🎤 Middleware — <code>set_config</code></h3>
+        <div class="highlight ok">
+          <strong>"Como a conexão do Django com o banco de dados tem um usuário unificado, nós injetamos na sessão daquele momento no PostgreSQL as variáveis customizadas como: set_config('portal.perfil', 'CID', true). Assim, todas as Triggers e Functions que criamos no banco sabem exatamente QUAL perfil de sistema está disparando a ação."</strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📖 Roteiro completo de demonstração</h3>
+        <ol style="padding-left:20px;color:var(--text2);line-height:1.8">
+          <li><strong>pgAdmin:</strong> mostre as 11 tabelas, destaque que <code>chamado</code> NÃO tem <code>id_status</code></li>
+          <li><strong>INSERT chamado</strong> → mostre o Trigger 1 criando o histórico AB</li>
+          <li><strong>INSERT historico</strong> → mostre o Trigger 2B atualizando <code>dt_conclusao</code> e gerando notificação</li>
+          <li><strong>Violar trigger de foto:</strong> tente inserir foto em chamado CO → mostre o <code>RAISE EXCEPTION</code></li>
+          <li><strong>Violar trigger de avaliação:</strong> tente alterar avaliação já preenchida → mostre erro</li>
+          <li><strong>Mostre a View</strong> com JOIN LATERAL funcionando</li>
+          <li><strong>Explique o middleware</strong> e o <code>set_config</code></li>
+          <li><strong>Explique a conversão</strong> rules → triggers</li>
+        </ol>
+      </div>
+    `
+  },
+
+  // ─── 10. MAPA POR ETAPA ───
+  etapas: {
+    title: "10. Mapa por Etapa",
+    subtitle: "O que apresentar em cada etapa da disciplina",
+    content: `
+      <div class="card">
+        <h3>📅 Etapas</h3>
+        <table>
+          <tr><th>Etapa</th><th>O que Rafael apresenta</th></tr>
+          <tr><td><strong>Etapa 1</strong></td><td>Seção 5 — Modelo de Dados: 11 entidades</td></tr>
+          <tr><td><strong>Etapa 2</strong></td><td>DER + <code>01_schema.sql</code> + pgAdmin</td></tr>
+          <tr><td><strong>Etapa 3</strong></td><td>Apoio com estrutura de dados</td></tr>
+          <tr><td><strong>Etapa 4</strong></td><td><code>settings.py</code>, conexão Neon, <code>middleware.py</code></td></tr>
+          <tr><td><strong>Etapa 5</strong></td><td>CRUD de Bairros + Triggers + Triggers de integridade</td></tr>
+          <tr><td><strong>Etapa 6</strong></td><td><code>models.py</code>, <code>decorators.py</code>, <code>middleware.py</code>, <code>utils.py</code></td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>📄 Arquivos que você DEVE saber explicar</h3>
+        <div class="grid-2">
+          <div>
+            <h4 style="color:var(--accent);margin-bottom:8px">SQL (database/)</h4>
+            <ul>
+              <li><code>00_install_all.sql</code> — Script master</li>
+              <li><code>01_schema.sql</code> — 11 tabelas</li>
+              <li><code>02_seed.sql</code> — Dados iniciais</li>
+              <li><code>03_functions_triggers.sql</code> — 3 funções + 3 triggers</li>
+              <li><code>04_rules.sql</code> — Regras de integridade</li>
+              <li><code>05_views.sql</code> — View com JOIN LATERAL</li>
+              <li><code>fix_rules_to_triggers.sql</code> — Migração</li>
+              <li><code>aplicar_no_neon.sql</code> — Consolidado Neon</li>
+            </ul>
+          </div>
+          <div>
+            <h4 style="color:var(--accent);margin-bottom:8px">Python (backend/portal/)</h4>
+            <ul>
+              <li><code>models.py</code> — 12 classes, properties</li>
+              <li><code>db.py</code> — 14 funções SQL puro</li>
+              <li><code>middleware.py</code> — Autenticação dual</li>
+              <li><code>decorators.py</code> — @perfis()</li>
+              <li><code>utils.py</code> — Protocolo, upload</li>
+              <li><code>context_processors.py</code> — nav_user, notif_count</li>
+              <li><code>migrations/0001_initial.py</code> — Migration inicial</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    `
+  },
+
+  // ─── 11. PONTO CRÍTICO ───
+  critico: {
+    title: "11. Ponto Crítico",
+    subtitle: "Conversão Rules → Triggers — a pergunta que vale nota",
+    content: `
+      <div class="card">
+        <h3>⚠️ Por que R1, R2, R3 foram convertidas?</h3>
+        <div class="highlight err">
+          <strong>O problema:</strong> Rules condicionais (<code>DO INSTEAD NOTHING</code>) interceptam o <code>INSERT</code>, fazendo o <code>RETURNING</code> falhar. O Python usava <code>INSERT ... RETURNING id_chamado</code> para obter o ID e a Rule "engolia" o comando.
+        </div>
+        <div class="highlight ok">
+          <strong>A solução:</strong> Triggers <code>BEFORE</code> com <code>RAISE EXCEPTION</code> — barram a transação da mesma forma mas jogam um erro explícito que o backend captura.
+        </div>
+        <pre><code>-- ANTES (Rule — falha silenciosa):
+CREATE RULE trg_foto_chamado_encerrado AS
+ON INSERT TO foto_chamado
+WHERE EXISTS (...)
+DO INSTEAD NOTHING;
+
+-- DEPOIS (Trigger — erro explícito):
+CREATE OR REPLACE FUNCTION fn_foto_chamado_encerrado()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM ... WHERE sigla IN ('CO','CA')) THEN
+    RAISE EXCEPTION 'Chamado já encerrado';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;</code></pre>
+      </div>
+      <div class="card">
+        <h3>🧠 Resumo de 1 minuto para a professora</h3>
+        <div class="highlight">
+          <p>"Trocamos <strong>3 Rules</strong> por <strong>Triggers BEFORE</strong> porque as Rules com <code>DO INSTEAD NOTHING</code> são <strong>incompatíveis com <code>INSERT RETURNING</code></strong> — elas impedem o INSERT de retornar dados, quebrando o fluxo do nosso backend Python. Os Triggers com <code>RAISE EXCEPTION</code> resolvem: barram a operação mas devolvem um erro tratável."</p>
+        </div>
+      </div>
+    `
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+//  QUIZ DATA
+// ═══════════════════════════════════════════════════════════
+
+const QUIZ = [
+  { q: "Quantas tabelas o banco de dados tem?", a: "11 tabelas" },
+  { q: "O campo id_status existe na tabela chamado?", a: "Não! O status é determinado pelo ÚLTIMO registro de historico_chamado." },
+  { q: "Quais são as 5 siglas de status?", a: "AB (Aberto), EA (Em Análise), EE (Em Execução), CO (Concluído), CA (Cancelado)" },
+  { q: "O que o Trigger 1 (trg_chamado_after_insert_historico_ab) faz?", a: "AFTER INSERT em chamado → insere automaticamente um histórico com status AB" },
+  { q: "O que o Trigger 2B (trg_historico_after_insert_status) faz?", a: "AFTER INSERT em historico_chamado → atualiza dt_conclusao se CO/CA, limpa se AB/EA/EE, gera notificação" },
+  { q: "Qual view usa JOIN LATERAL?", a: "vw_estatisticas_chamados — busca o último status de cada chamado e agrupa por categoria/bairro" },
+  { q: "Por que R1, R2, R3 foram convertidas de Rules para Triggers?", a: "Rules condicionais (DO INSTEAD NOTHING) são incompatíveis com INSERT RETURNING. Triggers BEFORE com RAISE EXCEPTION devolvem erro explícito." },
+  { q: "Quais são os 3 decorators disponíveis?", a: "@perfis('CID'), @perfis('COL','GES'), @perfis('GES')" },
+  { q: "O que o middleware PortalUserMiddleware faz?", a: "Injeta request.portal_user e define portal.perfil/portal.id_usuario_acao na sessão PG via set_config" },
+  { q: "O que a função proximo_protocolo() faz?", a: "Gera o próximo número de protocolo no formato 20260001 via SELECT MAX(num_protocolo)" },
+  { q: "Qual trigger impede adicionar foto a chamado encerrado?", a: "trg_foto_chamado_encerrado (BEFORE INSERT em foto_chamado) — RAISE EXCEPTION se último status for CO/CA" },
+  { q: "Qual trigger impede alterar avaliação já preenchida?", a: "trg_avaliacao_imutavel (BEFORE UPDATE em chamado) — RAISE EXCEPTION se avaliação já foi preenchida" },
+  { q: "O que a Rule R5 faz?", a: "Impede UPDATE e DELETE em historico_chamado via DO INSTEAD NOTHING" },
+  { q: "Qual é a fonte da verdade para o status atual do chamado?", a: "O último registro de historico_chamado (não a tabela chamado)" },
+  { q: "Quais são as 3 properties do model Chamado?", a: "status_atual, sigla_status, atualizado_em" },
+  { q: "O que o Trigger 2A (trg_chamado_before_update_metadados) faz?", a: "BEFORE UPDATE em chamado → atualiza atualizado_em = CURRENT_TIMESTAMP" },
+  { q: "Quais status fazem o Trigger 2B atualizar dt_conclusao?", a: "CO (Concluído) e CA (Cancelado)" },
+  { q: "O que o script fix_rules_to_triggers.sql contém?", a: "DROP das rules antigas + criação dos triggers equivalentes. Para executar no NeonDB." },
+  { q: "Qual perfil pode acessar @perfis('GES')?", a: "Apenas Gestor" },
+  { q: "Qual é o gerenciador de pacotes do projeto?", a: "uv" }
+];
+
+// ═══════════════════════════════════════════════════════════
+//  APP STATE
+// ═══════════════════════════════════════════════════════════
+
+let currentSection = 'overview';
+let quizActive = false;
+let quizIndex = 0;
+let quizFlipped = false;
+let completedChecks = new Set();
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════
+
+function renderSidebar() {
+  const nav = document.getElementById('sidebarNav');
+  const keys = Object.keys(DATA);
+  let html = '';
+  html += `<div class="nav-section">
+    <div class="nav-header" onclick="navigate('overview')">
+      🏠 Visão Geral <span class="arrow">▾</span>
+    </div>
+  </div>`;
+  for (const key of keys) {
+    if (key === 'overview') continue;
+    const d = DATA[key];
+    html += `<div class="nav-section">
+      <div class="nav-header ${key === currentSection ? '' : 'collapsed'}" onclick="navigate('${key}')">
+        ${d.title.split(' ').slice(1).join(' ')} <span class="arrow">▾</span>
+      </div>
+    </div>`;
+  }
+  nav.innerHTML = html;
+  updateNavActive();
+}
+
+function updateNavActive() {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const active = document.querySelector(`.nav-item[data-section="${currentSection}"]`);
+  if (active) active.classList.add('active');
+  // highlight the section header
+  document.querySelectorAll('.nav-header').forEach(h => h.style.color = '');
+  const headers = document.querySelectorAll('.nav-header');
+  // Find the header whose text matches current section
+  const d = DATA[currentSection];
+  if (d) {
+    headers.forEach(h => {
+      if (h.textContent.trim().includes(d.title.split(' ').slice(1).join(' '))) {
+        h.style.color = 'var(--accent)';
+      }
+    });
+  }
+}
+
+function renderMain() {
+  const main = document.getElementById('mainContent');
+  if (quizActive) {
+    renderQuiz();
+    return;
+  }
+  const d = DATA[currentSection];
+  if (!d) return;
+  main.innerHTML = `
+    <div class="search-box">
+      <span class="ico">🔍</span>
+      <input type="text" placeholder="Buscar nesta seção..." oninput="searchContent(this.value)">
+    </div>
+    <h2>${d.title}</h2>
+    <p class="subtitle">${d.subtitle}</p>
+    ${d.content}
+    ${currentSection === 'pontos' ? `<div class="progress-dots" id="progressDots"></div>` : ''}
+  `;
+  // re-trigger tabs
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+    });
+  });
+  // restore checklist
+  document.querySelectorAll('#checklist input').forEach(cb => {
+    const label = cb.parentElement.textContent.trim();
+    if (completedChecks.has(label)) cb.checked = true;
+  });
+}
+
+function navigate(key) {
+  currentSection = key;
+  quizActive = false;
+  renderSidebar();
+  renderMain();
+  // close sidebar on mobile
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  QUIZ
+// ═══════════════════════════════════════════════════════════
+
+function toggleQuiz() {
+  quizActive = !quizActive;
+  if (quizActive) {
+    quizIndex = 0;
+    quizFlipped = false;
+  }
+  renderMain();
+}
+
+function renderQuiz() {
+  const main = document.getElementById('mainContent');
+  const q = QUIZ[quizIndex];
+  if (!q) {
+    main.innerHTML = `
+      <div class="card" style="text-align:center;padding:60px">
+        <h2 style="font-size:2rem;margin-bottom:16px">🎉</h2>
+        <h3>Você completou o quiz!</h3>
+        <p style="color:var(--text2);margin:16px 0">${QUIZ.length} perguntas respondidas.</p>
+        <button class="btn btn-primary" onclick="quizIndex=0;quizFlipped=false;renderQuiz()">🔄 Recomeçar</button>
+        <button class="btn btn-outline" onclick="toggleQuiz()">Voltar ao estudo</button>
+      </div>
+    `;
+    return;
+  }
+  main.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <h2>🎯 Quiz Rápido</h2>
+      <span style="color:var(--text2);font-size:.85rem">${quizIndex + 1} / ${QUIZ.length}</span>
+    </div>
+    <div class="progress-bar" style="width:100%;margin-bottom:24px"><div class="progress-fill" style="width:${((quizIndex + 1) / QUIZ.length) * 100}%"></div></div>
+    <div class="flashcard" onclick="flipQuiz()">
+      ${!quizFlipped
+        ? `<div class="front">${q.q}</div><div class="hint">👆 Clique para ver a resposta</div>`
+        : `<div class="back">${q.a}</div><div class="hint">👆 Clique para voltar à pergunta</div>`
+      }
+    </div>
+    <div class="fc-controls">
+      <button class="btn btn-outline" onclick="prevQuiz()" ${quizIndex === 0 ? 'disabled style="opacity:.4"' : ''}>◀ Anterior</button>
+      <button class="btn btn-primary" onclick="nextQuiz()">Próxima ▶</button>
+    </div>
+    <div style="text-align:center">
+      <button class="btn-ghost" onclick="toggleQuiz()">← Voltar ao estudo</button>
+    </div>
+  `;
+}
+
+function flipQuiz() {
+  quizFlipped = !quizFlipped;
+  renderQuiz();
+}
+
+function nextQuiz() {
+  if (quizIndex < QUIZ.length - 1) { quizIndex++; quizFlipped = false; renderQuiz(); }
+}
+function prevQuiz() {
+  if (quizIndex > 0) { quizIndex--; quizFlipped = false; renderQuiz(); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PROGRESS & SEARCH
+// ═══════════════════════════════════════════════════════════
+
+function updateProgress() {
+  const checks = document.querySelectorAll('#checklist input');
+  const done = Array.from(checks).filter(c => c.checked).length;
+  checks.forEach(c => {
+    const label = c.parentElement.textContent.trim();
+    if (c.checked) completedChecks.add(label);
+    else completedChecks.delete(label);
+  });
+  const total = checks.length || 1;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+}
+
+function resetChecks() {
+  completedChecks.clear();
+  document.querySelectorAll('#checklist input').forEach(c => c.checked = false);
+  updateProgress();
+}
+
+function searchContent(val) {
+  const cards = document.querySelectorAll('.card');
+  const q = val.toLowerCase().trim();
+  cards.forEach(card => {
+    if (!q) { card.style.display = ''; return; }
+    card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+
+renderSidebar();
+renderMain();
+updateProgress();
+</script>
+</body>
+</html>
