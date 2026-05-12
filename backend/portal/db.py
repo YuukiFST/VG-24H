@@ -462,11 +462,35 @@ def listar_statuses():
 # PAGINACAO — Funcao reutilizavel
 # ═══════════════════════════════════════════════════════════════
 
+class _PageObj:
+    """Wrapper de paginacao compativel com templates Django.
+
+    Substitui SimpleNamespace porque o Python so enxerga metodos
+    dunder (__len__, __iter__) definidos na classe, nao no objeto.
+    """
+    def __init__(self, object_list, number, paginator,
+                 has_previous, has_next,
+                 previous_page_number, next_page_number):
+        self.object_list = object_list
+        self.number = number
+        self.paginator = paginator
+        self.has_previous = has_previous
+        self.has_next = has_next
+        self.previous_page_number = previous_page_number
+        self.next_page_number = next_page_number
+
+    def __len__(self):
+        return len(self.object_list)
+
+    def __iter__(self):
+        return iter(self.object_list)
+
+
 def paginar(itens, pagina, por_pagina=15):
     """
     Paginacao manual para listas de objetos.
 
-    Recebe uma lista completa de itens e retorna um objeto SimpleNamespace
+    Recebe uma lista completa de itens e retorna um objeto _PageObj
     compativel com os templates Django (page_obj), contendo:
       - object_list: itens da pagina atual
       - number: numero da pagina atual
@@ -474,7 +498,7 @@ def paginar(itens, pagina, por_pagina=15):
       - has_previous / has_next: navegacao
       - previous_page_number / next_page_number
 
-    [!] Usa SimpleNamespace em vez de django.core.paginator.Paginator
+    [!] Usa classe propria em vez de django.core.paginator.Paginator
         porque a paginacao e feita em memoria (todos os itens ja foram
         carregados do banco via SQL puro).
     """
