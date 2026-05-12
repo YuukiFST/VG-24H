@@ -190,6 +190,8 @@
       </section>
 
       <!-- ====== QUICK ACTIONS ====== -->
+      {# [!] Botoes visiveis apenas para anonimos e CID — GES/COL usam o menu lateral #}
+      {% if not request.portal_user or request.portal_user.perfil == 'CID' %}
       <section class="quick-actions">
         <div class="container-custom">
           <a href="{% url 'portal:cidadao_chamado_novo' %}" class="br-button primary" id="btn-abrir-chamado">
@@ -200,6 +202,7 @@
           </a>
         </div>
       </section>
+      {% endif %}
 
       <!-- ====== CATEGORY CARDS (GOV.br br-card oficial com hover overlay) ====== -->
       <style>
