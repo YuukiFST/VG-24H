@@ -7,11 +7,11 @@ BEGIN;
 -- 5 status do chamado (dominio fixo, corresponde ao CHECK constraint)
 -- ============================================================================
 INSERT INTO status_chamado (sigla, descricao) VALUES
-    ('AB', 'Aberto — Chamado aberto pelo cidadao'),
-    ('EA', 'Em Atendimento — Em atendimento pela equipe responsavel'),
-    ('EE', 'Em Execucao — Em execucao no campo'),
-    ('CO', 'Concluido — Servico concluido'),
-    ('CA', 'Cancelado — Chamado cancelado');
+    ('AB', 'AB — Aberto'),
+    ('EA', 'EA — Em Atendimento'),
+    ('EE', 'EE — Em Execução'),
+    ('CO', 'CO — Concluído'),
+    ('CA', 'CA — Cancelado');
 
 -- ============================================================================
 -- 1 secretaria padrao (secretaria de obras)

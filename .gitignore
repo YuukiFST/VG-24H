@@ -63,6 +63,7 @@ error_log.txt
 # =========================
 # Custom
 # =========================
+docs/agents/
 .skills/
 .gemini/
 .antigravity/
