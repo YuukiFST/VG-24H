@@ -66,7 +66,13 @@ def cidadao_chamados_lista(request):
         "  JOIN status_chamado sc ON hc.id_status = sc.id_status "
         "  WHERE hc.id_chamado = c.id_chamado "
         "  ORDER BY hc.dt_alteracao DESC LIMIT 1"
-        ") AS sigla_status "
+        ") AS sigla_status, "
+        "("
+        "  SELECT sc.descricao FROM historico_chamado hc "
+        "  JOIN status_chamado sc ON hc.id_status = sc.id_status "
+        "  WHERE hc.id_chamado = c.id_chamado "
+        "  ORDER BY hc.dt_alteracao DESC LIMIT 1"
+        ") AS status_descricao "
         "FROM chamado c "
         "JOIN servico s ON c.id_servico = s.id_servico "
         "JOIN bairro b ON c.id_bairro = b.id_bairro "
@@ -114,12 +120,15 @@ def cidadao_chamados_lista(request):
             cor = "amarelo"
         else:
             cor = "verde"
+        sigla = r[12] or ""
+        status_desc = r[13] or sigla
         chamados.append(SimpleNamespace(
             id_chamado=r[0], pk=r[0], num_protocolo=r[1], prioridade=r[2],
             descricao=r[3], dt_abertura=r[4], atualizado_em=r[5],
             id_servico=SimpleNamespace(id_servico=r[6], pk=r[6], nome=r[8]),
             id_bairro=SimpleNamespace(id_bairro=r[7], pk=r[7], nome_bairro=r[11]),
-            sigla_status=r[12] or "", cor_semaforo=cor,
+            sigla_status=sigla, cor_semaforo=cor,
+            status_atual=SimpleNamespace(sigla=sigla, descricao=status_desc),
         ))
 
     # Paginacao (via db.paginar)

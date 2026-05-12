@@ -491,7 +491,7 @@ def paginar(itens, pagina, por_pagina=15):
     end = start + por_pagina
     page_items = itens[start:end]
 
-    page_obj = SimpleNamespace(
+    page_obj = _PageObj(
         object_list=page_items,
         number=page_number,
         paginator=SimpleNamespace(
@@ -503,8 +503,21 @@ def paginar(itens, pagina, por_pagina=15):
         previous_page_number=page_number - 1 if page_number > 1 else None,
         next_page_number=page_number + 1 if page_number < total_pages else None,
     )
-    # Torna page_obj iteravel (para {% for ch in lista %} nos templates)
-    page_obj.__iter__ = lambda self: iter(self.object_list)
-    page_obj.__len__ = lambda self: len(self.object_list)
 
     return page_obj, total_count
+
+
+class _PageObj(SimpleNamespace):
+    """
+    Pagina de resultados compativel com templates Django.
+
+    [!] Python busca __len__ e __iter__ no TIPO (classe), nao na instancia.
+        Por isso precisamos de uma classe propria em vez de SimpleNamespace
+        com lambdas — len(obj) e iter(obj) so funcionam se definidos aqui.
+    """
+
+    def __iter__(self):
+        return iter(self.object_list)
+
+    def __len__(self):
+        return len(self.object_list)
