@@ -30,6 +30,7 @@ from portal.utils import salvar_foto_upload
 
 
 def _int_none(v):
+    """Converte string da query string para int, ou None se vazio/invalido."""
     if v is None or v == "":
         return None
     try:
@@ -39,15 +40,19 @@ def _int_none(v):
 
 
 
-# LISTAR TODOS OS CHAMADOS — Rota: /equipe/chamados/
-# @perfis("COL", "GES") = SÓ colaboradores e gestores podem acessar
-# Diferença do cidadão: aqui NÃO filtra por id_cidadao (vê TODOS os chamados)
+# ═══════════════════════════════════════════════════════════════
+# READ — Listar TODOS os chamados — Rota: /equipe/chamados/
+# ═══════════════════════════════════════════════════════════════
+# [!] Diferenca do cidadao: aqui NAO filtra por id_cidadao (ve TODOS)
+#     WHERE TRUE permite concatenar filtros opcionais com AND
 @perfis("COL", "GES")
 def equipe_chamados_lista(request):
-    # Stats (Semáforo) — antes de aplicar filtros (via db.py)
+    # Semaforo geral (sem filtros) — usado nos cards de resumo do dashboard
     stats = db.calcular_stats_semaforo()
 
-    # SQL puro: SELECT todos os chamados com JOINs
+    # SQL puro: SELECT com JOINs + 2 subqueries para status atual
+    # [!] Mesma logica de views_cidadao, mas sem WHERE id_cidadao
+    #     e com JOIN extra em cidadao (para mostrar nome do solicitante)
     sql = (
         "SELECT c.id_chamado, c.num_protocolo, c.prioridade, "
         "c.descricao, c.dt_abertura, c.atualizado_em, "
@@ -71,20 +76,21 @@ def equipe_chamados_lista(request):
         "JOIN servico s ON c.id_servico = s.id_servico "
         "JOIN bairro b ON c.id_bairro = b.id_bairro "
         "JOIN cidadao ci ON c.id_cidadao = ci.id_cidadao "
-        "WHERE TRUE "
+        "WHERE TRUE "      # WHERE TRUE = base para concatenar ANDs dinamicos
     )
     params = []
 
-    # Filtros
-    bairro = _int_none(request.GET.get("bairro"))
-    st = _int_none(request.GET.get("status"))
-    d0 = request.GET.get("de")
-    d1 = request.GET.get("ate")
+    # Filtros dinamicos da query string (todos opcionais)
+    bairro = _int_none(request.GET.get("bairro"))  # ?bairro=3 → filtra por bairro
+    st = _int_none(request.GET.get("status"))      # ?status=2 → filtra por id_status
+    d0 = request.GET.get("de")                      # ?de=2026-01-01 → data inicio
+    d1 = request.GET.get("ate")                     # ?ate=2026-05-01 → data fim
 
     if bairro:
         sql += "AND c.id_bairro = %s "
         params.append(bairro)
     if st:
+        # Subquery: filtra pelo status ATUAL (ultimo historico)
         sql += (
             "AND ("
             "  SELECT hc2.id_status FROM historico_chamado hc2 "
@@ -94,7 +100,7 @@ def equipe_chamados_lista(request):
         )
         params.append(st)
     if d0:
-        sql += "AND c.dt_abertura::date >= %s "
+        sql += "AND c.dt_abertura::date >= %s "  # ::date = cast para comparar so o dia
         params.append(d0)
     if d1:
         sql += "AND c.dt_abertura::date <= %s "
@@ -110,19 +116,20 @@ def equipe_chamados_lista(request):
         cursor.execute("SELECT COUNT(*) FROM chamado")
         total_count = cursor.fetchone()[0]
 
-    # Monta lista para o template
+    # HIDRATACAO + SEMAFORO: tuplas → SimpleNamespace com cor de urgencia
     now = timezone.now()
     linhas = []
     for r in rows:
+        # r[4]=dt_abertura, r[10]=prazo_amarelo, r[11]=prazo_vermelho
         dias = (now - r[4]).days
         if dias >= r[11]:
-            cor = "vermelho"
+            cor = "vermelho"    # Critico
         elif dias >= r[10]:
-            cor = "amarelo"
+            cor = "amarelo"     # Atencao
         else:
-            cor = "verde"
-        sigla = r[14] or ""
-        status_desc = r[15] or ""
+            cor = "verde"       # No prazo
+        sigla = r[14] or ""     # r[14] = subquery sigla_status
+        status_desc = r[15] or ""  # r[15] = subquery status_descricao
         ch = SimpleNamespace(
             id_chamado=r[0], pk=r[0], num_protocolo=r[1], prioridade=r[2],
             descricao=r[3], dt_abertura=r[4], atualizado_em=r[5],
@@ -134,7 +141,7 @@ def equipe_chamados_lista(request):
         )
         linhas.append({"ch": ch, "cor": cor})
 
-    # SQL puro: busca bairros e statuses para os filtros
+    # Busca listas para popular os <select> de filtros no template
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_bairro, nome_bairro FROM bairro "
@@ -153,6 +160,8 @@ def equipe_chamados_lista(request):
             for r in cursor.fetchall()
         ]
 
+    # Contexto para o template:
+    #   bairros/statuses = opcoes dos <select>  |  filtro_* = valor selecionado
     return render(
         request,
         "portal/equipe/dashboard.html",
@@ -160,20 +169,26 @@ def equipe_chamados_lista(request):
             "linhas": linhas,
             "stats": stats,
             "total_count": total_count,
-            "bairros": bairros_lista,
-            "statuses": statuses_lista,
-            "filtro_bairro": bairro,
-            "filtro_status": st,
-            "filtro_de": d0 or "",
-            "filtro_ate": d1 or "",
+            "bairros": bairros_lista,         # Lista completa para popular <select>
+            "statuses": statuses_lista,       # Lista completa para popular <select>
+            "filtro_bairro": bairro,           # Qual bairro esta selecionado
+            "filtro_status": st,               # Qual status esta selecionado
+            "filtro_de": d0 or "",             # Data inicio selecionada
+            "filtro_ate": d1 or "",            # Data fim selecionada
         },
     )
 
 
+# ═══════════════════════════════════════════════════════════════
+# UPDATE — Detalhe + acoes da equipe — Rota: /equipe/chamados/<pk>/
+# ═══════════════════════════════════════════════════════════════
+# [!] POST acao='status' → INSERT historico_chamado (muda status)
+#     POST acao='obs'    → INSERT historico_chamado (observacao)
+#     POST acao='foto'   → INSERT foto_chamado
 @perfis("COL", "GES")
 @require_http_methods(["GET", "POST"])
 def equipe_chamado_detalhe(request, pk):
-    # SQL puro: busca chamado com JOINs completos
+    # SELECT chamado com JOINs completos (servico + bairro + cidadao + categoria)
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT c.id_chamado, c.num_protocolo, c.prioridade, "
@@ -237,8 +252,11 @@ def equipe_chamado_detalhe(request, pk):
             if form_s.is_valid():
                 novo = form_s.cleaned_data["id_status"]
                 # [!] MUDANCA DE STATUS = INSERT em historico_chamado
-                #     Nao e UPDATE em chamado! O status atual e o ULTIMO registro.
-                #     Trigger 2B: atualiza dt_conclusao + gera notificacao.
+                #     NAO e UPDATE em chamado! O status atual = ULTIMO registro.
+                #     Trigger 2B dispara automaticamente:
+                #       → Se CO/CA: UPDATE chamado SET dt_conclusao = NOW()
+                #       → Se AB/EA/EE: UPDATE chamado SET dt_conclusao = NULL
+                #       → INSERT notificacao (aviso ao cidadao)
                 #     id_servidor = quem esta logado (rastreabilidade)
                 with connection.cursor() as cursor:
                     cursor.execute(
@@ -348,8 +366,10 @@ def equipe_chamado_detalhe(request, pk):
 
 
 # ═══════════════════════════════════════════════════════════════
-# EXCLUSÃO DE CHAMADO (somente GES — Gestor/Administrador)
+# DELETE — Exclusao de chamado — Rota: /equipe/chamados/<pk>/excluir/
 # ═══════════════════════════════════════════════════════════════
+# [!] Somente GES (Gestor). Requer justificativa obrigatoria.
+#     Fluxo: log de auditoria → DELETE filhos → DELETE chamado
 @perfis("GES")
 @require_http_methods(["POST"])
 def gestao_chamado_excluir(request, pk):
@@ -413,15 +433,30 @@ def gestao_chamado_excluir(request, pk):
     return redirect("portal:equipe_chamados")
 
 
+# ═══════════════════════════════════════════════════════════════
+# ESTATISTICAS — Dashboard com graficos — Rota: /equipe/
+# ═══════════════════════════════════════════════════════════════
+# [!] Calcula 4 metricas via SQL puro:
+#     1. Atendidas hoje (COUNT com dt_conclusao = hoje)
+#     2. Atendidas semana (COUNT com dt_conclusao >= 7 dias atras)
+#     3. Status geral (GROUP BY para grafico de pizza)
+#     4. Distribuicao por bairro (TOP 10 para grafico de barras)
+#
+# [!] dt_conclusao e preenchido AUTOMATICAMENTE pelo Trigger 2B
+#     quando um INSERT em historico_chamado tem status CO ou CA.
+#     O Python NUNCA seta dt_conclusao para conclusao — so o trigger.
 @perfis("COL", "GES")
 @require_http_methods(["GET"])
 def equipe_dashboard(request):
     agora = timezone.now()
-    hoje = agora.date()
-    inicio_semana = hoje - timedelta(days=7)
+    hoje = agora.date()                         # Data de hoje (so dia, sem hora)
+    inicio_semana = hoje - timedelta(days=7)    # 7 dias atras
 
     with connection.cursor() as cursor:
-        # Atendidas hoje
+        # METRICA 1: Chamados concluidos HOJE
+        # Conta chamados cujo status atual = 'CO' E dt_conclusao = hoje
+        # [!] Subquery busca o status ATUAL (ultimo historico)
+        # [!] dt_conclusao::date = cast para comparar so o dia (sem hora)
         cursor.execute('''
             SELECT COUNT(*) FROM chamado c
             WHERE (
@@ -435,7 +470,8 @@ def equipe_dashboard(request):
         atendidas_hoje_row = cursor.fetchone()
         atendidas_hoje = atendidas_hoje_row[0] if atendidas_hoje_row else 0
 
-        # Atendidas semana
+        # METRICA 2: Chamados concluidos nos ultimos 7 DIAS
+        # Mesma logica, mas com >= (a partir de 7 dias atras ate hoje)
         cursor.execute('''
             SELECT COUNT(*) FROM chamado c
             WHERE (
@@ -449,7 +485,9 @@ def equipe_dashboard(request):
         atendidas_semana_row = cursor.fetchone()
         atendidas_semana = atendidas_semana_row[0] if atendidas_semana_row else 0
 
-        # Status geral
+        # METRICA 3: Distribuicao por status (para grafico de pizza/barras)
+        # Resultado: [("Aberto", 15), ("Concluido", 42), ...]
+        # [!] Subquery no WHERE garante que pega APENAS o ultimo historico de cada chamado
         cursor.execute('''
             SELECT sc.descricao, COUNT(c.id_chamado) 
             FROM chamado c
@@ -463,10 +501,10 @@ def equipe_dashboard(request):
             GROUP BY sc.descricao
         ''')
         status_geral_rows = cursor.fetchall()
-        status_labels = [row[0] for row in status_geral_rows]
-        status_data = [row[1] for row in status_geral_rows]
+        status_labels = [row[0] for row in status_geral_rows]  # ["Aberto", "Concluido", ...]
+        status_data = [row[1] for row in status_geral_rows]    # [15, 42, ...]
 
-        # Distribuição de bairros
+        # METRICA 4: Top 10 bairros com mais chamados (para grafico de barras)
         cursor.execute('''
             SELECT b.nome_bairro, COUNT(c.id_chamado) as qtd
             FROM chamado c
@@ -476,14 +514,15 @@ def equipe_dashboard(request):
             LIMIT 10
         ''')
         bairros_rows = cursor.fetchall()
-        bairros_labels = [row[0] for row in bairros_rows]
-        bairros_data = [row[1] for row in bairros_rows]
+        bairros_labels = [row[0] for row in bairros_rows]  # ["Centro", "Jardim", ...]
+        bairros_data = [row[1] for row in bairros_rows]    # [30, 25, ...]
 
+    # Converte listas para JSON (usado pelo Chart.js no template)
     context = {
-        'atendidas_hoje': atendidas_hoje,
-        'atendidas_semana': atendidas_semana,
-        'status_labels_json': json.dumps(status_labels),
-        'status_data_json': json.dumps(status_data),
+        'atendidas_hoje': atendidas_hoje,          # Numero inteiro
+        'atendidas_semana': atendidas_semana,      # Numero inteiro
+        'status_labels_json': json.dumps(status_labels),   # JSON para Chart.js
+        'status_data_json': json.dumps(status_data),       # JSON para Chart.js
         'bairros_labels_json': json.dumps(bairros_labels),
         'bairros_data_json': json.dumps(bairros_data),
     }
