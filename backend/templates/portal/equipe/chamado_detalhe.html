@@ -48,17 +48,18 @@
         <div class="info-row">
           <span class="info-label">Status Atual</span>
           <span class="info-value">
-            <span class="br-tag count {% with s=sigla_status|lower %}{% if s == 'ab' %}info{% elif s == 'ea' or s == 'ee' %}warning{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ ch.status_atual.descricao }}</span>
+            <span class="br-tag count {% with s=sigla_status|lower %}{% if s == 'ab' %}info{% elif s == 'ea' %}warning{% elif s == 'ee' %}ee-status{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ ch.status_atual.descricao }}</span>
           </span>
         </div>
         <div class="info-row">
           <span class="info-label">Prioridade</span>
           <span class="info-value">
-            {% if ch.prioridade == 0 %}<span class="text-muted">Sem classificação</span>
-            {% elif ch.prioridade <= 2 %}<span style="color: var(--vg-accent);">{{ ch.prioridade }} — Baixa</span>
-            {% elif ch.prioridade == 3 %}<span style="color: var(--vg-orange);">{{ ch.prioridade }} — Média</span>
-            {% else %}<span style="color: var(--vg-danger);">{{ ch.prioridade }} — {% if ch.prioridade == 5 %}Urgente{% else %}Alta{% endif %}</span>
-            {% endif %}
+            {% if ch.prioridade == 5 %}<span class="br-tag" style="background:var(--vg-priority-5); color:var(--vg-priority-5-fg);">Urgente</span>
+            {% elif ch.prioridade == 4 %}<span class="br-tag" style="background:var(--vg-priority-4); color:var(--vg-priority-4-fg);">Alta</span>
+            {% elif ch.prioridade == 3 %}<span class="br-tag" style="background:var(--vg-priority-3); color:var(--vg-priority-3-fg);">Média</span>
+            {% elif ch.prioridade == 2 %}<span class="br-tag" style="background:var(--vg-priority-2); color:var(--vg-priority-2-fg);">Baixa</span>
+            {% elif ch.prioridade == 1 %}<span class="br-tag" style="background:var(--vg-priority-1); color:var(--vg-priority-1-fg);">Muito baixa</span>
+            {% else %}<span class="br-tag" style="background:var(--vg-priority-0); color:var(--vg-priority-0-fg);">Sem classificação</span>{% endif %}
           </span>
         </div>
         <div class="info-row">
@@ -176,7 +177,7 @@
 
             <div class="form-group mb-3x">
               <div class="br-input">
-                <label for="prioridade-select">Prioridade (0 = sem classificação):</label>
+                <label for="prioridade-select">Prioridade</label>
                 <select id="prioridade-select" name="prioridade">
                   {% for val, lbl in prioridades %}
                     <option value="{{ val }}" {% if ch.prioridade == val %}selected{% endif %}>{{ lbl }}</option>

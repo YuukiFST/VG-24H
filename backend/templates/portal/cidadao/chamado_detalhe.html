@@ -40,7 +40,7 @@
         <div class="info-row">
           <span class="info-label">Status</span>
           <span class="info-value">
-            <span class="br-tag count {% with s=sigla_status|lower %}{% if s == 'ab' %}info{% elif s == 'ea' or s == 'ee' %}warning{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ ch.status_atual.descricao }}</span>
+            <span class="br-tag count {% with s=sigla_status|lower %}{% if s == 'ab' %}info{% elif s == 'ea' %}warning{% elif s == 'ee' %}ee-status{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ ch.status_atual.descricao }}</span>
           </span>
         </div>
         <div class="info-row">

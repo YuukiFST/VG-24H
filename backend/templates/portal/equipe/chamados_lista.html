@@ -61,10 +61,10 @@
         {% for row in linhas %}
         {% with ch=row.ch %}
         <tr>
-          <td>
-            {% if row.cor == "verde" %}<span class="br-tag" style="background:#168821;color:#fff" title="Dentro do prazo">●</span>{% endif %}
-            {% if row.cor == "amarelo" %}<span class="br-tag" style="background:#ffcd07;color:#333" title="Atenção">●</span>{% endif %}
-            {% if row.cor == "vermelho" %}<span class="br-tag" style="background:#e52207;color:#fff" title="Atraso">●</span>{% endif %}
+          <td class="text-center">
+            {% if row.cor == "verde" %}<i class="fas fa-check-circle" style="color:var(--green-cool-vivid-50)" title="Dentro do prazo" aria-hidden="true"></i><span class="sr-only">Dentro do prazo</span>{% endif %}
+            {% if row.cor == "amarelo" %}<i class="fas fa-exclamation-triangle" style="color:var(--yellow-vivid-20)" title="Atenção" aria-hidden="true"></i><span class="sr-only">Atenção</span>{% endif %}
+            {% if row.cor == "vermelho" %}<i class="fas fa-fire" style="color:var(--red-vivid-50)" title="Atraso" aria-hidden="true"></i><span class="sr-only">Atraso</span>{% endif %}
           </td>
           <td>{{ ch.num_protocolo }}</td>
           <td>{{ ch.id_cidadao.nome_completo }}</td>

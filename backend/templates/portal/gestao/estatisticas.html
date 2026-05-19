@@ -96,7 +96,7 @@
                 <td>{{ row.categoria }}</td>
                 <td>{{ row.bairro }}</td>
                 <td>
-                  <span class="br-tag count {% with s=row.sigla|lower %}{% if s == 'ab' %}info{% elif s == 'ea' or s == 'ee' %}warning{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ row.status_descricao }}</span>
+                  <span class="br-tag count {% with s=row.sigla|lower %}{% if s == 'ab' %}info{% elif s == 'ea' %}warning{% elif s == 'ee' %}ee-status{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ row.status_descricao }}</span>
                 </td>
                 <td class="font-weight-bold">{{ row.total_chamados }}</td>
               </tr>

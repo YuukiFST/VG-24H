@@ -28,44 +28,56 @@
     </div>
 
     <!-- ====== SUMMARY CARDS (Semáforo) ====== -->
-    <div class="row mb-4x">
-        <div class="col-sm-6 col-lg-3 mb-3x">
-            <div class="semaforo-card total">
-                <div class="card-value">{{ total_count|default:0 }}</div>
-                <div class="card-label">Total de chamados</div>
-                <div class="card-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></div>
-            </div>
+    <div class="semaforo-grid mb-4x">
+        <div class="semaforo-card total">
+            <div class="card-value">{{ total_count|default:0 }}</div>
+            <div class="card-label">Total de chamados</div>
+            <div class="card-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></div>
         </div>
-        <div class="col-sm-6 col-lg-3 mb-3x">
-            <div class="semaforo-card verde">
-                <div class="card-value">{{ stats.no_prazo|default:0 }}</div>
-                <div class="card-label">No prazo (Verde)</div>
-                <div class="card-icon"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
-            </div>
+        <div class="semaforo-card verde">
+            <div class="card-value">{{ stats.no_prazo|default:0 }}</div>
+            <div class="card-label">No prazo (Verde)</div>
+            {% if total_count %}<div class="card-pct">{{ pct_no_prazo }}%</div>{% endif %}
+            <div class="card-icon"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
         </div>
-        <div class="col-sm-6 col-lg-3 mb-3x">
-            <div class="semaforo-card amarelo">
-                <div class="card-value">{{ stats.atencao|default:0 }}</div>
-                <div class="card-label">Atenção (Amarelo)</div>
-                <div class="card-icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>
-            </div>
+        <div class="semaforo-card amarelo">
+            <div class="card-value">{{ stats.atencao|default:0 }}</div>
+            <div class="card-label">Atenção (Amarelo)</div>
+            {% if total_count %}<div class="card-pct">{{ pct_atencao }}%</div>{% endif %}
+            <div class="card-icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>
         </div>
-        <div class="col-sm-6 col-lg-3 mb-3x">
-            <div class="semaforo-card vermelho">
-                <div class="card-value">{{ stats.critico|default:0 }}</div>
-                <div class="card-label">Crítico (Vermelho)</div>
-                <div class="card-icon"><i class="fas fa-fire" aria-hidden="true"></i></div>
-            </div>
+        <div class="semaforo-card vermelho">
+            <div class="card-value">{{ stats.critico|default:0 }}</div>
+            <div class="card-label">Crítico (Vermelho)</div>
+            {% if total_count %}<div class="card-pct">{{ pct_critico }}%</div>{% endif %}
+            <div class="card-icon"><i class="fas fa-fire" aria-hidden="true"></i></div>
+        </div>
+    </div>
+
+    <!-- ====== LEGENDA SEMAFORO ====== -->
+    <div class="br-message info mb-4x" role="alert">
+        <div class="icon"><i class="fas fa-info-circle fa-lg" aria-hidden="true"></i></div>
+        <div class="content">
+            <span class="message-title">Como funciona o semáforo de prazos</span>
+            <span class="message-body">
+                A cor indica o tempo em que o chamado está aberto. Os prazos podem variar de acordo com o serviço solicitado.
+                <br>
+                <strong>Verde:</strong> dentro do prazo esperado.
+                <br>
+                <strong>Amarelo:</strong> a partir de {{ prazo_amarelo_txt }}.
+                <br>
+                <strong>Vermelho:</strong> a partir de {{ prazo_vermelho_txt }}.
+            </span>
         </div>
     </div>
 
     <!-- ====== FILTER BAR ====== -->
     <div class="br-card p-3 mb-4x">
-        <form method="get" class="row align-items-end">
+        <form method="get" class="row align-items-end" id="form-filtros">
             <div class="col-md-3 mb-2x">
                 <label for="filter-status" class="small font-weight-bold">Status</label>
                 <div class="br-input">
-                    <select id="filter-status" name="status" style="width:70%;max-width:70%">
+                    <select id="filter-status" name="status" style="width:100%">
                         <option value="">Todos os Status</option>
                         {% for s in statuses %}
                         <option value="{{ s.id_status }}" {% if filtro_status == s.id_status %}selected{% endif %}>{{ s.descricao }}</option>
@@ -75,14 +87,32 @@
             </div>
             <div class="col-md-3 mb-2x">
                 <label for="filter-bairro" class="small font-weight-bold">Bairro</label>
-                <div class="br-input">
-                    <select id="filter-bairro" name="bairro" style="width:70%;max-width:70%">
-                        <option value="">Todos os Bairros</option>
+                <div class="br-select" id="br-select-bairro">
+                    <div class="br-input">
+                        <input id="filter-bairro-input" type="text" placeholder="Selecione o bairro"
+                            value="{% if filtro_bairro %}{% for b in bairros %}{% if filtro_bairro == b.id_bairro %}{{ b.nome_bairro }}{% endif %}{% endfor %}{% endif %}" />
+                        <button class="br-button circle small" type="button" data-trigger aria-label="Exibir lista">
+                            <i class="fas fa-angle-down" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="br-list" tabindex="0">
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="bairro-radio" value="" id="bairro-todos" {% if not filtro_bairro %}checked{% endif %} />
+                                <label for="bairro-todos">Todos os Bairros</label>
+                            </div>
+                        </div>
                         {% for b in bairros %}
-                        <option value="{{ b.id_bairro }}" {% if filtro_bairro == b.id_bairro %}selected{% endif %}>{{ b.nome_bairro }}</option>
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="bairro-radio" value="{{ b.id_bairro }}" id="bairro-{{ b.id_bairro }}" {% if filtro_bairro == b.id_bairro %}checked{% endif %} />
+                                <label for="bairro-{{ b.id_bairro }}">{{ b.nome_bairro }}</label>
+                            </div>
+                        </div>
                         {% endfor %}
-                    </select>
+                    </div>
                 </div>
+                <input type="hidden" name="bairro" id="filter-bairro-hidden" value="{{ filtro_bairro|default:'' }}" />
             </div>
             <div class="col-md-2 mb-2x">
                 <label for="filter-de" class="small font-weight-bold">De</label>
@@ -101,7 +131,7 @@
     </div>
 
     <!-- ====== TICKETS TABLE ====== -->
-    <div class="br-table">
+    <div class="br-table" id="tabela-chamados">
         <div class="table-header">
             <div class="top-bar">
                 <div class="table-title">Chamados da Equipe</div>
@@ -111,9 +141,30 @@
             <thead>
                 <tr>
                     <th scope="col">Protocolo</th>
+                    <th scope="col">
+                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=dt_abertura&direcao={% if ordenar_por == 'dt_abertura' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
+                            Abertura
+                            {% if ordenar_por == 'dt_abertura' %}
+                                <i class="fas fa-sort-{% if direcao == 'desc' %}down{% else %}up{% endif %}" aria-hidden="true"></i>
+                            {% else %}
+                                <i class="fas fa-sort" aria-hidden="true"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th scope="col">Semáforo</th>
                     <th scope="col">Cidadão</th>
                     <th scope="col">Serviço</th>
                     <th scope="col">Bairro</th>
+                    <th scope="col">
+                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=prioridade&direcao={% if ordenar_por == 'prioridade' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
+                            Prioridade
+                            {% if ordenar_por == 'prioridade' %}
+                                <i class="fas fa-sort-{% if direcao == 'desc' %}down{% else %}up{% endif %}" aria-hidden="true"></i>
+                            {% else %}
+                                <i class="fas fa-sort" aria-hidden="true"></i>
+                            {% endif %}
+                        </a>
+                    </th>
                     <th scope="col">Status</th>
                     <th scope="col">Ações</th>
                 </tr>
@@ -122,14 +173,29 @@
                 {% for linha in linhas %}
                 <tr>
                     <td data-th="Protocolo"><span class="text-bold">{{ linha.ch.num_protocolo }}</span></td>
+                    <td data-th="Abertura">{{ linha.ch.dt_abertura|date:"d/m/Y" }}</td>
+                    <td data-th="Semáforo" class="text-center">
+                        {% if linha.cor == 'verde' %}<i class="fas fa-check-circle" style="color:var(--green-cool-vivid-50)" title="Dentro do prazo" aria-hidden="true"></i><span class="sr-only">Dentro do prazo</span>
+                        {% elif linha.cor == 'amarelo' %}<i class="fas fa-exclamation-triangle" style="color:var(--yellow-vivid-20)" title="Atenção" aria-hidden="true"></i><span class="sr-only">Atenção</span>
+                        {% elif linha.cor == 'vermelho' %}<i class="fas fa-fire" style="color:var(--red-vivid-50)" title="Crítico" aria-hidden="true"></i><span class="sr-only">Crítico</span>
+                        {% endif %}
+                    </td>
                     <td data-th="Cidadão">{{ linha.ch.id_cidadao.nome_completo|truncatechars:20 }}</td>
                     <td data-th="Serviço">{{ linha.ch.id_servico.nome }}</td>
                     <td data-th="Bairro">{{ linha.ch.id_bairro.nome_bairro }}</td>
+                    <td data-th="Prioridade">
+                        {% if linha.ch.prioridade == 5 %}<span class="br-tag" style="background:var(--vg-priority-5); color:var(--vg-priority-5-fg);">Urgente</span>
+                        {% elif linha.ch.prioridade == 4 %}<span class="br-tag" style="background:var(--vg-priority-4); color:var(--vg-priority-4-fg);">Alta</span>
+                        {% elif linha.ch.prioridade == 3 %}<span class="br-tag" style="background:var(--vg-priority-3); color:var(--vg-priority-3-fg);">Média</span>
+                        {% elif linha.ch.prioridade == 2 %}<span class="br-tag" style="background:var(--vg-priority-2); color:var(--vg-priority-2-fg);">Baixa</span>
+                        {% elif linha.ch.prioridade == 1 %}<span class="br-tag" style="background:var(--vg-priority-1); color:var(--vg-priority-1-fg);">Muito baixa</span>
+                        {% else %}<span class="br-tag" style="background:var(--vg-priority-0); color:var(--vg-priority-0-fg);">Sem classificação</span>{% endif %}
+                    </td>
                     <td data-th="Status">
                         {% with sigla=linha.ch.sigla_status %}
                         <span
-                            class="br-tag count {% if sigla == 'AB' %}info{% elif sigla == 'EA' or sigla == 'EE' %}warning{% elif sigla == 'CO' %}success{% elif sigla == 'CA' %}danger{% endif %}">
-                            {{ sigla|default:"—" }}
+                            class="br-tag count {% if sigla == 'AB' %}info{% elif sigla == 'EA' %}warning{% elif sigla == 'EE' %}ee-status{% elif sigla == 'CO' %}success{% elif sigla == 'CA' %}danger{% endif %}">
+                            {{ linha.ch.status_atual.descricao|default:"—" }}
                         </span>
                         {% endwith %}
                     </td>
@@ -142,7 +208,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="text-center py-4">Nenhum chamado encontrado.</td>
+                    <td colspan="9" class="text-center py-4">Nenhum chamado encontrado.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -161,6 +227,23 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const bairroSelectEl = document.getElementById('br-select-bairro');
+        const hiddenInput = document.getElementById('filter-bairro-hidden');
+        const form = document.getElementById('form-filtros');
+        if (bairroSelectEl && hiddenInput && form) {
+            form.addEventListener('submit', function () {
+                const checked = bairroSelectEl.querySelector('.br-list .br-radio input[type="radio"]:checked');
+                hiddenInput.value = checked ? checked.value : '';
+            });
+        }
+        if (typeof core !== 'undefined' && core.BRSelect && bairroSelectEl) {
+            new core.BRSelect('br-select', bairroSelectEl);
+        }
+    });
+</script>
 {% endblock %}

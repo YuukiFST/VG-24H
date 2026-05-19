@@ -247,7 +247,7 @@ def gestao_servico_edit(request, pk):
 
 
 # ─── Bairros ─────────────────────────────────────────────────
-@perfis("GES")
+@perfis("COL", "GES")
 @require_http_methods(["GET", "POST"])
 def gestao_bairros(request):
     if request.method == "POST":
@@ -284,7 +284,7 @@ def gestao_bairros(request):
     )
 
 
-@perfis("GES")
+@perfis("COL", "GES")
 @require_http_methods(["GET", "POST"])
 def gestao_bairro_edit(request, pk):
     # SQL puro: SELECT bairro por ID
@@ -324,7 +324,7 @@ def gestao_bairro_edit(request, pk):
     return render(
         request,
         "portal/gestao/bairro_form.html",
-        {"form": form, "obj": obj},
+        {"form": form, "bairro": obj},
     )
 
 

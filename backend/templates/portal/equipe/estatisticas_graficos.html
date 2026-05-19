@@ -34,6 +34,7 @@
                 style="border-top: 4px solid #1351b4;">
                 <h2 class="text-up-02 mb-3 text-muted text-weight-regular">Chamados Atendidos Hoje</h2>
                 <div class="text-up-06 text-interactive text-weight-bold">{{ atendidas_hoje }}</div>
+                <div class="text-down-01 text-muted mt-2">{{ pct_hoje }}% do total</div>
             </div>
         </div>
 
@@ -44,6 +45,7 @@
                 style="border-top: 4px solid #168821;">
                 <h2 class="text-up-02 mb-3 text-muted text-weight-regular">Chamados Atendidos na Semana</h2>
                 <div class="text-up-06 text-success text-weight-bold">{{ atendidas_semana }}</div>
+                <div class="text-down-01 text-muted mt-2">{{ pct_semana }}% do total</div>
             </div>
         </div>
     </div>
@@ -144,6 +146,16 @@
                             labels: {
                                 font: { family: 'Rawline, Raleway, sans-serif', size: 14 }
                             }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const val = context.raw;
+                                    const pct = total ? ((val / total) * 100).toFixed(1) : 0;
+                                    return context.label + ': ' + val + ' (' + pct + '%)';
+                                }
+                            }
                         }
                     },
                     cutout: '65%'
@@ -158,6 +170,9 @@
         const bairrosLabels = JSON.parse(document.getElementById('bairrosLabelsData').textContent);
         const bairrosData = JSON.parse(document.getElementById('bairrosDataData').textContent);
 
+        // Gera uma cor distinta do DS Gov para cada barra
+        const bairrosColors = bairrosLabels.map((_, i) => colorsGov[i % colorsGov.length]);
+
         if (bairrosData.length > 0) {
             new Chart(ctxBairros.getContext('2d'), {
                 type: 'bar',
@@ -166,14 +181,24 @@
                     datasets: [{
                         label: 'Chamados',
                         data: bairrosData,
-                        backgroundColor: '#1351b4',
+                        backgroundColor: bairrosColors,
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const val = context.raw;
+                                    const pct = total ? ((val / total) * 100).toFixed(1) : 0;
+                                    return context.label + ': ' + val + ' (' + pct + '%)';
+                                }
+                            }
+                        }
                     },
                     scales: {
                         x: {

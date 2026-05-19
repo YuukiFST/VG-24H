@@ -20,6 +20,18 @@
   --vg-danger: var(--danger);
   --vg-warning: var(--warning);
   --vg-orange: var(--orange-vivid-30);
+  --vg-priority-0: #ddd6fe;
+  --vg-priority-0-fg: #1a1a1a;
+  --vg-priority-1: #c4b5fd;
+  --vg-priority-1-fg: #1a1a1a;
+  --vg-priority-2: #a78bfa;
+  --vg-priority-2-fg: #1a1a1a;
+  --vg-priority-3: #7c3aed;
+  --vg-priority-3-fg: #ffffff;
+  --vg-priority-4: #5b21b6;
+  --vg-priority-4-fg: #ffffff;
+  --vg-priority-5: #4c1d95;
+  --vg-priority-5-fg: #ffffff;
   --vg-bg-alt: var(--background-alternative);
   --vg-radius: var(--surface-rounder-md);
   --vg-shadow: var(--surface-shadow-sm);
@@ -640,10 +652,24 @@ img {
   margin-top: auto;
 }
 
+.semaforo-card .card-pct {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-top: 2px;
+  opacity: 0.85;
+}
+
 /* ===================================================================
    STATUS TAGS — now using GOV native .br-tag.count + color classes
    (.info, .warning, .success, .danger). Custom status-* classes removed.
    =================================================================== */
+
+/* Status "Em Execução" (EE) — orange, distinct from EA (warning/yellow) */
+.br-tag.count.ee-status,
+.br-tag.ee-status {
+  background: var(--orange-vivid-30);
+  color: #fff;
+}
 
 /* ===================================================================
    HEADER AVATAR DROPDOWN FIX

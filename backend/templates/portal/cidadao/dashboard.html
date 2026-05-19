@@ -78,7 +78,7 @@
             <td data-th="Abertura">{{ ch.dt_abertura|date:"d/m/Y H:i" }}</td>
             <td data-th="Status">
               {% with st_lower=ch.status_atual.sigla|lower %}
-                <span class="br-tag count {% if st_lower == 'ab' %}info{% elif st_lower == 'ea' or st_lower == 'ee' %}warning{% elif st_lower == 'co' %}success{% elif st_lower == 'ca' %}danger{% endif %}">{{ ch.status_atual.descricao }}</span>
+                <span class="br-tag count {% if st_lower == 'ab' %}info{% elif st_lower == 'ea' %}warning{% elif st_lower == 'ee' %}ee-status{% elif st_lower == 'co' %}success{% elif st_lower == 'ca' %}danger{% endif %}">{{ ch.status_atual.descricao }}</span>
               {% endwith %}
             </td>
             <td data-th="Ações">
