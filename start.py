@@ -20,7 +20,18 @@ else:
     _EXE = ""
 
 PYTHON_EXE = os.path.join(VENV_DIR, _BIN, f"python{_EXE}")
-UV_EXE = "uv"
+
+
+def _has_uv():
+    """Check if uv is available on the system."""
+    try:
+        subprocess.run(["uv", "--version"], capture_output=True, check=True)
+        return True
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return False
+
+
+UV_AVAILABLE = _has_uv()
 
 BANNER = """
 ========================================
@@ -73,14 +84,25 @@ def save_env(content):
 
 
 def ensure_venv():
-    if os.path.isdir(VENV_DIR):
+    if os.path.isdir(VENV_DIR) and os.path.isfile(PYTHON_EXE):
         print("Virtual environment encontrado.")
         return True
-    print("Criando virtual environment com uv...")
-    result = subprocess.run(
-        [UV_EXE, "venv", VENV_DIR],
-        capture_output=True, text=True, cwd=BACKEND_DIR
-    )
+    if os.path.isdir(VENV_DIR) and not os.path.isfile(PYTHON_EXE):
+        print("Virtual environment corrompido (cross-platform?). Recriando...")
+        import shutil
+        shutil.rmtree(VENV_DIR)
+    if UV_AVAILABLE:
+        print("Criando virtual environment com uv...")
+        result = subprocess.run(
+            ["uv", "venv", VENV_DIR],
+            capture_output=True, text=True, cwd=BACKEND_DIR
+        )
+    else:
+        print("uv nao encontrado. Criando virtual environment com venv padrao...")
+        result = subprocess.run(
+            [sys.executable, "-m", "venv", VENV_DIR],
+            capture_output=True, text=True, cwd=BACKEND_DIR
+        )
     if result.returncode != 0:
         print(f"Erro ao criar venv: {result.stderr}")
         return False
@@ -93,11 +115,19 @@ def install_requirements():
     if not os.path.isfile(req_file):
         print("requirements.txt nao encontrado.")
         return False
-    print("Instalando dependencias com uv...")
-    result = subprocess.run(
-        [UV_EXE, "pip", "install", "-r", req_file],
-        capture_output=True, text=True, cwd=BACKEND_DIR
-    )
+    if UV_AVAILABLE:
+        print("Instalando dependencias com uv...")
+        result = subprocess.run(
+            ["uv", "pip", "install", "-r", req_file],
+            capture_output=True, text=True, cwd=BACKEND_DIR
+        )
+    else:
+        pip_exe = os.path.join(VENV_DIR, _BIN, f"pip{_EXE}")
+        print("uv nao encontrado. Instalando dependencias com pip padrao...")
+        result = subprocess.run(
+            [pip_exe, "install", "-r", req_file],
+            capture_output=True, text=True, cwd=BACKEND_DIR
+        )
     if result.returncode != 0:
         print(f"Erro ao instalar dependencias: {result.stderr}")
         return False

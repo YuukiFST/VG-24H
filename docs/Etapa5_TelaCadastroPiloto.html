@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Etapa 5 - Tela de Cadastro Piloto (CRUD + Recursos Avancados de BD)</title>
+<style>
+  /* ========== RESET & BASE ========== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #1a1a1a;
+    background: #fff;
+    padding: 30px 40px;
+    max-width: 210mm;
+    margin: 0 auto;
+  }
+
+  /* ========== TITULOS ========== */
+  h1 {
+    font-size: 20pt;
+    color: #1351b4;
+    border-bottom: 3px solid #1351b4;
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+    margin-top: 10px;
+  }
+  h2 {
+    font-size: 15pt;
+    color: #071d41;
+    border-bottom: 2px solid #c5d4eb;
+    padding-bottom: 6px;
+    margin-top: 30px;
+    margin-bottom: 12px;
+  }
+  h3 {
+    font-size: 12pt;
+    color: #1351b4;
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+  h4 {
+    font-size: 11pt;
+    color: #333;
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+
+  /* ========== TEXTO ========== */
+  p { margin-bottom: 10px; }
+  strong { color: #071d41; }
+
+  /* ========== BLOCOS DE CODIGO ========== */
+  pre {
+    background: #f4f4f4;
+    border: 1px solid #d0d0d0;
+    border-left: 4px solid #1351b4;
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 8.5pt;
+    line-height: 1.45;
+    overflow-x: auto;
+    white-space: pre;
+    margin-bottom: 16px;
+    page-break-inside: avoid;
+  }
+  .lang-label {
+    display: inline-block;
+    background: #1351b4;
+    color: #fff;
+    font-size: 7.5pt;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px 3px 0 0;
+    margin-bottom: -1px;
+    letter-spacing: 0.5px;
+  }
+  .file-path {
+    display: inline-block;
+    background: #e8e8e8;
+    color: #555;
+    font-size: 8pt;
+    padding: 2px 8px;
+    border-radius: 3px 3px 0 0;
+    margin-left: 4px;
+    font-family: 'Consolas', monospace;
+  }
+
+  /* ========== PLACEHOLDER DE PRINT ========== */
+  .print-placeholder {
+    border: 3px dashed #888;
+    border-radius: 8px;
+    background: #f9f9f9;
+    padding: 30px 20px;
+    text-align: center;
+    margin: 20px 0;
+    page-break-inside: avoid;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .print-placeholder .print-number {
+    background: #1351b4;
+    color: #fff;
+    font-size: 11pt;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+  }
+  .print-placeholder .print-title {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 6px;
+  }
+  .print-placeholder .print-url {
+    font-family: 'Consolas', monospace;
+    font-size: 9pt;
+    color: #1351b4;
+    background: #e8f0fe;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .print-placeholder .print-desc {
+    font-size: 9.5pt;
+    color: #555;
+    max-width: 500px;
+  }
+
+  /* ========== TABELA RESUMO ========== */
+  table.resumo {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 16px 0;
+    font-size: 9.5pt;
+  }
+  table.resumo th {
+    background: #1351b4;
+    color: #fff;
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 600;
+  }
+  table.resumo td {
+    border: 1px solid #d0d0d0;
+    padding: 6px 10px;
+  }
+  table.resumo tr:nth-child(even) td { background: #f7f7f7; }
+
+  /* ========== INFO BOX ========== */
+  .info-box {
+    background: #e8f0fe;
+    border-left: 4px solid #1351b4;
+    padding: 10px 14px;
+    margin: 12px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 9.5pt;
+  }
+
+  /* ========== SEPARADOR ========== */
+  hr.section-break {
+    border: none;
+    border-top: 2px solid #c5d4eb;
+    margin: 30px 0;
+  }
+
+  /* ========== IMPRESSAO ========== */
+  @media print {
+    body { padding: 15px 20px; font-size: 10pt; }
+    pre { font-size: 7.5pt; padding: 8px 10px; }
+    h1 { font-size: 17pt; }
+    h2 { font-size: 13pt; page-break-before: auto; }
+    .print-placeholder { min-height: 200px; }
+    .no-break { page-break-inside: avoid; }
+    @page { margin: 15mm 12mm; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================================================================== -->
+<!-- CAPA / TITULO                                                      -->
+<!-- ================================================================== -->
+<div style="text-align:center; padding: 40px 0 20px 0;">
+  <h1 style="border:none; font-size:22pt; margin-bottom:8px;">Etapa 5 - Tela de Cadastro Piloto</h1>
+  <p style="font-size:13pt; color:#555;">Teste das 4 operacoes basicas do BD (CRUD) e recursos avancados</p>
+  <p style="font-size:11pt; color:#888; margin-top:20px;">
+    Projeto: <strong>VG 24H</strong> - Portal de Servicos Publicos de Varzea Grande/MT<br>
+    Tecnologias: Python/Django + PostgreSQL (NeonDB) + Design System GOV.BR<br>
+    Entidade piloto: <strong>Bairro</strong> (cadastro completo com CREATE, READ, UPDATE, DELETE)
+  </p>
+</div>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- RESUMO DAS 4 OPERACOES                                             -->
+<!-- ================================================================== -->
+<h2>Resumo das 4 Operacoes CRUD</h2>
+
+<table class="resumo">
+  <thead>
+    <tr>
+      <th>Operacao</th>
+      <th>SQL Executado</th>
+      <th>View Django</th>
+      <th>URL</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>CREATE</strong></td>
+      <td>INSERT INTO bairro (...) VALUES (...)</td>
+      <td>gestao_bairros (POST)</td>
+      <td>/gestao/bairros/</td>
+    </tr>
+    <tr>
+      <td><strong>READ</strong></td>
+      <td>SELECT ... FROM bairro WHERE ativo = TRUE</td>
+      <td>gestao_bairros (GET)</td>
+      <td>/gestao/bairros/</td>
+    </tr>
+    <tr>
+      <td><strong>UPDATE</strong></td>
+      <td>UPDATE bairro SET nome_bairro = %s, cep = %s ...</td>
+      <td>gestao_bairro_edit</td>
+      <td>/gestao/bairros/&lt;pk&gt;/editar/</td>
+    </tr>
+    <tr>
+      <td><strong>DELETE (logico)</strong></td>
+      <td>UPDATE bairro SET ativo = FALSE WHERE ...</td>
+      <td>gestao_bairro_desativar</td>
+      <td>/gestao/bairros/&lt;pk&gt;/desativar/</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="info-box">
+  <strong>Nota:</strong> O DELETE e logico (soft delete) - o campo <code>ativo</code> e alterado para <code>FALSE</code> em vez de remover o registro do banco. Isso preserva a integridade referencial com a tabela <code>chamado</code>.
+</div>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 1. SCHEMA SQL - TABELA BAIRRO                                      -->
+<!-- ================================================================== -->
+<h2>1. Schema SQL - Tabela <code>bairro</code></h2>
+<p>Definicao da tabela no banco de dados PostgreSQL, com constraints e indice.</p>
+
+<span class="lang-label">SQL</span>
+<span class="file-path">database/01_schema.sql</span>
+<pre>
+-- ============================================================
+-- Entidade 6: bairro (bairros de Varzea Grande/MT)
+-- ============================================================
+-- FK apontada por: chamado.id_bairro (bairro onde o chamado foi aberto)
+-- ============================================================
+CREATE TABLE bairro (
+    id_bairro          SERIAL PRIMARY KEY,
+    nome_bairro        VARCHAR(100) NOT NULL,
+    cep                CHAR(8) NOT NULL,              -- CEP representativo sem mascara (8 digitos)
+    regiao             VARCHAR(200),                   -- Ex: "Central", "Norte", "Sul"
+    ativo              BOOLEAN NOT NULL DEFAULT TRUE,
+    UNIQUE (nome_bairro)
+);
+
+-- Indice de performance para JOINs com a tabela chamado
+CREATE INDEX ix_chamado_bairro ON chamado (id_bairro);
+</pre>
+
+<div class="info-box">
+  <strong>Constraints aplicadas:</strong><br>
+  - <code>SERIAL PRIMARY KEY</code>: auto-incremento garantido pelo PostgreSQL<br>
+  - <code>NOT NULL</code>: nome e CEP sao obrigatorios<br>
+  - <code>UNIQUE (nome_bairro)</code>: nao permite bairros com nome duplicado<br>
+  - <code>DEFAULT TRUE</code>: todo bairro nasce ativo
+</div>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 2. SEED SQL - CARGA INICIAL                                        -->
+<!-- ================================================================== -->
+<h2>2. Seed SQL - Carga Inicial de Bairros</h2>
+<p>INSERT dos 20 bairros de Varzea Grande/MT usados como dados iniciais do sistema.</p>
+
+<span class="lang-label">SQL</span>
+<span class="file-path">database/02_seed.sql</span>
+<pre>
+-- 20 bairros de Varzea Grande/MT (CEPs representativos)
+-- Distribuidos nas regioes: Central, Norte, Sul, Leste, Oeste, Rural
+INSERT INTO bairro (nome_bairro, cep, regiao) VALUES
+    ('Centro-Norte', '78110100', 'Central'),
+    ('Centro-Sul', '78110150', 'Central'),
+    ('Jardim Eldorado', '78128500', 'Norte'),
+    ('Sao Matheus', '78145600', 'Leste'),
+    ('Ponte Nova', '78152300', 'Oeste'),
+    ('Costa Verde', '78118000', 'Norte'),
+    ('Mapim', '78142800', 'Sul'),
+    ('Ikaray', '78138000', 'Sul'),
+    ('23 de Setembro', '78115000', 'Central'),
+    ('Petropolis', '78144000', 'Leste'),
+    ('Santa Isabel', '78148700', 'Leste'),
+    ('Guarita', '78155000', 'Oeste'),
+    ('Capao Grande', '78160000', 'Rural'),
+    ('Agua Vermelha', '78125000', 'Norte'),
+    ('Panamericano', '78135000', 'Sul'),
+    ('Christ Rei', '78117000', 'Central'),
+    ('Parque do Lago', '78120000', 'Norte'),
+    ('Jardim dos Estados', '78130000', 'Sul'),
+    ('Marajoara', '78148000', 'Leste'),
+    ('Bom Sucesso', '78152700', 'Oeste');
+</pre>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 3. MODEL DJANGO                                                    -->
+<!-- ================================================================== -->
+<h2>3. Model Django - Classe <code>Bairro</code></h2>
+<p>Mapeamento ORM da tabela <code>bairro</code>. Usa <code>managed = False</code> (tabela criada via SQL, nao pelo Django).</p>
+
+<span class="lang-label">PYTHON</span>
+<span class="file-path">backend/portal/models.py</span>
+<pre>
+class Bairro(models.Model):
+    """
+    Mapeamento da tabela bairro.
+    Bairros de Varzea Grande/MT. FK apontada por: Chamado.id_bairro.
+    """
+    id_bairro = models.AutoField(primary_key=True)
+    nome_bairro = models.CharField(max_length=100, unique=True)
+    cep = models.CharField(max_length=8)
+    regiao = models.CharField(max_length=200, blank=True, null=True)
+    ativo = models.BooleanField(default=True)
+
+    class Meta:
+        managed = False          # Django NAO gerencia (tabela criada via SQL)
+        db_table = "bairro"
+
+    def __str__(self):
+        return self.nome_bairro
+</pre>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 4. FORMULARIO DJANGO                                               -->
+<!-- ================================================================== -->
+<h2>4. Formulario Django - <code>BairroForm</code></h2>
+<p>ModelForm que valida os dados do formulario antes de executar o SQL.</p>
+
+<span class="lang-label">PYTHON</span>
+<span class="file-path">backend/portal/forms.py</span>
+<pre>
+class BairroForm(forms.ModelForm):
+    class Meta:
+        model = Bairro
+        fields = ["nome_bairro", "cep", "regiao"]
+</pre>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 5. ROTAS (URLs)                                                    -->
+<!-- ================================================================== -->
+<h2>5. Rotas (URLs)</h2>
+<p>As 3 rotas que mapeiam as operacoes CRUD de bairros no <code>urls.py</code>.</p>
+
+<span class="lang-label">PYTHON</span>
+<span class="file-path">backend/portal/urls.py</span>
+<pre>
+# Dentro de urlpatterns = [...]
+
+# LIST + CREATE (GET mostra lista, POST cria novo bairro)
+path("gestao/bairros/", views_gestao.gestao_bairros, name="gestao_bairros"),
+
+# UPDATE (GET mostra formulario, POST salva alteracoes)
+path("gestao/bairros/&lt;int:pk&gt;/editar/", views_gestao.gestao_bairro_edit, name="gestao_bairro_editar"),
+
+# DELETE logico (POST desativa o bairro)
+path("gestao/bairros/&lt;int:pk&gt;/desativar/", views_gestao.gestao_bairro_desativar, name="gestao_bairro_desativar"),
+</pre>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 6. DECORATOR DE ACESSO                                             -->
+<!-- ================================================================== -->
+<h2>6. Controle de Acesso - Decorator <code>@perfis</code></h2>
+<p>Todas as views de bairro usam <code>@perfis("GES")</code> - apenas gestores podem acessar.</p>
+
+<span class="lang-label">PYTHON</span>
+<span class="file-path">backend/portal/decorators.py</span>
+<pre>
+def perfis(*codigos):
+    """
+    Decorator que restringe acesso por perfil.
+    Exemplo: @perfis("GES") -> apenas Gestores
+             @perfis("COL", "GES") -> Colaboradores e Gestores
+    """
+    def dec(view):
+        @wraps(view)
+        def w(request, *args, **kwargs):
+            u = request.portal_user
+            if not u:
+                return redirect("portal:login")         # Nao logado -> login
+            if perfil_codigo(u) not in codigos:
+                messages.error(request, "Sem permissao para acessar esta area.")
+                return redirect("portal:root")           # Perfil errado -> home
+            return view(request, *args, **kwargs)        # Autorizado -> executa
+        return w
+    return dec
+</pre>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 7. OPERACAO CREATE                                                  -->
+<!-- ================================================================== -->
+<h2>7. Operacao CREATE - Inserir Novo Bairro</h2>
+<p>Quando o gestor preenche o modal e envia o formulario, a view executa um <code>INSERT</code> via SQL puro.</p>
+
+<span class="lang-label">PYTHON</span>
+<span class="file-path">backend/portal/views_gestao.py</span>
+<pre>
+@perfis("GES")
+@require_http_methods(["GET", "POST"])
+def gestao_bairros(request):
+    if request.method == "POST":
+        form = BairroForm(request.POST)
+        if form.is_valid():
+            d = form.cleaned_data
+            # SQL puro: INSERT na tabela bairro
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO bairro (nome_bairro, cep, regiao, ativo) "
+                    "VALUES (%s, %s, %s, %s)",
+                    [d["nome_bairro"], d["cep"], d.get("regiao"), True],
+                )
+            messages.success(request, "Bairro criado.")
+        return redirect("portal:gestao_bairros")
+
+    # ... (parte GET continua na secao READ abaixo)
+</pre>
+
+<div class="info-box">
+  <strong>SQL executado:</strong><br>
+  <code>INSERT INTO bairro (nome_bairro, cep, regiao, ativo) VALUES ('Nome', '78110100', 'Central', TRUE)</code><br><br>
+  <strong>Seguranca:</strong> Os valores sao passados via <code>%s</code> (parametros), nunca concatenados na string SQL. Isso previne SQL Injection.
+</div>
+
+<div class="print-placeholder">
+  <span class="print-number">PRINT 1</span>
+  <span class="print-title">Modal "Novo Bairro" aberto</span>
+  <span class="print-url">/gestao/bairros/</span>
+  <span class="print-desc">
+    Acesse a tela de bairros logado como Gestor, clique no botao "Novo Bairro" no canto superior direito.
+    O modal vai abrir com os campos Nome do Bairro, CEP e Regiao. Tire o print com o modal aberto e os campos preenchidos.
+  </span>
+</div>
+
+<div class="print-placeholder">
+  <span class="print-number">PRINT 2</span>
+  <span class="print-title">Mensagem de sucesso apos criar o bairro</span>
+  <span class="print-url">/gestao/bairros/</span>
+  <span class="print-desc">
+    Apos preencher e enviar o formulario, a pagina recarrega com a mensagem verde "Bairro criado."
+    no topo da tela, e o novo bairro aparece na tabela. Tire o print mostrando a mensagem + tabela.
+  </span>
+</div>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 8. OPERACAO READ                                                    -->
+<!-- ================================================================== -->
+<h2>8. Operacao READ - Listar Bairros</h2>
+<p>Ao acessar via GET, a view executa um <code>SELECT</code> SQL puro e retorna os bairros ativos.</p>
+
+<span class="lang-label">PYTHON</span>
+<span class="file-path">backend/portal/views_gestao.py</span>
+<pre>
+@perfis("GES")
+@require_http_methods(["GET", "POST"])
+def gestao_bairros(request):
+    # ... (parte POST ja mostrada na secao CREATE acima)
+
+    form = BairroForm()
+    # SQL puro: SELECT bairros ativos
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
+            "FROM bairro WHERE ativo = TRUE ORDER BY nome_bairro"
+        )
+        lista = [
+            SimpleNamespace(
+                id_bairro=r[0], pk=r[0], nome_bairro=r[1],
+                cep=r[2], regiao=r[3], ativo=r[4],
+            )
+            for r in cursor.fetchall()
+        ]
+    return render(
+        request,
+        "portal/gestao/bairros.html",
+        {"form": form, "lista": lista},
+    )
+</pre>
+
+<div class="info-box">
+  <strong>SQL executado:</strong><br>
+  <code>SELECT id_bairro, nome_bairro, cep, regiao, ativo FROM bairro WHERE ativo = TRUE ORDER BY nome_bairro</code><br><br>
+  <strong>Nota:</strong> Os resultados sao transformados em objetos <code>SimpleNamespace</code> (nao usa ORM) para serem usados no template.
+  O filtro <code>WHERE ativo = TRUE</code> implementa o soft delete - bairros desativados nao aparecem.
+</div>
+
+<div class="print-placeholder">
+  <span class="print-number">PRINT 3</span>
+  <span class="print-title">Tela de listagem de bairros (tabela)</span>
+  <span class="print-url">/gestao/bairros/</span>
+  <span class="print-desc">
+    Acesse /gestao/bairros/ logado como Gestor. A tela mostra a tabela com todos os bairros ativos,
+    com colunas Nome, Status (tag "Ativo") e Acoes (botoes Editar e Desativar). Tire o print da tela completa.
+  </span>
+</div>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 9. OPERACAO UPDATE                                                  -->
+<!-- ================================================================== -->
+<h2>9. Operacao UPDATE - Editar Bairro</h2>
+<p>O gestor clica em "Editar" na tabela. A view busca o bairro por ID (SELECT), mostra o formulario preenchido, e ao enviar executa um UPDATE.</p>
+
+<span class="lang-label">PYTHON</span>
+<span class="file-path">backend/portal/views_gestao.py</span>
+<pre>
+@perfis("GES")
+@require_http_methods(["GET", "POST"])
+def gestao_bairro_edit(request, pk):
+    # SQL puro: SELECT bairro por ID
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
+            "FROM bairro WHERE id_bairro = %s",
+            [pk],
+        )
+        row = cursor.fetchone()
+    if not row:
+        raise Http404()
+
+    obj = Bairro()
+    obj.id_bairro = row[0]
+    obj.nome_bairro = row[1]
+    obj.cep = row[2]
+    obj.regiao = row[3]
+    obj.ativo = row[4]
+    obj._state.adding = False
+
+    if request.method == "POST":
+        form = BairroForm(request.POST, instance=obj)
+        if form.is_valid():
+            d = form.cleaned_data
+            # SQL puro: UPDATE bairro
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE bairro SET nome_bairro = %s, cep = %s, regiao = %s "
+                    "WHERE id_bairro = %s",
+                    [d["nome_bairro"], d["cep"], d.get("regiao"), pk],
+                )
+            messages.success(request, "Bairro atualizado.")
+            return redirect("portal:gestao_bairros")
+    else:
+        form = BairroForm(instance=obj)
+    return render(
+        request,
+        "portal/gestao/bairro_form.html",
+        {"form": form, "obj": obj},
+    )
+</pre>
+
+<div class="info-box">
+  <strong>SQL executado (leitura):</strong><br>
+  <code>SELECT id_bairro, nome_bairro, cep, regiao, ativo FROM bairro WHERE id_bairro = 5</code><br><br>
+  <strong>SQL executado (gravacao):</strong><br>
+  <code>UPDATE bairro SET nome_bairro = 'Novo Nome', cep = '78110100', regiao = 'Central' WHERE id_bairro = 5</code>
+</div>
+
+<div class="print-placeholder">
+  <span class="print-number">PRINT 4</span>
+  <span class="print-title">Formulario de edicao do bairro preenchido</span>
+  <span class="print-url">/gestao/bairros/&lt;pk&gt;/editar/</span>
+  <span class="print-desc">
+    Clique no botao de editar (icone de lapis) em qualquer bairro da tabela. A tela mostra o formulario
+    com os campos ja preenchidos com os dados atuais do bairro (nome, checkbox "Ativo"). Tire o print com os dados visiveis.
+  </span>
+</div>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 10. OPERACAO DELETE (LOGICO)                                        -->
+<!-- ================================================================== -->
+<h2>10. Operacao DELETE (Logico) - Desativar Bairro</h2>
+<p>O gestor clica no botao "Desativar" e confirma. A view executa um UPDATE que muda o campo <code>ativo</code> para <code>FALSE</code>.</p>
+
+<span class="lang-label">PYTHON</span>
+<span class="file-path">backend/portal/views_gestao.py</span>
+<pre>
+@perfis("GES")
+@require_http_methods(["POST"])
+def gestao_bairro_desativar(request, pk):
+    # SQL puro: verifica existencia e desativa bairro
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id_bairro FROM bairro WHERE id_bairro = %s", [pk])
+        if not cursor.fetchone():
+            raise Http404()
+        cursor.execute(
+            "UPDATE bairro SET ativo = FALSE WHERE id_bairro = %s", [pk]
+        )
+    messages.info(request, "Bairro inativado.")
+    return redirect("portal:gestao_bairros")
+</pre>
+
+<div class="info-box">
+  <strong>SQL executado:</strong><br>
+  <code>UPDATE bairro SET ativo = FALSE WHERE id_bairro = 5</code><br><br>
+  <strong>Por que soft delete?</strong> A tabela <code>chamado</code> tem uma FK para <code>bairro</code>. Se deletasse fisicamente,
+  chamados antigos ficariam orfaos. O soft delete preserva o historico enquanto impede novos usos.
+</div>
+
+<div class="print-placeholder">
+  <span class="print-number">PRINT 5</span>
+  <span class="print-title">Mensagem "Bairro inativado" apos desativar</span>
+  <span class="print-url">/gestao/bairros/</span>
+  <span class="print-desc">
+    Clique no botao de desativar (icone de ban) em algum bairro e confirme na caixa de dialogo.
+    A pagina recarrega com a mensagem "Bairro inativado." no topo. O bairro some da lista (filtro ativo = TRUE).
+    Tire o print mostrando a mensagem + a tabela atualizada.
+  </span>
+</div>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 11. TEMPLATE - LISTAGEM + MODAL                                    -->
+<!-- ================================================================== -->
+<h2>11. Template HTML - Listagem de Bairros + Modal de Criacao</h2>
+<p>Template Django que exibe a tabela de bairros e o modal para criar um novo bairro. Usa componentes do Design System GOV.BR.</p>
+
+<span class="lang-label">HTML (Django Template)</span>
+<span class="file-path">backend/templates/portal/gestao/bairros.html</span>
+<pre>
+{% extends "portal/base.html" %}
+{% load static %}
+
+{% block title %}Gestao de Bairros - VG 24H{% endblock %}
+
+{% block content %}
+&lt;div class="dashboard-content"&gt;
+  &lt;nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb"&gt;
+    &lt;div class="crumb-list"&gt;
+      &lt;span class="crumb"&gt;&lt;a href="{% url 'portal:root' %}"&gt;
+        &lt;i class="fas fa-home"&gt;&lt;/i&gt;&lt;/a&gt;&lt;/span&gt;
+      &lt;span class="crumb"&gt;&lt;i class="fas fa-chevron-right"&gt;&lt;/i&gt;&lt;/span&gt;
+      &lt;span class="crumb"&gt;&lt;a href="{% url 'portal:gestao_estatisticas' %}"&gt;
+        Administracao&lt;/a&gt;&lt;/span&gt;
+      &lt;span class="crumb"&gt;&lt;i class="fas fa-chevron-right"&gt;&lt;/i&gt;&lt;/span&gt;
+      &lt;span&gt;Bairros e Regioes&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/nav&gt;
+
+  &lt;div class="dashboard-header d-flex justify-content-between align-items-center mb-4x"&gt;
+    &lt;div&gt;
+      &lt;h1&gt;Bairros e Regioes&lt;/h1&gt;
+      &lt;p class="text-muted"&gt;Gerencie as areas geograficas atendidas pelo VG 24H.&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;button class="br-button primary" type="button"
+            data-toggle="modal" data-target="#modal-add-bairro"&gt;
+      &lt;i class="fas fa-plus mr-1"&gt;&lt;/i&gt; Novo Bairro
+    &lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;div class="br-card p-4"&gt;
+    &lt;div class="vg-table-wrapper"&gt;
+      &lt;div class="br-table"&gt;
+        &lt;div class="table-header"&gt;
+          &lt;div class="top-bar"&gt;
+            &lt;div class="table-title"&gt;Bairros&lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;table&gt;
+          &lt;thead&gt;
+            &lt;tr&gt;
+              &lt;th&gt;Nome&lt;/th&gt;
+              &lt;th&gt;Status&lt;/th&gt;
+              &lt;th&gt;Acoes&lt;/th&gt;
+            &lt;/tr&gt;
+          &lt;/thead&gt;
+          &lt;tbody&gt;
+            {% for b in lista %}
+              &lt;tr&gt;
+                &lt;td&gt;&lt;strong&gt;{{ b.nome }}&lt;/strong&gt;&lt;/td&gt;
+                &lt;td&gt;
+                  {% if b.ativo %}
+                    &lt;span class="br-tag success"&gt;Ativo&lt;/span&gt;
+                  {% else %}
+                    &lt;span class="br-tag danger"&gt;Inativo&lt;/span&gt;
+                  {% endif %}
+                &lt;/td&gt;
+                &lt;td&gt;
+                  &lt;a href="{% url 'portal:gestao_bairro_editar' b.pk %}"
+                     class="br-button circle small" title="Editar"&gt;
+                    &lt;i class="fas fa-edit"&gt;&lt;/i&gt;
+                  &lt;/a&gt;
+                  {% if b.ativo %}
+                  &lt;form action="{% url 'portal:gestao_bairro_desativar' b.pk %}"
+                        method="post" style="display:inline;"&gt;
+                    {% csrf_token %}
+                    &lt;button type="submit" class="br-button circle small"
+                            title="Desativar"
+                            onclick="return confirm('Inativar este bairro?')"&gt;
+                      &lt;i class="fas fa-ban"&gt;&lt;/i&gt;
+                    &lt;/button&gt;
+                  &lt;/form&gt;
+                  {% endif %}
+                &lt;/td&gt;
+              &lt;/tr&gt;
+            {% empty %}
+              &lt;tr&gt;&lt;td colspan="3" class="text-center"&gt;
+                Nenhum bairro cadastrado.&lt;/td&gt;&lt;/tr&gt;
+            {% endfor %}
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- Modal Adicionar Bairro --&gt;
+&lt;div class="br-modal" id="modal-add-bairro"&gt;
+  &lt;div class="br-modal-header"&gt;
+    &lt;div class="modal-title"&gt;Novo Bairro&lt;/div&gt;
+    &lt;button class="close" type="button" data-dismiss="modal"&gt;
+      &lt;i class="fas fa-times"&gt;&lt;/i&gt;&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;div class="br-modal-body"&gt;
+    &lt;form action="{% url 'portal:gestao_bairros' %}" method="post"&gt;
+      {% csrf_token %}
+      &lt;div class="br-input mt-3x"&gt;
+        &lt;label for="id_nome_b"&gt;Nome do Bairro *&lt;/label&gt;
+        &lt;input id="id_nome_b" name="nome" type="text" required /&gt;
+      &lt;/div&gt;
+    &lt;/form&gt;
+  &lt;/div&gt;
+  &lt;div class="br-modal-footer justify-content-end mt-4x"&gt;
+    &lt;button class="br-button secondary mr-2" type="button"
+            data-dismiss="modal"&gt;Cancelar&lt;/button&gt;
+    &lt;button class="br-button primary" type="submit"&gt;Criar Bairro&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+{% endblock %}
+</pre>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 12. TEMPLATE - FORMULARIO DE EDICAO                                -->
+<!-- ================================================================== -->
+<h2>12. Template HTML - Formulario de Edicao</h2>
+<p>Pagina dedicada para editar um bairro existente. Campos ja preenchidos com os dados atuais.</p>
+
+<span class="lang-label">HTML (Django Template)</span>
+<span class="file-path">backend/templates/portal/gestao/bairro_form.html</span>
+<pre>
+{% extends "portal/base.html" %}
+{% load static %}
+
+{% block title %}Editar Bairro - VG 24H{% endblock %}
+
+{% block content %}
+&lt;div class="dashboard-content"&gt;
+  &lt;nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb"&gt;
+    &lt;div class="crumb-list"&gt;
+      &lt;span class="crumb"&gt;&lt;a href="{% url 'portal:root' %}"&gt;
+        &lt;i class="fas fa-home"&gt;&lt;/i&gt;&lt;/a&gt;&lt;/span&gt;
+      &lt;span class="crumb"&gt;&lt;i class="fas fa-chevron-right"&gt;&lt;/i&gt;&lt;/span&gt;
+      &lt;span class="crumb"&gt;&lt;a href="{% url 'portal:gestao_bairros' %}"&gt;
+        Bairros&lt;/a&gt;&lt;/span&gt;
+      &lt;span class="crumb"&gt;&lt;i class="fas fa-chevron-right"&gt;&lt;/i&gt;&lt;/span&gt;
+      &lt;span class="crumb"&gt;Editar Bairro&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/nav&gt;
+
+  &lt;h1 class="h3 mb-4x"&gt;Editar Bairro: {{ bairro.nome_bairro }}&lt;/h1&gt;
+
+  &lt;div class="br-card p-4 mx-auto" style="max-width: 600px;"&gt;
+    &lt;form action="{% url 'portal:gestao_bairro_editar' bairro.pk %}"
+          method="post"&gt;
+      {% csrf_token %}
+      &lt;div class="br-input mb-3x"&gt;
+        &lt;label for="id_nome"&gt;Nome do Bairro *&lt;/label&gt;
+        &lt;input id="id_nome" name="nome" type="text"
+               value="{{ bairro.nome_bairro }}" required /&gt;
+      &lt;/div&gt;
+      &lt;div class="br-checkbox mb-4x"&gt;
+        &lt;input id="id_ativo" name="ativo" type="checkbox"
+               {% if bairro.ativo %}checked{% endif %} /&gt;
+        &lt;label for="id_ativo"&gt;Bairro Ativo&lt;/label&gt;
+      &lt;/div&gt;
+      &lt;div class="d-flex justify-content-end"&gt;
+        &lt;a href="{% url 'portal:gestao_bairros' %}"
+           class="br-button secondary mr-2"&gt;Cancelar&lt;/a&gt;
+        &lt;button class="br-button primary" type="submit"&gt;
+          Salvar Alteracoes&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/form&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+{% endblock %}
+</pre>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 13. RECURSO AVANCADO 1: TRIGGERS                                   -->
+<!-- ================================================================== -->
+<h2>13. Recurso Avancado de BD: Triggers</h2>
+<p>O sistema possui 3 triggers PL/pgSQL que automatizam acoes criticas no banco de dados.</p>
+
+<h3>Trigger 1 - Auto-criar historico "Aberto" ao inserir chamado</h3>
+<p>Quando um chamado e inserido, o trigger cria automaticamente o primeiro registro de historico com status "AB" (Aberto).</p>
+
+<span class="lang-label">SQL (PL/pgSQL)</span>
+<span class="file-path">database/03_functions_triggers.sql</span>
+<pre>
+CREATE OR REPLACE FUNCTION fn_chamado_after_insert_historico_ab()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id_status INTEGER;
+BEGIN
+    -- Busca o ID do status 'AB' na tabela status_chamado
+    SELECT id_status INTO v_id_status
+    FROM status_chamado WHERE sigla = 'AB';
+
+    -- Insere o primeiro historico: status AB, servidor = NULL (sistema)
+    INSERT INTO historico_chamado (id_chamado, id_servidor, id_status, observacao)
+    VALUES (NEW.id_chamado, NULL, v_id_status, NULL);
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_chamado_after_insert_historico_ab
+    AFTER INSERT ON chamado
+    FOR EACH ROW
+    EXECUTE PROCEDURE fn_chamado_after_insert_historico_ab();
+</pre>
+
+<h3>Trigger 2A - Auto-atualizar timestamp em UPDATE</h3>
+<p>Atualiza automaticamente o campo <code>atualizado_em</code> sempre que qualquer UPDATE ocorre na tabela chamado.</p>
+
+<span class="lang-label">SQL (PL/pgSQL)</span>
+<span class="file-path">database/03_functions_triggers.sql</span>
+<pre>
+CREATE OR REPLACE FUNCTION fn_chamado_before_update_metadados()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- BEFORE UPDATE: modifica NEW antes da gravacao
+    NEW.atualizado_em := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_chamado_before_update_metadados
+    BEFORE UPDATE ON chamado
+    FOR EACH ROW
+    EXECUTE PROCEDURE fn_chamado_before_update_metadados();
+</pre>
+
+<h3>Trigger 2B - Auto-notificar e atualizar conclusao ao mudar status</h3>
+<p>Ao inserir um novo historico (mudanca de status), o trigger: (1) atualiza <code>dt_conclusao</code> se for CO/CA, (2) gera notificacao automatica para o cidadao.</p>
+
+<span class="lang-label">SQL (PL/pgSQL)</span>
+<span class="file-path">database/03_functions_triggers.sql</span>
+<pre>
+CREATE OR REPLACE FUNCTION fn_historico_after_insert_status()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    nova_sigla  CHAR(2);
+    desc_nova   VARCHAR(200);
+    v_protocolo VARCHAR(20);
+    msg         VARCHAR(200);
+BEGIN
+    -- Busca a sigla e descricao do status inserido
+    SELECT sigla, descricao INTO nova_sigla, desc_nova
+    FROM status_chamado WHERE id_status = NEW.id_status;
+
+    -- Busca o numero de protocolo do chamado
+    SELECT num_protocolo INTO v_protocolo
+    FROM chamado WHERE id_chamado = NEW.id_chamado;
+
+    -- CO ou CA: marca data de conclusao
+    IF nova_sigla IN ('CO', 'CA') THEN
+        UPDATE chamado SET dt_conclusao = COALESCE(dt_conclusao, CURRENT_TIMESTAMP)
+        WHERE id_chamado = NEW.id_chamado;
+    -- AB, EA ou EE: limpa dt_conclusao (reaberto)
+    ELSIF nova_sigla IN ('AB', 'EA', 'EE') THEN
+        UPDATE chamado SET dt_conclusao = NULL
+        WHERE id_chamado = NEW.id_chamado;
+    END IF;
+
+    -- Gera notificacao automatica
+    msg := left(
+        'Chamado ' || v_protocolo || ': status alterado para '
+        || COALESCE(desc_nova, nova_sigla),
+        200
+    );
+    INSERT INTO notificacao (id_chamado, mensagem)
+    VALUES (NEW.id_chamado, msg);
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_historico_after_insert_status
+    AFTER INSERT ON historico_chamado
+    FOR EACH ROW
+    EXECUTE PROCEDURE fn_historico_after_insert_status();
+</pre>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 14. RECURSO AVANCADO 2: RULES                                      -->
+<!-- ================================================================== -->
+<h2>14. Recurso Avancado de BD: Rules de Integridade</h2>
+<p>Rules e triggers que garantem regras de negocio diretamente no banco, independente da aplicacao.</p>
+
+<h3>R1 - Bloquear fotos em chamados encerrados</h3>
+
+<span class="lang-label">SQL (PL/pgSQL)</span>
+<span class="file-path">database/04_rules.sql</span>
+<pre>
+CREATE OR REPLACE FUNCTION fn_rule_foto_chamado_encerrado()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM historico_chamado hc
+        JOIN status_chamado s ON s.id_status = hc.id_status
+        WHERE hc.id_chamado = NEW.id_chamado
+          AND s.sigla IN ('CO', 'CA')
+          AND hc.dt_alteracao = (
+              SELECT MAX(dt_alteracao) FROM historico_chamado
+              WHERE id_chamado = NEW.id_chamado
+          )
+    ) THEN
+        RAISE EXCEPTION 'Chamado encerrado (CO/CA): nao e permitido adicionar fotos.';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_foto_chamado_encerrado
+    BEFORE INSERT ON foto_chamado
+    FOR EACH ROW EXECUTE FUNCTION fn_rule_foto_chamado_encerrado();
+</pre>
+
+<h3>R5 - Historico imutavel (Rules puras)</h3>
+
+<span class="lang-label">SQL</span>
+<span class="file-path">database/04_rules.sql</span>
+<pre>
+-- Nenhum registro de historico pode ser alterado ou excluido
+CREATE RULE r05_historico_sem_update AS ON UPDATE TO historico_chamado
+DO INSTEAD NOTHING;
+
+CREATE RULE r05_historico_sem_delete AS ON DELETE TO historico_chamado
+DO INSTEAD NOTHING;
+
+-- Chamados nao podem ser deletados fisicamente
+CREATE RULE rx_chamado_sem_delete AS ON DELETE TO chamado DO INSTEAD NOTHING;
+</pre>
+
+<div class="info-box">
+  <strong>Diferenca entre Rule e Trigger:</strong><br>
+  - <strong>Rule</strong>: reescreve a query ANTES de executar (ex: transforma DELETE em "nada")<br>
+  - <strong>Trigger</strong>: executa codigo PL/pgSQL ANTES ou DEPOIS da operacao (pode validar e lancar excecao)
+</div>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 15. RECURSO AVANCADO 3: VIEW COM JOIN LATERAL                      -->
+<!-- ================================================================== -->
+<h2>15. Recurso Avancado de BD: View SQL com JOIN LATERAL</h2>
+<p>View que calcula estatisticas de chamados agrupados por categoria, bairro e status, usando <code>JOIN LATERAL</code> para buscar o ultimo status de cada chamado.</p>
+
+<span class="lang-label">SQL</span>
+<span class="file-path">database/05_views.sql</span>
+<pre>
+CREATE VIEW vw_estatisticas_chamados AS
+SELECT
+    cat.nome        AS categoria,          -- Nome da categoria de servico
+    b.nome_bairro   AS bairro,             -- Nome do bairro
+    s.sigla         AS sigla_status,       -- Sigla do status (AB, EA, EE, CO, CA)
+    s.descricao     AS status_descricao,   -- Descricao do status
+    COUNT(*)::BIGINT AS total_chamados     -- Quantidade de chamados
+FROM chamado ch
+-- JOIN 1: chamado -> servico -> categoria_servico
+JOIN servico srv     ON srv.id_servico  = ch.id_servico
+JOIN categoria_servico cat ON cat.id_categoria = srv.id_categoria
+-- JOIN 2: chamado -> bairro
+JOIN bairro b        ON b.id_bairro     = ch.id_bairro
+-- JOIN 3: LATERAL - busca o ULTIMO status de cada chamado
+-- A subconsulta roda para CADA chamado, ordena por dt_alteracao DESC
+-- e pega apenas 1 registro (o mais recente)
+JOIN LATERAL (
+    SELECT id_status FROM historico_chamado
+    WHERE id_chamado = ch.id_chamado
+    ORDER BY dt_alteracao DESC LIMIT 1
+) ultimo_h ON TRUE
+-- JOIN 4: status_chamado - sigla e descricao
+JOIN status_chamado s ON s.id_status = ultimo_h.id_status
+-- Filtra apenas registros ativos
+WHERE cat.ativo AND srv.ativo AND b.ativo
+-- Agrupamento: um registro por (categoria, bairro, status)
+GROUP BY cat.nome, b.nome_bairro, s.sigla, s.descricao;
+</pre>
+
+<div class="info-box">
+  <strong>O que e JOIN LATERAL?</strong><br>
+  Diferente de um JOIN comum, o <code>JOIN LATERAL</code> permite que a subconsulta <strong>referencie colunas da tabela anterior</strong> (neste caso, <code>ch.id_chamado</code>).
+  Funciona como um "foreach" no SQL: para cada chamado, busca o ultimo historico. Sem LATERAL, seria necessario uma subconsulta mais complexa com <code>ROW_NUMBER()</code> ou <code>DISTINCT ON</code>.
+</div>
+
+<h3>View utilizada na tela de Estatisticas do Gestor</h3>
+
+<span class="lang-label">PYTHON</span>
+<span class="file-path">backend/portal/views_gestao.py</span>
+<pre>
+@perfis("GES")
+def gestao_estatisticas(request):
+    rows = []
+    try:
+        with connection.cursor() as c:
+            # Consulta direta na view SQL
+            c.execute("SELECT * FROM vw_estatisticas_chamados ORDER BY categoria, bairro")
+            cols = [d[0] for d in c.description]
+            rows = [dict(zip(cols, r)) for r in c.fetchall()]
+    except ProgrammingError:
+        pass
+    return render(request, "portal/gestao/estatisticas.html", {"rows": rows})
+</pre>
+
+<div class="print-placeholder">
+  <span class="print-number">PRINT 6</span>
+  <span class="print-title">Tela de Estatisticas (View SQL com JOIN LATERAL)</span>
+  <span class="print-url">/gestao/estatisticas/</span>
+  <span class="print-desc">
+    Acesse /gestao/estatisticas/ logado como Gestor. A tela mostra uma tabela com as estatisticas
+    de chamados agrupados por categoria, bairro e status. Esses dados vem diretamente da view SQL
+    <code>vw_estatisticas_chamados</code>. Tire o print da tabela de estatisticas.
+  </span>
+</div>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- 16. RECURSO AVANCADO 4: MIDDLEWARE COM SET_CONFIG                   -->
+<!-- ================================================================== -->
+<h2>16. Recurso Avancado de BD: Variaveis de Sessao PostgreSQL</h2>
+<p>O middleware Django injeta variaveis de sessao no PostgreSQL usando <code>set_config()</code>.
+As triggers e functions do banco acessam essas variaveis para saber qual usuario/perfil esta executando a acao (auditoria).</p>
+
+<span class="lang-label">PYTHON</span>
+<span class="file-path">backend/portal/middleware.py</span>
+<pre>
+def _postgres_sessao(perfil, id_acao):
+    """
+    Injeta variaveis de sessao no PostgreSQL.
+    As triggers acessam via: SELECT current_setting('portal.perfil', true);
+    """
+    perfil = perfil or ""
+    id_acao = "" if id_acao is None else str(id_acao)
+    with connection.cursor() as c:
+        c.execute("SELECT set_config('portal.perfil', %s, true)", [perfil])
+        c.execute("SELECT set_config('portal.id_usuario_acao', %s, true)", [id_acao])
+
+
+class PortalUserMiddleware:
+    """
+    Executado em TODA requisicao ANTES de chegar na view.
+    Efeitos:
+      - request.portal_user -> objeto do usuario logado (ou None)
+      - set_config() no PG -> triggers sabem quem esta agindo
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = _usuario_da_sessao(request)
+        request.portal_user = user
+
+        # Informa ao PostgreSQL quem esta operando
+        if user:
+            _postgres_sessao((user.perfil or "").strip(), user.pk)
+        else:
+            _postgres_sessao(None, None)
+
+        return self.get_response(request)
+</pre>
+
+<div class="info-box">
+  <strong>Fluxo completo:</strong><br>
+  1. Usuario faz login -> sessao Django armazena <code>usuario_id</code> e <code>usuario_tipo</code><br>
+  2. Toda requisicao -> middleware busca o usuario no banco via SQL puro<br>
+  3. Middleware chama <code>set_config('portal.perfil', 'GES', true)</code> no PostgreSQL<br>
+  4. Triggers podem ler o perfil via <code>current_setting('portal.perfil', true)</code> para auditoria
+</div>
+
+<hr class="section-break">
+
+<!-- ================================================================== -->
+<!-- RESUMO FINAL DOS PRINTS                                            -->
+<!-- ================================================================== -->
+<h2>Resumo: Prints para o PDF</h2>
+
+<table class="resumo">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Tela</th>
+      <th>URL</th>
+      <th>O que mostrar</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>1</strong></td>
+      <td>Modal "Novo Bairro" aberto</td>
+      <td>/gestao/bairros/</td>
+      <td>Modal com campos preenchidos</td>
+    </tr>
+    <tr>
+      <td><strong>2</strong></td>
+      <td>Mensagem de sucesso apos criar</td>
+      <td>/gestao/bairros/</td>
+      <td>Mensagem verde + bairro na tabela</td>
+    </tr>
+    <tr>
+      <td><strong>3</strong></td>
+      <td>Listagem de bairros</td>
+      <td>/gestao/bairros/</td>
+      <td>Tabela com bairros + botoes de acao</td>
+    </tr>
+    <tr>
+      <td><strong>4</strong></td>
+      <td>Formulario de edicao</td>
+      <td>/gestao/bairros/&lt;pk&gt;/editar/</td>
+      <td>Formulario com dados preenchidos</td>
+    </tr>
+    <tr>
+      <td><strong>5</strong></td>
+      <td>Mensagem apos desativar</td>
+      <td>/gestao/bairros/</td>
+      <td>Mensagem "Bairro inativado" + tabela</td>
+    </tr>
+    <tr>
+      <td><strong>6</strong></td>
+      <td>Estatisticas (View SQL)</td>
+      <td>/gestao/estatisticas/</td>
+      <td>Tabela de estatisticas com dados</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="info-box" style="margin-top:20px;">
+  <strong>Como gerar o PDF final:</strong><br>
+  1. Abra este arquivo HTML no navegador (Chrome ou Firefox)<br>
+  2. Tire os 6 prints indicados acima no sistema rodando<br>
+  3. Cole cada print no placeholder correspondente (substitua as caixas tracejadas)<br>
+  4. Use <strong>Ctrl+P > Salvar como PDF</strong> para gerar o arquivo final
+</div>
+
+</body>
+</html>

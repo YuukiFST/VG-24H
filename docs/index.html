@@ -1,1114 +1,1285 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VG 24H — Documentação do Projeto</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --primary: #6366f1;
-  --primary-dark: #4f46e5;
-  --primary-light: #818cf8;
-  --secondary: #0ea5e9;
-  --accent: #f43f5e;
-  --accent-warm: #f59e0b;
-  --teal: #14b8a6;
-  --bg: #f0f2f5;
-  --bg-card: #ffffff;
-  --sidebar-bg: #0f172a;
-  --sidebar-hover: #1e293b;
-  --text: #1e293b;
-  --text-light: #64748b;
-  --text-muted: #94a3b8;
-  --border: #e2e8f0;
-  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-  --shadow-lg: 0 10px 40px rgba(0,0,0,.08);
-  --radius: 12px;
-  --radius-sm: 8px;
-  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --nav-width: 280px;
-}
-html { scroll-behavior: smooth; }
-body {
-  font-family: var(--font);
-  color: var(--text);
-  background: var(--bg);
-  line-height: 1.7;
-  display: flex;
-  min-height: 100vh;
-}
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
-
-/* Sidebar */
-.sidebar {
-  position: fixed;
-  top: 0; left: 0; bottom: 0;
-  width: var(--nav-width);
-  background: var(--sidebar-bg);
-  color: #fff;
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.sidebar-header {
-  padding: 24px 20px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
-  flex-shrink: 0;
-}
-.sidebar-header h1 { font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
-.sidebar-header h1 span { color: var(--primary-light); }
-.sidebar-header p { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
-.sidebar-nav {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px 0;
-}
-.sidebar-nav::-webkit-scrollbar { width: 4px; }
-.sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
-.nav-section { margin-bottom: 4px; }
-.nav-section-title {
-  padding: 8px 20px 4px;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: rgba(255,255,255,.3);
-  font-weight: 600;
-}
-.nav-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 20px;
-  color: rgba(255,255,255,.6);
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all .15s;
-  border-left: 3px solid transparent;
-}
-.nav-link:hover {
-  color: #fff;
-  background: var(--sidebar-hover);
-  border-left-color: var(--primary);
-}
-.nav-link .nav-icon {
-  width: 20px; height: 20px;
-  border-radius: 6px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px;
-  flex-shrink: 0;
-}
-.nav-link.active {
-  color: #fff;
-  background: rgba(99,102,241,.12);
-  border-left-color: var(--primary);
-}
-
-/* Main */
-.main {
-  margin-left: var(--nav-width);
-  flex: 1;
-  min-height: 100vh;
-  padding: 0;
-}
-.hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-  padding: 60px 48px;
-  color: #fff;
-  position: relative;
-  overflow: hidden;
-}
-.hero::before {
-  content: '';
-  position: absolute;
-  top: -50%; right: -20%;
-  width: 600px; height: 600px;
-  background: radial-gradient(circle, rgba(99,102,241,.12) 0%, transparent 70%);
-  border-radius: 50%;
-}
-.hero::after {
-  content: '';
-  position: absolute;
-  bottom: -30%; left: -10%;
-  width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(14,165,233,.08) 0%, transparent 70%);
-  border-radius: 50%;
-}
-.hero-content { position: relative; z-index: 1; max-width: 800px; }
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  background: rgba(99,102,241,.2);
-  border: 1px solid rgba(99,102,241,.3);
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--primary-light);
-  margin-bottom: 16px;
-}
-.hero h2 { font-size: 36px; font-weight: 800; letter-spacing: -.5px; line-height: 1.15; margin-bottom: 12px; }
-.hero h2 span { color: var(--primary-light); }
-.hero p { font-size: 16px; color: rgba(255,255,255,.6); line-height: 1.7; max-width: 600px; }
-.hero-stats {
-  display: flex; gap: 32px; margin-top: 32px;
-  padding-top: 28px;
-  border-top: 1px solid rgba(255,255,255,.06);
-}
-.hero-stat { }
-.hero-stat-value { font-size: 24px; font-weight: 700; color: #fff; }
-.hero-stat-label { font-size: 12px; color: rgba(255,255,255,.4); font-weight: 500; margin-top: 2px; }
-
-/* Content */
-.content { padding: 40px 48px 80px; max-width: 960px; }
-.doc-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  margin-bottom: 28px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-.doc-card-header {
-  padding: 24px 28px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.doc-card-icon {
-  width: 40px; height: 40px;
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-.doc-card-title { font-size: 18px; font-weight: 700; letter-spacing: -.2px; }
-.doc-card-subtitle { font-size: 13px; color: var(--text-light); margin-top: 2px; }
-.doc-card-body { padding: 24px 28px; }
-
-/* Typography inside cards */
-.doc-card-body h2 {
-  font-size: 22px;
-  font-weight: 700;
-  margin: 32px 0 12px;
-  letter-spacing: -.3px;
-  color: var(--text);
-}
-.doc-card-body h2:first-child { margin-top: 0; }
-.doc-card-body h3 {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 24px 0 8px;
-  color: var(--text);
-}
-.doc-card-body h4 {
-  font-size: 14px;
-  font-weight: 600;
-  margin: 20px 0 6px;
-  color: var(--text);
-}
-.doc-card-body p { margin-bottom: 14px; color: var(--text); }
-.doc-card-body p:last-child { margin-bottom: 0; }
-.doc-card-body strong { font-weight: 600; }
-.doc-card-body ul, .doc-card-body ol { margin: 8px 0 16px; padding-left: 20px; }
-.doc-card-body li { margin-bottom: 6px; color: var(--text); }
-.doc-card-body hr {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 28px 0;
-}
-.doc-card-body blockquote {
-  border-left: 3px solid var(--primary);
-  padding: 12px 16px;
-  margin: 16px 0;
-  background: #f8fafc;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  font-size: 14px;
-  color: var(--text-light);
-}
-.doc-card-body code {
-  font-family: var(--mono);
-  font-size: 13px;
-  background: #f1f5f9;
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: #e11d48;
-}
-.doc-card-body pre {
-  background: #0f172a;
-  color: #e2e8f0;
-  padding: 20px;
-  border-radius: var(--radius-sm);
-  overflow-x: auto;
-  margin: 16px 0;
-  font-size: 13px;
-  line-height: 1.6;
-}
-.doc-card-body pre code {
-  background: none;
-  padding: 0;
-  color: inherit;
-  font-size: inherit;
-}
-.doc-card-body table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 16px 0;
-  font-size: 14px;
-}
-.doc-card-body th {
-  background: #f8fafc;
-  padding: 10px 14px;
-  text-align: left;
-  font-weight: 600;
-  border-bottom: 2px solid var(--border);
-  color: var(--text);
-}
-.doc-card-body td {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-}
-.doc-card-body tr:last-child td { border-bottom: none; }
-.doc-card-body tr:hover td { background: #f8fafc; }
-
-/* Tags & badges */
-.tag {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .3px;
-}
-.tag-purple { background: rgba(99,102,241,.12); color: #4f46e5; }
-.tag-blue { background: rgba(14,165,233,.12); color: #0284c7; }
-.tag-red { background: rgba(244,67,54,.1); color: #dc2626; }
-.tag-green { background: rgba(20,184,166,.1); color: #0d9488; }
-.tag-yellow { background: rgba(245,158,11,.1); color: #d97706; }
-
-/* Checklist */
-.checklist { list-style: none; padding: 0 !important; }
-.checklist li {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 8px 12px;
-  background: #f8fafc;
-  border-radius: var(--radius-sm);
-  margin-bottom: 6px;
-}
-.checklist li::before {
-  content: '☐';
-  font-size: 16px;
-  line-height: 1.5;
-  flex-shrink: 0;
-}
-.checklist li.done::before { content: '☑'; color: var(--teal); }
-
-/* Responsive */
-@media (max-width: 900px) {
-  .sidebar { width: 240px; }
-  .main { margin-left: 240px; }
-  .hero { padding: 40px 24px; }
-  .hero h2 { font-size: 28px; }
-  .content { padding: 24px; }
-  .doc-card-header, .doc-card-body { padding: 16px 20px; }
-}
-@media (max-width: 640px) {
-  .sidebar {
-    width: 100%;
-    position: relative;
-    height: auto;
-    max-height: 300px;
-  }
-  .main { margin-left: 0; }
-  .hero { padding: 32px 20px; }
-  .hero-stats { flex-wrap: wrap; gap: 20px; }
-  .content { padding: 16px; }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VG 24H - Documentação Unificada do Projeto</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rawline:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hljs-dark" disabled>
 </head>
-<body>
+<body data-theme="light">
+  <button class="mobile-menu-btn" aria-label="Menu">☰</button>
 
-<nav class="sidebar">
-  <div class="sidebar-header">
-    <h1>VG <span>24H</span></h1>
-    <p>Documentação do Projeto</p>
-  </div>
-  <div class="sidebar-nav">
-    <div class="nav-section">
-      <div class="nav-section-title">Visão Geral</div>
-      <a href="#plano" class="nav-link"><span class="nav-icon">📋</span> Plano de Trabalho</a>
-      <a href="#relatorio" class="nav-link"><span class="nav-icon">📊</span> Relatório de Atividades</a>
-    </div>
-    <div class="nav-section">
-      <div class="nav-section-title">Guias Técnicos</div>
-      <a href="#guia-frontend" class="nav-link"><span class="nav-icon">🎨</span> Guia de Frontend</a>
-      <a href="#faq" class="nav-link"><span class="nav-icon">❓</span> FAQ de Código</a>
-    </div>
-    <div class="nav-section">
-      <div class="nav-section-title">Roteiros</div>
-      <a href="#bruno" class="nav-link"><span class="nav-icon">👤</span> Bruno Dias</a>
-      <a href="#fausto" class="nav-link"><span class="nav-icon">👤</span> Fausto Yuuki</a>
-      <a href="#rafael" class="nav-link"><span class="nav-icon">👤</span> Rafael Pereira</a>
-    </div>
-  </div>
-</nav>
-
-<div class="main">
-
-  <!-- Hero -->
-  <section class="hero" id="topo">
-    <div class="hero-content">
-      <div class="hero-badge">⎈ Portal de Serviços Públicos</div>
-      <h2>Portal <span>VG 24H</span></h2>
-      <p>Documentação completa do projeto de Programação de Banco de Dados — Instituto Federal de Mato Grosso. Sistema web para centralizar solicitações de serviços públicos em Várzea Grande.</p>
-      <div class="hero-stats">
-        <div class="hero-stat">
-          <div class="hero-stat-value">7</div>
-          <div class="hero-stat-label">Documentos</div>
-        </div>
-        <div class="hero-stat">
-          <div class="hero-stat-value">11</div>
-          <div class="hero-stat-label">Tabelas no BD</div>
-        </div>
-        <div class="hero-stat">
-          <div class="hero-stat-value">3</div>
-          <div class="hero-stat-label">Membros</div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <svg viewBox="0 0 48 48" width="32" height="32" style="flex-shrink:0">
+          <rect x="4" y="4" width="40" height="40" rx="8" fill="#1351b4"/>
+          <text x="24" y="30" text-anchor="middle" fill="white" font-family="Rawline, sans-serif" font-weight="700" font-size="18">VG</text>
+        </svg>
+        <div>
+          <span>VG 24H</span>
+          <small>Documentação do Projeto</small>
         </div>
       </div>
     </div>
-  </section>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Visão Geral</div>
+        <a href="#visao" class="nav-link active" data-section="visao">
+          <span class="nav-ico">🎯</span> Visão Geral
+        </a>
+        <a href="#arquitetura" class="nav-link" data-section="arquitetura">
+          <span class="nav-ico">🏗️</span> Arquitetura
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Integrantes</div>
+        <a href="#bruno" class="nav-link" data-section="bruno">
+          <span class="nav-ico">🔐</span> Bruno Dias
+        </a>
+        <a href="#fausto" class="nav-link" data-section="fausto">
+          <span class="nav-ico">🎨</span> Fausto Yuuki
+        </a>
+        <a href="#rafael" class="nav-link" data-section="rafael">
+          <span class="nav-ico">🗄️</span> Rafael Pereira
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Referência</div>
+        <a href="#faq" class="nav-link" data-section="faq">
+          <span class="nav-ico">❓</span> FAQ Técnico
+        </a>
+        <a href="#checklist" class="nav-link" data-section="checklist">
+          <span class="nav-ico">✅</span> Checklist Final
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="theme-toggle" aria-label="Alternar tema">🌙</button>
+      <div class="progress-ring">
+        <svg viewBox="0 0 36 36" width="44" height="44">
+          <path class="progress-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+          <path class="progress-ring-fill" id="global-progress" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+        </svg>
+        <text class="progress-ring-text" x="18" y="18" id="global-progress-text">0%</text>
+      </div>
+    </div>
+  </aside>
 
-  <div class="content">
+  <div class="sidebar-overlay"></div>
 
-    <!-- ============================== -->
-    <!-- PLANO DE TRABALHO              -->
-    <!-- ============================== -->
-    <article class="doc-card" id="plano">
-      <div class="doc-card-header">
-        <div class="doc-card-icon" style="background:rgba(99,102,241,.12);color:var(--primary)">📋</div>
-        <div>
-          <div class="doc-card-title">Plano de Trabalho — Portal VG 24H</div>
-          <div class="doc-card-subtitle">Versão 5 · Programação de Banco de Dados — 2026/1</div>
+  <main class="main">
+    <div class="content">
+      <!-- VISÃO GERAL -->
+      <section class="content-section active" id="sec-visao">
+        <div class="hero">
+          <div class="hero-inner">
+            <div class="hero-badge">🚀 Disciplina de Programação de Banco de Dados — 2026/1</div>
+            <h1>Visão Geral do Projeto</h1>
+            <p>Portal de Serviços Públicos de Várzea Grande — <strong>VG 24H</strong>. Uma plataforma digital para centralizar solicitações de serviços municipais, acompanhar chamados em tempo real e integrar cidadãos e gestores.</p>
+            <div class="hero-stats">
+              <div><div class="hero-stat-val">3</div><div class="hero-stat-lbl">Integrantes</div></div>
+              <div><div class="hero-stat-val">6</div><div class="hero-stat-lbl">Funcionalidades</div></div>
+              <div><div class="hero-stat-val">100%</div><div class="hero-stat-lbl">Gov.br DS</div></div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="doc-card-body">
 
-        <h2>1. O que fazer?</h2>
-        <p>O projeto consiste no desenvolvimento de uma aplicação web para a Prefeitura de Várzea Grande, inspirada no aplicativo "Cuiabá Smart", executada exclusivamente como um portal responsivo em conformidade com o <strong>Design System do Governo Federal (Gov.br)</strong>.</p>
-        <p>O sistema centraliza o recebimento de solicitações de serviços públicos, permitindo que o cidadão reporte problemas urbanos como buracos, falhas na iluminação pública, problemas de saneamento e acompanhe o andamento dos chamados pelo número de protocolo.</p>
-        <p>O banco de dados em PostgreSQL armazena e integra os dados, garantindo integridade e rastreabilidade por meio de <strong>Triggers</strong> e <strong>Rules</strong> implementados diretamente no banco.</p>
-
-        <hr>
-
-        <h2>2. Justificativa</h2>
-        <h3>2.1 Importância para a área proposta</h3>
-        <p>A digitalização dos serviços públicos é essencial para a modernização da gestão municipal. Um portal web facilita o acesso dos cidadãos, democratiza a informação e permite que a prefeitura mapeie problemas recorrentes por meio de dados estatísticos.</p>
-
-        <h3>2.2 Importância para o curso</h3>
-        <ul>
-          <li>Modelagem de dados relacional com entidades bem definidas</li>
-          <li>Controle de acesso por perfil de usuário (Cidadão, Colaborador, Administrador)</li>
-          <li>Desenvolvimento full-stack com Django e PostgreSQL</li>
-          <li>Recursos avançados de banco de dados: Triggers, Rules e Views</li>
-        </ul>
-
-        <hr>
-
-        <h2>3. Funcionalidades e Requisitos</h2>
-
-        <h3>3.1 Autenticação e controle de acesso</h3>
-        <ul>
-          <li>Login padronizado (Gov.br) para Cidadão, Colaborador e Administrador</li>
-          <li>Cidadão faz seu cadastro pela plataforma</li>
-          <li>Contas de Colaborador criadas exclusivamente pelo Administrador</li>
-          <li>Recuperação de senha com token temporário</li>
-          <li>Senha temporária para Colaborador com troca obrigatória no 1º acesso</li>
-        </ul>
-
-        <h3>Módulo do Cidadão</h3>
-        <ul>
-          <li>Abertura de chamados: categoria → serviço → descrição → foto → bairro</li>
-          <li>Número do endereço obrigatório (informar 0 se não houver)</li>
-          <li>Adição de fotos e observações (bloqueado em CO/CA)</li>
-          <li>Cancelamento do próprio chamado (status AB e EA)</li>
-          <li>Acompanhamento via protocolo numérico com histórico de status</li>
-          <li>Avaliação do atendimento (nota 1-5, uma única vez)</li>
-          <li>Visualização e exclusão de notificações</li>
-        </ul>
-
-        <h3>Módulo do Colaborador</h3>
-        <ul>
-          <li>Dashboard (Semáforo) com listagem filtrável por bairro, status e data</li>
-          <li>Alteração de status — exceto reabrir chamados CO ou CA</li>
-          <li>Encerramento (CO/CA) exige campo de resolução obrigatório</li>
-          <li>Adição de observações e fotos como comprovação</li>
-        </ul>
-
-        <h3>Módulo do Administrador</h3>
-        <ul>
-          <li>Todas as funcionalidades do Colaborador</li>
-          <li>Alteração de status de qualquer chamado, incluindo CO e CA</li>
-          <li>Invalidação de chamados (status CA) com motivo em resolução</li>
-          <li>Gerenciamento de usuários, categorias, serviços e bairros</li>
-          <li>Acesso exclusivo ao painel de estatísticas consolidadas</li>
-        </ul>
-
-        <h3>3.2 Requisitos técnicos e de banco de dados</h3>
-        <ul>
-          <li>Chaves primárias (SERIAL), estrangeiras, NOT NULL, UNIQUE, CHECK</li>
-          <li>Protocolo numérico reiniciando a cada ano (ex: 20260001)</li>
-          <li>Registros inativados com campo ativo — nenhuma exclusão real</li>
-          <li>Fotos armazenadas no Cloudinary com compressão automática</li>
-          <li>Carga inicial: 2 categorias, 5 serviços, 5 status, bairros de VG</li>
-        </ul>
-
-        <table>
-          <tr><th>Categoria</th><th>Serviços</th></tr>
-          <tr><td>Infraestrutura e Via Pública</td><td>Iluminação Pública, Pavimentação e Vias, Saneamento e Drenagem</td></tr>
-          <tr><td>Mobilidade e Cidadania</td><td>Trânsito e Sinalização, Saúde e Bem-estar</td></tr>
-        </table>
-
-        <table>
-          <tr><th>Sigla</th><th>Status</th></tr>
-          <tr><td><span class="tag tag-blue">AB</span></td><td>Aberto</td></tr>
-          <tr><td><span class="tag tag-yellow">EA</span></td><td>Em Análise</td></tr>
-          <tr><td><span class="tag tag-purple">EE</span></td><td>Em Execução</td></tr>
-          <tr><td><span class="tag tag-green">CO</span></td><td>Concluído</td></tr>
-          <tr><td><span class="tag tag-red">CA</span></td><td>Cancelado</td></tr>
-        </table>
-
-        <h3>3.3 Recursos avançados de banco de dados</h3>
-
-        <h4>Triggers</h4>
-        <ul>
-          <li><strong>Trigger 1 — AFTER INSERT</strong> em chamado: insere automaticamente o primeiro histórico com status AB</li>
-          <li><strong>Trigger 2A — BEFORE UPDATE</strong> em chamado: atualiza <code>atualizado_em</code></li>
-          <li><strong>Trigger 2B — AFTER INSERT</strong> em historico_chamado: atualiza <code>dt_conclusao</code> e gera notificação</li>
-        </ul>
-
-        <h4>Triggers de Integridade (convertidos de Rules)</h4>
-        <ul>
-          <li><code>trg_foto_chamado_encerrado</code> — bloqueia foto se chamado CO/CA</li>
-          <li><code>trg_historico_obs_encerrado</code> — bloqueia observação se chamado CO/CA</li>
-          <li><code>trg_avaliacao_imutavel</code> — impede reavaliação</li>
-        </ul>
-
-        <h4>Rules</h4>
-        <ul>
-          <li><strong>R5</strong> — impede UPDATE e DELETE em historico_chamado</li>
-          <li><strong>Extra</strong> — impede DELETE em chamado</li>
-        </ul>
-
-        <h4>View</h4>
-        <p><code>vw_estatisticas_chamados</code>: consolidação de chamados agrupados por categoria, bairro e status usando <strong>JOIN LATERAL</strong> para buscar o último status.</p>
-
-        <hr>
-
-        <h2>4. Restrições do Projeto</h2>
-        <table>
-          <tr><th>Restrição</th><th>Descrição</th></tr>
-          <tr><td>Linguagem/Framework</td><td>Python + Django</td></tr>
-          <tr><td>Banco de dados</td><td>PostgreSQL</td></tr>
-          <tr><td>Interface visual</td><td>Design System Gov.br</td></tr>
-          <tr><td>Plataforma</td><td>Exclusivamente web e responsivo</td></tr>
-          <tr><td>Gerenciador</td><td>uv (substitui pip)</td></tr>
-          <tr><td>Fotos</td><td>Cloudinary</td></tr>
-          <tr><td>Hospedagem</td><td>Render</td></tr>
-        </table>
-
-        <hr>
-
-        <h2>5. Modelo de Dados</h2>
-
-        <h3>5.1 Entidades e Atributos</h3>
-
-        <h4>usuario</h4>
-        <table>
-          <tr><th>Atributo</th><th>Tipo</th></tr>
-          <tr><td>id_usuario</td><td>PK, SERIAL</td></tr>
-          <tr><td>nome_completo</td><td>VARCHAR(200), NOT NULL</td></tr>
-          <tr><td>cpf</td><td>VARCHAR(14), UNIQUE, NOT NULL</td></tr>
-          <tr><td>dt_nascimento</td><td>DATE, NOT NULL</td></tr>
-          <tr><td>telefone</td><td>VARCHAR(20), NOT NULL</td></tr>
-          <tr><td>email</td><td>VARCHAR(255), UNIQUE, NOT NULL</td></tr>
-          <tr><td>senha_hash</td><td>VARCHAR(255), NOT NULL</td></tr>
-          <tr><td>senha_temporaria</td><td>VARCHAR(255), NULL</td></tr>
-          <tr><td>perfil</td><td>CHAR(3), CHECK ('CID','COL','ADM')</td></tr>
-          <tr><td>ativo</td><td>BOOLEAN, DEFAULT TRUE</td></tr>
-        </table>
-
-        <h4>status_chamado</h4>
-        <table>
-          <tr><th>Atributo</th><th>Tipo</th></tr>
-          <tr><td>id_status</td><td>PK, SERIAL</td></tr>
-          <tr><td>tipo_status</td><td>CHAR(2), UNIQUE, NOT NULL — AB, EA, EE, CO, CA</td></tr>
-          <tr><td>descricao</td><td>VARCHAR(200)</td></tr>
-        </table>
-
-        <h4>categoria_servico</h4>
-        <table>
-          <tr><th>Atributo</th><th>Tipo</th></tr>
-          <tr><td>id_categoria</td><td>PK, SERIAL</td></tr>
-          <tr><td>nome</td><td>VARCHAR(200), UNIQUE, NOT NULL</td></tr>
-          <tr><td>ativo</td><td>BOOLEAN, DEFAULT TRUE</td></tr>
-        </table>
-
-        <h4>servico</h4>
-        <table>
-          <tr><th>Atributo</th><th>Tipo</th></tr>
-          <tr><td>id_servico</td><td>PK, SERIAL</td></tr>
-          <tr><td>nome</td><td>VARCHAR(200), NOT NULL</td></tr>
-          <tr><td>prazo_amarelo_dias</td><td>INTEGER, DEFAULT 15</td></tr>
-          <tr><td>prazo_vermelho_dias</td><td>INTEGER, DEFAULT 30</td></tr>
-          <tr><td>ativo</td><td>BOOLEAN, DEFAULT TRUE</td></tr>
-        </table>
-
-        <h4>bairro_regiao</h4>
-        <table>
-          <tr><th>Atributo</th><th>Tipo</th></tr>
-          <tr><td>id_bairro</td><td>PK, SERIAL</td></tr>
-          <tr><td>nome</td><td>VARCHAR(200), NOT NULL</td></tr>
-          <tr><td>cep</td><td>CHAR(8), NOT NULL</td></tr>
-          <tr><td>ativo</td><td>BOOLEAN, DEFAULT TRUE</td></tr>
-        </table>
-
-        <h4>chamado</h4>
-        <table>
-          <tr><th>Atributo</th><th>Tipo</th></tr>
-          <tr><td>id_chamado</td><td>PK, SERIAL</td></tr>
-          <tr><td>protocolo</td><td>VARCHAR(20), UNIQUE, NOT NULL</td></tr>
-          <tr><td>prioridade</td><td>SMALLINT, CHECK (0-5), DEFAULT 0</td></tr>
-          <tr><td>numero</td><td>VARCHAR(10), NOT NULL</td></tr>
-          <tr><td>descricao</td><td>VARCHAR(500), NOT NULL</td></tr>
-          <tr><td>resolucao</td><td>VARCHAR(500), NULL</td></tr>
-          <tr><td>nota_avaliacao</td><td>SMALLINT, CHECK (1-5), NULL</td></tr>
-          <tr><td>dt_abertura</td><td>TIMESTAMP, DEFAULT CURRENT_TIMESTAMP</td></tr>
-          <tr><td>dt_conclusao</td><td>TIMESTAMP, NULL</td></tr>
-        </table>
-
-        <h4>foto_chamado · historico_chamado · observacao_chamado · notificacao</h4>
-        <p>Tabelas auxiliares que armazenam fotos (URL Cloudinary), histórico de status, troca de mensagens e notificações ao cidadão.</p>
-
-        <h3>5.2 Relacionamentos</h3>
-        <table>
-          <tr><th>Relacionamento</th><th>Cardinalidade</th></tr>
-          <tr><td>usuario → chamado</td><td>1:N</td></tr>
-          <tr><td>categoria_servico → servico</td><td>1:N</td></tr>
-          <tr><td>servico → chamado</td><td>1:N</td></tr>
-          <tr><td>status_chamado → chamado</td><td>1:N</td></tr>
-          <tr><td>bairro_regiao → chamado</td><td>1:N</td></tr>
-          <tr><td>chamado → foto_chamado</td><td>1:N (mín. 1)</td></tr>
-          <tr><td>chamado → historico_chamado</td><td>1:N (mín. 1)</td></tr>
-          <tr><td>chamado → observacao_chamado</td><td>1:N</td></tr>
-          <tr><td>chamado → notificacao</td><td>1:N</td></tr>
-        </table>
-
-        <hr>
-
-        <h2>6. Público-Alvo</h2>
-        <table>
-          <tr><th>Perfil</th><th>Descrição</th></tr>
-          <tr><td><span class="tag tag-green">CID</span> Cidadão</td><td>Moradores de Várzea Grande que registram problemas urbanos</td></tr>
-          <tr><td><span class="tag tag-blue">COL</span> Colaborador</td><td>Servidores responsáveis pela triagem e resposta</td></tr>
-          <tr><td><span class="tag tag-purple">GES</span> Gestor</td><td>Administrador com acesso total e painel de estatísticas</td></tr>
-        </table>
-
-        <hr>
-
-        <h2>7. Ferramentas</h2>
-        <table>
-          <tr><th>Ferramenta</th><th>Função</th></tr>
-          <tr><td>Python / Django</td><td>Backend</td></tr>
-          <tr><td>PostgreSQL</td><td>Banco de dados relacional</td></tr>
-          <tr><td>BrModelo</td><td>DER Conceitual e Lógico</td></tr>
-          <tr><td>pgAdmin 4</td><td>Administração do banco</td></tr>
-          <tr><td>uv</td><td>Gerenciador de pacotes</td></tr>
-          <tr><td>Design System Gov.br</td><td>Padrão visual</td></tr>
-          <tr><td>Git / GitHub</td><td>Controle de versão</td></tr>
-          <tr><td>Neon</td><td>Hospedagem PostgreSQL</td></tr>
-          <tr><td>Cloudinary</td><td>Armazenamento de fotos</td></tr>
-          <tr><td>Render</td><td>Hospedagem da aplicação</td></tr>
-        </table>
-
-        <hr>
-
-        <h2>8. Cronograma</h2>
-        <table>
-          <tr><th>Bimestre</th><th>Etapas</th></tr>
-          <tr><td>1º Bimestre (12/03 a 14/04)</td><td>Planejamento, Modelagem, Implementação do BD — 30% da nota</td></tr>
-          <tr><td>2º Bimestre (15/04 a 07/07)</td><td>Conexão e Login, Recursos Avançados, Módulos Cidadão/Colaborador/Admin, Finalização — 70% da nota</td></tr>
-        </table>
-
-      </div>
-    </article>
-
-    <!-- ============================== -->
-    <!-- RELATÓRIO DE ATIVIDADES        -->
-    <!-- ============================== -->
-    <article class="doc-card" id="relatorio">
-      <div class="doc-card-header">
-        <div class="doc-card-icon" style="background:rgba(20,184,166,.12);color:var(--teal)">📊</div>
-        <div>
-          <div class="doc-card-title">Relatório de Atividades</div>
-          <div class="doc-card-subtitle">Divisão de tarefas e contribuições por membro</div>
+        <div class="alert alert-info reveal">
+          <strong>💡 Dica rápida:</strong> Use o menu lateral para navegar entre as seções. Seu progresso de leitura é salvo automaticamente no navegador.
         </div>
-      </div>
-      <div class="doc-card-body">
 
-        <h3>Fausto Yuuki — Frontend &amp; Design System GOV.BR</h3>
-        <ul>
-          <li>Desenvolvimento de todas as interfaces HTML (Cidadão, Equipe, Gestão, Login)</li>
-          <li>Implementação e customização do CSS e JavaScript do padrão GOV.BR</li>
-          <li>Conexão do front-end com objetos de contexto das views</li>
-        </ul>
+        <h2 class="reveal">📋 O que é o VG 24H?</h2>
+        <p class="reveal">O <strong>Portal VG 24H</strong> é uma plataforma digital para centralizar serviços públicos do município de Várzea Grande – MT. O objetivo é permitir que cidadãos solicitem serviços (iluminação pública, limpeza, tapa-buracos, poda de árvore etc.), acompanhem o status em tempo real e interajam com a prefeitura de forma transparente.</p>
 
-        <h3>Rafael Pereira — Engenharia de Banco de Dados</h3>
-        <ul>
-          <li>Criação de todo o modelo DDL do banco PostgreSQL</li>
-          <li>Desenvolvimento de triggers, functions (PL/pgSQL) e views consolidadas</li>
-          <li>Tradução do banco físico para o ORM do Django + carga de dados inicial</li>
-        </ul>
-
-        <h3>Bruno Dias — Backend, Segurança e Regras de Negócio</h3>
-        <ul>
-          <li>Lógica de login, recuperação de senhas e decoradores de rotas</li>
-          <li>Operações CRUD das áreas gerenciais (forms + views)</li>
-          <li>Criação de scripts via CLI do Django (comandos de gerenciamento)</li>
-        </ul>
-
-      </div>
-    </article>
-
-    <!-- ============================== -->
-    <!-- GUIA FRONTEND                  -->
-    <!-- ============================== -->
-    <article class="doc-card" id="guia-frontend">
-      <div class="doc-card-header">
-        <div class="doc-card-icon" style="background:rgba(244,63,94,.12);color:var(--accent)">🎨</div>
-        <div>
-          <div class="doc-card-title">Guia de Frontend e Interface</div>
-          <div class="doc-card-subtitle">Onde está cada parte visual e qual arquivo editar</div>
+        <div class="grid-3 reveal">
+          <div class="stat-card">
+            <div class="sc-num">🏛️</div>
+            <h3>Município</h3>
+            <p class="sc-lbl">Várzea Grande – MT</p>
+          </div>
+          <div class="stat-card">
+            <div class="sc-num">📚</div>
+            <h3>Disciplina</h3>
+            <p class="sc-lbl">Programação de Banco de Dados</p>
+          </div>
+          <div class="stat-card">
+            <div class="sc-num">📅</div>
+            <h3>Semestre</h3>
+            <p class="sc-lbl">2026/1</p>
+          </div>
         </div>
-      </div>
-      <div class="doc-card-body">
 
-        <h2>Estrutura de Pastas</h2>
-        <pre>backend/
-├── templates/portal/
-│   ├── base.html              ← Template master
-│   ├── root.html              ← Homepage pública
-│   ├── auth/                  ← Telas de autenticação (5 arquivos)
-│   ├── cidadao/               ← Telas do cidadão (7 arquivos)
-│   ├── equipe/                ← Telas da equipe COL/GES (4 arquivos)
-│   ├── gestao/                ← Telas do gestor GES (10 arquivos)
-│   └── public/                ← Telas públicas (2 arquivos)
-├── static/
-│   ├── img/logo.png
-│   └── portal/
-│       ├── css/vg24h.css      ← CSS principal
-│       └── js/vg24h.js        ← JavaScript principal</pre>
-
-        <h2>Template Base — <code>base.html</code></h2>
-        <p>Todas as páginas usam <code>{% extends "portal/base.html" %}</code>. Afeta o sistema inteiro.</p>
-        <table>
-          <tr><th>Elemento</th><th>Localização</th></tr>
-          <tr><td>Header / Barra superior</td><td><code>&lt;header&gt;</code></td></tr>
-          <tr><td>Menu / Sidebar</td><td><code>nav_perfil</code> (dinâmico por perfil)</td></tr>
-          <tr><td>Footer</td><td><code>&lt;footer&gt;</code></td></tr>
-          <tr><td>Cookie bar (LGPD)</td><td><code>cookie</code></td></tr>
-          <tr><td>Skip links</td><td><code>skip</code></td></tr>
-          <tr><td>Bloco de conteúdo</td><td><code>{% block content %}</code></td></tr>
-          <tr><td>Bloco CSS extra</td><td><code>{% block extra_css %}</code></td></tr>
-          <tr><td>Bloco JS extra</td><td><code>{% block extra_js %}</code></td></tr>
-        </table>
-
-        <h2>Homepage — <code>root.html</code></h2>
-        <table>
-          <tr><th>Seção</th><th>Descrição</th></tr>
-          <tr><td>Carousel de Banners</td><td>Imagens rotativas no topo (dinâmicas do banco)</td></tr>
-          <tr><td>Quick Actions</td><td>Botões de ação rápida</td></tr>
-          <tr><td>Cards de Serviços</td><td>Top 5 serviços ativos</td></tr>
-          <tr><td>Estatísticas</td><td>Chamados resolvidos, bairros atendidos</td></tr>
-          <tr><td>CTA</td><td>Faixa de destaque convidando o cidadão</td></tr>
-        </table>
-
-        <h2>Telas de Autenticação — <code>auth/</code></h2>
-        <table>
-          <tr><th>Arquivo</th><th>Função</th></tr>
-          <tr><td>login.html</td><td>Formulário e-mail + senha</td></tr>
-          <tr><td>cadastro.html</td><td>Wizard de 3 etapas</td></tr>
-          <tr><td>recuperar_senha.html</td><td>Campo de e-mail para link de recuperação</td></tr>
-          <tr><td>redefinir_senha.html</td><td>Nova senha + confirmação</td></tr>
-          <tr><td>troca_senha_obrigatoria.html</td><td>Troca de senha no 1º acesso de colaboradores</td></tr>
-        </table>
-
-        <h2>CSS — <code>vg24h.css</code></h2>
-        <p>Arquivo único CSS customizado (24 KB). Contém variáveis CSS, estilos de header, sidebar, hero, cards, semáforo, steps, stats, CTA, tabelas, forms e footer.</p>
-        <blockquote>Para mudar a cor principal, altere as variáveis em <code>:root</code>. Para mudar a fonte, altere <code>font-family</code>. O projeto usa a fonte <strong>Rawline</strong> do Gov.br.</blockquote>
-
-        <h2>JavaScript — <code>vg24h.js</code></h2>
-        <p>Arquivo principal (7 KB) com funcionalidades de: carousel, menu toggle, formulário dinâmico (categoria → serviço) e validações visuais.</p>
-
-        <h2>Resumo Rápido</h2>
-        <table>
-          <tr><th>O que alterar</th><th>Arquivo</th></tr>
-          <tr><td>Header / Footer</td><td><code>base.html</code></td></tr>
-          <tr><td>Logo</td><td><code>static/img/logo.png</code></td></tr>
-          <tr><td>Cores do sistema</td><td><code>vg24h.css</code> (:root)</td></tr>
-          <tr><td>Cores do semáforo</td><td><code>vg24h.css</code> (verde/amarelo/vermelho)</td></tr>
-          <tr><td>Carousel banners</td><td>Conteúdo: painel GES. Estrutura: <code>root.html</code></td></tr>
-          <tr><td>Dashboard cidadão</td><td><code>cidadao/dashboard.html</code></td></tr>
-          <tr><td>Dashboard equipe</td><td><code>equipe/dashboard.html</code></td></tr>
-          <tr><td>CRUD categorias</td><td><code>gestao/categorias.html</code></td></tr>
-          <tr><td>Estatísticas gestor</td><td><code>gestao/estatisticas.html</code></td></tr>
-        </table>
-
-      </div>
-    </article>
-
-    <!-- ============================== -->
-    <!-- FAQ DE CÓDIGO                  -->
-    <!-- ============================== -->
-    <article class="doc-card" id="faq">
-      <div class="doc-card-header">
-        <div class="doc-card-icon" style="background:rgba(245,158,11,.12);color:var(--accent-warm)">❓</div>
-        <div>
-          <div class="doc-card-title">FAQ de Código e Arquitetura</div>
-          <div class="doc-card-subtitle">Perguntas frequentes sobre o funcionamento interno</div>
+        <h2 class="reveal">👥 Equipe</h2>
+        <div class="team-grid reveal">
+          <div class="team-card">
+            <div class="team-avatar">BD</div>
+            <h3>Bruno Dias</h3>
+            <p class="team-role">Autenticação + Cidadão + Páginas Públicas</p>
+            <div class="team-tags">
+              <span class="tag tag-blue">Login</span>
+              <span class="tag tag-blue">Cadastro</span>
+              <span class="tag tag-blue">Sessões</span>
+              <span class="tag tag-blue">Recuperar Senha</span>
+              <span class="tag tag-blue">Homepage</span>
+              <span class="tag tag-blue">Chamados (CID)</span>
+            </div>
+          </div>
+          <div class="team-card">
+            <div class="team-avatar">FY</div>
+            <h3>Fausto Yuuki</h3>
+            <p class="team-role">Design System Gov.br 100% + Frontend + Templates</p>
+            <div class="team-tags">
+              <span class="tag tag-green">Design System</span>
+              <span class="tag tag-green">Gov.br</span>
+              <span class="tag tag-green">Templates HTML</span>
+              <span class="tag tag-green">CSS Custom</span>
+              <span class="tag tag-green">Acessibilidade</span>
+              <span class="tag tag-green">Responsivo</span>
+            </div>
+          </div>
+          <div class="team-card">
+            <div class="team-avatar">RP</div>
+            <h3>Rafael Pereira</h3>
+            <p class="team-role">Banco de Dados + Modelagem + Backend Core (Equipe + Gestão)</p>
+            <div class="team-tags">
+              <span class="tag tag-purple">PostgreSQL</span>
+              <span class="tag tag-purple">Triggers</span>
+              <span class="tag tag-purple">Views SQL</span>
+              <span class="tag tag-purple">Modelagem</span>
+              <span class="tag tag-purple">Dashboard</span>
+              <span class="tag tag-purple">Administração</span>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="doc-card-body">
 
-        <h3>1. Onde é feita a busca (SELECT) para o login?</h3>
-        <p><strong>Arquivo:</strong> <code>backend/portal/views_auth.py</code> (função <code>login_view</code>)</p>
-        <p>O sistema usa SQL puro via <code>connection.cursor()</code>. A busca é dual: primeiro na tabela <code>Cidadao</code>, depois em <code>Servidor</code>. O SQL puro fica centralizado em <code>backend/portal/db.py</code>.</p>
-        <pre>user = db.buscar_cidadao_por_email(email)
-tipo = "cidadao"
+        <h2 class="reveal">🗂️ Principais Funcionalidades</h2>
+        <div class="feature-list reveal">
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <div>
+              <strong>Cadastro e Login de Cidadãos e Servidores</strong>
+              <p>Autenticação segura com hash de senha (Django Hashers) e sessões via cookie. Login dual: busca em cidadão ou servidor.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <div>
+              <strong>Solicitação de Serviços</strong>
+              <p>O cidadão escolhe o tipo de serviço, descreve o problema e informa a localização. Trigger cria o primeiro histórico (AB) automaticamente.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <div>
+              <strong>Acompanhamento de Chamados</strong>
+              <p>Status em tempo real: Aberto (AB) → Em Atendimento (EA) → Em Execução (EE) → Concluído (CO). Cancelado (CA) é status final sem conclusão.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <div>
+              <strong>Gestão por Equipe (Colaboradores e Gestores)</strong>
+              <p>Servidores da prefeitura visualizam, atribuem e atualizam chamados por área de atuação. Dashboard com gráficos Chart.js.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <div>
+              <strong>Painel Administrativo (Gestor)</strong>
+              <p>CRUD de categorias, serviços, bairros, colaboradores, banners e estatísticas detalhadas via view SQL.</p>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="reveal">🛠️ Stack Tecnológico Real</h2>
+        <div class="stack-grid reveal">
+          <div class="stack-card">
+            <div class="stack-icon">🐍</div>
+            <h4>Backend</h4>
+            <p>Django 5.1, Python 3.12, WhiteNoise, Gunicorn</p>
+          </div>
+          <div class="stack-card">
+            <div class="stack-icon">🐘</div>
+            <h4>Banco de Dados</h4>
+            <p>PostgreSQL 15+ (Neon na nuvem), PL/pgSQL, Triggers, Views</p>
+          </div>
+          <div class="stack-card">
+            <div class="stack-icon">🎨</div>
+            <h4>Frontend</h4>
+            <p>Design System Gov.br v3.7, Rawline + Raleway, Chart.js, Templates Django (Jinja2)</p>
+          </div>
+          <div class="stack-card">
+            <div class="stack-icon">☁️</div>
+            <h4>Infraestrutura</h4>
+            <p>NeonDB (PostgreSQL cloud), Cloudinary (fotos), dotenv</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ARQUITETURA -->
+      <section class="content-section" id="sec-arquitetura">
+        <div class="hero">
+          <div class="hero-inner">
+            <div class="hero-badge">🏗️ Fundamentos Técnicos</div>
+            <h1>Arquitetura do Sistema</h1>
+            <p>Como as camadas se comunicam e onde cada responsabilidade mora.</p>
+          </div>
+        </div>
+
+        <h2 class="reveal">📐 Diagrama de Arquitetura Django (MTV)</h2>
+        <div class="architecture-diagram reveal">
+          <div class="arch-layer">
+            <div class="arch-label">🖥️ Navegador (Cliente)</div>
+            <div class="arch-items">
+              <span class="arch-item">HTML renderizado pelo servidor</span>
+              <span class="arch-item">CSS Gov.br DS + vg24h.css</span>
+              <span class="arch-item">JavaScript (Chart.js, interações)</span>
+              <span class="arch-item">Cookie de sessão Django</span>
+            </div>
+          </div>
+          <div class="arch-arrow">⬇️ Requisição HTTP + Cookie de Sessão</div>
+          <div class="arch-layer">
+            <div class="arch-label">⚙️ Django (Servidor)</div>
+            <div class="arch-items">
+              <span class="arch-item">URLs (urls.py) → roteamento</span>
+              <span class="arch-item">Middleware (PortalUserMiddleware)</span>
+              <span class="arch-item">Views (views_*.py) — lógica de negócio</span>
+              <span class="arch-item">Templates (Jinja2) — renderização HTML</span>
+            </div>
+          </div>
+          <div class="arch-arrow">⬇️ Queries via Django ORM ou SQL puro</div>
+          <div class="arch-layer">
+            <div class="arch-label">🐘 PostgreSQL (Neon)</div>
+            <div class="arch-items">
+              <span class="arch-item">Tabelas Normalizadas (11 tabelas)</span>
+              <span class="arch-item">Triggers & Functions (PL/pgSQL)</span>
+              <span class="arch-item">Views SQL (vw_estatisticas_chamados)</span>
+              <span class="arch-item">Índices & Constraints</span>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="reveal">🔄 Fluxo de um Chamado</h2>
+        <div class="flow-diagram reveal">
+          <div class="flow-step">
+            <div class="flow-num">1</div>
+            <div class="flow-content">
+              <strong>Cidadão cria chamado</strong>
+              <p>View <code>views_cidadao.py</code> recebe POST — INSERT na tabela <code>chamado</code>. <strong>Trigger 1</strong> cria automaticamente o primeiro histórico com status <strong>AB (Aberto)</strong>.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">2</div>
+            <div class="flow-content">
+              <strong>Trigger atualiza metadados</strong>
+              <p>Trigger <code>fn_chamado_before_update_metadados</code> atualiza <code>atualizado_em</code> sempre que o chamado é modificado.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">3</div>
+            <div class="flow-content">
+              <strong>Equipe visualiza e atribui</strong>
+              <p>View <code>views_equipe.py</code> lista todos os chamados (sem filtro de cidadão). Colaborador atribui a si e muda status.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">4</div>
+            <div class="flow-content">
+              <strong>Atualização de status</strong>
+              <p>Novo INSERT em <code>historico_chamado</code> com status <strong>EA, EE ou CO</strong>. <strong>Trigger 2B</strong> atualiza <code>dt_conclusao</code> se for CO/CA e gera notificação automática.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">5</div>
+            <div class="flow-content">
+              <strong>Conclusão ou Cancelamento</strong>
+              <p>Status <strong>CO (Concluído)</strong> encerra com sucesso. Status <strong>CA (Cancelado)</strong> encerra sem conclusão. Cidadão pode avaliar chamados concluídos.</p>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="reveal">🗂️ Modelo Entidade-Relacionamento</h2>
+        <div class="er-diagram reveal">
+          <div class="er-table">
+            <div class="er-header">cidadao</div>
+            <div class="er-row pk">id_cidadao (PK)</div>
+            <div class="er-row">cpf (UNIQUE)</div>
+            <div class="er-row">nome_completo, email, telefone</div>
+            <div class="er-row">senha_hash</div>
+            <div class="er-row">dt_cadastro</div>
+          </div>
+          <div class="er-join">1:N</div>
+          <div class="er-table">
+            <div class="er-header">chamado</div>
+            <div class="er-row pk">id_chamado (PK)</div>
+            <div class="er-row fk">id_cidadao (FK)</div>
+            <div class="er-row fk">id_servico (FK)</div>
+            <div class="er-row fk">id_bairro (FK)</div>
+            <div class="er-row fk">id_funcionario (FK, nullable)</div>
+            <div class="er-row">protocolo, descricao, localizacao</div>
+            <div class="er-row">data_abertura, atualizado_em, dt_conclusao</div>
+          </div>
+          <div class="er-join">1:N</div>
+          <div class="er-table">
+            <div class="er-header">historico_chamado</div>
+            <div class="er-row pk">id_historico (PK)</div>
+            <div class="er-row fk">id_chamado (FK)</div>
+            <div class="er-row fk">id_status (FK → status_chamado)</div>
+            <div class="er-row fk">id_servidor (FK, nullable)</div>
+            <div class="er-row">observacao, dt_alteracao</div>
+          </div>
+        </div>
+
+        <div class="alert alert-warning reveal">
+          <strong>⚠️ Decisão Arquitetural:</strong> O <strong>status do chamado</strong> <em>não é um campo direto</em> na tabela <code>chamado</code>. Ele vem sempre do <strong>último registro</strong> da tabela <code>historico_chamado</code>. Isso garante auditoria completa de todas as mudanças de status.
+        </div>
+
+        <h2 class="reveal">🔐 Fluxo de Autenticação</h2>
+        <div class="flow-diagram reveal">
+          <div class="flow-step">
+            <div class="flow-num">1</div>
+            <div class="flow-content">
+              <strong>Login</strong>
+              <p>POST para <code>/accounts/login/</code> com email+senha — View busca em <code>cidadao</code>, depois em <code>servidor</code> — <code>check_password()</code> compara hash</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">2</div>
+            <div class="flow-content">
+              <strong>Sessão Django</strong>
+              <p>View salva <code>usuario_id</code> e <code>usuario_tipo</code> no <code>request.session</code> (cookie seguro). <code>cycle_key()</code> previne Session Fixation.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">3</div>
+            <div class="flow-content">
+              <strong>Middleware em toda requisição</strong>
+              <p><code>PortalUserMiddleware</code> lê o cookie, busca o usuário no banco e injeta em <code>request.portal_user</code>. Também chama <code>set_config()</code> no PostgreSQL para auditoria nas triggers.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">4</div>
+            <div class="flow-content">
+              <strong>Logout</strong>
+              <p><code>request.session.flush()</code> apaga o cookie de sessão. Redireciona para login.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BRUNO DIAS -->
+      <section class="content-section" id="sec-bruno">
+        <div class="hero">
+          <div class="hero-inner">
+            <div class="hero-badge">🔐 Autenticação & Cidadão</div>
+            <h1>Bruno Dias</h1>
+            <p>Responsável por <strong>Autenticação</strong>, <strong>Cidadão</strong> e <strong>Páginas Públicas</strong>.</p>
+          </div>
+        </div>
+
+        <h2 class="reveal">📦 Suas Responsabilidades</h2>
+        <div class="resp-grid reveal">
+          <div class="resp-card">
+            <span class="resp-icon">🔐</span>
+            <h3>Autenticação</h3>
+            <p>Login, cadastro, recuperação de senha, troca obrigatória de senha (primeiro acesso), logout, proteção de rotas.</p>
+          </div>
+          <div class="resp-card">
+            <span class="resp-icon">👤</span>
+            <h3>Cidadão</h3>
+            <p>Abrir chamado, listar meus chamados, detalhe do chamado, cancelar, avaliar, adicionar observação e foto.</p>
+          </div>
+          <div class="resp-card">
+            <span class="resp-icon">🏠</span>
+            <h3>Páginas Públicas</h3>
+            <p>Homepage com estatísticas, catálogo de serviços, landing page. Rotas sem <code>@perfis()</code>.</p>
+          </div>
+        </div>
+
+        <h2 class="reveal">🧩 Conceitos-Chave</h2>
+        <div class="accordion accordion-group reveal">
+          <div class="accordion-item">
+            <button class="accordion-header">🔑 Login Dual <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <p>O sistema não usa o <code>django.contrib.auth</code> padrão. Possui duas tabelas separadas: <code>cidadao</code> e <code>servidor</code>. O login busca primeiro em cidadão; se não encontrar, busca em servidor.</p>
+              <div class="code-block">
+                <pre><code class="language-python"># views_auth.py — Login Dual
+user, tipo = db.buscar_cidadao_por_email(email)
 if not user:
-    user = db.buscar_servidor_por_email(email)
-    tipo = "servidor"</pre>
+    user, tipo = db.buscar_servidor_por_email(email)
 
-        <h3>2. Como os dados errados são tratados?</h3>
-        <p>Mensagem genérica de erro por segurança: <code>"E-mail ou senha incorretos."</code> — nunca informa se o e-mail existe ou não.</p>
+if user and check_password(senha, user.senha_hash):
+    request.session.cycle_key()
+    request.session["usuario_id"] = user.pk
+    request.session["usuario_tipo"] = tipo  # 'cidadao' ou 'servidor'</code></pre>
+                <button class="btn-copy">📋 Copiar</button>
+              </div>
+              <div class="flashcard-wrap">
+                <div class="flashcard">
+                  <div class="fc-front">
+                    <div class="fc-label">🃏 Pergunta</div>
+                    <div class="fc-text">Por que não usamos o User padrão do Django?</div>
+                    <div class="fc-hint">Clique para revelar a resposta</div>
+                  </div>
+                  <div class="fc-back">
+                    <div class="fc-label">💡 Resposta</div>
+                    <div class="fc-text">Porque o projeto exige dois tipos distintos de usuário com campos diferentes: cidadão (CPF, endereço) e servidor (SIAPE, secretaria, perfil GES/COL). O auth padrão do Django não lida bem com múltiplos perfis sem extensão complexa.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button class="accordion-header">🔒 Hash de Senha (Django Hashers) <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <p>O Django já possui um sistema robusto de hash de senhas via <code>django.contrib.auth.hashers</code>. Usamos <code>make_password()</code> no cadastro e <code>check_password()</code> no login. O algoritmo padrão é <strong>PBKDF2</strong> (não bcrypt diretamente).</p>
+              <div class="code-block">
+                <pre><code class="language-python">from django.contrib.auth.hashers import check_password, make_password
 
-        <h3>3. O que o sistema memoriza no login?</h3>
-        <pre>request.session["usuario_id"] = user.pk
-request.session["usuario_tipo"] = tipo
-if (user.senha_temporaria or "").strip():
-    request.session["forcar_troca_senha"] = True</pre>
+# No cadastro (views_auth.py)
+senha_hash = make_password(senha_digitada)
 
-        <h3>4. Separação de telas por perfil</h3>
-        <p>Três camadas: (1) <strong>Decorators</strong> <code>@perfis("GES")</code> nas views, (2) <strong>Template</strong> com <code>{% if nav_perfil == "GES" %}</code>, (3) <strong>Triggers</strong> no PostgreSQL via <code>set_config</code>.</p>
+# No login (views_auth.py)
+if check_password(senha_digitada, user.senha_hash):
+    # Login bem-sucedido</code></pre>
+                <button class="btn-copy">📋 Copiar</button>
+              </div>
+              <div class="flashcard-wrap">
+                <div class="flashcard">
+                  <div class="fc-front">
+                    <div class="fc-label">🃏 Pergunta</div>
+                    <div class="fc-text">Qual o algoritmo padrão de hash do Django?</div>
+                    <div class="fc-hint">Clique para revelar</div>
+                  </div>
+                  <div class="fc-back">
+                    <div class="fc-label">💡 Resposta</div>
+                    <div class="fc-text">PBKDF2 (Password-Based Key Derivation Function 2) com SHA-256, 600.000 iterações (Django 5.1). O Django pode verificar hashes antigos (bcrypt, SHA1) mas sempre gera novos com o padrão mais seguro.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button class="accordion-header">🛡️ Decoradores de Acesso <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <p>Os decorators <code>@anonimo</code>, <code>@autenticado</code> e <code>@perfis()</code> substituem as Rules R4 e R6 que foram removidas do banco. Eles verificam <code>request.portal_user</code> e redirecionam se necessário.</p>
+              <div class="code-block">
+                <pre><code class="language-python"># decorators.py
+@perfis("CID")
+def novo_chamado(request):
+    # Apenas cidadãos acessam
+    ...
 
-        <h3>5. Criptografia de senhas</h3>
-        <p>Usa <code>make_password()</code> do Django. No banco caem hashes como <code>pbkdf2_sha256$720000$...</code>. A senha real nunca é gravada.</p>
+@perfis("COL", "GES")
+def equipe_dashboard(request):
+    # Apenas servidores acessam
+    ...</code></pre>
+                <button class="btn-copy">📋 Copiar</button>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button class="accordion-header">👤 CRUD de Cidadão <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <p>O cidadão se cadastra com CPF, nome completo, email, telefone e senha. Depois pode abrir chamados, acompanhar status e avaliar serviços concluídos. A privacidade é garantida: cada cidadão vê <strong>apenas seus próprios</strong> chamados (WHERE id_cidadao = %s).</p>
+              <div class="checklist-wrap">
+                <div class="progress-wrap"><div class="progress-fill"></div></div>
+                <span class="progress-text"></span>
+                <ul class="checklist" data-checklist-group="bruno-cidadao">
+                  <li class="check-item" data-key="cpf">Validação de CPF (formato e dígitos verificadores)</li>
+                  <li class="check-item" data-key="email">Validação de email (único no banco)</li>
+                  <li class="check-item" data-key="hash">Hash de senha com make_password</li>
+                  <li class="check-item" data-key="form">Formulário com Gov.br DS (br-input, br-button)</li>
+                  <li class="check-item" data-key="wizard">Cadastro em wizard de 3 etapas</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <h3>6. Identificação a cada requisição</h3>
-        <p>O <code>PortalUserMiddleware</code> reconstrói o usuário via sessão em cada request, delegando a busca ao <code>db.py</code>.</p>
+        <h2 class="reveal">🗣️ Dicas de Apresentação</h2>
+        <div class="tips-card reveal">
+          <div class="tip">
+            <div class="tip-num">1</div>
+            <p><strong>Comece pela Homepage:</strong> Mostre a landing page com estatísticas e catálogo de serviços. Isso impressiona de cara.</p>
+          </div>
+          <div class="tip">
+            <div class="tip-num">2</div>
+            <p><strong>Demonstração ao vivo de Login:</strong> Cadastre um usuário novo, faça login e mostre a sessão no cookie (dev tools → Application → Cookies).</p>
+          </div>
+          <div class="tip">
+            <div class="tip-num">3</div>
+            <p><strong>Fale de segurança:</strong> Mencione <code>cycle_key()</code>, hash de senha, proteção CSRF do Django e decorators de acesso. Professores gostam de ver segurança.</p>
+          </div>
+          <div class="tip">
+            <div class="tip-num">4</div>
+            <p><strong>Mostre o fluxo completo:</strong> Cidadão cadastra → faz login → abre chamado. Isso mostra integração com as partes dos colegas.</p>
+          </div>
+        </div>
 
-        <h3>7. Como as Triggers sabem o perfil?</h3>
-        <p>O middleware executa <code>set_config('portal.perfil', perfil, true)</code> para criar uma sessão PostgreSQL customizada que as triggers consultam.</p>
+        <h2 class="reveal">✅ Checklist Pessoal</h2>
+        <div class="checklist-wrap reveal">
+          <div class="progress-wrap"><div class="progress-fill" id="prog-bruno"></div></div>
+          <span class="progress-text" id="txt-bruno"></span>
+          <ul class="checklist" data-checklist-group="bruno">
+            <li class="check-item" data-key="home">Homepage pública com estatísticas</li>
+            <li class="check-item" data-key="login">Tela de login funcionando (sessões)</li>
+            <li class="check-item" data-key="cadastro">Tela de cadastro com validação (wizard)</li>
+            <li class="check-item" data-key="decorator">Decorators protegendo rotas</li>
+            <li class="check-item" data-key="recuperar">Recuperação de senha por email</li>
+            <li class="check-item" data-key="chamados">Listagem e detalhe de chamados (cidadão)</li>
+          </ul>
+        </div>
+      </section>
 
-        <h3>8. Semáforo do prazo</h3>
-        <p>Função <code>db.popular_status(ch)</code> em <code>backend/portal/db.py</code>. Compara <code>prazo_amarelo_dias</code> e <code>prazo_vermelho_dias</code> com a idade do chamado.</p>
-        <pre>dias = (timezone.now() - ch.dt_abertura).days
-if dias >= ch.id_servico.prazo_vermelho_dias:
-    ch.cor_semaforo = "vermelho"
-elif dias >= ch.id_servico.prazo_amarelo_dias:
-    ch.cor_semaforo = "amarelo"
-else:
-    ch.cor_semaforo = "verde"</pre>
+      <!-- FAUSTO YUUKI -->
+      <section class="content-section" id="sec-fausto">
+        <div class="hero">
+          <div class="hero-inner">
+            <div class="hero-badge">🎨 Design System Gov.br</div>
+            <h1>Fausto Yuuki</h1>
+            <p>Encarregado <strong>100%</strong> do <strong>Design System Gov.br</strong>, Templates e Responsividade.</p>
+          </div>
+        </div>
 
-        <h3>9. Burla via DevTools?</h3>
-        <p>Três proteções: decorator <code>@perfis</code> nas views, verificação de permissão na view, e trigger de integridade no banco como última barreira.</p>
+        <h2 class="reveal">📦 Suas Responsabilidades</h2>
+        <div class="resp-grid reveal">
+          <div class="resp-card">
+            <span class="resp-icon">🎨</span>
+            <h3>Design System Gov.br</h3>
+            <p>Integração do Gov.br DS via CDN, cores, tipografia, espaçamento, componentes acessíveis, tokens de design.</p>
+          </div>
+          <div class="resp-card">
+            <span class="resp-icon">💻</span>
+            <h3>Templates HTML</h3>
+            <p>Todos os templates Django (<code>templates/portal/</code>), herança de <code>base.html</code>, blocos Jinja2.</p>
+          </div>
+          <div class="resp-card">
+            <span class="resp-icon">📱</span>
+            <h3>CSS Custom + Responsivo</h3>
+            <p><code>vg24h.css</code> com variáveis CSS, semáforo, dashboard cards, tabelas responsivas, animações.</p>
+          </div>
+        </div>
 
-        <h3>10. Triggers do banco</h3>
-        <table>
-          <tr><th>Trigger</th><th>Tabela</th><th>O que faz</th></tr>
-          <tr><td><code>trg_chamado_after_insert_historico_ab</code></td><td>chamado</td><td>AFTER INSERT — 1º histórico AB</td></tr>
-          <tr><td><code>trg_chamado_before_update_metadados</code></td><td>chamado</td><td>BEFORE UPDATE — atualiza <code>atualizado_em</code></td></tr>
-          <tr><td><code>trg_historico_after_insert_status</code></td><td>historico_chamado</td><td>AFTER INSERT — <code>dt_conclusao</code> + notificação</td></tr>
-          <tr><td><code>trg_foto_chamado_encerrado</code></td><td>foto_chamado</td><td>BEFORE INSERT — bloqueia se CO/CA</td></tr>
-          <tr><td><code>trg_historico_obs_encerrado</code></td><td>historico_chamado</td><td>BEFORE INSERT — bloqueia obs se CO/CA</td></tr>
-          <tr><td><code>trg_avaliacao_imutavel</code></td><td>chamado</td><td>BEFORE UPDATE — impede reavaliação</td></tr>
-        </table>
+        <h2 class="reveal">🏛️ Design System Gov.br</h2>
+        <p class="reveal">Fausto é o <strong>guardião oficial</strong> do DS Gov.br no projeto. Todo componente visual deve seguir os padrões abaixo.</p>
 
-        <h3>11. Rules do banco</h3>
-        <p><strong>R5</strong>: <code>DO INSTEAD NOTHING</code> em UPDATE/DELETE no <code>historico_chamado</code>. <strong>Extra</strong>: <code>DO INSTEAD NOTHING</code> em DELETE no <code>chamado</code>.</p>
+        <h3 class="reveal">🎨 Paleta de Cores Oficial</h3>
+        <div class="color-palette reveal">
+          <div class="color-swatch">
+            <div class="color-box" style="background:#071d41"></div>
+            <div class="color-info">
+              <code>#071d41</code>
+              <span>Azul institucional (cabeçalho, títulos)</span>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-box" style="background:#1351b4"></div>
+            <div class="color-info">
+              <code>#1351b4</code>
+              <span>Azul interativo (botões primários, links)</span>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-box" style="background:#268744"></div>
+            <div class="color-info">
+              <code>#268744</code>
+              <span>Verde sucesso (confirmações, CO)</span>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-box" style="background:#e52207"></div>
+            <div class="color-info">
+              <code>#e52207</code>
+              <span>Vermelho erro/alerta (erros, cancelados)</span>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-box" style="background:#ffcd07"></div>
+            <div class="color-info">
+              <code>#ffcd07</code>
+              <span>Amarelo alerta (pendências, EA/EE)</span>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-box" style="background:#555555;border:1px solid #ddd"></div>
+            <div class="color-info">
+              <code>#555555</code>
+              <span>Cinza texto secundário</span>
+            </div>
+          </div>
+        </div>
 
-        <h3>12. View SQL <code>vw_estatisticas_chamados</code></h3>
-        <p>View que usa <strong>JOIN LATERAL</strong> para buscar o último status de cada chamado agrupando por categoria, bairro e status. Usada no painel do Gestor.</p>
+        <h3 class="reveal">🔤 Tipografia</h3>
+        <div class="typo-showcase reveal">
+          <div class="typo-item">
+            <span class="typo-sample" style="font:700 32px/1.2 Rawline,sans-serif">Rawline Bold</span>
+            <span class="typo-desc">Títulos principais — 700, 32px</span>
+          </div>
+          <div class="typo-item">
+            <span class="typo-sample" style="font:600 20px/1.3 Rawline,sans-serif">Rawline SemiBold</span>
+            <span class="typo-desc">Subtítulos — 600, 20px</span>
+          </div>
+          <div class="typo-item">
+            <span class="typo-sample" style="font:400 16px/1.5 Rawline,sans-serif">Rawline Regular</span>
+            <span class="typo-desc">Corpo de texto — 400, 16px</span>
+          </div>
+          <div class="typo-item">
+            <span class="typo-sample" style="font:400 14px/1.5 'Inter',sans-serif">Inter 14px</span>
+            <span class="typo-desc">Labels, captions — 400, 14px</span>
+          </div>
+        </div>
 
-        <h3>13. Geração do protocolo</h3>
-        <p>Formato <code>ANO + SEQUENCIAL</code> (ex: <code>2026000043</code>). Função <code>proximo_protocolo()</code> em <code>utils.py</code>.</p>
+        <h3 class="reveal">📐 Componentes Gov.br</h3>
+        <div class="accordion accordion-group reveal">
+          <div class="accordion-item">
+            <button class="accordion-header">🔘 Botões <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <div class="component-preview">
+                <button class="btn btn-primary">Primário</button>
+                <button class="btn btn-secondary">Secundário</button>
+                <button class="btn btn-ghost">Ghost</button>
+                <button class="btn btn-primary" disabled>Desabilitado</button>
+              </div>
+              <div class="code-block">
+                <pre><code class="language-html">&lt;!-- Gov.br DS --&gt;
+&lt;button class="br-button primary" type="button"&gt;
+  Solicitar Serviço
+&lt;/button&gt;
 
-        <h3>14. Notificações automáticas</h3>
-        <p>Trigger 2B insere em <code>notificacao</code> quando um novo histórico é criado. O <code>context_processors.py</code> conta notificações não lidas a cada página.</p>
+&lt;button class="br-button secondary" type="button"&gt;
+  Cancelar
+&lt;/button&gt;
 
-        <h3>15. <code>managed = False</code></h3>
-        <p>Django não gerencia as tabelas. Tudo foi criado manualmente via scripts SQL da pasta <code>database/</code>. Exigência da disciplina de Banco de Dados.</p>
+&lt;button class="br-button" type="button"&gt;Voltar&lt;/button&gt;</code></pre>
+                <button class="btn-copy">📋 Copiar</button>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button class="accordion-header">📝 Formulários <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <div class="component-preview">
+                <div class="form-group" style="flex:1;min-width:200px">
+                  <label class="form-label">Email</label>
+                  <input type="email" class="form-input" placeholder="exemplo@email.com">
+                  <span class="form-hint">Informe um email válido</span>
+                </div>
+                <div class="form-group" style="flex:1;min-width:200px">
+                  <label class="form-label">Senha</label>
+                  <input type="password" class="form-input is-error" placeholder="******">
+                  <span class="form-error">Senha deve ter pelo menos 6 caracteres</span>
+                </div>
+              </div>
+              <div class="code-block">
+                <pre><code class="language-html">&lt;!-- Gov.br Input --&gt;
+&lt;div class="br-input"&gt;
+  &lt;label for="email"&gt;Email&lt;/label&gt;
+  &lt;input id="email" type="email" placeholder="exemplo@email.com" /&gt;
+  &lt;span class="help-text"&gt;Informe um email válido&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+                <button class="btn-copy">📋 Copiar</button>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button class="accordion-header">🏷️ Badges de Status <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <div class="component-preview">
+                <span class="badge badge-aberto">AB — Aberto</span>
+                <span class="badge badge-andamento">EA — Em Atendimento</span>
+                <span class="badge badge-execucao">EE — Em Execução</span>
+                <span class="badge badge-resolvido">CO — Concluído</span>
+                <span class="badge badge-cancelado">CA — Cancelado</span>
+              </div>
+              <div class="code-block">
+                <pre><code class="language-html">&lt;!-- Status com semáforo --&gt;
+&lt;span class="badge badge-aberto"&gt;AB — Aberto&lt;/span&gt;
+&lt;span class="badge badge-andamento"&gt;EA — Em Atendimento&lt;/span&gt;
+&lt;span class="badge badge-resolvido"&gt;CO — Concluído&lt;/span&gt;</code></pre>
+                <button class="btn-copy">📋 Copiar</button>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button class="accordion-header">♿ Acessibilidade (WCAG 2.1) <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <ul class="checklist-plain">
+                <li>✅ Skip links no topo da página (ir para conteúdo, menu, cabeçalho, rodapé)</li>
+                <li>✅ Atributos ARIA em componentes interativos</li>
+                <li>✅ Foco visível em todos elementos interativos</li>
+                <li>✅ Navegação por teclado (Tab, Enter, Escape)</li>
+                <li>✅ Contraste mínimo 4.5:1 para texto normal</li>
+                <li>✅ Estrutura semântica (header, nav, main, footer)</li>
+              </ul>
+              <div class="flashcard-wrap">
+                <div class="flashcard">
+                  <div class="fc-front">
+                    <div class="fc-label">🃏 Pergunta</div>
+                    <div class="fc-text">O que são os "skip links" do Gov.br DS?</div>
+                    <div class="fc-hint">Clique para revelar</div>
+                  </div>
+                  <div class="fc-back">
+                    <div class="fc-label">💡 Resposta</div>
+                    <div class="fc-text">São links invisíveis no topo da página que aparecem ao pressionar Tab. Permitem que usuários de leitor de tela pulem diretamente para o conteúdo, menu, cabeçalho ou rodapé sem navegar por todos os elementos.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <h3>16. <code>transaction.atomic()</code></h3>
-        <p>Garante atomicidade: se a foto falhar, o chamado não fica sem foto. Ambos os INSERTs funcionam ou nenhum.</p>
+        <h2 class="reveal">🧩 Conceitos-Chave</h2>
+        <div class="accordion accordion-group reveal">
+          <div class="accordion-item">
+            <button class="accordion-header">🎨 Herança de Templates Django <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <p>Todas as páginas herdam de <code>base.html</code>. O template master carrega o Gov.br DS, fontes, CSS custom e define blocos como <code>{% block title %}</code> e <code>{% block content %}</code>.</p>
+              <div class="code-block">
+                <pre><code class="language-html">&lt;!-- base.html --&gt;
+&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core.min.css" /&gt;
+&lt;link rel="stylesheet" href="{% static 'portal/css/vg24h.css' %}" /&gt;
 
-        <h3>17. Índices</h3>
-        <p>6 índices em colunas de chave estrangeira: <code>ix_chamado_cidadao</code>, <code>ix_chamado_bairro</code>, <code>ix_chamado_servico</code>, <code>ix_foto_chamado</code>, <code>ix_historico_chamado</code>, <code>ix_notificacao_chamado</code>.</p>
+&lt;!-- pagina_filha.html --&gt;
+{% extends "portal/base.html" %}
+{% block title %}Meus Chamados{% endblock %}
+{% block content %}
+  &lt;h1&gt;Meus Chamados&lt;/h1&gt;
+{% endblock %}</code></pre>
+                <button class="btn-copy">📋 Copiar</button>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button class="accordion-header">📱 Responsividade Mobile-First <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <p>O Gov.br DS já é responsivo por padrão. O CSS custom <code>vg24h.css</code> usa media queries e classes utilitárias para ajustar cards, tabelas e formulários em telas menores.</p>
+              <div class="code-block">
+                <pre><code class="language-css">/* vg24h.css — Responsividade */
+@media (max-width: 768px) {
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+  .header-actions {
+    display: none; /* ou menu hamburguer */
+  }
+}</code></pre>
+                <button class="btn-copy">📋 Copiar</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <h3>18. JOIN manual</h3>
-        <p>Como usamos SQL puro, queries com JOIN substituem múltiplos SELECTs. Centralizado em <code>db.py</code> para evitar duplicação.</p>
+        <h2 class="reveal">🗣️ Dicas de Apresentação</h2>
+        <div class="tips-card reveal">
+          <div class="tip">
+            <div class="tip-num">1</div>
+            <p><strong>Abra com o Design System:</strong> Mostre que o projeto segue o Gov.br DS oficial. Mencione a versão 3.7 e o uso de componentes padronizados.</p>
+          </div>
+          <div class="tip">
+            <div class="tip-num">2</div>
+            <p><strong>Mostre responsividade:</strong> Redimensione a janela do navegador ao vivo para provar que funciona em mobile. Mostre o menu colapsado.</p>
+          </div>
+          <div class="tip">
+            <div class="tip-num">3</div>
+            <p><strong>Fale de acessibilidade:</strong> Mencione skip links, ARIA labels, navegação por teclado. Diferencia o projeto.</p>
+          </div>
+          <div class="tip">
+            <div class="tip-num">4</div>
+            <p><strong>Explique a arquitetura de templates:</strong> Mostre como <code>base.html</code> é estendido por todas as páginas, garantindo consistência visual.</p>
+          </div>
+        </div>
 
-        <h3>19. Fluxo de abertura de chamado</h3>
-        <p>5 operações: (1) INSERT chamado, (2) Trigger 1 → histórico AB, (3) Trigger 2B → notificação, (4) INSERT foto, (5) COMMIT. Se falhar, ROLLBACK.</p>
+        <h2 class="reveal">✅ Checklist Pessoal</h2>
+        <div class="checklist-wrap reveal">
+          <div class="progress-wrap"><div class="progress-fill" id="prog-fausto"></div></div>
+          <span class="progress-text" id="txt-fausto"></span>
+          <ul class="checklist" data-checklist-group="fausto">
+            <li class="check-item" data-key="govbr">Gov.br DS v3.7 carregado via CDN</li>
+            <li class="check-item" data-key="base">Template base.html com blocos definidos</li>
+            <li class="check-item" data-key="css">CSS custom vg24h.css organizado</li>
+            <li class="check-item" data-key="resp">Layout responsivo (mobile, tablet, desktop)</li>
+            <li class="check-item" data-key="sem">Semáforo de chamados funcionando</li>
+            <li class="check-item" data-key="dash">Dashboard com cards e gráficos</li>
+            <li class="check-item" data-key="a11y">Skip links e ARIA aplicados</li>
+          </ul>
+        </div>
+      </section>
 
-        <h3>20. Exclusão de chamado pelo Gestor</h3>
-        <p>Usa SQL direto que contorna a Rule: apaga registros filhos (foto, histórico, notificação) antes do chamado pai. Exige justificativa e grava log de auditoria.</p>
+      <!-- RAFAEL PEREIRA -->
+      <section class="content-section" id="sec-rafael">
+        <div class="hero">
+          <div class="hero-inner">
+            <div class="hero-badge">🗄️ Banco de Dados & Backend</div>
+            <h1>Rafael Pereira</h1>
+            <p>Responsável por <strong>Banco de Dados</strong>, <strong>Modelagem</strong> e <strong>Backend Core</strong> (Equipe + Gestão).</p>
+          </div>
+        </div>
 
+        <h2 class="reveal">📦 Suas Responsabilidades</h2>
+        <div class="resp-grid reveal">
+          <div class="resp-card">
+            <span class="resp-icon">🐘</span>
+            <h3>Banco de Dados</h3>
+            <p>DDL/DML em SQL puro, normalização, índices, constraints, integridade referencial, seed data.</p>
+          </div>
+          <div class="resp-card">
+            <span class="resp-icon">📐</span>
+            <h3>Modelagem</h3>
+            <p>DER, MER, cardinalidade, 11 entidades, triggers, views, funções PL/pgSQL.</p>
+          </div>
+          <div class="resp-card">
+            <span class="resp-icon">⚙️</span>
+            <h3>Backend Core</h3>
+            <p>Views de Equipe (dashboard, atribuição), Views de Gestão (CRUD admin, estatísticas), SQL puro.</p>
+          </div>
+        </div>
+
+        <h2 class="reveal">🧩 Conceitos-Chave</h2>
+        <div class="accordion accordion-group reveal">
+          <div class="accordion-item">
+            <button class="accordion-header">🐘 Django ORM com managed=False <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <p>O Django <strong>não gerencia</strong> as tabelas (não cria nem altera). As tabelas foram criadas manualmente via scripts SQL (<code>database/01_schema.sql</code>). O Django apenas <strong>lê e escreve</strong> registros usando o ORM para facilitar JOINs e tipagem.</p>
+              <div class="code-block">
+                <pre><code class="language-python"># portal/models.py
+class Chamado(models.Model):
+    id_chamado = models.AutoField(primary_key=True)
+    id_cidadao = models.IntegerField()
+    id_servico = models.IntegerField()
+    descricao = models.TextField()
+    localizacao = models.CharField(max_length=255)
+    data_abertura = models.DateTimeField(default=timezone.now)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        managed = False   # Django NÃO cria/altera a tabela
+        db_table = "chamado"</code></pre>
+                <button class="btn-copy">📋 Copiar</button>
+              </div>
+              <div class="flashcard-wrap">
+                <div class="flashcard">
+                  <div class="fc-front">
+                    <div class="fc-label">🃏 Pergunta</div>
+                    <div class="fc-text">Por que usamos managed=False nos models?</div>
+                    <div class="fc-hint">Clique para revelar</div>
+                  </div>
+                  <div class="fc-back">
+                    <div class="fc-label">💡 Resposta</div>
+                    <div class="fc-text">Porque o schema é criado e controlado manualmente via SQL puro (01_schema.sql). O managed=False impede que o Django execute migrations automáticas que poderiam conflitar com nossos triggers, constraints e índices customizados.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button class="accordion-header">⚡ Triggers PostgreSQL <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <p><strong>Triggers</strong> são funções PL/pgSQL que executam automaticamente em resposta a eventos no banco. Temos 3 triggers principais:</p>
+              <ul class="checklist-plain">
+                <li><strong>Trigger 1:</strong> Após INSERT em chamado, cria automaticamente um histórico com status AB.</li>
+                <li><strong>Trigger 2A:</strong> Antes de UPDATE em chamado, atualiza o campo <code>atualizado_em</code>.</li>
+                <li><strong>Trigger 2B:</strong> Após INSERT em historico_chamado, atualiza <code>dt_conclusao</code> e gera notificação.</li>
+              </ul>
+              <div class="code-block">
+                <pre><code class="language-sql">-- Trigger 1: cria histórico AB automaticamente
+CREATE OR REPLACE FUNCTION fn_chamado_after_insert_historico_ab()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_id_status INTEGER;
+BEGIN
+    SELECT id_status INTO v_id_status
+    FROM status_chamado WHERE sigla = 'AB';
+
+    INSERT INTO historico_chamado (id_chamado, id_servidor, id_status, observacao)
+    VALUES (NEW.id_chamado, NULL, v_id_status, NULL);
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;</code></pre>
+                <button class="btn-copy">📋 Copiar</button>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button class="accordion-header">📜 Views SQL <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <p><strong>Views</strong> são consultas salvas que funcionam como tabelas virtuais. A view <code>vw_estatisticas_chamados</code> é usada pelo gestor para relatórios detalhados.</p>
+              <div class="code-block">
+                <pre><code class="language-sql">CREATE VIEW vw_estatisticas_chamados AS
+SELECT 
+    c.id_chamado,
+    c.protocolo,
+    ci.nome_completo AS cidadao,
+    s.nome AS servico,
+    st.sigla AS status,
+    h.dt_alteracao AS ultima_atualizacao
+FROM chamado c
+JOIN cidadao ci ON c.id_cidadao = ci.id_cidadao
+JOIN servico s ON c.id_servico = s.id_servico
+LEFT JOIN historico_chamado h ON c.id_chamado = h.id_chamado
+LEFT JOIN status_chamado st ON h.id_status = st.id_status
+WHERE h.dt_alteracao = (
+    SELECT MAX(dt_alteracao) 
+    FROM historico_chamado 
+    WHERE id_chamado = c.id_chamado
+);</code></pre>
+                <button class="btn-copy">📋 Copiar</button>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button class="accordion-header">📐 Normalização (1NF, 2NF, 3NF) <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <ul class="checklist-plain">
+                <li><strong>1NF:</strong> Cada célula contém apenas um valor (não há listas dentro de células).</li>
+                <li><strong>2NF:</strong> Toda coluna não-chave depende da <em>chave primária inteira</em> (relevante para chaves compostas).</li>
+                <li><strong>3NF:</strong> Não há dependência transitiva: colunas não-chave dependem <em>diretamente</em> da PK, não de outra coluna não-chave.</li>
+              </ul>
+              <div class="flashcard-wrap">
+                <div class="flashcard">
+                  <div class="fc-front">
+                    <div class="fc-label">🃏 Pergunta</div>
+                    <div class="fc-text">Nosso projeto está em qual forma normal?</div>
+                    <div class="fc-hint">Clique para revelar</div>
+                  </div>
+                  <div class="fc-back">
+                    <div class="fc-label">💡 Resposta</div>
+                    <div class="fc-text">3NF. Separamos cidadão, servidor, serviço, categoria, secretaria, bairro e chamado em tabelas distintas. Não há atributos multivalorados (1NF), todas as colunas dependem da PK (2NF), e não há dependências transitivas (3NF).</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <button class="accordion-header">🔄 SQL Puro nas Views <span class="accordion-icon">▼</span></button>
+            <div class="accordion-body">
+              <p>As views de Equipe e Gestão usam <strong>SQL puro</strong> via <code>connection.cursor()</code>, não o ORM do Django. Isso permite queries complexas com JOIN LATERAL, subqueries e funções PostgreSQL.</p>
+              <div class="code-block">
+                <pre><code class="language-python"># views_equipe.py — SQL puro
+from django.db import connection
+
+with connection.cursor() as cursor:
+    cursor.execute("""
+        SELECT c.id_chamado, c.protocolo, ci.nome_completo,
+               s.nome AS servico, st.sigla AS status
+        FROM chamado c
+        JOIN cidadao ci ON c.id_cidadao = ci.id_cidadao
+        JOIN servico s ON c.id_servico = s.id_servico
+        LEFT JOIN LATERAL (
+            SELECT id_status, dt_alteracao
+            FROM historico_chamado
+            WHERE id_chamado = c.id_chamado
+            ORDER BY dt_alteracao DESC
+            LIMIT 1
+        ) h ON true
+        LEFT JOIN status_chamado st ON h.id_status = st.id_status
+        WHERE st.sigla IN ('AB', 'EA', 'EE')
+    """)
+    chamados = cursor.fetchall()</code></pre>
+                <button class="btn-copy">📋 Copiar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="reveal">🗣️ Dicas de Apresentação</h2>
+        <div class="tips-card reveal">
+          <div class="tip">
+            <div class="tip-num">1</div>
+            <p><strong>Comece pelo DER:</strong> Mostre o diagrama no pgAdmin, dbdiagram.io ou no papel. Visual é poderoso.</p>
+          </div>
+          <div class="tip">
+            <div class="tip-num">2</div>
+            <p><strong>Explique normalização:</strong> Diga por que separou as tabelas (evitar redundância, garantir integridade). Mostre que entende 1NF, 2NF, 3NF.</p>
+          </div>
+          <div class="tip">
+            <div class="tip-num">3</div>
+            <p><strong>Demonstração ao vivo:</strong> Abra o pgAdmin/Neon, mostre as tabelas, triggers e views. Execute um INSERT em chamado e mostre o Trigger 1 criando o histórico AB automaticamente.</p>
+          </div>
+          <div class="tip">
+            <div class="tip-num">4</div>
+            <p><strong>Conecte com o frontend:</strong> Mostre como o dashboard consome a view SQL. Isso prova integração entre BD e aplicação.</p>
+          </div>
+        </div>
+
+        <h2 class="reveal">✅ Checklist Pessoal</h2>
+        <div class="checklist-wrap reveal">
+          <div class="progress-wrap"><div class="progress-fill" id="prog-rafael"></div></div>
+          <span class="progress-text" id="txt-rafael"></span>
+          <ul class="checklist" data-checklist-group="rafael">
+            <li class="check-item" data-key="der">DER completo e validado</li>
+            <li class="check-item" data-key="schema">Schema SQL (01_schema.sql) finalizado</li>
+            <li class="check-item" data-key="3nf">Normalização 3NF aplicada</li>
+            <li class="check-item" data-key="triggers">Triggers 1, 2A e 2B funcionando</li>
+            <li class="check-item" data-key="views">Views criadas (vw_estatisticas_chamados)</li>
+            <li class="check-item" data-key="idx">Índices em campos de busca</li>
+            <li class="check-item" data-key="seed">Seed data para demonstração</li>
+            <li class="check-item" data-key="dash">Dashboard de equipe funcionando</li>
+            <li class="check-item" data-key="admin">CRUD de administração (Gestor)</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="content-section" id="sec-faq">
+        <div class="hero">
+          <div class="hero-inner">
+            <div class="hero-badge">❓ Tire suas dúvidas</div>
+            <h1>FAQ Técnico</h1>
+            <p>Respostas rápidas para as dúvidas mais comuns durante o desenvolvimento.</p>
+          </div>
+        </div>
+
+        <input type="text" class="faq-search" placeholder="Filtrar perguntas..." id="faq-filter">
+
+        <div class="faq-list">
+          <div class="faq-item">
+            <button class="faq-question">Por que o status do chamado não é um campo direto na tabela chamado?</button>
+            <div class="faq-answer">
+              <p>Porque precisamos de <strong>histórico completo</strong> de todas as mudanças de status. Se o status fosse um campo simples, perderíamos o rastro de quando mudou de "AB" para "EA" e para "CO". Com a tabela <code>historico_chamado</code>, cada mudança é um registro permanente com data, observação e servidor responsável.</p>
+              <p>O status atual vem sempre do <strong>último registro</strong> de <code>historico_chamado</code> para aquele <code>id_chamado</code>.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">Qual a diferença entre Trigger e Rule no PostgreSQL?</button>
+            <div class="faq-answer">
+              <ul>
+                <li><strong>Trigger:</strong> Executa uma função PL/pgSQL em resposta a eventos (INSERT, UPDATE, DELETE). Pode ser BEFORE ou AFTER, e row-level ou statement-level. É a forma moderna e recomendada.</li>
+                <li><strong>Rule:</strong> Reescreve a query antes de executar. Pode transformar um INSERT em outra operação. Menos flexível que triggers e está em desuso. Nosso projeto <strong>removeu as Rules R4 e R6</strong> e migrou o controle de acesso para decorators Django.</li>
+              </ul>
+              <p><strong>Recomendação:</strong> Use <strong>Triggers</strong> para auditoria e integridade. Rules são legado.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">Como funciona a autenticação no Django sem usar django.contrib.auth?</button>
+            <div class="faq-answer">
+              <ol>
+                <li>Usuário envia email+senha para <code>POST /accounts/login/</code></li>
+                <li>View busca em <code>cidadao</code>, depois em <code>servidor</code> (login dual)</li>
+                <li>Se encontrou, compara senha com <code>check_password()</code> (Django Hashers)</li>
+                <li>Se válido, salva <code>usuario_id</code> e <code>usuario_tipo</code> no <code>request.session</code></li>
+                <li>O middleware <code>PortalUserMiddleware</code> lê a sessão em toda requisição e injeta <code>request.portal_user</code></li>
+                <li>Decorators <code>@perfis()</code> verificam o perfil e bloqueiam acesso não autorizado</li>
+              </ol>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">O que é o PortalUserMiddleware e por que ele chama set_config() no PostgreSQL?</button>
+            <div class="faq-answer">
+              <p>O <code>PortalUserMiddleware</code> é executado em <strong>toda requisição HTTP</strong>. Ele faz duas coisas:</p>
+              <ol>
+                <li><strong>Autenticação:</strong> Lê o cookie de sessão, busca o usuário no banco e coloca em <code>request.portal_user</code>.</li>
+                <li><strong>Auditoria:</strong> Chama <code>set_config('portal.perfil', ...)</code> e <code>set_config('portal.id_usuario_acao', ...)</code> no PostgreSQL. As triggers do banco leem essas variáveis para saber <strong>quem executou a ação</strong> e gerar notificações/históricos corretos.</li>
+              </ol>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">Por que os models Django usam managed=False?</button>
+            <div class="faq-answer">
+              <p>Com <code>managed = False</code>, o Django <strong>não cria, altera nem remove</strong> as tabelas automaticamente. O schema é controlado manualmente pelos scripts SQL em <code>database/</code>:</p>
+              <ul>
+                <li><code>01_schema.sql</code> — cria as 11 tabelas com PKs, FKs, CHECKs</li>
+                <li><code>02_seed.sql</code> — dados iniciais (status, categorias, serviços)</li>
+                <li><code>03_functions_triggers.sql</code> — triggers e funções PL/pgSQL</li>
+                <li><code>04_rules.sql</code> — regras de negócio (em desuso, substituídas por decorators)</li>
+                <li><code>05_views.sql</code> — views para relatórios</li>
+              </ul>
+              <p>O Django ORM é usado apenas para <strong>ler e escrever registros</strong>, facilitando JOINs e tipagem em Python.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">Quais são os 5 status do chamado e o que significam?</button>
+            <div class="faq-answer">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Sigla</th><th>Nome</th><th>Significado</th><th>Cor</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><strong>AB</strong></td><td>Aberto</td><td>Chamado criado pelo cidadão</td><td>Azul</td></tr>
+                    <tr><td><strong>EA</strong></td><td>Em Atendimento</td><td>Colaborador iniciou o atendimento</td><td>Amarelo</td></tr>
+                    <tr><td><strong>EE</strong></td><td>Em Execução</td><td>Serviço está sendo executado no local</td><td>Laranja</td></tr>
+                    <tr><td><strong>CO</strong></td><td>Concluído</td><td>Serviço finalizado com sucesso</td><td>Verde</td></tr>
+                    <tr><td><strong>CA</strong></td><td>Cancelado</td><td>Encerrado SEM conclusão (cinza neutro)</td><td>Cinza</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">Como o semáforo de prazo funciona?</button>
+            <div class="faq-answer">
+              <p>O semáforo é calculado automaticamente pela property <code>cor_semaforo</code> no model <code>Chamado</code>:</p>
+              <ul>
+                <li><strong>Verde:</strong> Dias desde a abertura &lt; <code>prazo_amarelo_dias</code> (padrão 15)</li>
+                <li><strong>Amarelo:</strong> Dias &gt;= amarelo e &lt; <code>prazo_vermelho_dias</code> (padrão 30)</li>
+                <li><strong>Vermelho:</strong> Dias &gt;= prazo_vermelho</li>
+              </ul>
+              <p>Os prazos são definidos por serviço na tabela <code>servico</code> (campos <code>prazo_amarelo_dias</code> e <code>prazo_vermelho_dias</code>).</p>
+              <p><strong>Não confundir com Prioridade:</strong> prioridade é um número 0-5 atribuído manualmente pelo gestor/colaborador. Semáforo é automático por tempo.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question">Como rodar o projeto localmente?</button>
+            <div class="faq-answer">
+              <div class="code-block">
+                <pre><code class="language-bash"># 1. Clone o repositório
+git clone &lt;url&gt;
+cd VG_Smart
+
+# 2. Crie e ative o ambiente virtual
+python -m venv backend\.venv
+.\backend\.venv\Scripts\activate
+
+# 3. Instale as dependências
+pip install -r backend\requirements.txt
+
+# 4. Configure o .env (copie de .env.example)
+cp backend\.env.example backend\.env
+# Edite: SECRET_KEY, POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST
+
+# 5. Rode o servidor
+cd backend
+python manage.py runserver
+
+# Acesse: http://localhost:8000/</code></pre>
+                <button class="btn-copy">📋 Copiar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHECKLIST FINAL -->
+      <section class="content-section" id="sec-checklist">
+        <div class="hero">
+          <div class="hero-inner">
+            <div class="hero-badge">✅ Entrega Final</div>
+            <h1>Checklist Final do Projeto</h1>
+            <p>Tudo que precisa estar pronto antes da apresentação final.</p>
+          </div>
+        </div>
+
+        <div class="checklist-wrap reveal">
+          <div class="progress-wrap"><div class="progress-fill global-progress-fill"></div></div>
+          <span class="progress-text global-progress-text"></span>
+        </div>
+
+        <h2 class="reveal">🗄️ Banco de Dados (Rafael)</h2>
+        <div class="checklist-wrap reveal">
+          <div class="progress-wrap"><div class="progress-fill"></div></div>
+          <span class="progress-text"></span>
+          <ul class="checklist" data-checklist-group="final-bd">
+            <li class="check-item" data-key="der">DER completo (1:1, 1:N, N:M mapeados)</li>
+            <li class="check-item" data-key="schema">Schema SQL (01_schema.sql) com 11 tabelas</li>
+            <li class="check-item" data-key="3nf">Normalização 3NF aplicada</li>
+            <li class="check-item" data-key="triggers">Triggers 1, 2A e 2B funcionando</li>
+            <li class="check-item" data-key="views">Views SQL para relatórios</li>
+            <li class="check-item" data-key="idx">Índices em campos de busca</li>
+            <li class="check-item" data-key="seed">Seed data para demo (02_seed.sql)</li>
+          </ul>
+        </div>
+
+        <h2 class="reveal">⚙️ Backend (Rafael + Bruno)</h2>
+        <div class="checklist-wrap reveal">
+          <div class="progress-wrap"><div class="progress-fill"></div></div>
+          <span class="progress-text"></span>
+          <ul class="checklist" data-checklist-group="final-backend">
+            <li class="check-item" data-key="login">Login dual (cidadao + servidor) funcionando</li>
+            <li class="check-item" data-key="cadastro">Cadastro de cidadão com wizard</li>
+            <li class="check-item" data-key="decorator">Decorators de acesso (@perfis) funcionando</li>
+            <li class="check-item" data-key="middleware">PortalUserMiddleware injetando usuário</li>
+            <li class="check-item" data-key="crudc">CRUD completo de cidadão (meus chamados)</li>
+            <li class="check-item" data-key="crude">CRUD de equipe (atribuir, mudar status)</li>
+            <li class="check-item" data-key="admin">Painel administrativo (Gestor)</li>
+          </ul>
+        </div>
+
+        <h2 class="reveal">🎨 Frontend (Fausto + Bruno)</h2>
+        <div class="checklist-wrap reveal">
+          <div class="progress-wrap"><div class="progress-fill"></div></div>
+          <span class="progress-text"></span>
+          <ul class="checklist" data-checklist-group="final-frontend">
+            <li class="check-item" data-key="ds">Design System Gov.br v3.7 aplicado</li>
+            <li class="check-item" data-key="home">Homepage pública com estatísticas</li>
+            <li class="check-item" data-key="login">Tela de login/cadastro com Gov.br DS</li>
+            <li class="check-item" data-key="dash">Dashboard de equipe com gráficos Chart.js</li>
+            <li class="check-item" data-key="form">Formulário de solicitação de serviço</li>
+            <li class="check-item" data-key="resp">Responsividade testada (mobile, tablet, desktop)</li>
+            <li class="check-item" data-key="a11y">Acessibilidade (skip links, ARIA, contraste)</li>
+          </ul>
+        </div>
+
+        <h2 class="reveal">🔐 Autenticação (Bruno)</h2>
+        <div class="checklist-wrap reveal">
+          <div class="progress-wrap"><div class="progress-fill"></div></div>
+          <span class="progress-text"></span>
+          <ul class="checklist" data-checklist-group="final-auth">
+            <li class="check-item" data-key="hash">Cadastro com hash de senha (make_password)</li>
+            <li class="check-item" data-key="session">Login com sessão Django (cookie seguro)</li>
+            <li class="check-item" data-key="prot">Proteção de rotas privadas (@autenticado, @perfis)</li>
+            <li class="check-item" data-key="logout">Logout limpando sessão (flush)</li>
+            <li class="check-item" data-key="tipo">Diferenciação Cidadão (CID) / Colaborador (COL) / Gestor (GES)</li>
+            <li class="check-item" data-key="rec">Recuperação de senha por email</li>
+          </ul>
+        </div>
+
+        <h2 class="reveal">🎯 Integração (Todos)</h2>
+        <div class="checklist-wrap reveal">
+          <div class="progress-wrap"><div class="progress-fill"></div></div>
+          <span class="progress-text"></span>
+          <ul class="checklist" data-checklist-group="final-integracao">
+            <li class="check-item" data-key="real">Frontend consome dados reais do banco (não mock)</li>
+            <li class="check-item" data-key="fluxo">Fluxo completo: cadastro → login → solicitar → acompanhar</li>
+            <li class="check-item" data-key="func">Funcionário atribui e resolve chamado</li>
+            <li class="check-item" data-key="notif">Notificações automáticas ao mudar status (Trigger 2B)</li>
+          </ul>
+        </div>
+
+        <h2 class="reveal">📊 Apresentação (Todos)</h2>
+        <div class="checklist-wrap reveal">
+          <div class="progress-wrap"><div class="progress-fill"></div></div>
+          <span class="progress-text"></span>
+          <ul class="checklist" data-checklist-group="final-apresentacao">
+            <li class="check-item" data-key="slides">Slides com DER e arquitetura Django MTV</li>
+            <li class="check-item" data-key="demo">Demo ao vivo do sistema</li>
+            <li class="check-item" data-key="cada">Cada um apresenta sua parte</li>
+            <li class="check-item" data-key="gh">Código no GitHub com README</li>
+            <li class="check-item" data-key="dados">Banco populado com dados realistas</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast">📋 Código copiado!</div>
+
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🃏 Flashcard</h3>
+        <button class="modal-close" id="modal-close">×</button>
       </div>
-    </article>
-
-    <!-- ============================== -->
-    <!-- BRUNO DIAS                     -->
-    <!-- ============================== -->
-    <article class="doc-card" id="bruno">
-      <div class="doc-card-header">
-        <div class="doc-card-icon" style="background:rgba(99,102,241,.12);color:var(--primary)">👤</div>
-        <div>
-          <div class="doc-card-title">Roteiro de Apresentação — Bruno Dias</div>
-          <div class="doc-card-subtitle">Autenticação, Módulo do Cidadão e Página Inicial</div>
+      <div class="modal-body">
+        <div class="flashcard-modal" id="flashcard-modal">
+          <div class="flashcard-front" id="flashcard-front"></div>
+          <div class="flashcard-back" id="flashcard-back"></div>
         </div>
       </div>
-      <div class="doc-card-body">
-
-        <h2>Sistema de Autenticação</h2>
-        <p>Autenticação <strong>dual</strong>: busca primeiro na tabela <code>cidadao</code>, depois em <code>servidor</code>. A sessão guarda <code>usuario_tipo</code>.</p>
-        <ul>
-          <li><strong>Login</strong> — <code>login_view</code> em <code>views_auth.py</code></li>
-          <li><strong>Cadastro</strong> — <code>cadastro_view</code> com wizard de 3 etapas</li>
-          <li><strong>Recuperação</strong> — token assinado com <code>django.core.signing</code></li>
-          <li><strong>Redefinição</strong> — valida token e atualiza <code>senha_hash</code></li>
-          <li><strong>Troca obrigatória</strong> — 1º acesso de colaborador</li>
-        </ul>
-
-        <h2>Módulo do Cidadão</h2>
-        <p>Todas as views usam <code>@perfis("CID")</code>. Status do chamado NÃO é campo direto — vem do último <code>historico_chamado</code> via <code>db.popular_status()</code>.</p>
-
-        <table>
-          <tr><th>View</th><th>Função</th></tr>
-          <tr><td>Dashboard</td><td><code>cidadao_chamados_lista</code> — JOIN com <code>servico</code> e <code>bairro</code></td></tr>
-          <tr><td>Novo chamado</td><td><code>cidadao_chamado_novo</code> — upload de foto + protocolo + Trigger 1</td></tr>
-          <tr><td>Detalhe</td><td><code>cidadao_chamado_detalhe</code> — 4 ações POST</td></tr>
-          <tr><td>Notificações</td><td><code>cidadao_notificacoes</code> — exclusão individual</td></tr>
-        </table>
-
-        <h3>4 ações POST no detalhe</h3>
-        <ul>
-          <li><code>"obs"</code> — insere observação em <code>historico_chamado</code></li>
-          <li><code>"foto"</code> — insere foto em <code>foto_chamado</code></li>
-          <li><code>"cancelar"</code> — insere status CA (só AB ou EA)</li>
-          <li><code>"avaliar"</code> — nota + comentário (só CO, uma vez)</li>
-        </ul>
-
-        <h2>Página Inicial</h2>
-        <p><strong>Root view</strong> — <code>views_root.py</code>: calcula <code>total_resolvidos</code> via subquery no último histórico. Carrega top 5 serviços, estatísticas e banners.</p>
-
-        <h2>Arquivos-chave</h2>
-        <table>
-          <tr><th>Arquivo</th><th>Caminho</th></tr>
-          <tr><td>views_auth.py</td><td><code>backend/portal/views_auth.py</code></td></tr>
-          <tr><td>views_cidadao.py</td><td><code>backend/portal/views_cidadao.py</code></td></tr>
-          <tr><td>views_root.py</td><td><code>backend/portal/views_root.py</code></td></tr>
-          <tr><td>db.py</td><td><code>backend/portal/db.py</code></td></tr>
-          <tr><td>forms.py</td><td><code>backend/portal/forms.py</code></td></tr>
-        </table>
-
-        <h2>Checklist Seminário Final</h2>
-        <ul class="checklist">
-          <li>Print de <code>views_auth.py</code> — login dual e cadastro</li>
-          <li>Print de <code>views_cidadao.py</code> — dashboard, novo chamado, detalhe</li>
-          <li>Print do cadastro com wizard (3 passos)</li>
-          <li>Print do dashboard com semáforo</li>
-          <li>Print da abertura de chamado com upload de foto</li>
-          <li>Print do detalhe com histórico + avaliação</li>
-          <li>Print das notificações</li>
-          <li>Demonstração ao vivo do fluxo completo</li>
-        </ul>
-
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="flashcard-flip">Virar cartão</button>
       </div>
-    </article>
-
-    <!-- ============================== -->
-    <!-- FAUSTO YUUKI                   -->
-    <!-- ============================== -->
-    <article class="doc-card" id="fausto">
-      <div class="doc-card-header">
-        <div class="doc-card-icon" style="background:rgba(14,165,233,.12);color:var(--secondary)">👤</div>
-        <div>
-          <div class="doc-card-title">Roteiro de Apresentação — Fausto Yuuki</div>
-          <div class="doc-card-subtitle">Módulo Colaborador, Gestor e Frontend (Gov.br DS)</div>
-        </div>
-      </div>
-      <div class="doc-card-body">
-
-        <h2>Frontend e Design System Gov.br</h2>
-        <ul>
-          <li><strong>base.html</strong> (17 KB): header, sidebar dinâmico por perfil, footer, skip links, cookie bar</li>
-          <li><strong>vg24h.css</strong> (24 KB): variáveis CSS, tokens Gov.br, semáforo, tabelas, forms</li>
-          <li><strong>vg24h.js</strong> (7 KB): carousel, menu toggle, formulários dinâmicos</li>
-          <li>Componentes Gov.br: <code>br-button</code>, <code>br-input</code>, <code>br-table</code>, <code>br-tag</code>, fonte Rawline</li>
-        </ul>
-
-        <h2>Módulo do Colaborador (COL)</h2>
-        <p>Status do chamado NÃO é campo direto — vem do último <code>historico_chamado</code>. Mudar status = INSERT em <code>historico_chamado</code>.</p>
-        <table>
-          <tr><th>View</th><th>Função</th></tr>
-          <tr><td>Dashboard Semáforo</td><td><code>equipe_dashboard</code> — Chart.js + filtros</td></tr>
-          <tr><td>Lista de Chamados</td><td><code>equipe_chamados_lista</code> — SQL puro com JOINs</td></tr>
-          <tr><td>Detalhe do Chamado</td><td><code>equipe_chamado_detalhe</code> — 3 ações POST</td></tr>
-        </table>
-
-        <p><strong>3 ações POST:</strong> <code>"status"</code> (INSERT em historico + resolução), <code>"obs"</code> (observação), <code>"foto"</code> (upload Cloudinary). COL bloqueado em CO/CA; GES sempre pode.</p>
-
-        <h2>Módulo do Gestor (GES)</h2>
-        <p><code>@perfis("GES")</code> — exclusivo. Perfil GES = "Administrador" no Plano.</p>
-        <table>
-          <tr><th>CRUD</th><th>Views</th></tr>
-          <tr><td>Categorias</td><td><code>gestao_categorias</code>, <code>gestao_categoria_edit</code></td></tr>
-          <tr><td>Serviços</td><td><code>gestao_servicos</code>, <code>gestao_servico_edit</code>, <code>gestao_servico_desativar</code></td></tr>
-          <tr><td>Bairros</td><td><code>gestao_bairros</code>, <code>gestao_bairro_edit</code>, <code>gestao_bairro_desativar</code></td></tr>
-          <tr><td>Colaboradores</td><td><code>gestao_colaboradores</code>, <code>gestao_colaborador_toggle</code></td></tr>
-          <tr><td>Banners</td><td><code>gestao_banners</code>, <code>gestao_banner_novo/editar/excluir</code></td></tr>
-          <tr><td>Estatísticas</td><td><code>gestao_estatisticas</code> — View SQL</td></tr>
-        </table>
-
-        <h2>Arquivos-chave</h2>
-        <table>
-          <tr><th>Arquivo</th><th>Caminho</th></tr>
-          <tr><td>views_equipe.py</td><td><code>backend/portal/views_equipe.py</code></td></tr>
-          <tr><td>views_gestao.py</td><td><code>backend/portal/views_gestao.py</code></td></tr>
-          <tr><td>base.html</td><td><code>backend/templates/portal/base.html</code></td></tr>
-          <tr><td>vg24h.css</td><td><code>backend/static/portal/css/vg24h.css</code></td></tr>
-          <tr><td>vg24h.js</td><td><code>backend/static/portal/js/vg24h.js</code></td></tr>
-        </table>
-
-        <h2>Checklist Seminário Final</h2>
-        <ul class="checklist">
-          <li>Print de <code>views_equipe.py</code> — dashboard e detalhe</li>
-          <li>Print de <code>views_gestao.py</code> — CRUDs</li>
-          <li>Print de <code>base.html</code> e <code>vg24h.css</code></li>
-          <li>Print do Dashboard Semáforo (cards verde/amarelo/vermelho)</li>
-          <li>Print do CRUD de Categorias completo</li>
-          <li>Print do CRUD de Serviços com prazos</li>
-          <li>Print da criação de Colaborador</li>
-          <li>Print do Painel de Estatísticas</li>
-          <li>Print dos Banners + carousel</li>
-          <li>Demonstração ao vivo: login GES → CRUD → alterar status → dashboard</li>
-        </ul>
-
-      </div>
-    </article>
-
-    <!-- ============================== -->
-    <!-- RAFAEL PEREIRA                 -->
-    <!-- ============================== -->
-    <article class="doc-card" id="rafael">
-      <div class="doc-card-header">
-        <div class="doc-card-icon" style="background:rgba(20,184,166,.12);color:var(--teal)">👤</div>
-        <div>
-          <div class="doc-card-title">Roteiro de Apresentação — Rafael Pereira</div>
-          <div class="doc-card-subtitle">Banco de Dados, Modelagem e Backend Core</div>
-        </div>
-      </div>
-      <div class="doc-card-body">
-
-        <h2>Modelagem de Dados</h2>
-        <p>O banco tem <strong>11 tabelas</strong>. O status do chamado <strong>NÃO é campo direto</strong> na tabela <code>chamado</code> — vem do último registro de <code>historico_chamado</code>.</p>
-
-        <table>
-          <tr><th>#</th><th>Tabela</th><th>Descrição</th></tr>
-          <tr><td>1</td><td><code>cidadao</code></td><td>Cidadãos (perfil = 'CID')</td></tr>
-          <tr><td>2</td><td><code>servidor</code></td><td>Colaboradores (COL) e Gestores (GES)</td></tr>
-          <tr><td>3</td><td><code>secretaria</code></td><td>Secretarias municipais</td></tr>
-          <tr><td>4</td><td><code>status_chamado</code></td><td>5 status: AB, EA, EE, CO, CA</td></tr>
-          <tr><td>5</td><td><code>categoria_servico</code></td><td>Categorias de serviço</td></tr>
-          <tr><td>6</td><td><code>servico</code></td><td>Serviços com prazos amarelo/vermelho</td></tr>
-          <tr><td>7</td><td><code>bairro</code></td><td>Bairros de VG com CEP e região</td></tr>
-          <tr><td>8</td><td><code>chamado</code></td><td>Entidade central. SEM id_status</td></tr>
-          <tr><td>9</td><td><code>foto_chamado</code></td><td>Fotos (URL Cloudinary)</td></tr>
-          <tr><td>10</td><td><code>historico_chamado</code></td><td>Mudanças de status + observações</td></tr>
-          <tr><td>11</td><td><code>notificacao</code></td><td>Avisos ao cidadão</td></tr>
-        </table>
-
-        <h2>Scripts SQL</h2>
-
-        <h3><code>01_schema.sql</code> (191 linhas)</h3>
-        <ul>
-          <li>11 CREATE TABLE com PKs, FKs, constraints</li>
-          <li><code>chamado</code> NÃO tem <code>id_status</code></li>
-          <li>6 índices de performance</li>
-        </ul>
-
-        <h3><code>02_seed.sql</code></h3>
-        <ul>
-          <li>5 status, 1 secretaria, 2 categorias, 5 serviços, 20 bairros</li>
-        </ul>
-
-        <h3><code>03_functions_triggers.sql</code> (107 linhas)</h3>
-        <ul>
-          <li><strong>Trigger 1</strong>: <code>AFTER INSERT</code> em chamado — insere histórico AB</li>
-          <li><strong>Trigger 2A</strong>: <code>BEFORE UPDATE</code> em chamado — atualiza <code>atualizado_em</code></li>
-          <li><strong>Trigger 2B</strong>: <code>AFTER INSERT</code> em historico — dt_conclusao + notificação</li>
-        </ul>
-
-        <h3><code>04_rules.sql</code> (126 linhas)</h3>
-        <p>R1, R2, R3 convertidas para Triggers BEFORE com <code>RAISE EXCEPTION</code> (incompatibilidade de rules condicionais com <code>INSERT RETURNING</code>). R5 e Extra permanecem como Rules.</p>
-
-        <h3><code>05_views.sql</code> (30 linhas)</h3>
-        <p><code>vw_estatisticas_chamados</code> com <strong>JOIN LATERAL</strong> para buscar último status.</p>
-
-        <h2>Models Django</h2>
-        <p>Todos com <code>managed = False</code>. <code>Chamado</code> tem properties: <code>status_atual</code>, <code>sigla_status</code>, <code>atualizado_em</code>.</p>
-
-        <h2>Middleware &amp; Decorators</h2>
-        <ul>
-          <li><strong>Middleware</strong>: <code>_usuario_da_sessao()</code> + <code>_postgres_sessao()</code> (set_config)</li>
-          <li><strong>Decorators</strong>: <code>@perfis("CID")</code>, <code>@perfis("COL", "GES")</code>, <code>@perfis("GES")</code></li>
-        </ul>
-
-        <h2>Checklist Seminário Final</h2>
-        <ul class="checklist">
-          <li>Print do DER (11 entidades, chamado SEM id_status)</li>
-          <li>Print das tabelas no pgAdmin</li>
-          <li>SQL do Trigger 1 — linha a linha</li>
-          <li>SQL do Trigger 2A — linha a linha</li>
-          <li>SQL do Trigger 2B — linha a linha</li>
-          <li>SQL dos Triggers de integridade (R1→T, R2→T, R3→T)</li>
-          <li>SQL da View com JOIN LATERAL</li>
-          <li>Print de <code>models.py</code> — properties</li>
-          <li>Print de <code>middleware.py</code> — set_config</li>
-          <li>Demonstração: INSERT chamado → Trigger 1</li>
-          <li>Demonstração: INSERT historico → Trigger 2B</li>
-          <li>Demonstração: violação de trigger → RAISE EXCEPTION</li>
-        </ul>
-
-      </div>
-    </article>
-
+    </div>
   </div>
-</div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="assets/app.js"></script>
 </body>
 </html>

@@ -6,16 +6,25 @@
 {% block content %}
 <div class="dashboard-content">
   <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
-    <div class="crumb-list">
-      <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
-      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
-      <span class="crumb"><a href="{% url 'portal:gestao_estatisticas' %}">Administração</a></span>
-      <span class="crumb"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
-      <span>Bairros e Regiões</span>
-    </div>
+    <ol class="crumb-list">
+      <li class="crumb home">
+        <a class="br-button circle" href="{% url 'portal:root' %}">
+          <span class="sr-only">Página inicial</span>
+          <i class="fas fa-home" aria-hidden="true"></i>
+        </a>
+      </li>
+      <li class="crumb">
+        <i class="icon fas fa-chevron-right" aria-hidden="true"></i>
+        <a href="{% url 'portal:gestao_estatisticas' %}">Administração</a>
+      </li>
+      <li class="crumb" data-active="active">
+        <i class="icon fas fa-chevron-right" aria-hidden="true"></i>
+        <span tabindex="0" aria-current="page">Bairros e Regiões</span>
+      </li>
+    </ol>
   </nav>
 
-  <div class="dashboard-header d-flex justify-content-between align-items-center mb-4x">
+  <div class="dashboard-header">
     <div>
       <h1>Bairros e Regiões</h1>
       <p class="text-muted">Gerencie as áreas geográficas atendidas pelo VG 24H.</p>
@@ -44,7 +53,7 @@
           <tbody>
             {% for b in lista %}
               <tr>
-                <td><strong>{{ b.nome }}</strong></td>
+                <td><strong>{{ b.nome_bairro }}</strong></td>
                 <td>
                   {% if b.ativo %}
                     <span class="br-tag success">Ativo</span>
@@ -80,20 +89,22 @@
 <div class="br-modal" id="modal-add-bairro">
   <div class="br-modal-header">
     <div class="modal-title">Novo Bairro</div>
-    <button class="close" type="button" data-dismiss="modal"><i class="fas fa-times"></i></button>
+    <button class="br-button close circle" type="button" data-dismiss="br-modal" aria-label="Fechar">
+      <i class="fas fa-times"></i>
+    </button>
   </div>
-  <div class="br-modal-body">
-    <form action="{% url 'portal:gestao_bairros' %}" method="post">
-      {% csrf_token %}
+  <form action="{% url 'portal:gestao_bairros' %}" method="post">
+    {% csrf_token %}
+    <div class="br-modal-body">
       <div class="br-input mt-3x">
         <label for="id_nome_b">Nome do Bairro *</label>
         <input id="id_nome_b" name="nome" type="text" required />
       </div>
-    </form>
-  </div>
-  <div class="br-modal-footer justify-content-end mt-4x">
-    <button class="br-button secondary mr-2" type="button" data-dismiss="modal">Cancelar</button>
-    <button class="br-button primary" type="submit">Criar Bairro</button>
-  </div>
+    </div>
+    <div class="br-modal-footer justify-content-end mt-4x">
+      <button class="br-button secondary mr-2" type="button" data-dismiss="br-modal">Cancelar</button>
+      <button class="br-button primary" type="submit">Criar Bairro</button>
+    </div>
+  </form>
 </div>
 {% endblock %}
