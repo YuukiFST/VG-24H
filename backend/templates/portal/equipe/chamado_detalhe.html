@@ -186,7 +186,7 @@
               </div>
             </div>
 
-            <div class="form-group mb-3x">
+            <div id="resolucao-wrapper" class="form-group mb-3x" style="display:none;">
               <div class="br-input">
                 <label for="resolucao-text">Resolução Final / Motivo</label>
                 <textarea id="resolucao-text" name="resolucao" rows="4" placeholder="Obrigatório para concluir ou cancelar.">{{ ch.resolucao|default:'' }}</textarea>
@@ -196,6 +196,21 @@
             <button class="br-button primary w-100" type="submit">
               <i class="fas fa-save mr-1"></i> Atualizar Status
             </button>
+            <div id="sigla-map-data" data-map='{{ status_sigla_map_json|safe }}' style="display:none;"></div>
+            <script>
+              (function () {
+                var sel = document.getElementById('status-select');
+                var wrap = document.getElementById('resolucao-wrapper');
+                var siglaMap = JSON.parse(document.getElementById('sigla-map-data').getAttribute('data-map'));
+                function toggle() {
+                  var pk = parseInt(sel.value, 10);
+                  var sigla = (siglaMap[pk] || '').toUpperCase();
+                  wrap.style.display = (sigla === 'CO' || sigla === 'CA') ? '' : 'none';
+                }
+                sel.addEventListener('change', toggle);
+                toggle();
+              })();
+            </script>
           </form>
         {% else %}
           <div class="br-message warning" role="alert">

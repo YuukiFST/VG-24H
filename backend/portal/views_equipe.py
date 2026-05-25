@@ -265,8 +265,8 @@ def equipe_chamado_detalhe(request, pk):
                         "VALUES (%s, %s, %s, %s)",
                         [pk, request.portal_user.pk, novo.pk, timezone.now()],
                     )
-                    # UPDATE resolução e prioridade
-                    resolucao = form_s.cleaned_data.get("resolucao") or None
+                    # UPDATE resolução (somente para CO/CA) e prioridade
+                    nova_sigla = novo.sigla.strip().upper()
                     pri = request.POST.get("prioridade")
                     prioridade_val = ch.prioridade
                     if pri is not None:
@@ -274,11 +274,19 @@ def equipe_chamado_detalhe(request, pk):
                             prioridade_val = max(0, min(5, int(pri)))
                         except (ValueError, TypeError):
                             pass
-                    cursor.execute(
-                        "UPDATE chamado SET resolucao = %s, prioridade = %s "
-                        "WHERE id_chamado = %s",
-                        [resolucao, prioridade_val, pk],
-                    )
+                    if nova_sigla in ("CO", "CA"):
+                        resolucao = form_s.cleaned_data.get("resolucao") or None
+                        cursor.execute(
+                            "UPDATE chamado SET resolucao = %s, prioridade = %s "
+                            "WHERE id_chamado = %s",
+                            [resolucao, prioridade_val, pk],
+                        )
+                    else:
+                        cursor.execute(
+                            "UPDATE chamado SET prioridade = %s "
+                            "WHERE id_chamado = %s",
+                            [prioridade_val, pk],
+                        )
                 messages.success(request, "Status atualizado.")
                 return redirect("portal:equipe_chamado", pk=pk)
             form_status_erro = form_s
@@ -346,6 +354,11 @@ def equipe_chamado_detalhe(request, pk):
         (5, "5 — Urgente"),
     ]
 
+    # Mapa PK → sigla para o JS saber quais status são CO/CA
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id_status, sigla FROM status_chamado")
+        status_sigla_map = {r[0]: r[1].strip() for r in cursor.fetchall()}
+
     return render(
         request,
         "portal/equipe/chamado_detalhe.html",
@@ -361,6 +374,7 @@ def equipe_chamado_detalhe(request, pk):
             "form_obs": ObservacaoForm(),
             "form_foto": FotoForm(),
             "prioridades": PRIORIDADES,
+            "status_sigla_map_json": json.dumps(status_sigla_map),
         },
     )
 
