@@ -179,8 +179,16 @@
                         </a>
                         {% endif %}
                         {% endif %}
-                        {# [!] APENAS GES: link direto para gestao de banners #}
+                        {# [!] APENAS GES: links de administracao (Servicos, Colaboradores, Banners) #}
                         {% if request.portal_user.perfil == 'GES' %}
+                        <a class="menu-item divider" href="{% url 'portal:gestao_servicos' %}" role="treeitem">
+                            <span class="icon"><i class="fas fa-concierge-bell" aria-hidden="true"></i></span>
+                            <span class="content">Serviços</span>
+                        </a>
+                        <a class="menu-item divider" href="{% url 'portal:gestao_colaboradores' %}" role="treeitem">
+                            <span class="icon"><i class="fas fa-users-cog" aria-hidden="true"></i></span>
+                            <span class="content">Colaboradores</span>
+                        </a>
                         <a class="menu-item divider" href="{% url 'portal:gestao_banners' %}" role="treeitem">
                             <span class="icon"><i class="fas fa-image" aria-hidden="true"></i></span>
                             <span class="content">Banners</span>
