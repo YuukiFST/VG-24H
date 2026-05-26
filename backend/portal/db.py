@@ -269,13 +269,21 @@ def popular_status(ch):
         ch.sigla_status = ""
 
     # Calculo do semaforo baseado nos prazos do servico
-    dias = (timezone.now() - ch.dt_abertura).days
-    if dias >= ch.id_servico.prazo_vermelho_dias:
-        ch.cor_semaforo = "vermelho"
-    elif dias >= ch.id_servico.prazo_amarelo_dias:
-        ch.cor_semaforo = "amarelo"
-    else:
-        ch.cor_semaforo = "verde"
+    ch.cor_semaforo = cor_semaforo(ch.dt_abertura, ch.id_servico.prazo_amarelo_dias, ch.id_servico.prazo_vermelho_dias)
+
+
+def cor_semaforo(dt_abertura, prazo_amarelo_dias, prazo_vermelho_dias):
+    """Classifica a urgencia do chamado com base nos prazos do servico.
+
+    Retorna 'verde', 'amarelo' ou 'vermelho'.
+    Funcao pura (sem side effects) — usada por popular_status e pelas views.
+    """
+    dias = (timezone.now() - dt_abertura).days
+    if dias >= prazo_vermelho_dias:
+        return "vermelho"
+    if dias >= prazo_amarelo_dias:
+        return "amarelo"
+    return "verde"
 
 
 def calcular_stats_semaforo(cidadao_id=None):
@@ -284,42 +292,32 @@ def calcular_stats_semaforo(cidadao_id=None):
 
     Retorna dict: {'no_prazo': N, 'atencao': N, 'critico': N}
 
-    [!] Se cidadao_id for informado, filtra apenas os chamados daquele cidadao.
-        Se None, calcula para TODOS os chamados (usado pela equipe/gestao).
-
-    [!] A classificacao usa os prazos do servico vinculado ao chamado:
-        - no_prazo (verde):  dias < prazo_amarelo_dias
-        - atencao (amarelo): prazo_amarelo_dias <= dias < prazo_vermelho_dias
-        - critico (vermelho): dias >= prazo_vermelho_dias
+    [!] Agregacao totalmente em SQL — sem loop Python.
     """
     where = ""
-    params = []
+    where_params = []
     if cidadao_id:
-        where = "WHERE c.id_cidadao = %s"
-        params = [cidadao_id]
+        where = "AND c.id_cidadao = %s"
+        where_params = [cidadao_id]
+
+    now = timezone.now()
+    params = [now, now, now, now] + where_params
+
+    sql = (
+        "SELECT "
+        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) < make_interval(days := s.prazo_amarelo_dias) THEN 1 ELSE 0 END), 0), "
+        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := s.prazo_amarelo_dias) "
+        "    AND (%s - c.dt_abertura) < make_interval(days := s.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0), "
+        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := s.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0) "
+        "FROM chamado c "
+        "JOIN servico s ON c.id_servico = s.id_servico "
+        "WHERE TRUE " + where
+    )
 
     with connection.cursor() as cursor:
-        cursor.execute(
-            f"SELECT c.id_chamado, c.dt_abertura, "
-            f"s.prazo_amarelo_dias, s.prazo_vermelho_dias "
-            f"FROM chamado c "
-            f"JOIN servico s ON c.id_servico = s.id_servico "
-            f"{where}",
-            params,
-        )
-        stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
-        now = timezone.now()
-        for row in cursor.fetchall():
-            dias = (now - row[1]).days
-            if dias >= row[3]:
-                stats["critico"] += 1
-            elif dias >= row[2]:
-                stats["atencao"] += 1
-            else:
-                stats["no_prazo"] += 1
-    return stats
-
-
+        cursor.execute(sql, params)
+        row = cursor.fetchone()
+    return {"no_prazo": row[0], "atencao": row[1], "critico": row[2]}
 def buscar_historicos(chamado_pk):
     """
     SQL puro: SELECT historicos de um chamado com JOIN em servidor e status.
@@ -486,11 +484,11 @@ class _PageObj:
         return iter(self.object_list)
 
 
-def paginar(itens, pagina, por_pagina=15):
+def paginar(itens, pagina, por_pagina=15, total_count=None):
     """
     Paginacao manual para listas de objetos.
 
-    Recebe uma lista completa de itens e retorna um objeto _PageObj
+    Recebe uma lista de itens (pagina atual) e retorna um objeto _PageObj
     compativel com os templates Django (page_obj), contendo:
       - object_list: itens da pagina atual
       - number: numero da pagina atual
@@ -498,11 +496,11 @@ def paginar(itens, pagina, por_pagina=15):
       - has_previous / has_next: navegacao
       - previous_page_number / next_page_number
 
-    [!] Usa classe propria em vez de django.core.paginator.Paginator
-        porque a paginacao e feita em memoria (todos os itens ja foram
-        carregados do banco via SQL puro).
+    [!] total_count: se informado (via COUNT(*) SQL), usa ele para
+        calcular num_pages. Se None, usa len(itens).
     """
-    total_count = len(itens)
+    if total_count is None:
+        total_count = len(itens)
     total_pages = max(1, (total_count + por_pagina - 1) // por_pagina)
 
     try:
@@ -511,9 +509,14 @@ def paginar(itens, pagina, por_pagina=15):
         page_number = 1
     page_number = max(1, min(page_number, total_pages))
 
-    start = (page_number - 1) * por_pagina
-    end = start + por_pagina
-    page_items = itens[start:end]
+    # Se total_count foi informado, o chamador ja fez LIMIT/OFFSET no SQL
+    # e 'itens' contem apenas os registros da pagina atual.
+    if total_count is not None and total_count != len(itens):
+        page_items = itens
+    else:
+        start = (page_number - 1) * por_pagina
+        end = start + por_pagina
+        page_items = itens[start:end]
 
     page_obj = _PageObj(
         object_list=page_items,
@@ -529,19 +532,3 @@ def paginar(itens, pagina, por_pagina=15):
     )
 
     return page_obj, total_count
-
-
-class _PageObj(SimpleNamespace):
-    """
-    Pagina de resultados compativel com templates Django.
-
-    [!] Python busca __len__ e __iter__ no TIPO (classe), nao na instancia.
-        Por isso precisamos de uma classe propria em vez de SimpleNamespace
-        com lambdas — len(obj) e iter(obj) so funcionam se definidos aqui.
-    """
-
-    def __iter__(self):
-        return iter(self.object_list)
-
-    def __len__(self):
-        return len(self.object_list)

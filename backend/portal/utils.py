@@ -7,32 +7,38 @@ from django.db import connection
 from django.utils import timezone
 
 
+def escape_like(valor):
+    """Escapa caracteres especiais de LIKE/ILIKE (%  _  \\) em input do usuario.
+
+    Deve ser chamado ANTES de envolver o valor com %...% para busca parcial.
+    Ex: escape_like("100%") → "100\\%"
+    """
+    return valor.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 def proximo_protocolo():
     """
     Gera o proximo numero de protocolo no formato ANO + sequencial (6 digitos).
     Ex: 2026000001 (ano 2026, sequencial 00001).
 
-    [!] Usa SQL puro (MAX(num_protocolo)) para evitar condicao de corrida
-        em requisicoes simultaneas — o banco garante a atomicidade.
+    [!] INSERT ... ON CONFLICT DO UPDATE RETURNING garante atomicidade.
+        Se duas requisicoes concorrentes chamam esta funcao, cada uma
+        recebe um numero unico — o banco serializa o LOCK na linha do ano.
+        A tabela protocolo_seq e criada pelo schema (01_schema.sql).
     """
     y = timezone.now().year
-    prefix = str(y)
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT MAX(num_protocolo) FROM chamado "
-            "WHERE num_protocolo LIKE %s",
-            [f"{prefix}%"],
+            "INSERT INTO protocolo_seq (ano, ultimo_numero) VALUES (%s, 1) "
+            "ON CONFLICT (ano) DO UPDATE SET ultimo_numero = protocolo_seq.ultimo_numero + 1 "
+            "RETURNING ultimo_numero",
+            [y],
         )
         row = cursor.fetchone()
-        ultimo = row[0] if row else None
-    if not ultimo:
-        n = 1                                         # Primeiro protocolo do ano
-    else:
-        try:
-            n = int(ultimo[len(prefix):]) + 1          # Incrementa o sequencial
-        except ValueError:
-            n = 1
-    return f"{prefix}{n:06d}"                          # Ex: 2026000001
+        if not row:
+            raise RuntimeError("protocolo_seq INSERT/RETURNING nao retornou linha")
+        n = row[0]
+    return f"{y}{n:06d}"
 
 
 def salvar_foto_upload(arquivo, request=None):
@@ -46,17 +52,21 @@ def salvar_foto_upload(arquivo, request=None):
         raise ValueError("Foto obrigatoria.")
     cu = os.environ.get("CLOUDINARY_URL")
     if cu:
-        # Upload para Cloudinary (nuvem)
-        import cloudinary
-        import cloudinary.uploader
-
+        try:
+            import cloudinary
+            import cloudinary.uploader
+        except ImportError:
+            raise ImportError(
+                "Cloudinary não instalado. Execute: pip install cloudinary"
+            )
         cloudinary.config(cloudinary_url=cu)
         r = cloudinary.uploader.upload(
             arquivo, folder="vg_portal", resource_type="image"
         )
         return r["secure_url"]
     # Fallback: salva localmente com nome unico (UUID)
-    ext = os.path.splitext(arquivo.name)[1][:12] or ".jpg"
+    ext_raw = os.path.splitext(arquivo.name)[1].lower()
+    ext = ext_raw if ext_raw in (".jpg", ".jpeg", ".png", ".gif", ".webp") else ".jpg"
     nome = f"chamados/{uuid.uuid4().hex}{ext}"
     caminho = default_storage.save(nome, arquivo)
     if request:

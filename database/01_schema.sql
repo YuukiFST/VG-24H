@@ -246,6 +246,17 @@ CREATE INDEX ix_chamado_bairro    ON chamado (id_bairro);         -- Filtro: cha
 CREATE INDEX ix_chamado_servico   ON chamado (id_servico);        -- JOIN com servico
 CREATE INDEX ix_foto_chamado      ON foto_chamado (id_chamado);   -- JOIN para listar fotos de um chamado
 CREATE INDEX ix_historico_chamado  ON historico_chamado (id_chamado);  -- JOIN para buscar historico de um chamado
+CREATE INDEX ix_historico_chamado_status ON historico_chamado (id_chamado, dt_alteracao);  -- "ultimo status" queries (LATERAL/Subquery)
 CREATE INDEX ix_notificacao_chamado ON notificacao (id_chamado);  -- JOIN para notificacoes de um chamado
+
+-- ============================================================
+-- Tabela auxiliar: sequencia de protocolo por ano
+-- ============================================================
+-- Usada por proximo_protocolo() com INSERT ... ON CONFLICT DO UPDATE
+-- RETURNING para gerar numeros sequenciais atomicos (sem race condition).
+CREATE TABLE protocolo_seq (
+    ano            INTEGER PRIMARY KEY,
+    ultimo_numero  INTEGER NOT NULL DEFAULT 0
+);
 
 COMMIT;

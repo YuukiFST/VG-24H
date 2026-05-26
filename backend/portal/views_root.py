@@ -10,12 +10,17 @@ Contem:
 - Pagina inicial com estatisticas e banners
 """
 
+import logging
+
 from types import SimpleNamespace
 
 from django.db import connection
 from django.shortcuts import redirect, render
 
 from portal.decorators import perfil_codigo
+from portal.utils import escape_like
+
+logger = logging.getLogger(__name__)
 
 
 def catalogo_servicos(request):
@@ -70,13 +75,14 @@ def catalogo_servicos(request):
                         ]
                     else:
                         # Filtra serviços pelo termo de busca
+                        q_like = f"%{escape_like(q_lower)}%"
                         cursor.execute(
                             "SELECT id_servico, nome, descricao, ativo "
                             "FROM servico "
                             "WHERE id_categoria = %s AND ativo = TRUE "
-                            "AND (LOWER(nome) LIKE %s OR LOWER(descricao) LIKE %s) "
+                            "AND (LOWER(nome) LIKE %s ESCAPE '\\\\' OR LOWER(descricao) LIKE %s ESCAPE '\\\\') "
                             "ORDER BY nome",
-                            [cat.pk, f"%{q_lower}%", f"%{q_lower}%"],
+                            [cat.pk, q_like, q_like],
                         )
                         servicos = [
                             SimpleNamespace(id_servico=r[0], nome=r[1], descricao=r[2], ativo=r[3], pk=r[0])
@@ -86,6 +92,7 @@ def catalogo_servicos(request):
                             continue
                 blocos.append((cat, servicos))
     except Exception:
+        logger.exception("Erro ao carregar catalogo de servicos")
         blocos = []
     return render(
         request,
@@ -151,6 +158,7 @@ def root_view(request):
             "total_servicos": total_servicos,
         }
     except Exception:
+        logger.exception("Erro ao carregar pagina inicial")
         categorias = []
         stats = {
             "total_resolvidos": 0,
@@ -176,6 +184,7 @@ def root_view(request):
                 for r in cursor.fetchall()
             ]
     except Exception:
+        logger.exception("Erro ao carregar banners")
         banners = []
 
     return render(

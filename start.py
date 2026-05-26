@@ -39,18 +39,18 @@ BANNER = """
 ========================================
 """
 
-ENV_TEMPLATE = """SECRET_KEY='django-insecure-=4go(b5(k7+p04r7n)7sht+ct(t=7+k39u%j11wlv%p3jqm@*#'
+ENV_TEMPLATE = """SECRET_KEY='sua_chave_secreta_aqui'
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
-POSTGRES_DB=neondb
-POSTGRES_USER=neondb_owner
-POSTGRES_PASSWORD=npg_HxpBqfrFvW45
-POSTGRES_HOST=ep-blue-base-acfyy807.sa-east-1.aws.neon.tech
+POSTGRES_DB=seu_banco
+POSTGRES_USER=seu_usuario
+POSTGRES_PASSWORD=sua_senha
+POSTGRES_HOST=seu_host
 POSTGRES_PORT=5432
 POSTGRES_SSL=require
 
-CLOUDINARY_URL=cloudinary://356796922145521:3mbCw6p64k_h3xOAqBJka7P3GJ0@dceazqrtx
+CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
 """
 
 

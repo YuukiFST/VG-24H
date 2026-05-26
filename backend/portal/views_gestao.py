@@ -264,11 +264,11 @@ def gestao_bairros(request):
             messages.success(request, "Bairro criado.")
         return redirect("portal:gestao_bairros")
     form = BairroForm()
-    # SQL puro: SELECT bairros ativos
+    # SQL puro: SELECT todos os bairros (ativos e inativos)
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
-            "FROM bairro WHERE ativo = TRUE ORDER BY nome_bairro"
+            "FROM bairro ORDER BY nome_bairro"
         )
         lista = [
             SimpleNamespace(
@@ -313,9 +313,9 @@ def gestao_bairro_edit(request, pk):
             # SQL puro: UPDATE bairro
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "UPDATE bairro SET nome_bairro = %s, cep = %s, regiao = %s "
-                    "WHERE id_bairro = %s",
-                    [d["nome_bairro"], d["cep"], d.get("regiao"), pk],
+                    "UPDATE bairro SET nome_bairro = %s, cep = %s, regiao = %s, "
+                    "ativo = %s WHERE id_bairro = %s",
+                    [d["nome_bairro"], d["cep"], d.get("regiao"), d.get("ativo", True), pk],
                 )
             messages.success(request, "Bairro atualizado.")
             return redirect("portal:gestao_bairros")
@@ -446,7 +446,7 @@ def gestao_servico_desativar(request, pk):
     return redirect("portal:gestao_servicos")
 
 
-@perfis("GES")
+@perfis("COL", "GES")
 @require_http_methods(["POST"])
 def gestao_bairro_desativar(request, pk):
     # SQL puro: verifica existência e desativa bairro
@@ -458,6 +458,21 @@ def gestao_bairro_desativar(request, pk):
             "UPDATE bairro SET ativo = FALSE WHERE id_bairro = %s", [pk]
         )
     messages.info(request, "Bairro inativado.")
+    return redirect("portal:gestao_bairros")
+
+
+@perfis("COL", "GES")
+@require_http_methods(["POST"])
+def gestao_bairro_ativar(request, pk):
+    # SQL puro: verifica existência e reativa bairro
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id_bairro FROM bairro WHERE id_bairro = %s", [pk])
+        if not cursor.fetchone():
+            raise Http404()
+        cursor.execute(
+            "UPDATE bairro SET ativo = TRUE WHERE id_bairro = %s", [pk]
+        )
+    messages.info(request, "Bairro reativado.")
     return redirect("portal:gestao_bairros")
 
 

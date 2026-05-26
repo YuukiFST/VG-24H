@@ -55,6 +55,7 @@ urlpatterns = [
     path("gestao/bairros/", views_gestao.gestao_bairros, name="gestao_bairros"),
     path("gestao/bairros/<int:pk>/editar/", views_gestao.gestao_bairro_edit, name="gestao_bairro_editar"),
     path("gestao/bairros/<int:pk>/desativar/", views_gestao.gestao_bairro_desativar, name="gestao_bairro_desativar"),
+    path("gestao/bairros/<int:pk>/ativar/", views_gestao.gestao_bairro_ativar, name="gestao_bairro_ativar"),
     path("gestao/colaboradores/", views_gestao.gestao_colaboradores, name="gestao_colaboradores"),
     path("gestao/colaboradores/<int:pk>/toggle/", views_gestao.gestao_colaborador_toggle, name="gestao_colaborador_toggle"),
 

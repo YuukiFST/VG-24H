@@ -118,21 +118,27 @@ CREATE TRIGGER trg_avaliacao_imutavel
 -- @perfis("CID"), @perfis("COL"), @perfis("GES") em decorators.py).
 
 -- ============================================================================
--- R5 — Rule: historico_chamado IMUTAVEL (UPDATE e DELETE proibidos)
+-- R5 — Trigger: historico_chamado IMUTAVEL (UPDATE proibido)
 -- ============================================================================
--- [!] ESTA Rule permanece como Rule (nao foi convertida) porque:
---     Nao ha INSERT RETURNING envolvido — sao operacoes de UPDATE e DELETE.
---     As Rules R5 usam DO INSTEAD NOTHING, que funciona corretamente aqui.
--- FINALIDADE: Preservar a auditoria. NENHUM registro de historico pode ser
---     alterado ou excluido depois de criado.
+-- [!] Apenas UPDATE é bloqueado (auditoria). DELETE é permitido pois
+--     a exclusão de chamado (gestao_chamado_excluir) registra log de
+--     auditoria no histórico e depois remove os registros associados.
+-- FINALIDADE: Preservar a auditoria. NENHUM registro de historico
+--     pode ser alterado depois de criado.
 -- ============================================================================
 DROP RULE IF EXISTS r05_historico_sem_update ON historico_chamado;
-CREATE RULE r05_historico_sem_update AS ON UPDATE TO historico_chamado
-DO INSTEAD NOTHING;  -- Silenciosamente ignora qualquer UPDATE
-
 DROP RULE IF EXISTS r05_historico_sem_delete ON historico_chamado;
-CREATE RULE r05_historico_sem_delete AS ON DELETE TO historico_chamado
-DO INSTEAD NOTHING;  -- Silenciosamente ignora qualquer DELETE
+
+DROP TRIGGER IF EXISTS trg_historico_sem_update ON historico_chamado;
+CREATE OR REPLACE FUNCTION fn_historico_sem_update()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE EXCEPTION 'Histórico de chamado é imutável: UPDATE não permitido.';
+END;
+$$;
+CREATE TRIGGER trg_historico_sem_update
+    BEFORE UPDATE ON historico_chamado
+    FOR EACH ROW EXECUTE FUNCTION fn_historico_sem_update();
 
 -- ============================================================================
 -- R6 — REMOVIDA: validacao de resolucao obrigatoria
@@ -141,12 +147,55 @@ DO INSTEAD NOTHING;  -- Silenciosamente ignora qualquer DELETE
 -- obrigatoria ao concluir e feita na camada de aplicacao (Django forms).
 
 -- ============================================================================
--- EXTRA — Rule: chamado SEM DELETE
+-- EXTRA — Trigger: chamado DELETE protegido por log de auditoria
 -- ============================================================================
--- FINALIDADE: Nenhum chamado pode ser excluido do banco (integridade legal).
---     Soft delete e feito pelo campo ativo nas tabelas de usuario.
 -- ============================================================================
-DROP RULE IF EXISTS rx_chamado_sem_delete ON chamado;
-CREATE RULE rx_chamado_sem_delete AS ON DELETE TO chamado DO INSTEAD NOTHING;
+-- R5b — Trigger: historico_chamado DELETE protegido (auditoria)
+-- ============================================================================
+-- [!] DELETE em historico_chamado so e permitido quando a view
+--     gestao_chamado_excluir seta portal.excluindo = 'true' na sessao.
+--     Protege o audit trail contra DELETEs via SQL direto (psql, injection).
+-- FINALIDADE: Preservar trilha de auditoria. Apenas a exclusao completa
+--     de um chamado (com log) pode remover registros do historico.
+-- ============================================================================
+CREATE OR REPLACE FUNCTION fn_historico_sem_delete()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    IF current_setting('portal.excluindo', true) IS DISTINCT FROM 'true' THEN
+        RAISE EXCEPTION 'Historico de chamado e imutavel: DELETE nao permitido diretamente.';
+    END IF;
+    RETURN OLD;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_historico_sem_delete ON historico_chamado;
+CREATE TRIGGER trg_historico_sem_delete
+    BEFORE DELETE ON historico_chamado
+    FOR EACH ROW EXECUTE FUNCTION fn_historico_sem_delete();
+
+-- ============================================================================
+-- EXTRA — Trigger: chamado DELETE protegido por sessao
+-- ============================================================================
+-- [!] DELETE em chamado so e permitido quando a view
+--     gestao_chamado_excluir seta portal.excluindo = 'true' na sessao.
+--     A view insere log de auditoria e exclui registros filhos primeiro.
+--     Protegido por @perfis('GES') na camada de aplicacao.
+-- FINALIDADE: Rastreabilidade — toda exclusao deixa registro e passa
+--     exclusivamente pelo fluxo controlado da aplicacao.
+-- ============================================================================
+CREATE OR REPLACE FUNCTION fn_chamado_sem_delete()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    IF current_setting('portal.excluindo', true) IS DISTINCT FROM 'true' THEN
+        RAISE EXCEPTION 'Chamado nao pode ser excluido diretamente. Use a interface de exclusao no portal.';
+    END IF;
+    RETURN OLD;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_chamado_sem_delete ON chamado;
+CREATE TRIGGER trg_chamado_sem_delete
+    BEFORE DELETE ON chamado
+    FOR EACH ROW EXECUTE FUNCTION fn_chamado_sem_delete();
 
 COMMIT;

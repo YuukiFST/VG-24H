@@ -16,7 +16,7 @@ Operacoes:
 from types import SimpleNamespace
 
 from django.contrib import messages
-from django.db import connection
+from django.db import connection, transaction
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -31,7 +31,7 @@ from portal.forms import (
     FotoForm,
     ObservacaoForm,
 )
-from portal.utils import proximo_protocolo, salvar_foto_upload
+from portal.utils import escape_like, proximo_protocolo, salvar_foto_upload
 
 # ─── Helpers ─────────────────────────────────────────────────
 
@@ -57,86 +57,68 @@ def _chamado_do_cidadao(request, pk):
 @perfis("CID")
 def cidadao_chamados_lista(request):
     uid = request.portal_user.pk
+    try:
+        pagina = max(1, int(request.GET.get("pagina") or 1))
+    except (ValueError, TypeError):
+        pagina = 1
+    por_pagina = 15
+    offset = (pagina - 1) * por_pagina
 
-    # SQL puro: SELECT com JOINs (chamado + servico + bairro)
-    # [!] 2 subqueries correlatas buscam o status ATUAL de cada chamado
-    #     via historico_chamado (ORDER BY DESC LIMIT 1 = registro mais recente)
-    #     Subquery 1: sigla do status (ex: 'AB', 'CO')
-    #     Subquery 2: descricao do status (ex: 'Aberto', 'Concluido')
-    # [!] WHERE c.id_cidadao = %s garante privacidade (so ve os proprios chamados)
-    sql = (
+    sql_base = (
+        "FROM chamado c "
+        "JOIN servico s ON c.id_servico = s.id_servico "
+        "JOIN bairro b ON c.id_bairro = b.id_bairro "
+        "JOIN LATERAL ("
+        "  SELECT sc.sigla, sc.descricao, sc.id_status FROM historico_chamado hc "
+        "  JOIN status_chamado sc ON hc.id_status = sc.id_status "
+        "  WHERE hc.id_chamado = c.id_chamado "
+        "  ORDER BY hc.dt_alteracao DESC LIMIT 1"
+        ") ultimo ON TRUE "
+        "WHERE c.id_cidadao = %s "
+    )
+    select_cols = (
         "SELECT c.id_chamado, c.num_protocolo, c.prioridade, "
         "c.descricao, c.dt_abertura, c.atualizado_em, "
         "c.id_servico, c.id_bairro, "
         "s.nome AS servico_nome, s.prazo_amarelo_dias, s.prazo_vermelho_dias, "
         "b.nome_bairro, "
-        "("
-        "  SELECT sc.sigla FROM historico_chamado hc "
-        "  JOIN status_chamado sc ON hc.id_status = sc.id_status "
-        "  WHERE hc.id_chamado = c.id_chamado "
-        "  ORDER BY hc.dt_alteracao DESC LIMIT 1"
-        ") AS sigla_status, "
-        "("
-        "  SELECT sc.descricao FROM historico_chamado hc "
-        "  JOIN status_chamado sc ON hc.id_status = sc.id_status "
-        "  WHERE hc.id_chamado = c.id_chamado "
-        "  ORDER BY hc.dt_alteracao DESC LIMIT 1"
-        ") AS status_descricao "
-        "FROM chamado c "
-        "JOIN servico s ON c.id_servico = s.id_servico "
-        "JOIN bairro b ON c.id_bairro = b.id_bairro "
-        "WHERE c.id_cidadao = %s "
+        "ultimo.sigla AS sigla_status, "
+        "ultimo.descricao AS status_descricao "
     )
     params = [uid]
 
-    # Filtros dinamicos: concatenam AND ao SQL base se o usuario selecionou
-    # [!] Cada filtro e opcional — se nao informado, o IF e ignorado
-    st_filter = request.GET.get("status")       # Filtro por sigla de status (ex: 'AB')
+    # Filtros opcionais
+    st_filter = request.GET.get("status")
+    dt_filter = request.GET.get("data")
+    q_filter = request.GET.get("q")
+
     if st_filter:
-        # Subquery para filtrar pelo status ATUAL (ultimo historico)
-        sql += (
-            "AND ("
-            "  SELECT sc2.sigla FROM historico_chamado hc2 "
-            "  JOIN status_chamado sc2 ON hc2.id_status = sc2.id_status "
-            "  WHERE hc2.id_chamado = c.id_chamado "
-            "  ORDER BY hc2.dt_alteracao DESC LIMIT 1"
-            ") = %s "
-        )
+        sql_base += "AND ultimo.sigla = %s "
         params.append(st_filter)
-
-    dt_filter = request.GET.get("data")          # Filtro por data de abertura
     if dt_filter:
-        sql += "AND c.dt_abertura::date = %s "   # ::date = cast para comparar so o dia
+        sql_base += "AND c.dt_abertura::date = %s "
         params.append(dt_filter)
-
-    q_filter = request.GET.get("q")              # Busca por protocolo (parcial)
     if q_filter:
-        sql += "AND c.num_protocolo ILIKE %s "   # ILIKE = case-insensitive LIKE
-        params.append(f"%{q_filter}%")
+        sql_base += "AND c.num_protocolo ILIKE %s "
+        params.append(f"%{escape_like(q_filter)}%")
 
-    sql += "ORDER BY c.dt_abertura DESC"
+    count_sql = "SELECT COUNT(*) " + sql_base
+    with connection.cursor() as cursor:
+        cursor.execute(count_sql, params)
+        total_count = cursor.fetchone()[0]
+
+    data_sql = select_cols + sql_base + "ORDER BY c.dt_abertura DESC LIMIT %s OFFSET %s"
+    data_params = params + [por_pagina, offset]
 
     with connection.cursor() as cursor:
-        cursor.execute(sql, params)
+        cursor.execute(data_sql, data_params)
         rows = cursor.fetchall()
 
-    # HIDRATACAO: converte tuplas do banco em objetos SimpleNamespace
-    # [!] r[0], r[1]... sao posicionais — a ordem depende do SELECT acima
-    #     SimpleNamespace permite {{ ch.num_protocolo }} nos templates
-    now = timezone.now()
     chamados = []
     for r in rows:
-        # SEMAFORO: classifica urgencia com base nos prazos do servico
-        # r[4]=dt_abertura, r[9]=prazo_amarelo, r[10]=prazo_vermelho
-        dias = (now - r[4]).days
-        if dias >= r[10]:
-            cor = "vermelho"    # Critico: ultrapassou prazo_vermelho_dias
-        elif dias >= r[9]:
-            cor = "amarelo"     # Atencao: ultrapassou prazo_amarelo_dias
-        else:
-            cor = "verde"       # No prazo
-        sigla = r[12] or ""     # r[12] = resultado da subquery sigla_status
-        status_desc = r[13] or sigla  # r[13] = resultado da subquery status_descricao
+        cor = db.cor_semaforo(r[4], r[9], r[10])
+        sigla = r[12] or ""
+        status_desc = r[13] or sigla
         chamados.append(SimpleNamespace(
             id_chamado=r[0], pk=r[0], num_protocolo=r[1], prioridade=r[2],
             descricao=r[3], dt_abertura=r[4], atualizado_em=r[5],
@@ -146,12 +128,8 @@ def cidadao_chamados_lista(request):
             status_atual=SimpleNamespace(sigla=sigla, descricao=status_desc),
         ))
 
-    # Paginacao (via db.paginar)
-    page_obj, total_count = db.paginar(
-        chamados, request.GET.get("pagina", 1), por_pagina=15,
-    )
+    page_obj, _ = db.paginar(chamados, pagina, por_pagina=por_pagina, total_count=total_count)
 
-    # Stats (Semáforo) — via db.calcular_stats_semaforo
     stats = db.calcular_stats_semaforo(cidadao_id=uid)
 
     return render(
@@ -220,9 +198,11 @@ def cidadao_chamado_novo(request):
                     {"form": form, "categorias": categorias_list, "bairros": bairros},
                 )
             now = timezone.now()
-            protocolo = proximo_protocolo()  # Gera num sequencial: "2026000001"
-            # SQL puro: INSERT chamado + INSERT foto (dentro da mesma transacao Django)
-            with connection.cursor() as cursor:
+            # SQL puro: INSERT chamado + INSERT foto (atômico)
+            # [!] proximo_protocolo() dentro do atomic() garante que,
+            #     se o INSERT falhar, o numero de protocolo nao e consumido.
+            with transaction.atomic(), connection.cursor() as cursor:
+                protocolo = proximo_protocolo()  # Gera num sequencial: "2026000001"
                 # [!] INSERT apenas em chamado. NAO insere status!
                 #     O Trigger 1 (AFTER INSERT) cria automaticamente o
                 #     registro em historico_chamado com status 'AB'.
@@ -315,16 +295,26 @@ def cidadao_chamado_detalhe(request, pk):
                             [pk, url, timezone.now()],
                         )
                     messages.success(request, "Foto adicionada.")
+            else:
+                if not request.FILES.get("foto"):
+                    messages.error(request, "Selecione uma imagem.")
+                else:
+                    for field, errors in form_f.errors.items():
+                        for error in errors:
+                            messages.error(request, error)
             return redirect("portal:cidadao_chamado", pk=pk)
         if acao == "cancelar" and pode_cancelar:
             form_c = CancelarChamadoForm(request.POST)
             if form_c.is_valid():
-                with connection.cursor() as cursor:
-                    # Busca o ID do status 'CA' na tabela status_chamado
+                with transaction.atomic(), connection.cursor() as cursor:
                     cursor.execute(
                         "SELECT id_status FROM status_chamado WHERE sigla = 'CA'"
                     )
-                    ca_id = cursor.fetchone()[0]
+                    ca_row = cursor.fetchone()
+                    if not ca_row:
+                        messages.error(request, "Erro interno: status CA nao encontrado.")
+                        return redirect("portal:cidadao_chamado", pk=pk)
+                    ca_id = ca_row[0]
                     # INSERT historico com status CA → muda o status para Cancelado
                     # [!] Trigger 2B dispara automaticamente:
                     #     → UPDATE chamado SET dt_conclusao = NOW()

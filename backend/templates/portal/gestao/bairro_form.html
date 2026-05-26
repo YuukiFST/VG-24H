@@ -21,8 +21,16 @@
     <form action="{% url 'portal:gestao_bairro_editar' bairro.pk %}" method="post">
       {% csrf_token %}
       <div class="br-input mb-3x">
-        <label for="id_nome">Nome do Bairro *</label>
-        <input id="id_nome" name="nome" type="text" value="{{ bairro.nome_bairro }}" required />
+        <label for="id_nome_bairro">Nome do Bairro *</label>
+        <input id="id_nome_bairro" name="nome_bairro" type="text" value="{{ bairro.nome_bairro }}" required />
+      </div>
+      <div class="br-input mb-3x">
+        <label for="id_cep">CEP</label>
+        <input id="id_cep" name="cep" type="text" value="{{ bairro.cep|default:'' }}" />
+      </div>
+      <div class="br-input mb-3x">
+        <label for="id_regiao">Região</label>
+        <input id="id_regiao" name="regiao" type="text" value="{{ bairro.regiao|default:'' }}" />
       </div>
       <div class="br-checkbox mb-4x">
         <input id="id_ativo" name="ativo" type="checkbox" {% if bairro.ativo %}checked{% endif %} />

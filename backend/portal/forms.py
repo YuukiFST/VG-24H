@@ -162,7 +162,7 @@ class ServicoForm(forms.ModelForm):
 class BairroForm(forms.ModelForm):
     class Meta:
         model = Bairro
-        fields = ["nome_bairro", "cep", "regiao"]
+        fields = ["nome_bairro", "cep", "regiao", "ativo"]
 
 
 class ColaboradorNovoForm(forms.Form):

@@ -115,7 +115,7 @@
         <form action="{% url 'portal:cidadao_chamado' ch.pk %}" method="post" enctype="multipart/form-data" class="mt-2 text-center">
           {% csrf_token %}
           <input type="hidden" name="acao" value="foto">
-          <input type="file" name="foto" id="input-foto" style="display:none;" onchange="this.form.submit()" required>
+          <input type="file" name="foto" id="input-foto" style="display:none;" onchange="this.form.submit()" accept="image/*">
           <button class="br-button secondary small" type="button" onclick="document.getElementById('input-foto').click()">
             <i class="fas fa-camera mr-1"></i> Adicionar Foto
           </button>
