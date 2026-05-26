@@ -49,14 +49,21 @@ urlpatterns = [
     path("gestao/estatisticas/", views_gestao.gestao_estatisticas, name="gestao_estatisticas"),
     path("gestao/categorias/", views_gestao.gestao_categorias, name="gestao_categorias"),
     path("gestao/categorias/<int:pk>/editar/", views_gestao.gestao_categoria_edit, name="gestao_categoria_editar"),
+    # ─── Serviços ───
+    # GET: Listagem / POST: Criar novo
     path("gestao/servicos/", views_gestao.gestao_servicos, name="gestao_servicos"),
+    # GET: Form edição / POST: Salvar edição
     path("gestao/servicos/<int:pk>/editar/", views_gestao.gestao_servico_edit, name="gestao_servico_editar"),
+    # POST: Desativar serviço
     path("gestao/servicos/<int:pk>/desativar/", views_gestao.gestao_servico_desativar, name="gestao_servico_desativar"),
     path("gestao/bairros/", views_gestao.gestao_bairros, name="gestao_bairros"),
     path("gestao/bairros/<int:pk>/editar/", views_gestao.gestao_bairro_edit, name="gestao_bairro_editar"),
     path("gestao/bairros/<int:pk>/desativar/", views_gestao.gestao_bairro_desativar, name="gestao_bairro_desativar"),
     path("gestao/bairros/<int:pk>/ativar/", views_gestao.gestao_bairro_ativar, name="gestao_bairro_ativar"),
+    # ─── Colaboradores ───
+    # GET: Listagem / POST: Cadastrar novo
     path("gestao/colaboradores/", views_gestao.gestao_colaboradores, name="gestao_colaboradores"),
+    # POST: Ativar ou inativar colaborador
     path("gestao/colaboradores/<int:pk>/toggle/", views_gestao.gestao_colaborador_toggle, name="gestao_colaborador_toggle"),
 
     # ─── Banners ───

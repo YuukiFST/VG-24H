@@ -147,6 +147,10 @@ def gestao_categoria_edit(request, pk):
 @perfis("GES")
 @require_http_methods(["GET", "POST"])
 def gestao_servicos(request):
+    """
+    Exibe a listagem de serviços ativos (GET) e processa a criação de um novo serviço (POST).
+    Acesso restrito ao perfil Gestor (GES).
+    """
     if request.method == "POST":
         form = ServicoForm(request.POST)
         if form.is_valid():
@@ -195,6 +199,10 @@ def gestao_servicos(request):
 @perfis("GES")
 @require_http_methods(["GET", "POST"])
 def gestao_servico_edit(request, pk):
+    """
+    Exibe formulário para edição (GET) e salva as alterações de um serviço (POST).
+    Acesso restrito ao perfil Gestor (GES).
+    """
     # SQL puro: SELECT serviço por ID
     with connection.cursor() as cursor:
         cursor.execute(
@@ -332,6 +340,10 @@ def gestao_bairro_edit(request, pk):
 @perfis("GES")
 @require_http_methods(["GET", "POST"])
 def gestao_colaboradores(request):
+    """
+    Exibe a lista de colaboradores (GET) e cadastra um novo usuário com perfil 'COL' (POST).
+    Acesso restrito ao perfil Gestor (GES).
+    """
     if request.method == "POST":
         form = ColaboradorNovoForm(request.POST)
         if form.is_valid():
@@ -407,6 +419,10 @@ def gestao_colaboradores(request):
 @perfis("GES")
 @require_http_methods(["POST"])
 def gestao_colaborador_toggle(request, pk):
+    """
+    Inverte o status ativo/inativo de um colaborador. Requer POST.
+    Acesso restrito ao perfil Gestor (GES).
+    """
     # SQL puro: busca colaborador e inverte o campo ativo
     with connection.cursor() as cursor:
         cursor.execute(
@@ -434,6 +450,10 @@ def gestao_colaborador_toggle(request, pk):
 @perfis("GES")
 @require_http_methods(["POST"])
 def gestao_servico_desativar(request, pk):
+    """
+    Desativa um serviço existente. Requer POST.
+    Acesso restrito ao perfil Gestor (GES).
+    """
     # SQL puro: verifica existência e desativa serviço
     with connection.cursor() as cursor:
         cursor.execute("SELECT id_servico FROM servico WHERE id_servico = %s", [pk])
