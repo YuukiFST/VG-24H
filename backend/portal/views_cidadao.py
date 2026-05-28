@@ -1,16 +1,33 @@
 """
-views_cidadao.py — Views do Cidadao (Portal VG 24H)
+views_cidadao.py — Views do cidadao (Portal VG 24H)
 
-[!] PONTOS CRITICOS:
-    1. @perfis("CID") — APENAS cidadaos acessam. COL/GES sao bloqueados.
-    2. [!] O status NAO esta em chamado — vem do ULTIMO historico_chamado via Subquery.
-    3. [!] Ao abrir chamado, a view NAO insere status — o Trigger 1 cria AB automaticamente.
-    4. [!] Privacidade: cada cidadao ve APENAS seus proprios chamados (WHERE id_cidadao = %s).
+Este modulo atende as rotas acessiveis apenas por cidadaos autenticados
+(perfil "CID"). Colaboradores e gestores sao bloqueados pelo decorator
+@perfis("CID").
 
-Operacoes:
-  - CREATE: Abrir novo chamado (INSERT em chamado + Trigger 1 cria historico AB)
-  - READ:   Listar chamados (SELECT com Subquery no ultimo historico)
-  - UPDATE: Cancelar (INSERT historico CA), avaliar (UPDATE chamado), adicionar obs
+As operacoes disponiveis sao:
+- Listar chamados do proprio cidadao (com filtros e paginacao)
+- Abrir novo chamado (com upload de foto)
+- Ver detalhe de um chamado (historico, fotos, observacoes)
+- Cancelar chamado aberto ou em atendimento
+- Avaliar chamado concluido (nota 1-5)
+- Listar e excluir notificacoes
+
+O status de um chamado nao eh armazenado como campo direto na tabela
+chamado. Em vez disso, o status atual eh determinado pelo registro mais
+recente na tabela historico_chamado (padrao event sourcing). Toda mudanca
+de status gera um novo INSERT em historico_chamado, nunca um UPDATE.
+Isso garante um log completo de auditoria.
+
+O trigger Trigger 1 (AFTER INSERT ON chamado) cria automaticamente o
+primeiro registro em historico_chamado com status "AB" (Aberto). A view
+de criacao nao precisa se preocupar com o historico inicial.
+
+Cada cidadao acessa somente seus proprios chamados. Todas as queries
+incluem WHERE c.id_cidadao = %s para garantir privacidade. A funcao
+auxiliar _chamado_do_cidadao() valida propriedade e retorna HTTP 404
+quando o chamado nao pertence ao usuario (em vez de 403, para nao
+revelar a existencia do recurso).
 """
 
 from types import SimpleNamespace
@@ -33,13 +50,15 @@ from portal.forms import (
 )
 from portal.utils import escape_like, proximo_protocolo, salvar_foto_upload
 
-# ─── Helpers ─────────────────────────────────────────────────
 
-# FUNCAO AUXILIAR DE SEGURANCA:
-# [!] Verifica se o chamado pertence ao cidadao logado.
-# Impede que um cidadao acesse chamados de outros cidadaos pela URL.
-# Retorna 404 (em vez de 403) para nao revelar se o chamado existe.
 def _chamado_do_cidadao(request, pk):
+    """Busca um chamado e valida que pertence ao cidadao logado.
+
+    Retorna o objeto SimpleNamespace do chamado (com JOINs em servico e
+   bairro) ou levanta Http404 se o chamado nao existir ou pertencer
+    a outro usuario. Retorna 404 em vez de 403 para nao revelar se
+    o recurso existe (seguranca por obscuridade).
+    """
     ch = db.buscar_chamado(pk)
     if not ch:
         raise Http404()
@@ -48,15 +67,28 @@ def _chamado_do_cidadao(request, pk):
     return ch
 
 
-# ═══════════════════════════════════════════════════════════════
-# READ — Listar chamados do cidadao — Rota: /cidadao/chamados/
-# ═══════════════════════════════════════════════════════════════
-# [!] Fluxo: URL → @perfis('CID') → monta SQL dinamico → cursor.execute
-#     → tuplas → SimpleNamespace (hidratacao) → semaforo → paginacao → template
+# ------------------------------------------------------------------
+# Listar chamados do cidadao (GET /cidadao/chamados/)
+# ------------------------------------------------------------------
+
 @autenticado
 @perfis("CID")
 def cidadao_chamados_lista(request):
+    """Lista os chamados do cidadao logado com filtros e paginacao.
+
+    A query usa JOIN LATERAL (PostgreSQL) para buscar o ultimo historico
+    de cada chamado em uma unica query, evitando o problema N+1.
+    A subquery LATERAL executa ORDER BY dt_alteracao DESC LIMIT 1
+    para pegar o registro mais recente de historico_chamado.
+
+    Filtros disponiveis (todos opcionais, via query string):
+    - status: sigla do status (ex: AB, EA, CO)
+    - data: data de abertura (YYYY-MM-DD)
+    - q: busca por numero de protocolo (ILIKE case-insensitive)
+    """
     uid = request.portal_user.pk
+
+    # Paginacao: le o parametro "pagina" da URL, com minimo de 1.
     try:
         pagina = max(1, int(request.GET.get("pagina") or 1))
     except (ValueError, TypeError):
@@ -64,6 +96,8 @@ def cidadao_chamados_lista(request):
     por_pagina = 15
     offset = (pagina - 1) * por_pagina
 
+    # Clase base do FROM/WHERE (reutilizada no COUNT e no SELECT).
+    # JOIN LATERAL busca o ultimo status de cada chamado.
     sql_base = (
         "FROM chamado c "
         "JOIN servico s ON c.id_servico = s.id_servico "
@@ -87,7 +121,7 @@ def cidadao_chamados_lista(request):
     )
     params = [uid]
 
-    # Filtros opcionais
+    # Filtros opcionais: cada um adiciona uma clausula AND ao WHERE.
     st_filter = request.GET.get("status")
     dt_filter = request.GET.get("data")
     q_filter = request.GET.get("q")
@@ -96,17 +130,21 @@ def cidadao_chamados_lista(request):
         sql_base += "AND ultimo.sigla = %s "
         params.append(st_filter)
     if dt_filter:
+        # ::date faz o cast para comparar apenas o dia, ignorando a hora.
         sql_base += "AND c.dt_abertura::date = %s "
         params.append(dt_filter)
     if q_filter:
+        # ILIKE faz busca case-insensitive no PostgreSQL.
         sql_base += "AND c.num_protocolo ILIKE %s "
         params.append(f"%{escape_like(q_filter)}%")
 
+    # Conta o total de registros para a paginacao (sem LIMIT/OFFSET).
     count_sql = "SELECT COUNT(*) " + sql_base
     with connection.cursor() as cursor:
         cursor.execute(count_sql, params)
         total_count = cursor.fetchone()[0]
 
+    # Busca apenas a pagina atual (LIMIT + OFFSET no proprio SQL).
     data_sql = select_cols + sql_base + "ORDER BY c.dt_abertura DESC LIMIT %s OFFSET %s"
     data_params = params + [por_pagina, offset]
 
@@ -114,6 +152,8 @@ def cidadao_chamados_lista(request):
         cursor.execute(data_sql, data_params)
         rows = cursor.fetchall()
 
+    # Hidratacao: cada tupla do banco vira um SimpleNamespace com atributos
+    # nomeados, para que o template acesse ch.num_protocolo em vez de ch[1].
     chamados = []
     for r in rows:
         cor = db.cor_semaforo(r[4], r[9], r[10])
@@ -128,8 +168,11 @@ def cidadao_chamados_lista(request):
             status_atual=SimpleNamespace(sigla=sigla, descricao=status_desc),
         ))
 
+    # db.paginar() cria um objeto page_obj compativel com os templates
+    # de paginacao padrao do Django.
     page_obj, _ = db.paginar(chamados, pagina, por_pagina=por_pagina, total_count=total_count)
 
+    # Estatisticas do semaforo para os cards no topo da pagina.
     stats = db.calcular_stats_semaforo(cidadao_id=uid)
 
     return render(
@@ -139,18 +182,28 @@ def cidadao_chamados_lista(request):
     )
 
 
-# ═══════════════════════════════════════════════════════════════
-# CREATE — Abrir novo chamado — Rota: /cidadao/chamados/novo/
-# ═══════════════════════════════════════════════════════════════
-# [!] Fluxo CREATE:
-#     1. GET → mostra formulario (categorias + servicos + bairros do banco)
-#     2. POST → valida form → INSERT chamado → Trigger 1 cria status AB
-#                           → INSERT foto_chamado → redirect detalhe
+# ------------------------------------------------------------------
+# Abrir novo chamado (GET/POST /cidadao/chamados/novo/)
+# ------------------------------------------------------------------
+
 @autenticado
 @perfis("CID")
 @require_http_methods(["GET", "POST"])
 def cidadao_chamado_novo(request):
-    # SQL puro: busca categorias com seus servicos (para popular o formulario)
+    """Formulario de abertura de novo chamado.
+
+    GET: exibe o formulario com categorias, servicos (select cascata),
+    bairros, descricao e campo de foto.
+
+    POST: valida, salva a foto, gera protocolo e insere o chamado.
+    O trigger Trigger 1 (AFTER INSERT ON chamado) cria automaticamente
+    o registro em historico_chamado com status "AB".
+
+    O numero de protocolo eh gerado atomicamente por proximo_protocolo()
+    (INSERT ... ON CONFLICT DO UPDATE RETURNING), evitando race conditions
+    entre duas requisicoes simultaneas.
+    """
+    # Busca categorias ativas com seus servicos (para o select cascata).
     categorias_list = []
     with connection.cursor() as cursor:
         cursor.execute(
@@ -167,27 +220,21 @@ def cidadao_chamado_novo(request):
                 "WHERE id_categoria = %s AND ativo = TRUE ORDER BY nome",
                 [cat.pk],
             )
+            # Simula o queryset.all() do ORM para compatibilidade com templates.
             cat.servicos = SimpleNamespace(all=lambda rows=[
                 SimpleNamespace(id_servico=r[0], pk=r[0], nome=r[1]) for r in cursor.fetchall()
             ]: rows)
             categorias_list.append(cat)
 
-    # SQL puro: busca bairros ativos
-    bairros = []
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_bairro, nome_bairro FROM bairro "
-            "WHERE ativo = TRUE ORDER BY nome_bairro"
-        )
-        bairros = [
-            SimpleNamespace(id_bairro=r[0], pk=r[0], nome_bairro=r[1])
-            for r in cursor.fetchall()
-        ]
+    # Busca bairros ativos para o select de bairro.
+    bairros = db.listar_bairros_ativos()
 
     if request.method == "POST":
         form = ChamadoNovoForm(request.POST, request.FILES)
         if form.is_valid():
             d = form.cleaned_data
+
+            # Salva a foto (Cloudinary ou filesystem local).
             try:
                 url = salvar_foto_upload(request.FILES.get("foto"), request=request)
             except ValueError as e:
@@ -197,21 +244,25 @@ def cidadao_chamado_novo(request):
                     "portal/cidadao/novo_chamado.html",
                     {"form": form, "categorias": categorias_list, "bairros": bairros},
                 )
+
             now = timezone.now()
-            # SQL puro: INSERT chamado + INSERT foto (atômico)
-            # [!] proximo_protocolo() dentro do atomic() garante que,
-            #     se o INSERT falhar, o numero de protocolo nao e consumido.
+
+            # transaction.atomic() garante que todos os INSERTs acontecam
+            # juntos. Se qualquer um falhar, tudo eh desfeito (ROLLBACK).
             with transaction.atomic(), connection.cursor() as cursor:
-                protocolo = proximo_protocolo()  # Gera num sequencial: "2026000001"
-                # [!] INSERT apenas em chamado. NAO insere status!
-                #     O Trigger 1 (AFTER INSERT) cria automaticamente o
-                #     registro em historico_chamado com status 'AB'.
+                # Gera o proximo numero de protocolo (ex: "2026000042").
+                protocolo = proximo_protocolo()
+
+                # INSERT na tabela chamado. Nao insere status aqui porque
+                # o Trigger 1 cria automaticamente o historico com status "AB".
+                # RETURNING id_chamado evita uma segunda query para descobrir
+                # o ID gerado pelo SERIAL.
                 cursor.execute(
                     "INSERT INTO chamado "
                     "(num_protocolo, prioridade, ponto_de_referencia, descricao, "
                     "dt_abertura, atualizado_em, id_cidadao, id_servico, id_bairro) "
                     "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
-                    "RETURNING id_chamado",            # [!] RETURNING necessario para obter o ID
+                    "RETURNING id_chamado",
                     [
                         protocolo, 0,
                         d.get("ponto_de_referencia") or None,
@@ -221,20 +272,20 @@ def cidadao_chamado_novo(request):
                         d["id_bairro"].pk,
                     ],
                 )
-                chamado_id = cursor.fetchone()[0]       # ID gerado pelo SERIAL
-                # INSERT foto do chamado
+                chamado_id = cursor.fetchone()[0]
+
+                # Registra a foto associada ao chamado.
                 cursor.execute(
                     "INSERT INTO foto_chamado (id_chamado, url_foto, dt_upload) "
                     "VALUES (%s, %s, %s)",
                     [chamado_id, url, now],
                 )
-            messages.success(
-                request,
-                f"Chamado aberto. Protocolo: {protocolo}",
-            )
+
+            messages.success(request, f"Chamado aberto. Protocolo: {protocolo}")
             return redirect("portal:cidadao_chamado", pk=chamado_id)
     else:
         form = ChamadoNovoForm()
+
     return render(
         request,
         "portal/cidadao/novo_chamado.html",
@@ -242,33 +293,52 @@ def cidadao_chamado_novo(request):
     )
 
 
-# ═══════════════════════════════════════════════════════════════
-# UPDATE — Detalhe do chamado + acoes — Rota: /cidadao/chamados/<pk>/
-# ═══════════════════════════════════════════════════════════════
-# [!] GET: exibe detalhe (via db.buscar_chamado → SELECT com JOINs)
-# [!] POST: executa acao conforme campo 'acao' do formulario:
-#     'obs'      → INSERT historico_chamado (observacao do cidadao)
-#     'foto'     → INSERT foto_chamado (upload de imagem)
-#     'cancelar' → INSERT historico CA + UPDATE resolucao (muda status para Cancelado)
-#     'avaliar'  → UPDATE chamado (nota 1-5 + comentario, so se status=CO)
+# ------------------------------------------------------------------
+# Detalhe do chamado + acoes (GET/POST /cidadao/chamados/<pk>/)
+# ------------------------------------------------------------------
+
 @autenticado
 @perfis("CID")
 @require_http_methods(["GET", "POST"])
 def cidadao_chamado_detalhe(request, pk):
-    ch = _chamado_do_cidadao(request, pk)  # Busca + verifica se pertence ao cidadao
-    ts = ch.sigla_status                   # Status atual (ex: 'AB', 'CO', 'CA')
-    # Regras de negocio: o que o cidadao pode fazer depende do status atual
-    pode_obs_foto = ts not in ("CO", "CA")           # Chamado encerrado? Bloqueia obs/foto
-    pode_cancelar = ts in ("AB", "EA")                # So cancela se aberto ou em atendimento
-    pode_avaliar = ts == "CO" and ch.nota_avaliacao is None  # So avalia se concluido e nunca avaliado
+    """Exibe detalhes do chamado e processa acoes do cidadao.
+
+    Esta view eh hibrida: GET mostra o detalhe, POST executa uma acao
+    determinada pelo campo oculto "acao" no formulario HTML.
+
+    Acoes disponiveis (cada uma condicionada ao status atual):
+
+    - obs: Adiciona observacao (INSERT historico com o mesmo status).
+      Disponivel enquanto o chamado nao estiver concluido ou cancelado.
+
+    - foto: Upload de nova foto (INSERT foto_chamado).
+      Mesma restricao de status que obs.
+
+    - cancelar: Cancela o chamado (INSERT historico com status "CA").
+      O trigger Trigger 2B seta dt_conclusao = NOW() e gera notificacao.
+      Disponivel apenas para status "AB" ou "EA".
+
+    - avaliar: Avalia chamado concluido (UPDATE chamado com nota e comentario).
+      Disponivel apenas para status "CO" e quando nota_avaliacao eh NULL.
+    """
+    ch = _chamado_do_cidadao(request, pk)
+    ts = ch.sigla_status
+
+    # Calcula permissoes com base no status atual.
+    # Encerrado = CO (Concluido) ou CA (Cancelado).
+    pode_obs_foto = ts not in ("CO", "CA")
+    pode_cancelar = ts in ("AB", "EA")
+    pode_avaliar = ts == "CO" and ch.nota_avaliacao is None
 
     if request.method == "POST":
         acao = request.POST.get("acao")
+
+        # Acao: adicionar observacao.
+        # INSERT historico mantendo o mesmo status, so com o texto.
+        # id_servidor=None indica que foi o cidadao quem escreveu.
         if acao == "obs" and pode_obs_foto:
             form_o = ObservacaoForm(request.POST)
             if form_o.is_valid():
-                # INSERT observacao: mantem o status atual, apenas adiciona texto
-                # [!] id_servidor=None porque quem escreveu foi o cidadao (nao e servidor)
                 status_id = ch.status_atual.pk if ch.status_atual else None
                 with connection.cursor() as cursor:
                     cursor.execute(
@@ -277,8 +347,10 @@ def cidadao_chamado_detalhe(request, pk):
                         "VALUES (%s, %s, %s, %s, %s)",
                         [pk, None, status_id, form_o.cleaned_data["texto"], timezone.now()],
                     )
-                messages.success(request, "Observação registrada.")
+                messages.success(request, "Observacao registrada.")
             return redirect("portal:cidadao_chamado", pk=pk)
+
+        # Acao: upload de foto.
         if acao == "foto" and pode_obs_foto:
             form_f = FotoForm(request.POST, request.FILES)
             if form_f.is_valid() and request.FILES.get("foto"):
@@ -287,7 +359,6 @@ def cidadao_chamado_detalhe(request, pk):
                 except ValueError as e:
                     messages.error(request, str(e))
                 else:
-                    # SQL puro: INSERT foto no foto_chamado
                     with connection.cursor() as cursor:
                         cursor.execute(
                             "INSERT INTO foto_chamado (id_chamado, url_foto, dt_upload) "
@@ -303,6 +374,10 @@ def cidadao_chamado_detalhe(request, pk):
                         for error in errors:
                             messages.error(request, error)
             return redirect("portal:cidadao_chamado", pk=pk)
+
+        # Acao: cancelar chamado.
+        # Busca o ID do status "CA" e faz INSERT no historico.
+        # O trigger Trigger 2B cuida de setar dt_conclusao e gerar notificacao.
         if acao == "cancelar" and pode_cancelar:
             form_c = CancelarChamadoForm(request.POST)
             if form_c.is_valid():
@@ -315,29 +390,28 @@ def cidadao_chamado_detalhe(request, pk):
                         messages.error(request, "Erro interno: status CA nao encontrado.")
                         return redirect("portal:cidadao_chamado", pk=pk)
                     ca_id = ca_row[0]
-                    # INSERT historico com status CA → muda o status para Cancelado
-                    # [!] Trigger 2B dispara automaticamente:
-                    #     → UPDATE chamado SET dt_conclusao = NOW()
-                    #     → INSERT notificacao ("Chamado XXXX: status alterado para Cancelado")
+
                     cursor.execute(
                         "INSERT INTO historico_chamado "
                         "(id_chamado, id_servidor, id_status, observacao, dt_alteracao) "
                         "VALUES (%s, %s, %s, %s, %s)",
                         [pk, None, ca_id, form_c.cleaned_data["motivo"], timezone.now()],
                     )
-                    # UPDATE resolucao: salva o motivo do cancelamento no chamado
-                    # [!] Trigger 2A dispara: atualiza atualizado_em automaticamente
+
+                    # Salva o motivo do cancelamento no campo resolucao do chamado.
+                    # O trigger Trigger 2A atualiza atualizado_em automaticamente.
                     cursor.execute(
                         "UPDATE chamado SET resolucao = %s WHERE id_chamado = %s",
                         [form_c.cleaned_data["motivo"], pk],
                     )
                 messages.success(request, "Chamado cancelado.")
             return redirect("portal:cidadao_chamado", pk=pk)
+
+        # Acao: avaliar chamado concluido.
+        # UPDATE direto na tabela chamado (avaliacao nao gera historico).
         if acao == "avaliar" and pode_avaliar:
             form_a = AvaliacaoForm(request.POST)
             if form_a.is_valid():
-                # UPDATE direto na tabela chamado (avaliacao NAO e historico)
-                # [!] Trigger 2A dispara: atualiza atualizado_em
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "UPDATE chamado SET nota_avaliacao = %s, "
@@ -350,14 +424,14 @@ def cidadao_chamado_detalhe(request, pk):
                             pk,
                         ],
                     )
-                messages.success(request, "Avaliação registrada.")
+                messages.success(request, "Avaliacao registrada.")
             return redirect("portal:cidadao_chamado", pk=pk)
 
-    # SQL puro: busca historicos e fotos (via db.py)
+    # GET: busca historicos e fotos para renderizar o detalhe.
     historicos = db.buscar_historicos(pk)
     fotos = db.buscar_fotos(pk)
 
-    # Observações = registros com observacao preenchida
+    # Observacoes = registros do historico que possuem texto no campo observacao.
     observacoes = [h for h in historicos if h.observacao]
 
     return render(
@@ -380,18 +454,28 @@ def cidadao_chamado_detalhe(request, pk):
     )
 
 
-# ═══════════════════════════════════════════════════════════════
-# NOTIFICACOES — Rota: /cidadao/notificacoes/
-# ═══════════════════════════════════════════════════════════════
-# [!] Notificacoes sao criadas AUTOMATICAMENTE pelo Trigger 2B
-#     sempre que um status e alterado. Aqui apenas exibe e exclui.
+# ------------------------------------------------------------------
+# Notificacoes do cidadao (GET/POST /cidadao/notificacoes/)
+# ------------------------------------------------------------------
+
 @autenticado
 @perfis("CID")
 @require_http_methods(["GET", "POST"])
 def cidadao_notificacoes(request):
+    """Lista e exclui notificacoes do cidadao logado.
+
+    As notificacoes sao criadas automaticamente pelo trigger Trigger 2B
+    toda vez que o status de um chamado muda. Esta view so permite
+    visualizar e deletar — nunca cria notificacoes.
+
+    Seguranca: a subquery no WHERE garante que o cidadao so ve
+    notificacoes dos seus proprios chamados. O DELETE tambem usa a
+    mesma subquery para impedir que um cidadao manipule o POST e
+    delete notificacoes de outros.
+    """
     uid = request.portal_user.pk
-    # SELECT notificacoes nao-arquivadas dos chamados deste cidadao
-    # [!] Subquery garante privacidade: so ve notificacoes dos SEUS chamados
+
+    # Busca notificacoes nao arquivadas dos chamados deste cidadao.
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT n.id_notificacao, n.mensagem, n.lida, n.arquivada, "
@@ -412,11 +496,10 @@ def cidadao_notificacoes(request):
             for r in cursor.fetchall()
         ]
 
+    # POST: exclusao de notificacao especifica.
     if request.method == "POST":
         nid = request.POST.get("excluir")
         if nid:
-            # DELETE notificacao — a subquery impede que um cidadao
-            # delete notificacao de outro cidadao manipulando o POST
             with connection.cursor() as cursor:
                 cursor.execute(
                     "DELETE FROM notificacao "
@@ -426,8 +509,9 @@ def cidadao_notificacoes(request):
                     ")",
                     [nid, uid],
                 )
-            messages.info(request, "Notificação removida.")
+            messages.info(request, "Notificacao removida.")
         return redirect("portal:cidadao_notificacoes")
+
     return render(
         request,
         "portal/cidadao/notificacoes.html",

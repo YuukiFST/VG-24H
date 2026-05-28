@@ -30,7 +30,15 @@
       </div>
       <div class="br-input mb-3x">
         <label for="id_regiao">Região</label>
-        <input id="id_regiao" name="regiao" type="text" value="{{ bairro.regiao|default:'' }}" />
+        <select id="id_regiao" name="regiao">
+          <option value="">Selecione...</option>
+          <option value="Central" {% if bairro.regiao == 'Central' %}selected{% endif %}>Central</option>
+          <option value="Norte" {% if bairro.regiao == 'Norte' %}selected{% endif %}>Norte</option>
+          <option value="Sul" {% if bairro.regiao == 'Sul' %}selected{% endif %}>Sul</option>
+          <option value="Leste" {% if bairro.regiao == 'Leste' %}selected{% endif %}>Leste</option>
+          <option value="Oeste" {% if bairro.regiao == 'Oeste' %}selected{% endif %}>Oeste</option>
+          <option value="Rural" {% if bairro.regiao == 'Rural' %}selected{% endif %}>Rural</option>
+        </select>
       </div>
       <div class="br-checkbox mb-4x">
         <input id="id_ativo" name="ativo" type="checkbox" {% if bairro.ativo %}checked{% endif %} />

@@ -20,7 +20,7 @@
   <!-- ====== FILTER BAR ====== -->
   <div class="br-card p-3 mb-4x">
     <form method="get" class="row align-items-end">
-      <div class="col-md-3 mb-2x mb-md-0">
+      <div class="col-md-2 mb-2x mb-md-0">
         <div class="br-input">
           <label for="filter-status">Status</label>
           <select id="filter-status" name="status">
@@ -33,13 +33,13 @@
           </select>
         </div>
       </div>
-      <div class="col-md-3 mb-2x mb-md-0">
+      <div class="col-md-2 mb-2x mb-md-0">
         <div class="br-input">
           <label for="filter-date">Abertura</label>
-          <input id="filter-date" name="data" type="date" class="w-100" value="{{ request.GET.data }}" />
+          <input id="filter-date" name="data" type="date" value="{{ request.GET.data }}" />
         </div>
       </div>
-      <div class="col-md-4 mb-2x mb-md-0">
+      <div class="col-md-2 mb-2x mb-md-0">
         <div class="br-input">
           <label for="filter-search">Pesquisar Protocolo</label>
           <input id="filter-search" name="q" type="text" placeholder="Ex: 20260001" value="{{ request.GET.q }}" />
@@ -78,7 +78,7 @@
             <td data-th="Abertura">{{ ch.dt_abertura|date:"d/m/Y H:i" }}</td>
             <td data-th="Status">
               {% with st_lower=ch.status_atual.sigla|lower %}
-                <span class="br-tag count {% if st_lower == 'ab' %}info{% elif st_lower == 'ea' %}warning{% elif st_lower == 'ee' %}ee-status{% elif st_lower == 'co' %}success{% elif st_lower == 'ca' %}danger{% endif %}">{{ ch.status_atual.descricao }}</span>
+                <span class="br-tag vg-tag-fixed rounder-none {% if st_lower == 'ab' %}info{% elif st_lower == 'ea' %}warning{% elif st_lower == 'ee' %}ee-status{% elif st_lower == 'co' %}success{% elif st_lower == 'ca' %}danger{% endif %}">{{ ch.status_atual.descricao }}</span>
               {% endwith %}
             </td>
             <td data-th="Ações">

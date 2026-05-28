@@ -1,12 +1,12 @@
 """
-tests.py — Testes Verticais do Portal VG 24H
+tests.py — Testes verticais do Portal VG 24H
 
-Testes organizados por vertical slice (conforme /tdd skill):
-  1. Protocolo — proximo_protocolo() gera sequência correta
-  2. Semáforo — cor_semaforo classifica verde/amarelo/vermelho
-  3. Modelo — status_atual, sigla_status, calcular_stats
-  4. Decoradores — perfil_codigo, controle de acesso
-  5. Formulários — validação de senhas, CPF
+Testes organizados por vertical slice:
+1. Protocolo: proximo_protocolo() gera sequencia correta
+2. Semaforo: cor_semaforo classifica verde/amarelo/vermelho
+3. Paginacao: paginar() com e sem total_count
+4. Decoradores: perfil_codigo, controle de acesso
+5. Formularios: validacao de senhas e CPF
 
 Cada teste segue F.I.R.S.T: Fast, Independent, Repeatable,
 Self-validating, Timely.
@@ -24,14 +24,15 @@ from portal.forms import CadastroCidadaoForm, RedefinirSenhaForm
 from portal.utils import proximo_protocolo
 
 
-# ═══════════════════════════════════════════════════════════════
-# SLICE 1: Protocolo
-# ═══════════════════════════════════════════════════════════════
+# ------------------------------------------------------------------
+# Slice 1: Protocolo
+# ------------------------------------------------------------------
+
 class ProximoProtocoloTests(TestCase):
-    """Testa a geração sequencial de números de protocolo.
+    """Testa a geracao sequencial de numeros de protocolo.
 
     proximo_protocolo() usa INSERT ... ON CONFLICT DO UPDATE RETURNING
-    (atômico). Os testes mockam connection.cursor.
+    (operacao atomica no PostgreSQL). Os testes mockam connection.cursor.
     """
 
     @patch("portal.utils.connection")
@@ -57,11 +58,14 @@ class ProximoProtocoloTests(TestCase):
 
         resultado = proximo_protocolo()
         self.assertEqual(resultado, f"{ano}000006")
-# ═══════════════════════════════════════════════════════════════
-# SLICE 2: Semáforo (cor_semaforo property)
-# ═══════════════════════════════════════════════════════════════
+
+
+# ------------------------------------------------------------------
+# Slice 2: Semaforo (cor_semaforo)
+# ------------------------------------------------------------------
+
 class CorSemaforoTests(TestCase):
-    """Testa a classificação de chamados pelo prazo."""
+    """Testa a classificacao de chamados por urgencia (verde/amarelo/vermelho)."""
 
     def _make_chamado_mock(self, dias_aberto, prazo_amarelo=15, prazo_vermelho=30):
         """Cria um mock que simula Chamado para testar cor_semaforo."""
@@ -102,14 +106,15 @@ class CorSemaforoTests(TestCase):
         self.assertEqual(db.cor_semaforo(ch.dt_abertura, 15, 30), "verde")
 
 
-# ═══════════════════════════════════════════════════════════════
-# SLICE 3: Paginação (paginar com total_count vs sem)
-# ═══════════════════════════════════════════════════════════════
+# ------------------------------------------------------------------
+# Slice 3: Paginacao
+# ------------------------------------------------------------------
+
 class PaginarTests(TestCase):
-    """Testa a paginacao manual do db.py."""
+    """Testa a paginacao manual implementada em db.py."""
 
     def test_pagina_1_sem_total_count(self):
-        """Sem total_count, paginar() faz slicing Python."""
+        """Sem total_count, paginar() faz slicing em Python."""
         itens = list(range(30))
         page_obj, total = db.paginar(itens, pagina=1, por_pagina=15)
         self.assertEqual(total, 30)
@@ -124,7 +129,7 @@ class PaginarTests(TestCase):
 
     def test_pagina_2_com_total_count(self):
         """Com total_count (SQL LIMIT/OFFSET), itens ja sao a pagina atual."""
-        itens = list(range(15))  # ja e o slice da pagina 2
+        itens = list(range(15))
         page_obj, total = db.paginar(itens, pagina=2, por_pagina=15, total_count=30)
         self.assertEqual(total, 30)
         self.assertEqual(list(page_obj.object_list), list(range(15)))
@@ -144,50 +149,48 @@ class PaginarTests(TestCase):
         self.assertFalse(page_obj.has_next)
 
 
-# ═══════════════════════════════════════════════════════════════
-# SLICE 4: Decoradores
-# ═══════════════════════════════════════════════════════════════
+# ------------------------------------------------------------------
+# Slice 4: Decoradores
+# ------------------------------------------------------------------
+
 class PerfilCodigoTests(TestCase):
-    """Testa a extração do código de perfil do usuário."""
+    """Testa a extracao do codigo de perfil do usuario."""
 
     def test_cidadao_retorna_cid(self):
-        """Usuário com perfil 'CID' retorna 'CID'."""
         user = MagicMock()
         user.perfil = "CID"
         self.assertEqual(perfil_codigo(user), "CID")
 
     def test_gestor_retorna_ges(self):
-        """Usuário com perfil 'GES' retorna 'GES'."""
         user = MagicMock()
         user.perfil = "GES"
         self.assertEqual(perfil_codigo(user), "GES")
 
     def test_perfil_com_espacos_retorna_limpo(self):
-        """Perfil com espaços extras é stripped."""
+        """Perfil com espacos extras eh stripped."""
         user = MagicMock()
         user.perfil = "  COL  "
         self.assertEqual(perfil_codigo(user), "COL")
 
     def test_usuario_none_retorna_vazio(self):
-        """Quando user é None, retorna string vazia."""
         self.assertEqual(perfil_codigo(None), "")
 
     def test_perfil_none_retorna_vazio(self):
-        """Quando user.perfil é None, retorna string vazia."""
         user = MagicMock()
         user.perfil = None
         self.assertEqual(perfil_codigo(user), "")
 
 
-# ═══════════════════════════════════════════════════════════════
-# SLICE 4: Formulários (validação)
-# ═══════════════════════════════════════════════════════════════
+# ------------------------------------------------------------------
+# Slice 5: Formularios (validacao)
+# ------------------------------------------------------------------
+
 class CadastroCidadaoFormTests(TestCase):
-    """Testa a validação do formulário de cadastro de cidadão."""
+    """Testa a validacao do formulario de cadastro de cidadao."""
 
     def _base_data(self):
         return {
-            "nome_completo": "João Silva",
+            "nome_completo": "Joao Silva",
             "cpf": "123.456.789-01",
             "dt_nascimento": "1990-01-15",
             "telefone": "65999990000",
@@ -197,19 +200,19 @@ class CadastroCidadaoFormTests(TestCase):
         }
 
     def test_form_valido(self):
-        """Form com dados completos e senhas iguais é válido."""
+        """Form com dados completos e senhas iguais eh valido."""
         form = CadastroCidadaoForm(data=self._base_data())
         self.assertTrue(form.is_valid())
 
     def test_senhas_diferentes_invalida(self):
-        """Form com senhas diferentes é inválido."""
+        """Form com senhas diferentes eh invalido."""
         data = self._base_data()
         data["senha2"] = "outrasenha456"
         form = CadastroCidadaoForm(data=data)
         self.assertFalse(form.is_valid())
 
     def test_cpf_limpa_mascara(self):
-        """CPF com máscara (123.456.789-01) retorna apenas dígitos."""
+        """CPF com mascara (123.456.789-01) retorna apenas digitos."""
         data = self._base_data()
         data["cpf"] = "123.456.789-01"
         form = CadastroCidadaoForm(data=data)
@@ -217,7 +220,7 @@ class CadastroCidadaoFormTests(TestCase):
         self.assertEqual(form.cleaned_data["cpf"], "12345678901")
 
     def test_senha_curta_invalida(self):
-        """Senha com menos de 6 caracteres é inválida."""
+        """Senha com menos de 6 caracteres eh invalida."""
         data = self._base_data()
         data["senha"] = "abc"
         data["senha2"] = "abc"
@@ -226,14 +229,14 @@ class CadastroCidadaoFormTests(TestCase):
 
 
 class RedefinirSenhaFormTests(TestCase):
-    """Testa a validação do formulário de redefinição de senha."""
+    """Testa a validacao do formulario de redefinicao de senha."""
 
     def test_senhas_iguais_valido(self):
-        """Form com senhas iguais e >= 6 chars é válido."""
+        """Form com senhas iguais e >= 6 chars eh valido."""
         form = RedefinirSenhaForm(data={"senha": "novasenha", "senha2": "novasenha"})
         self.assertTrue(form.is_valid())
 
     def test_senhas_diferentes_invalido(self):
-        """Form com senhas diferentes é inválido."""
+        """Form com senhas diferentes eh invalido."""
         form = RedefinirSenhaForm(data={"senha": "novasenha", "senha2": "outra"})
         self.assertFalse(form.is_valid())

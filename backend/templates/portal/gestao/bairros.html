@@ -29,7 +29,40 @@
       <h1>Bairros e Regiões</h1>
       <p class="text-muted">Gerencie as áreas geográficas atendidas pelo VG 24H.</p>
     </div>
+    <a href="#" class="br-button primary" onclick="document.getElementById('form-novo-bairro').style.display='block'; this.style.display='none'; return false;">
+      <i class="fas fa-plus" aria-hidden="true"></i> Novo Bairro
+    </a>
+  </div>
 
+  <div id="form-novo-bairro" class="br-card p-4 mb-4x" style="display:none; max-width:600px;">
+    <h3 class="h4 mb-3x">Novo Bairro</h3>
+    <form method="post" action="{% url 'portal:gestao_bairros' %}">
+      {% csrf_token %}
+      <div class="br-input mb-2x">
+        <label for="id_nome_bairro_novo">Nome do Bairro *</label>
+        <input id="id_nome_bairro_novo" name="nome_bairro" type="text" required />
+      </div>
+      <div class="br-input mb-2x">
+        <label for="id_cep_novo">CEP</label>
+        <input id="id_cep_novo" name="cep" type="text" />
+      </div>
+      <div class="br-input mb-3x">
+        <label for="id_regiao_novo">Região</label>
+        <select id="id_regiao_novo" name="regiao">
+          <option value="">Selecione...</option>
+          <option value="Central">Central</option>
+          <option value="Norte">Norte</option>
+          <option value="Sul">Sul</option>
+          <option value="Leste">Leste</option>
+          <option value="Oeste">Oeste</option>
+          <option value="Rural">Rural</option>
+        </select>
+      </div>
+      <div class="d-flex" style="gap:var(--spacing-scale-2x);">
+        <button type="submit" class="br-button primary">Salvar</button>
+        <button type="button" class="br-button secondary" onclick="document.getElementById('form-novo-bairro').style.display='none'; document.querySelector('.dashboard-header .br-button.primary').style.display=''; return false;">Cancelar</button>
+      </div>
+    </form>
   </div>
 
   <div class="br-card p-4">

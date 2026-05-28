@@ -665,10 +665,48 @@ img {
    =================================================================== */
 
 /* Status "Em Execução" (EE) — orange, distinct from EA (warning/yellow) */
-.br-tag.count.ee-status,
 .br-tag.ee-status {
   background: var(--orange-vivid-30);
   color: #fff;
+}
+
+/* Fixed-width tags for Prioridade and Status columns */
+.vg-tag-fixed {
+    border-radius: 0 !important;
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
+    flex-shrink: 0;
+    display: inline-flex;
+    text-align: center;
+    justify-content: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* GOV DS .br-input does not style native <select> — match input sizing */
+.br-input select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-color: #fff !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") !important;
+    background-position: right 12px center !important;
+    background-repeat: no-repeat !important;
+    border: 1px solid #888 !important;
+    border-radius: 4px !important;
+    box-sizing: border-box !important;
+    color: #333 !important;
+    display: block !important;
+    font-family: inherit !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    height: 40px !important;
+    line-height: 40px !important;
+    margin: 4px 0 0 0 !important;
+    padding: 0 36px 0 16px !important;
+    width: 100% !important;
 }
 
 /* ===================================================================

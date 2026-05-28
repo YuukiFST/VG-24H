@@ -1,24 +1,23 @@
 """
 views_auth.py — Autenticacao do Portal VG 24H
 
-[!] PONTO CRITICO: NAO usamos o django.contrib.auth padrao.
-    Usamos um sistema proprio com as tabelas 'cidadao' e 'servidor'.
-    [!] LOGIN DUAL: primeiro busca em cidadao, depois em servidor.
-    Sessoes sao gerenciadas via cookie (request.session), nao via User model do Django.
+Este modulo gerencia login, logout, cadastro de cidadaos, recuperacao
+e redefinicao de senha, e troca obrigatoria de senha no primeiro acesso.
 
-Este modulo gerencia:
-- Login / Logout (cidadaos e servidores)
-- Cadastro de novos cidadaos
-- Recuperacao e redefinicao de senha
-- Troca de senha obrigatoria (primeiro acesso de servidores)
+O sistema NAO usa o django.contrib.auth padrao. Em vez disso, utiliza
+as tabelas proprias "cidadao" e "servidor" com senhas armazenadas como
+hash bcrypt. As sessoes sao gerenciadas via cookie (request.session),
+nao via o User model do Django.
+
+O login eh dual: primeiro busca o email na tabela cidadao; se nao
+encontrar, busca na tabela servidor. Isso permite que cidadaos e
+servidores usem a mesma tela de login.
 """
 
 from django.conf import settings
 from django.contrib import messages
-# check_password: compara senha digitada com o hash salvo no banco
-# make_password: gera hash bcrypt da senha ao cadastrar/alterar
 from django.contrib.auth.hashers import check_password, make_password
-from django.core import signing  # Gera tokens seguros para recuperação de senha
+from django.core import signing
 from django.core.mail import send_mail
 from django.db import connection
 from django.shortcuts import redirect, render
@@ -29,27 +28,33 @@ from django.views.decorators.http import require_http_methods
 from portal import db
 from portal.decorators import anonimo, autenticado, perfil_codigo
 from portal.forms import (
-    CadastroCidadaoForm,        # Formulario de cadastro (wizard 3 etapas)
+    CadastroCidadaoForm,
     RecuperarSenhaForm,
     RedefinirSenhaForm,
-    TrocaSenhaObrigatoriaForm,  # Formulario para 1o acesso de servidor
+    TrocaSenhaObrigatoriaForm,
 )
 
 
-# ═══════════════════════════════════════════════════════════════
-# LOGIN — Rota: /accounts/login/
-# ═══════════════════════════════════════════════════════════════
-# FLUXO COMPLETO:
-#   1. Usuário digita email + senha no formulário e clica "Entrar"
-#   2. O formulário envia um POST para esta view (/accounts/login/)
-#   3. A view faz um SELECT no banco para buscar o usuário pelo email
-#   4. Se encontrou, compara a senha digitada com o hash salvo
-#   5. Se a senha bate, cria a sessão e redireciona para a home
-#   6. Se não bate ou não encontrou, mostra mensagem de erro
-# ═══════════════════════════════════════════════════════════════
+# ------------------------------------------------------------------
+# Login (GET/POST /accounts/login/)
+# ------------------------------------------------------------------
+
 @require_http_methods(["GET", "POST"])
 def login_view(request):
-    # Se já está logado (middleware já carregou o user), redireciona para home
+    """Tela de login dual (cidadao e servidor).
+
+    Fluxo completo:
+    1. Usuario digita email + senha e envia o formulario.
+    2. Busca o email primeiro na tabela cidadao, depois na tabela servidor.
+    3. Se encontrou, compara a senha digitada com o hash bcrypt salvo
+       no banco usando check_password().
+    4. Se a senha confere, cria a sessao com o ID e tipo do usuario.
+    5. Se o servidor tem senha_temporaria preenchida, redireciona
+       para a tela de troca obrigatoria de senha.
+    6. Se nao encontrou ou a senha nao confere, mostra erro genérico
+       (nao revela se o email existe por seguranca).
+    """
+    # Se ja esta logado, redireciona para a home.
     if request.portal_user:
         return redirect("portal:root")
 
@@ -60,89 +65,73 @@ def login_view(request):
         user = None
         tipo = None
 
-        # BUSCA NO BANCO DE DADOS (SELECT via db.py)
-        # [!] LOGIN DUAL: primeiro tenta em cidadao, depois em servidor.
-        #     Se o email existe em cidadao, usuario e cidadao (CID).
-        #     Se nao, tenta em servidor (COL ou GES).
-        #     Se nao encontrar em nenhuma → erro "E-mail ou senha incorretos."
+        # Busca dual: primeiro cidadao, depois servidor.
         user, tipo = db.buscar_cidadao_por_email(email)
         if not user:
             user, tipo = db.buscar_servidor_por_email(email)
 
-        # ┌─────────────────────────────────────────────────────┐
-        # │  TRATAMENTO DE ERRO — Usuário NÃO encontrado       │
-        # │  Se user é None, o email não existe em nenhuma      │
-        # │  das duas tabelas (cidadao/servidor).               │
-        # └─────────────────────────────────────────────────────┘
         if user is None:
+            # Email nao encontrado em nenhuma tabela.
             messages.error(request, "E-mail ou senha incorretos.")
 
-        # ┌─────────────────────────────────────────────────────┐
-        # │  VERIFICAÇÃO DA SENHA                               │
-        # │  check_password() compara a senha digitada com o    │
-        # │  hash bcrypt salvo no campo 'senha_hash' do banco.  │
-        # │  Retorna True se a senha está correta.              │
-        # └─────────────────────────────────────────────────────┘
         elif check_password(senha, user.senha_hash):
-            # ┌─────────────────────────────────────────────────┐
-            # │  LOGIN BEM-SUCEDIDO                             │
-            # │  [!] Salva na sessao (cookie) o ID e o tipo.   │
-            # │  O middleware.py le esses valores em TODA       │
-            # │  requisicao seguinte para saber quem esta        │
-            # │  logado e qual perfil (CID/COL/GES).            │
-            # │  [!] NAO usamos request.user do Django —        │
-            # │      usamos request.portal_user (middleware).   │
-            # └─────────────────────────────────────────────────┘
-            request.session.cycle_key()                    # Novo sessionid (anti Session Fixation)
-            request.session["usuario_id"] = user.pk       # ID no banco (chave primaria)
-            request.session["usuario_tipo"] = tipo        # 'cidadao' ou 'servidor'
-            # Se o servidor tem senha temporária (primeiro acesso),
-            # força a troca antes de usar o sistema
+            # Senha confere. Cria a sessao no cookie.
+            request.session.cycle_key()  # Novo sessionid (previne Session Fixation)
+            request.session["usuario_id"] = user.pk
+            request.session["usuario_tipo"] = tipo
+
+            # Se o servidor tem senha temporaria (primeiro acesso),
+            # obriga a trocar antes de usar o sistema.
             if (user.senha_temporaria or "").strip():
                 request.session["forcar_troca_senha"] = True
                 return redirect("portal:troca_senha_obrigatoria")
 
-            messages.success(request, f"Olá, {user.nome_completo}.")
+            messages.success(request, f"Ola, {user.nome_completo}.")
 
-            # ┌─────────────────────────────────────────────────┐
-            # │  REDIRECIONAMENTO POR PERFIL                    │
-            # │  Após o login, o middleware carrega o usuário   │
-            # │  e cada view usa @perfis() para controlar quem  │
-            # │  pode acessar. Veja decorators.py para detalhes.│
-            # │                                                 │
-            # │  CID → / (home) ou /cidadao/chamados/           │
-            # │  COL/GES → /equipe/ (estatísticas gráficos)     │
-            # └─────────────────────────────────────────────────┘
+            # Redireciona conforme o perfil.
             if tipo == "servidor":
                 return redirect("portal:equipe_dashboard")
             return redirect("portal:root")
         else:
-            # ┌─────────────────────────────────────────────────┐
-            # │  SENHA INCORRETA                                │
-            # │  A conta existe no banco, mas a senha digitada  │
-            # │  não confere com o hash armazenado.             │
-            # └─────────────────────────────────────────────────┘
+            # Senha incorreta (email existe, mas senha nao confere).
             messages.error(request, "E-mail ou senha incorretos.")
 
     return render(request, "portal/auth/login.html")
 
-# Logout — /accounts/logout/
-# Apaga toda a sessão do navegador (cookie), deslogando o usuário
+
+# ------------------------------------------------------------------
+# Logout (POST /accounts/logout/)
+# ------------------------------------------------------------------
+
 @require_http_methods(["POST"])
 def logout_view(request):
-    #apaga o cookie de sessão e usuario_id e usuario_tipo somem
+    """Encerra a sessao do usuario (apaga o cookie).
+
+    request.session.flush() remove todos os dados da sessao,
+    incluindo usuario_id e usuario_tipo.
+    """
     request.session.flush()
-    messages.info(request, "Sessão encerrada.")
+    messages.info(request, "Sessao encerrada.")
     return redirect("portal:login")
 
 
-# CADASTRO — Rota: /accounts/cadastro/
-# Apenas cidadãos se cadastram pelo site. Servidores são criados por gestores.
-# @anonimo = decorador que impede acesso de quem já está logado (ver decorators.py)
+# ------------------------------------------------------------------
+# Cadastro de cidadao (GET/POST /accounts/cadastro/)
+# ------------------------------------------------------------------
+
 @anonimo
 @require_http_methods(["GET", "POST"])
 def cadastro_view(request):
-    # SQL puro: SELECT bairros ativos para o formulario de endereco (via db.py)
+    """Cadastro de novos cidadaos pelo site.
+
+    Apenas cidadaos se cadastram pelo site. Servidores sao criados
+    por gestores no painel administrativo.
+
+    Antes de inserir, verifica se email ou CPF ja existem no banco
+    para evitar erros de constraint UNIQUE. A senha eh armazenada
+    como hash bcrypt (make_password) — a senha original nunca fica
+    no banco.
+    """
     try:
         bairros = db.listar_bairros_ativos()
     except Exception:
@@ -152,8 +141,8 @@ def cadastro_view(request):
         form = CadastroCidadaoForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-            # VALIDAÇÃO DE DUPLICIDADE no banco antes de inserir:
-            # SQL puro: SELECT EXISTS(SELECT 1 FROM cidadao WHERE ...)
+
+            # Verifica duplicidade de email ou CPF.
             with connection.cursor() as cursor:
                 cursor.execute(
                     "SELECT EXISTS("
@@ -166,13 +155,9 @@ def cadastro_view(request):
                 ja_existe = cursor.fetchone()[0]
 
             if ja_existe:
-                messages.error(request, "E-mail ou CPF já cadastrado.")
+                messages.error(request, "E-mail ou CPF ja cadastrado.")
             else:
-                # INSERÇÃO DO NOVO CIDADÃO NO BANCO DE DADOS
-                # SQL puro: INSERT INTO cidadao (...) VALUES (...)
-                #
-                # make_password(senha) transforma 'minhasenha123' em hash bcrypt
-                # para nunca armazenar a senha real no banco (segurança)
+                # INSERT do novo cidadao com senha hasheada.
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "INSERT INTO cidadao "
@@ -197,10 +182,11 @@ def cadastro_view(request):
                             timezone.now(),
                         ],
                     )
-                messages.success(request, "Cadastro concluído. Faça login.")
+                messages.success(request, "Cadastro concluido. Faca login.")
                 return redirect("portal:login")
     else:
         form = CadastroCidadaoForm()
+
     return render(
         request,
         "portal/auth/cadastro.html",
@@ -208,17 +194,26 @@ def cadastro_view(request):
     )
 
 
-# RECUPERAÇÃO DE SENHA — Rota: /accounts/recuperar-senha/
-# Gera um token criptografado com o ID do usuário e envia por email.
-# O token expira em 3 dias (86400 * 3 segundos).
+# ------------------------------------------------------------------
+# Recuperacao de senha (GET/POST /accounts/recuperar-senha/)
+# ------------------------------------------------------------------
+
 @anonimo
 @require_http_methods(["GET", "POST"])
 def recuperar_senha_view(request):
+    """Envia email com link para redefinicao de senha.
+
+    O link contem um token criptografado (signing.dumps) que armazena
+    o ID do cidadao. O token expira em 3 dias (max_age=259200).
+
+    Por seguranca, sempre mostra a mesma mensagem ("se o email existir...")
+    independentemente de o email existir ou nao no banco.
+    """
     if request.method == "POST":
         form = RecuperarSenhaForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"].lower()
-            # SQL puro: SELECT id_cidadao, email FROM cidadao WHERE ...
+
             with connection.cursor() as cursor:
                 cursor.execute(
                     "SELECT id_cidadao, email "
@@ -227,22 +222,25 @@ def recuperar_senha_view(request):
                     [email],
                 )
                 row = cursor.fetchone()
+
             if not row:
                 messages.info(
                     request,
-                    "Se o e-mail existir, você receberá instruções em instantes.",
+                    "Se o e-mail existir, voce recebera instrucoes em instantes.",
                 )
                 return redirect("portal:login")
+
             uid = row[0]
             user_email = row[1]
-            # signing.dumps() gera um token criptografado com o ID do cidadão
+
+            # Gera token criptografado com o ID do cidadao.
             token = signing.dumps({"id": uid}, salt="vg.pwreset")
             link = request.build_absolute_uri(
                 reverse("portal:redefinir_senha", args=[token])
             )
-            body = f"Use o link para definir nova senha (válido por 3 dias):\n{link}"
+            body = f"Use o link para definir nova senha (valido por 3 dias):\n{link}"
             send_mail(
-                "VG 24H — redefinição de senha",
+                "VG 24H — redefinicao de senha",
                 body,
                 settings.DEFAULT_FROM_EMAIL,
                 [user_email],
@@ -255,21 +253,30 @@ def recuperar_senha_view(request):
             return redirect("portal:login")
     else:
         form = RecuperarSenhaForm()
+
     return render(request, "portal/auth/recuperar_senha.html", {"form": form})
 
 
-# REDEFINIÇÃO DE SENHA — Rota: /accounts/redefinir-senha/<token>/
-# Valida o token e permite definir nova senha.
+# ------------------------------------------------------------------
+# Redefinicao de senha (GET/POST /accounts/redefinir-senha/<token>/)
+# ------------------------------------------------------------------
+
 @anonimo
 @require_http_methods(["GET", "POST"])
 def redefinir_senha_view(request, token):
+    """Valida o token e permite definir uma nova senha.
+
+    signing.loads() descriptografa o token e verifica se nao expirou
+    (max_age de 3 dias). Se o token for invalido ou expirado,
+    redireciona para o login com mensagem de erro.
+    """
     try:
-        # signing.loads() descriptografa o token e verifica se não expirou
         data = signing.loads(token, salt="vg.pwreset", max_age=86400 * 3)
     except signing.BadSignature:
-        messages.error(request, "Link inválido ou expirado.")
+        messages.error(request, "Link invalido ou expirado.")
         return redirect("portal:login")
-    # SQL puro: SELECT id_cidadao FROM cidadao WHERE id_cidadao = X AND ativo = true
+
+    # Verifica se o cidadao ainda existe e esta ativo.
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_cidadao FROM cidadao "
@@ -279,11 +286,13 @@ def redefinir_senha_view(request, token):
         row = cursor.fetchone()
     if not row:
         return redirect("portal:login")
+
     uid = row[0]
+
     if request.method == "POST":
         form = RedefinirSenhaForm(request.POST)
         if form.is_valid():
-            # SQL puro: UPDATE cidadao SET senha_hash = 'novo_hash' WHERE id_cidadao = X
+            # Atualiza o hash da senha no banco.
             with connection.cursor() as cursor:
                 cursor.execute(
                     "UPDATE cidadao SET senha_hash = %s "
@@ -294,23 +303,33 @@ def redefinir_senha_view(request, token):
             return redirect("portal:login")
     else:
         form = RedefinirSenhaForm()
+
     return render(request, "portal/auth/redefinir_senha.html", {"form": form})
 
 
-# TROCA DE SENHA OBRIGATÓRIA — Rota: /accounts/trocar-senha/
-# Usado quando um servidor recebe senha temporária no primeiro acesso.
-# O sistema obriga a trocar antes de usar qualquer funcionalidade.
+# ------------------------------------------------------------------
+# Troca obrigatoria de senha (GET/POST /accounts/trocar-senha/)
+# ------------------------------------------------------------------
+
 @autenticado
 @require_http_methods(["GET", "POST"])
 def troca_senha_obrigatoria_view(request):
+    """Forca a troca de senha no primeiro acesso de servidores.
+
+    Quando um gestor cria um novo colaborador, define uma senha
+    provisoria e seta senha_temporaria="1". O middleware detecta
+    isso e redireciona todas as requisicoes para esta tela.
+
+    Apos trocar a senha, remove a flag senha_temporaria e limpa
+    a sessao forcar_troca_senha.
+    """
     if not request.session.get("forcar_troca_senha"):
         return redirect("portal:root")
+
     if request.method == "POST":
         form = TrocaSenhaObrigatoriaForm(request.POST)
         if form.is_valid():
             u = request.portal_user
-            # SQL puro: UPDATE servidor SET senha_hash = 'novo_hash', senha_temporaria = NULL
-            # WHERE id_servidor = X
             with connection.cursor() as cursor:
                 cursor.execute(
                     "UPDATE servidor SET senha_hash = %s, senha_temporaria = NULL "
@@ -322,6 +341,7 @@ def troca_senha_obrigatoria_view(request):
             return redirect("portal:root")
     else:
         form = TrocaSenhaObrigatoriaForm()
+
     return render(
         request,
         "portal/auth/troca_senha_obrigatoria.html",

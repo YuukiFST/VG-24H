@@ -1,2 +1,7 @@
-# Portal VG 24H não utiliza o django.contrib.admin.
-# A administração é feita por views próprias em views_gestao.py.
+"""
+admin.py — Admin do Django (nao utilizado).
+
+O Portal VG 24H nao utiliza o django.contrib.admin. A administracao
+eh feita por views proprias em views_gestao.py, acessiveis apenas
+por gestores (perfil GES).
+"""

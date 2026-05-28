@@ -1,14 +1,23 @@
 """
-views_gestao.py — Views de Gestao (Portal VG 24H)
+views_gestao.py — Views de gestao (painel administrativo — Portal VG 24H)
 
-[!] @perfis("GES") — APENAS Gestores acessam. CID e COL sao bloqueados.
-[!] Todas as operacoes usam SQL puro (NEM models Django ORM).
-[!] A view de estatisticas consulta a view SQL vw_estatisticas_chamados
-    (criada por Rafael em 05_views.sql — JOIN LATERAL no ultimo historico).
+Este modulo atende as rotas do painel administrativo, acessiveis
+principalmente por gestores (GES). Bairros tambem sao acessiveis
+para colaboradores (COL).
 
-Operacoes:
-  - CRUD de Categorias, Servicos, Bairros, Colaboradores e Banners
-  - Visualizacao de estatisticas via view SQL
+As operacoes disponiveis sao CRUD completo para cada entidade:
+- Categorias de servico: listar, criar, editar
+- Servicos: listar, criar, editar, desativar (soft delete)
+- Bairros: listar, criar, editar, desativar, reativar
+- Colaboradores: listar, criar, ativar/desativar (toggle)
+- Banners: listar, criar, editar, excluir, reordenar
+- Estatisticas: visualizar view SQL materializada
+
+Todas as operacoes usam SQL puro (cursor.execute()) em vez de Django ORM.
+Os models existem apenas para formularios (ModelChoiceField precisa de
+queryset do ORM para validar FKs) e metodos utilitarios. Nenhuma view
+chama form.save() — os dados sao extraidos de cleaned_data e inseridos
+manualmente via SQL.
 """
 
 from types import SimpleNamespace
@@ -40,13 +49,24 @@ from portal.models import (
 from portal.utils import salvar_foto_upload
 
 
-# ─── Estatísticas ────────────────────────────────────────────
+# ------------------------------------------------------------------
+# Estatisticas (GET /gestao/estatisticas/)
+# ------------------------------------------------------------------
+
 @perfis("GES")
 def gestao_estatisticas(request):
+    """Exibe estatisticas via view SQL materializada.
+
+    Consulta vw_estatisticas_chamados, criada no script 05_views.sql.
+    Essa view usa JOIN LATERAL para buscar o ultimo status de cada
+    chamado e agrupa por categoria e bairro.
+
+    Se a view SQL ainda nao existir no banco (ProgrammingError),
+    retorna lista vazia em vez de erro 500.
+    """
     rows = []
     try:
         with connection.cursor() as c:
-            # SQL puro: consulta a view materializada de estatísticas
             c.execute("SELECT * FROM vw_estatisticas_chamados ORDER BY categoria, bairro")
             cols = [d[0] for d in c.description]
             rows = [dict(zip(cols, r)) for r in c.fetchall()]
@@ -59,20 +79,32 @@ def gestao_estatisticas(request):
     )
 
 
-# ─── Categorias ──────────────────────────────────────────────
+# ------------------------------------------------------------------
+# Categorias (GET/POST /gestao/categorias/ e /gestao/categorias/<pk>/editar/)
+# ------------------------------------------------------------------
+
 @perfis("GES")
 @require_http_methods(["GET", "POST"])
 def gestao_categorias(request):
+    """Lista categorias ativas e cria novas.
+
+    Categorias agrupam servicos por area (ex: "Infraestrutura").
+    Cada categoria pertence a uma secretaria. Como o sistema so tem
+    uma secretaria (VG 24H), busca com LIMIT 1.
+
+    O formulario usa ModelForm (CategoriaForm), mas o save() nunca
+    eh chamado. Os dados sao extraidos de cleaned_data e inseridos
+    via INSERT SQL puro.
+    """
     if request.method == "POST":
         form = CategoriaForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-            # SQL puro: busca a primeira secretaria disponível
             with connection.cursor() as cursor:
                 cursor.execute("SELECT id_secretaria FROM secretaria LIMIT 1")
                 sec_row = cursor.fetchone()
                 sec_id = sec_row[0] if sec_row else None
-                # SQL puro: INSERT na tabela categoria_servico
+
                 cursor.execute(
                     "INSERT INTO categoria_servico (nome, descricao, ativo, id_secretaria) "
                     "VALUES (%s, %s, %s, %s)",
@@ -80,8 +112,8 @@ def gestao_categorias(request):
                 )
             messages.success(request, "Categoria criada.")
         return redirect("portal:gestao_categorias")
+
     form = CategoriaForm()
-    # SQL puro: SELECT categorias ativas
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_categoria, nome, descricao, ativo "
@@ -102,7 +134,12 @@ def gestao_categorias(request):
 @perfis("GES")
 @require_http_methods(["GET", "POST"])
 def gestao_categoria_edit(request, pk):
-    # SQL puro: SELECT categoria por ID
+    """Edita uma categoria existente.
+
+    No GET, busca a categoria por ID e monta um objeto CategoriaServico
+    para preencher o ModelForm (precisa de instance). No POST, extrai
+    os dados validados e faz UPDATE SQL puro.
+    """
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_categoria, nome, descricao, ativo, id_secretaria "
@@ -113,6 +150,7 @@ def gestao_categoria_edit(request, pk):
     if not row:
         raise Http404()
 
+    # Monta objeto ORM para preencher o ModelForm no template.
     obj = CategoriaServico()
     obj.id_categoria = row[0]
     obj.nome = row[1]
@@ -125,7 +163,6 @@ def gestao_categoria_edit(request, pk):
         form = CategoriaForm(request.POST, instance=obj)
         if form.is_valid():
             d = form.cleaned_data
-            # SQL puro: UPDATE categoria_servico
             with connection.cursor() as cursor:
                 cursor.execute(
                     "UPDATE categoria_servico SET nome = %s, descricao = %s "
@@ -136,6 +173,7 @@ def gestao_categoria_edit(request, pk):
             return redirect("portal:gestao_categorias")
     else:
         form = CategoriaForm(instance=obj)
+
     return render(
         request,
         "portal/gestao/categoria_form.html",
@@ -143,19 +181,23 @@ def gestao_categoria_edit(request, pk):
     )
 
 
-# ─── Serviços ────────────────────────────────────────────────
+# ------------------------------------------------------------------
+# Servicos (GET/POST /gestao/servicos/, editar, desativar)
+# ------------------------------------------------------------------
+
 @perfis("GES")
 @require_http_methods(["GET", "POST"])
 def gestao_servicos(request):
-    """
-    Exibe a listagem de serviços ativos (GET) e processa a criação de um novo serviço (POST).
-    Acesso restrito ao perfil Gestor (GES).
+    """Lista servicos ativos e cria novos.
+
+    Servicos sao os itens que o cidadao seleciona ao abrir chamado
+    (ex: "Tapa-buraco"). Cada servico pertence a uma categoria e
+    tem prazos para o semaforo (amarelo/vermelho em dias).
     """
     if request.method == "POST":
         form = ServicoForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-            # SQL puro: INSERT na tabela servico
             with connection.cursor() as cursor:
                 cursor.execute(
                     "INSERT INTO servico (nome, descricao, ativo, id_categoria, "
@@ -168,10 +210,10 @@ def gestao_servicos(request):
                         d.get("prazo_vermelho_dias", 30),
                     ],
                 )
-            messages.success(request, "Serviço criado.")
+            messages.success(request, "Servico criado.")
         return redirect("portal:gestao_servicos")
+
     form = ServicoForm()
-    # SQL puro: SELECT serviços ativos com JOIN na categoria
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT s.id_servico, s.nome, s.descricao, s.ativo, "
@@ -199,11 +241,7 @@ def gestao_servicos(request):
 @perfis("GES")
 @require_http_methods(["GET", "POST"])
 def gestao_servico_edit(request, pk):
-    """
-    Exibe formulário para edição (GET) e salva as alterações de um serviço (POST).
-    Acesso restrito ao perfil Gestor (GES).
-    """
-    # SQL puro: SELECT serviço por ID
+    """Edita um servico existente (incluindo prazos do semaforo)."""
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_servico, nome, descricao, ativo, id_categoria, "
@@ -229,7 +267,6 @@ def gestao_servico_edit(request, pk):
         form = ServicoForm(request.POST, instance=obj)
         if form.is_valid():
             d = form.cleaned_data
-            # SQL puro: UPDATE servico
             with connection.cursor() as cursor:
                 cursor.execute(
                     "UPDATE servico SET nome = %s, descricao = %s, "
@@ -243,10 +280,11 @@ def gestao_servico_edit(request, pk):
                         pk,
                     ],
                 )
-            messages.success(request, "Serviço atualizado.")
+            messages.success(request, "Servico atualizado.")
             return redirect("portal:gestao_servicos")
     else:
         form = ServicoForm(instance=obj)
+
     return render(
         request,
         "portal/gestao/servico_form.html",
@@ -254,15 +292,23 @@ def gestao_servico_edit(request, pk):
     )
 
 
-# ─── Bairros ─────────────────────────────────────────────────
+# ------------------------------------------------------------------
+# Bairros (GET/POST /gestao/bairros/, editar, desativar, reativar)
+# ------------------------------------------------------------------
+
 @perfis("COL", "GES")
 @require_http_methods(["GET", "POST"])
 def gestao_bairros(request):
+    """Lista todos os bairros (ativos e inativos) e cria novos.
+
+    Colaboradores tambem podem gerenciar bairros (alem de gestores).
+    O campo regiao eh um combobox com valores predefinidos
+    (Central, Norte, Sul, etc.) para evitar inconsistencias.
+    """
     if request.method == "POST":
         form = BairroForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-            # SQL puro: INSERT na tabela bairro
             with connection.cursor() as cursor:
                 cursor.execute(
                     "INSERT INTO bairro (nome_bairro, cep, regiao, ativo) "
@@ -271,8 +317,8 @@ def gestao_bairros(request):
                 )
             messages.success(request, "Bairro criado.")
         return redirect("portal:gestao_bairros")
+
     form = BairroForm()
-    # SQL puro: SELECT todos os bairros (ativos e inativos)
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
@@ -295,7 +341,7 @@ def gestao_bairros(request):
 @perfis("COL", "GES")
 @require_http_methods(["GET", "POST"])
 def gestao_bairro_edit(request, pk):
-    # SQL puro: SELECT bairro por ID
+    """Edita um bairro existente. Permite alterar nome, CEP, regiao e ativo."""
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
@@ -318,7 +364,6 @@ def gestao_bairro_edit(request, pk):
         form = BairroForm(request.POST, instance=obj)
         if form.is_valid():
             d = form.cleaned_data
-            # SQL puro: UPDATE bairro
             with connection.cursor() as cursor:
                 cursor.execute(
                     "UPDATE bairro SET nome_bairro = %s, cep = %s, regiao = %s, "
@@ -329,6 +374,7 @@ def gestao_bairro_edit(request, pk):
             return redirect("portal:gestao_bairros")
     else:
         form = BairroForm(instance=obj)
+
     return render(
         request,
         "portal/gestao/bairro_form.html",
@@ -336,19 +382,32 @@ def gestao_bairro_edit(request, pk):
     )
 
 
-# ─── Colaboradores ───────────────────────────────────────────
+# ------------------------------------------------------------------
+# Colaboradores (GET/POST /gestao/colaboradores/, toggle)
+# ------------------------------------------------------------------
+
 @perfis("GES")
 @require_http_methods(["GET", "POST"])
 def gestao_colaboradores(request):
-    """
-    Exibe a lista de colaboradores (GET) e cadastra um novo usuário com perfil 'COL' (POST).
-    Acesso restrito ao perfil Gestor (GES).
+    """Lista colaboradores e cria novos.
+
+    Colaboradores sao servidores com perfil="COL". Ao criar, o gestor
+    define uma senha provisoria que o colaborador deve trocar no primeiro
+    acesso (senha_temporaria="1").
+
+    Antes de inserir, verifica se email ou CPF ja existem no banco.
+    A verificacao no Python (em vez de deixar o banco retornar erro de
+    UNIQUE constraint) permite mostrar mensagem amigavel ao usuario.
+
+    A senha eh armazenada como hash bcrypt (via make_password) —
+    a senha original nunca fica no banco.
     """
     if request.method == "POST":
         form = ColaboradorNovoForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-            # SQL puro: verifica duplicidade de email/CPF na tabela servidor
+
+            # Verifica duplicidade de email ou CPF.
             with connection.cursor() as cursor:
                 cursor.execute(
                     "SELECT EXISTS("
@@ -361,9 +420,8 @@ def gestao_colaboradores(request):
                 ja_existe = cursor.fetchone()[0]
 
             if ja_existe:
-                messages.error(request, "E-mail ou CPF já existe.")
+                messages.error(request, "E-mail ou CPF ja existe.")
             else:
-                # SQL puro: busca primeira secretaria + INSERT servidor
                 with connection.cursor() as cursor:
                     cursor.execute("SELECT id_secretaria FROM secretaria LIMIT 1")
                     sec_row = cursor.fetchone()
@@ -382,17 +440,17 @@ def gestao_colaboradores(request):
                             d["telefone"],
                             d["email"].lower(),
                             make_password(d["senha_provisoria"]),
-                            "1",
-                            "COL",
+                            "1",       # Flag: senha temporaria
+                            "COL",     # Perfil: colaborador
                             True,
                             timezone.now(),
                             sec_id,
                         ],
                     )
-                messages.success(request, "Colaborador criado. Deve trocar a senha no 1º acesso.")
+                messages.success(request, "Colaborador criado. Deve trocar a senha no 1o acesso.")
         return redirect("portal:gestao_colaboradores")
+
     form = ColaboradorNovoForm()
-    # SQL puro: SELECT colaboradores (perfil COL)
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_servidor, nome_completo, cpf, email, telefone, "
@@ -419,11 +477,7 @@ def gestao_colaboradores(request):
 @perfis("GES")
 @require_http_methods(["POST"])
 def gestao_colaborador_toggle(request, pk):
-    """
-    Inverte o status ativo/inativo de um colaborador. Requer POST.
-    Acesso restrito ao perfil Gestor (GES).
-    """
-    # SQL puro: busca colaborador e inverte o campo ativo
+    """Ativa ou desativa um colaborador (toggle do campo ativo)."""
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_servidor, nome_completo, ativo "
@@ -436,47 +490,48 @@ def gestao_colaborador_toggle(request, pk):
 
     novo_ativo = not row[2]
     nome = row[1]
-    # SQL puro: UPDATE servidor SET ativo = ...
+
     with connection.cursor() as cursor:
         cursor.execute(
             "UPDATE servidor SET ativo = %s WHERE id_servidor = %s",
             [novo_ativo, pk],
         )
+
     status = "ativado" if novo_ativo else "inativado"
     messages.success(request, f"Colaborador {nome} {status}.")
     return redirect("portal:gestao_colaboradores")
 
 
+# ------------------------------------------------------------------
+# Acoes rapidas (desativar servico, desativar/reativar bairro)
+# ------------------------------------------------------------------
+
 @perfis("GES")
 @require_http_methods(["POST"])
 def gestao_servico_desativar(request, pk):
+    """Desativa um servico (soft delete: ativo=FALSE).
+
+    Servicos desativados nao aparecem no formulario de novo chamado,
+    mas chamados antigos que usam este servico mantem a referencia.
     """
-    Desativa um serviço existente. Requer POST.
-    Acesso restrito ao perfil Gestor (GES).
-    """
-    # SQL puro: verifica existência e desativa serviço
     with connection.cursor() as cursor:
         cursor.execute("SELECT id_servico FROM servico WHERE id_servico = %s", [pk])
         if not cursor.fetchone():
             raise Http404()
-        cursor.execute(
-            "UPDATE servico SET ativo = FALSE WHERE id_servico = %s", [pk]
-        )
-    messages.info(request, "Serviço inativado.")
+        cursor.execute("UPDATE servico SET ativo = FALSE WHERE id_servico = %s", [pk])
+    messages.info(request, "Servico inativado.")
     return redirect("portal:gestao_servicos")
 
 
 @perfis("COL", "GES")
 @require_http_methods(["POST"])
 def gestao_bairro_desativar(request, pk):
-    # SQL puro: verifica existência e desativa bairro
+    """Desativa um bairro (soft delete: ativo=FALSE)."""
     with connection.cursor() as cursor:
         cursor.execute("SELECT id_bairro FROM bairro WHERE id_bairro = %s", [pk])
         if not cursor.fetchone():
             raise Http404()
-        cursor.execute(
-            "UPDATE bairro SET ativo = FALSE WHERE id_bairro = %s", [pk]
-        )
+        cursor.execute("UPDATE bairro SET ativo = FALSE WHERE id_bairro = %s", [pk])
     messages.info(request, "Bairro inativado.")
     return redirect("portal:gestao_bairros")
 
@@ -484,22 +539,23 @@ def gestao_bairro_desativar(request, pk):
 @perfis("COL", "GES")
 @require_http_methods(["POST"])
 def gestao_bairro_ativar(request, pk):
-    # SQL puro: verifica existência e reativa bairro
+    """Reativa um bairro previamente desativado."""
     with connection.cursor() as cursor:
         cursor.execute("SELECT id_bairro FROM bairro WHERE id_bairro = %s", [pk])
         if not cursor.fetchone():
             raise Http404()
-        cursor.execute(
-            "UPDATE bairro SET ativo = TRUE WHERE id_bairro = %s", [pk]
-        )
+        cursor.execute("UPDATE bairro SET ativo = TRUE WHERE id_bairro = %s", [pk])
     messages.info(request, "Bairro reativado.")
     return redirect("portal:gestao_bairros")
 
 
-# ─── Banners ─────────────────────────────────────────────────
+# ------------------------------------------------------------------
+# Banners (CRUD completo + reordenacao)
+# ------------------------------------------------------------------
+
 @perfis("GES")
 def gestao_banners(request):
-    # SQL puro: SELECT todos os banners ordenados
+    """Lista todos os banners ordenados por posicao no carrossel."""
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_banner, titulo, descricao, url_imagem, link, "
@@ -521,25 +577,34 @@ def gestao_banners(request):
 @perfis("GES")
 @require_http_methods(["GET", "POST"])
 def gestao_banner_novo(request):
+    """Cria um novo banner com upload de imagem.
+
+    A ordem eh auto-incrementada (MAX + 1), colocando o banner no final
+    do carrossel. A imagem pode ir para Cloudinary ou filesystem local.
+    Tamanho maximo: 5MB. Resolucao recomendada: 1200x400px (3:1).
+    """
     if request.method == "POST":
         titulo = request.POST.get("titulo", "").strip()
         descricao = request.POST.get("descricao", "").strip() or None
         link = request.POST.get("link", "").strip() or None
-        ordem = int(request.POST.get("ordem", 0) or 0)
         foto = request.FILES.get("imagem")
 
         if not titulo:
-            messages.error(request, "Título é obrigatório.")
+            messages.error(request, "Titulo e obrigatorio.")
             return redirect("portal:gestao_banner_novo")
-
         if not foto:
-            messages.error(request, "Imagem é obrigatória.")
+            messages.error(request, "Imagem e obrigatoria.")
+            return redirect("portal:gestao_banner_novo")
+        if foto.size > 5 * 1024 * 1024:
+            messages.error(request, "A imagem excede o tamanho maximo de 5MB.")
             return redirect("portal:gestao_banner_novo")
 
         url_imagem = salvar_foto_upload(foto)
 
-        # SQL puro: INSERT na tabela banner_publicacao
         with connection.cursor() as cursor:
+            # Auto-incremento: nova ordem = MAX(ordem) + 1.
+            cursor.execute("SELECT COALESCE(MAX(ordem), -1) + 1 FROM banner_publicacao")
+            ordem = cursor.fetchone()[0]
             cursor.execute(
                 "INSERT INTO banner_publicacao "
                 "(titulo, descricao, url_imagem, link, ordem, ativo, dt_criacao) "
@@ -548,13 +613,15 @@ def gestao_banner_novo(request):
             )
         messages.success(request, "Banner criado com sucesso!")
         return redirect("portal:gestao_banners")
+
     return render(request, "portal/gestao/banner_form.html", {"banner": None})
 
 
 @perfis("GES")
 @require_http_methods(["GET", "POST"])
 def gestao_banner_editar(request, pk):
-    # SQL puro: SELECT banner por ID
+    """Edita um banner existente. Permite alterar titulo, descricao,
+    link, ordem e substituir a imagem."""
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_banner, titulo, descricao, url_imagem, link, "
@@ -581,9 +648,11 @@ def gestao_banner_editar(request, pk):
         url_imagem = banner.url_imagem
         foto = request.FILES.get("imagem")
         if foto:
+            if foto.size > 5 * 1024 * 1024:
+                messages.error(request, "A imagem excede o tamanho maximo de 5MB.")
+                return redirect("portal:gestao_banner_editar", pk=pk)
             url_imagem = salvar_foto_upload(foto)
 
-        # SQL puro: UPDATE banner_publicacao
         with connection.cursor() as cursor:
             cursor.execute(
                 "UPDATE banner_publicacao SET titulo = %s, descricao = %s, "
@@ -593,21 +662,73 @@ def gestao_banner_editar(request, pk):
             )
         messages.success(request, "Banner atualizado!")
         return redirect("portal:gestao_banners")
+
     return render(request, "portal/gestao/banner_form.html", {"banner": banner})
 
 
 @perfis("GES")
 @require_http_methods(["POST"])
 def gestao_banner_excluir(request, pk):
-    # SQL puro: verifica existência e DELETE do banner
+    """Exclui permanentemente um banner (DELETE fisico, nao soft delete)."""
     with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_banner FROM banner_publicacao WHERE id_banner = %s", [pk]
-        )
+        cursor.execute("SELECT id_banner FROM banner_publicacao WHERE id_banner = %s", [pk])
         if not cursor.fetchone():
             raise Http404()
+        cursor.execute("DELETE FROM banner_publicacao WHERE id_banner = %s", [pk])
+    messages.info(request, "Banner excluido.")
+    return redirect("portal:gestao_banners")
+
+
+@perfis("GES")
+@require_http_methods(["POST"])
+def gestao_banner_reordenar(request, pk):
+    """Move um banner para cima ou para baixo no carrossel.
+
+    A direcao vem como campo oculto no formulario (-1 para cima,
+    +1 para baixo). A funcao busca o vizinho na direcao indicada
+    e troca as ordens entre os dois banners (swap).
+    """
+    direcao = int(request.POST.get("direcao", 0))
+
+    with connection.cursor() as cursor:
         cursor.execute(
-            "DELETE FROM banner_publicacao WHERE id_banner = %s", [pk]
+            "SELECT id_banner, ordem FROM banner_publicacao WHERE id_banner = %s", [pk]
         )
-    messages.info(request, "Banner excluído.")
+        row = cursor.fetchone()
+    if not row:
+        raise Http404()
+
+    ordem_atual = row[1]
+
+    # Busca o vizinho na direcao indicada.
+    with connection.cursor() as cursor:
+        if direcao == -1:
+            cursor.execute(
+                "SELECT id_banner, ordem FROM banner_publicacao "
+                "WHERE ordem < %s ORDER BY ordem DESC LIMIT 1",
+                [ordem_atual],
+            )
+        elif direcao == 1:
+            cursor.execute(
+                "SELECT id_banner, ordem FROM banner_publicacao "
+                "WHERE ordem > %s ORDER BY ordem ASC LIMIT 1",
+                [ordem_atual],
+            )
+        else:
+            return redirect("portal:gestao_banners")
+
+        vizinho = cursor.fetchone()
+
+    # Swap: troca as ordens entre o banner e o vizinho.
+    if vizinho:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE banner_publicacao SET ordem = %s WHERE id_banner = %s",
+                [ordem_atual, vizinho[0]],
+            )
+            cursor.execute(
+                "UPDATE banner_publicacao SET ordem = %s WHERE id_banner = %s",
+                [vizinho[1], pk],
+            )
+
     return redirect("portal:gestao_banners")

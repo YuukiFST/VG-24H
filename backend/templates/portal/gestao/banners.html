@@ -55,6 +55,20 @@
             {% endif %}
           </td>
           <td style="text-align:right;">
+            <form action="{% url 'portal:gestao_banner_reordenar' b.pk %}" method="post" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="direcao" value="-1" />
+              <button type="submit" class="br-button circle small" aria-label="Mover para cima" title="Mover para cima">
+                <i class="fas fa-arrow-up" aria-hidden="true"></i>
+              </button>
+            </form>
+            <form action="{% url 'portal:gestao_banner_reordenar' b.pk %}" method="post" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="direcao" value="1" />
+              <button type="submit" class="br-button circle small" aria-label="Mover para baixo" title="Mover para baixo">
+                <i class="fas fa-arrow-down" aria-hidden="true"></i>
+              </button>
+            </form>
             <a href="{% url 'portal:gestao_banner_editar' b.pk %}" class="br-button small secondary"
                aria-label="Editar banner {{ b.titulo }}">
               <i class="fas fa-edit" aria-hidden="true"></i>

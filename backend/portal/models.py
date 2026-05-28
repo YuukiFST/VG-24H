@@ -1,53 +1,40 @@
 """
-models.py — Mapeamento ORM (Object-Relational Mapping) do Portal VG 24H
+models.py — Mapeamento ORM do Portal VG 24H
 
-Este arquivo define as CLASSES PYTHON que representam as TABELAS DO BANCO DE DADOS.
-Cada classe = uma tabela. Cada atributo = uma coluna.
+Este arquivo define as classes Python que representam as tabelas do banco
+de dados. Cada classe equivale a uma tabela e cada atributo a uma coluna.
 
-O Django ORM traduz automaticamente operacoes Python em SQL:
-  - Cidadao.objects.get(pk=5)          → SELECT * FROM cidadao WHERE id_cidadao = 5
-  - Cidadao.objects.filter(ativo=True) → SELECT * FROM cidadao WHERE ativo = true
-  - Cidadao.objects.create(...)        → INSERT INTO cidadao (...) VALUES (...)
-  - obj.save()                         → UPDATE cidadao SET ... WHERE id_cidadao = X
-  - obj.delete()                       → DELETE FROM cidadao WHERE id_cidadao = X
+Todas as classes usam managed = False no Meta, o que significa que o Django
+nao cria nem altera as tabelas automaticamente. As tabelas foram criadas
+manualmente via scripts SQL (pasta database/). O Django apenas le e
+escreve nos registros.
 
-IMPORTANTE: Todas as classes usam 'managed = False' no Meta.
-Isso significa que o Django NAO cria nem altera as tabelas automaticamente.
-As tabelas foram criadas manualmente via scripts SQL (pasta database/).
-O Django apenas LE e ESCREVE nos registros.
+Os modelos existem para:
+- Formularios: ModelChoiceField usa queryset do ORM para validar FKs.
+- Propriedades utilitarias: Chamado.status_atual, Chamado.cor_semaforo.
+- Metodos de classe: Chamado.calcular_stats().
 
-Relacionamentos (FOREIGN KEYS) sao mapeados com models.ForeignKey(),
-que equivalem a REFERENCES no SQL. O Django usa isso para fazer JOINs
-automaticamente quando usamos select_related() ou acessamos obj.id_servico.nome.
-
-[!] Propriedades-chave da classe Chamado:
-    - status_atual      → retorna o objeto StatusChamado do ULTIMO historico
-    - sigla_status      → retorna a sigla (string) do status atual
-    - ultima_atualizacao → retorna dt_alteracao do ultimo historico
-    - cor_semaforo      → retorna 'verde', 'amarelo' ou 'vermelho' conforme prazos
+As views, por sua vez, usam SQL puro para todas as operacoes de
+leitura e escrita (INSERT, UPDATE, SELECT, DELETE).
 """
 
 from django.db import models
 from django.utils import timezone
 
 
-# ============================================================
-# TABELA: status_chamado
-# Armazena os 5 status possíveis de um chamado:
-# AB (Aberto), EA (Em Atendimento), EE (Em Execução), CO (Concluído), CA (Cancelado)
-# ============================================================
 class StatusChamado(models.Model):
+    """Catalogo dos 5 status possiveis de um chamado.
+
+    AB = Aberto, EA = Em Atendimento, EE = Em Execucao,
+    CO = Concluido, CA = Cancelado. Registros fixos, nao devem
+    ser criados ou removidos pelo usuario.
     """
-    Mapeamento da tabela status_chamado.
-    Catalogo com 5 registros fixos: AB (Aberto), EA (Em Atendimento),
-    EE (Em Execucao), CO (Concluido), CA (Cancelado).
-    """
-    id_status = models.AutoField(primary_key=True)      # SERIAL PRIMARY KEY
+    id_status = models.AutoField(primary_key=True)
     descricao = models.CharField(max_length=200, blank=True, null=True)
-    sigla = models.CharField(max_length=2, unique=True) # UNIQUE + CHECK no SQL (AB, EA, EE, CO, CA)
+    sigla = models.CharField(max_length=2, unique=True)
 
     class Meta:
-        managed = False          # Django NAO gerencia (tabela criada via SQL)
+        managed = False
         db_table = "status_chamado"
 
     def __str__(self):
@@ -55,9 +42,9 @@ class StatusChamado(models.Model):
 
 
 class Secretaria(models.Model):
-    """
-    Mapeamento da tabela secretaria.
-    Orgaos municipais. FK apontada por: Servidor, CategoriaServico.
+    """Orgaos municipais. Atualmente so existe uma (VG 24H).
+
+    FK apontada por: Servidor.id_secretaria e CategoriaServico.id_secretaria.
     """
     id_secretaria = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=100)
@@ -75,10 +62,9 @@ class Secretaria(models.Model):
 
 
 class CategoriaServico(models.Model):
-    """
-    Mapeamento da tabela categoria_servico.
-    Agrupa servicos por area (ex: Infraestrutura, Mobilidade).
-    FK → Secretaria. FK apontada por: Servico.
+    """Agrupa servicos por area (ex: Infraestrutura, Mobilidade Urbana).
+
+    FK para Secretaria. Cada categoria pode ter varios servicos.
     """
     id_categoria = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=100, unique=True)
@@ -86,7 +72,7 @@ class CategoriaServico(models.Model):
     ativo = models.BooleanField(default=True)
     id_secretaria = models.ForeignKey(
         Secretaria,
-        models.DO_NOTHING,       # Nao faz CASCADE no Django (gerenciado pelo banco)
+        models.DO_NOTHING,
         db_column="id_secretaria",
     )
 
@@ -99,24 +85,24 @@ class CategoriaServico(models.Model):
 
 
 class Servico(models.Model):
-    """
-    Mapeamento da tabela servico.
-    Tipos de servico com prazos para o semaforo (amarelo/vermelho).
-    FK → CategoriaServico. FK apontada por: Chamado.
-    [!] Os prazos (prazo_amarelo_dias, prazo_vermelho_dias) sao usados
-        pela property cor_semaforo para classificar a urgencia.
+    """Tipos de servico com prazos para o semaforo de urgencia.
+
+    Cada servico pertence a uma Categoria e tem dois prazos:
+    - prazo_amarelo_dias: dias ate o chamado ficar amarelo (atencao).
+    - prazo_vermelho_dias: dias ate ficar vermelho (critico).
+    Esses prazos sao usados pela funcao cor_semaforo() em db.py.
     """
     id_servico = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=100)
     descricao = models.CharField(max_length=200, blank=True, null=True)
-    prazo_amarelo_dias = models.IntegerField(default=15)    # Dias ate "amarelo"
-    prazo_vermelho_dias = models.IntegerField(default=30)   # Dias ate "vermelho"
+    prazo_amarelo_dias = models.IntegerField(default=15)
+    prazo_vermelho_dias = models.IntegerField(default=30)
     ativo = models.BooleanField(default=True)
     id_categoria = models.ForeignKey(
         CategoriaServico,
         models.DO_NOTHING,
         db_column="id_categoria",
-        related_name="servicos",     # cat.servicos.all() — acesso reverso
+        related_name="servicos",
     )
 
     class Meta:
@@ -128,13 +114,14 @@ class Servico(models.Model):
 
 
 class Bairro(models.Model):
-    """
-    Mapeamento da tabela bairro.
-    Bairros de Varzea Grande/MT. FK apontada por: Chamado.id_bairro.
+    """Bairros de Varzea Grande/MT. Usado como endereco do chamado.
+
+    O campo regiao aceita valores predefinidos (Central, Norte, Sul, etc.)
+    para evitar inconsistencias de digitacao.
     """
     id_bairro = models.AutoField(primary_key=True)
     nome_bairro = models.CharField(max_length=100, unique=True)
-    cep = models.CharField(max_length=8)
+    cid = models.CharField(max_length=8)
     regiao = models.CharField(max_length=200, blank=True, null=True)
     ativo = models.BooleanField(default=True)
 
@@ -146,35 +133,28 @@ class Bairro(models.Model):
         return self.nome_bairro
 
 
-# ============================================================
-# TABELA: cidadao
-# Usuários do portal (login próprio, NÃO usa django.contrib.auth).
-# O campo 'perfil' define o tipo: 'CID' = Cidadão.
-# 'senha_hash' armazena o hash bcrypt da senha (NUNCA a senha real).
-# ============================================================
 class Cidadao(models.Model):
-    """
-    Mapeamento da tabela cidadao.
-    Usuarios do portal (autenticacao propria — NAO usa django.contrib.auth).
-    [!] A senha e armazenada como HASH (NUNCA em texto puro).
-    Perfil: 'CID' = Cidadao padrao. FK apontada por: Chamado.id_cidadao.
+    """Usuarios do portal (autenticacao propria, nao usa django.contrib.auth).
+
+    A senha eh armazenada como hash bcrypt (senha_hash), nunca em texto puro.
+    O campo perfil define o tipo: 'CID' = cidadao padrao.
     """
     id_cidadao = models.AutoField(primary_key=True)
     nome_completo = models.CharField(max_length=200)
-    cpf = models.CharField(max_length=11, unique=True)          # CPF sem mascara (11 digitos)
+    cpf = models.CharField(max_length=11, unique=True)
     dt_nascimento = models.DateField()
     telefone = models.CharField(max_length=20)
     email = models.CharField(max_length=255, unique=True)
-    senha_hash = models.CharField(max_length=255)               # Hash bcrypt (ex: pbkdf2_sha256$...)
+    senha_hash = models.CharField(max_length=255)
     senha_temporaria = models.CharField(max_length=200, blank=True, null=True)
-    perfil = models.CharField(max_length=3, default="CID")      # 'CID' ou 'VER'
+    perfil = models.CharField(max_length=3, default="CID")
     rua = models.CharField(max_length=100, blank=True, null=True)
     num_endereco = models.CharField(max_length=10, blank=True, null=True)
     complemento_endereco = models.CharField(max_length=200, blank=True, null=True)
     bairro_endereco = models.CharField(max_length=200, blank=True, null=True)
     cep_endereco = models.CharField(max_length=8, blank=True, null=True)
     dt_cadastro = models.DateTimeField()
-    ativo = models.BooleanField(default=True)                   # Soft delete
+    ativo = models.BooleanField(default=True)
 
     class Meta:
         managed = False
@@ -185,16 +165,10 @@ class Cidadao(models.Model):
 
 
 class Servidor(models.Model):
-    """
-    Mapeamento da tabela servidor.
-    Colaboradores e gestores da prefeitura.
+    """Colaboradores e gestores da prefeitura.
 
-    [!] Perfis (campo 'perfil'):
-        'GES' = Gestor (acesso total a todas as funcionalidades)
-        'COL' = Colaborador (acesso parcial — atende chamados)
-
-    FK → Secretaria (qual secretaria ele pertence).
-    FK apontada por: HistoricoChamado.id_servidor (quem alterou o status).
+    Perfis: 'GES' = gestor (acesso total), 'COL' = colaborador (parcial).
+    O campo senha_temporaria indica primeiro acesso (deve trocar senha).
     """
     id_servidor = models.AutoField(primary_key=True)
     nome_completo = models.CharField(max_length=200)
@@ -204,11 +178,9 @@ class Servidor(models.Model):
     email = models.CharField(max_length=255, unique=True)
     senha_hash = models.CharField(max_length=255)
     senha_temporaria = models.CharField(max_length=200, blank=True, null=True)
-    perfil = models.CharField(max_length=3)                     # 'GES' ou 'COL'
+    perfil = models.CharField(max_length=3)
     dt_cadastro = models.DateTimeField()
     ativo = models.BooleanField(default=True)
-    # FOREIGN KEY: REFERENCES secretaria(id_secretaria)
-    # models.DO_NOTHING = não faz CASCADE no Django (gerenciado pelo banco)
     id_secretaria = models.ForeignKey(
         Secretaria,
         models.DO_NOTHING,
@@ -223,122 +195,77 @@ class Servidor(models.Model):
         return self.nome_completo
 
 
-# ============================================================
-# TABELA: chamado
-# Tabela CENTRAL do sistema. Registra as solicitações dos cidadãos.
-# Possui 3 FOREIGN KEYS: servico, bairro e cidadao.
-#
-# Relacionamentos:
-#   chamado.id_servico → JOIN com tabela servico
-#   chamado.id_bairro  → JOIN com tabela bairro
-#   chamado.id_cidadao → JOIN com tabela cidadao (quem abriu)
-#
-# O Django permite acessar dados relacionados diretamente:
-#   ch.id_servico.nome      → nome do serviço (faz JOIN automaticamente)
-#   ch.id_cidadao.email     → email do cidadão que abriu
-#   ch.historicos.all()     → todos os registros de histórico (related_name)
-# ============================================================
 class Chamado(models.Model):
-    """
-    Mapeamento da tabela chamado (TABELA CENTRAL do sistema).
+    """Tabela central do sistema. Registra as solicitacoes dos cidadaos.
 
-    [!] NAO possui campo id_status. O status e determinado pelo ULTIMO
-        registro de HistoricoChamado (fonte da verdade).
+    Nao possui campo id_status. O status eh determinado pelo ultimo
+    registro de HistoricoChamado (padrao event sourcing).
 
     Properties principais:
-      - status_atual        → objeto StatusChamado do ultimo historico
-      - sigla_status        → sigla do status (ex: 'AB', 'CO') como string
-      - ultima_atualizacao  → data/hora do ultimo historico
-      - cor_semaforo        → 'verde' / 'amarelo' / 'vermelho' conforme prazos
+    - status_atual: objeto StatusChamado do ultimo historico
+    - sigla_status: sigla do status como string (ex: 'AB', 'CO')
+    - cor_semaforo: 'verde', 'amarelo' ou 'vermelho' conforme prazos
+    - ultima_atualizacao: data/hora do ultimo historico
     """
     id_chamado = models.AutoField(primary_key=True)
-    num_protocolo = models.CharField(max_length=20, unique=True)   # Ex: '2026000001'
-    prioridade = models.IntegerField(default=0)                    # 0 a 5 (CHECK no banco)
+    num_protocolo = models.CharField(max_length=20, unique=True)
+    prioridade = models.IntegerField(default=0)
     ponto_de_referencia = models.CharField(max_length=100, blank=True, null=True)
     descricao = models.CharField(max_length=500)
     resolucao = models.CharField(max_length=600, blank=True, null=True)
-    nota_avaliacao = models.IntegerField(blank=True, null=True)    # 1 a 5
+    nota_avaliacao = models.IntegerField(blank=True, null=True)
     comentario_avaliacao = models.CharField(max_length=500, blank=True, null=True)
     dt_abertura = models.DateTimeField()
-    dt_conclusao = models.DateTimeField(blank=True, null=True)     # Atualizado pelo Trigger 2B
+    dt_conclusao = models.DateTimeField(blank=True, null=True)
     dt_avaliacao = models.DateTimeField(blank=True, null=True)
-    atualizado_em = models.DateTimeField()                         # Atualizado pelo Trigger 2A
-    # FOREIGN KEYS (equivalem a REFERENCES no SQL)
-    id_servico = models.ForeignKey(
-        Servico,
-        models.DO_NOTHING,
-        db_column="id_servico",
-    )
-    id_bairro = models.ForeignKey(
-        Bairro,
-        models.DO_NOTHING,
-        db_column="id_bairro",
-    )
+    atualizado_em = models.DateTimeField()
+    id_servico = models.ForeignKey(Servico, models.DO_NOTHING, db_column="id_servico")
+    id_bairro = models.ForeignKey(Bairro, models.DO_NOTHING, db_column="id_bairro")
     id_cidadao = models.ForeignKey(
         Cidadao,
         models.DO_NOTHING,
         db_column="id_cidadao",
-        related_name="chamados",         # cidadao.chamados.all() — acesso reverso
+        related_name="chamados",
     )
 
     class Meta:
         managed = False
         db_table = "chamado"
 
-    # ========================================================================
-    # PROPERTIES — logica de negocio que consulta o historico
-    # ========================================================================
-
     @property
     def _ultimo_historico(self):
-        """
-        Retorna o objeto HistoricoChamado mais recente.
-        [!] Usa cache: se o related_name 'historicos' foi prefetchado
-            via prefetch_related(), evita queries extras.
-        """
+        """Retorna o historico mais recente. Usa cache do prefetch_related se disponivel."""
         try:
             historicos = list(self.historicos.all())
             if not historicos:
                 return None
-            # Encontra o registro com a maior dt_alteracao
             return max(historicos, key=lambda h: h.dt_alteracao)
         except (ValueError, AttributeError):
             return None
 
     @property
     def status_atual(self):
-        """
-        [!] DESTAQUE: Retorna o objeto StatusChamado do ultimo historico.
-        Equivalente funcional do antigo campo id_status (que foi removido).
-        """
+        """Retorna o objeto StatusChamado do ultimo historico (fonte da verdade)."""
         ultimo = self._ultimo_historico
         return ultimo.id_status if ultimo else None
 
     @property
     def sigla_status(self):
-        """
-        Retorna a sigla do status atual como string (ex: 'AB', 'CO').
-        Usada em templates e views para comparacao direta.
-        """
+        """Retorna a sigla do status atual como string (ex: 'AB', 'CO')."""
         st = self.status_atual
         return (st.sigla or "").strip() if st else ""
 
     @property
     def ultima_atualizacao(self):
-        """
-        Retorna a data/hora da ultima alteracao de status.
-        Se nao houver historico, retorna a data de abertura.
-        """
+        """Retorna a data/hora da ultima alteracao de status."""
         ultimo = self._ultimo_historico
         return ultimo.dt_alteracao if ultimo else self.dt_abertura
 
     @property
     def cor_semaforo(self):
-        """
-        [!] Classifica o chamado por urgencia usando os prazos do servico:
-          - 'verde':    dentro do prazo amarelo
-          - 'amarelo':  entre prazo amarelo e vermelho
-          - 'vermelho': alem do prazo vermelho
+        """Classifica o chamado por urgencia usando os prazos do servico.
+
+        Retorna 'verde' (dentro do prazo), 'amarelo' (atencao) ou 'vermelho' (critico).
         """
         s = self.id_servico
         dias = (timezone.now() - self.dt_abertura).days
@@ -350,10 +277,9 @@ class Chamado(models.Model):
 
     @classmethod
     def calcular_stats(cls, queryset):
-        """
-        Metodo de classe: calcula estatisticas de semaforo para um queryset.
-        Uso: Chamado.calcular_stats(Chamado.objects.all())
-        Retorna dict: {'no_prazo': N, 'atencao': N, 'critico': N}
+        """Calcula estatisticas do semaforo para um queryset de chamados.
+
+        Retorna dict: {'no_prazo': N, 'atencao': N, 'critico': N}.
         """
         stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
         now = timezone.now()
@@ -369,25 +295,16 @@ class Chamado(models.Model):
         return stats
 
 
-# ============================================================
-# TABELA: foto_chamado
-# Fotos anexadas aos chamados. URLs armazenadas (Cloudinary).
-# FOREIGN KEY para chamado.
-# ============================================================
 class FotoChamado(models.Model):
-    """
-    Mapeamento da tabela foto_chamado.
-    Fotos anexadas aos chamados. URLs armazenadas (Cloudinary ou local).
-    [!] Trigger de integridade: bloqueia INSERT se chamado estiver CO/CA.
+    """Fotos anexadas aos chamados. URLs armazenadas (Cloudinary ou local).
+
+    O banco possui um trigger de integridade que bloqueia INSERT
+    se o chamado estiver concluido ou cancelado.
     """
     id_foto = models.AutoField(primary_key=True)
     url_foto = models.CharField(max_length=200)
     dt_upload = models.DateTimeField()
-    id_chamado = models.ForeignKey(
-        Chamado,
-        models.DO_NOTHING,
-        db_column="id_chamado",
-    )
+    id_chamado = models.ForeignKey(Chamado, models.DO_NOTHING, db_column="id_chamado")
 
     class Meta:
         managed = False
@@ -395,16 +312,15 @@ class FotoChamado(models.Model):
 
 
 class HistoricoChamado(models.Model):
-    """
-    Mapeamento da tabela historico_chamado — FONTE DA VERDADE para status.
+    """Historico de alteracoes de status — fonte da verdade para status.
 
-    [!] Cada inserção nesta tabela:
-      1. Trigger 2B atualiza dt_conclusao em chamado (se CO/CA)
-      2. Trigger 2B gera notificacao automatica
+    Cada insercao nesta tabela pode disparar dois triggers:
+    - Trigger 2A: atualiza atualizado_em na tabela chamado.
+    - Trigger 2B: se o novo status eh CO ou CA, seta dt_conclusao = NOW()
+      e gera uma notificacao automatica para o cidadao.
 
-    FKs: id_chamado → Chamado, id_servidor → Servidor (quem alterou),
-         id_status → StatusChamado.
-    related_name="historicos": permite fazer chamado.historicos.all()
+    O campo id_servidor pode ser NULL quando o registro foi criado
+    automaticamente (ex: abertura de chamado pelo Trigger 1).
     """
     id_historico_chamado = models.AutoField(primary_key=True)
     dt_alteracao = models.DateTimeField()
@@ -413,20 +329,16 @@ class HistoricoChamado(models.Model):
         Chamado,
         models.DO_NOTHING,
         db_column="id_chamado",
-        related_name="historicos",    # chamado.historicos.all() — todo o historico
+        related_name="historicos",
     )
     id_servidor = models.ForeignKey(
         Servidor,
         models.DO_NOTHING,
         db_column="id_servidor",
         blank=True,
-        null=True,                    # NULL quando criado pelo sistema (ex: abertura)
+        null=True,
     )
-    id_status = models.ForeignKey(
-        StatusChamado,
-        models.DO_NOTHING,
-        db_column="id_status",
-    )
+    id_status = models.ForeignKey(StatusChamado, models.DO_NOTHING, db_column="id_status")
 
     class Meta:
         managed = False
@@ -434,13 +346,13 @@ class HistoricoChamado(models.Model):
 
 
 class Notificacao(models.Model):
-    """
-    Mapeamento da tabela notificacao.
-    [!] Geradas AUTOMATICAMENTE pelo Trigger 2B ao inserir historico.
-    Avisos ao cidadao sobre mudancas de status nos seus chamados.
+    """Notificacoes geradas automaticamente pelo Trigger 2B.
+
+    Cada mudanca de status gera uma notificacao para o cidadao
+    dono do chamado, informando a nova situacao.
     """
     id_notificacao = models.AutoField(primary_key=True)
-    mensagem = models.CharField(max_length=200)               # Ex: "Chamado 20260001: status alterado..."
+    mensagem = models.CharField(max_length=200)
     lida = models.BooleanField(default=False)
     arquivada = models.BooleanField(default=False)
     dt_envio = models.DateTimeField()
@@ -458,25 +370,25 @@ class Notificacao(models.Model):
 
 
 class BannerPublicacao(models.Model):
-    """
-    Mapeamento da tabela banner_publicacao (NAO esta no DER original).
-    Banners da pagina inicial (carrossel de noticias/destaques).
-    Tabela adicional fora das 11 entidades principais.
+    """Banners da pagina inicial (carrossel de noticias/destaques).
+
+    Tabela adicional fora das 11 entidades principais do DER.
+    A ordem controla a posicao no carrossel e eh gerenciada
+    pelo gestor via painel administrativo.
     """
     id_banner = models.AutoField(primary_key=True)
     titulo = models.CharField(max_length=100)
     descricao = models.CharField(max_length=300, blank=True, null=True)
     url_imagem = models.CharField(max_length=500)
     link = models.CharField(max_length=500, blank=True, null=True)
-    ordem = models.IntegerField(default=0)                    # Ordem de exibicao
+    ordem = models.IntegerField(default=0)
     ativo = models.BooleanField(default=True)
     dt_criacao = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         managed = False
         db_table = "banner_publicacao"
-        ordering = ["ordem", "-dt_criacao"]                   # Ordena por ordem, depois data
+        ordering = ["ordem", "-dt_criacao"]
 
     def __str__(self):
         return self.titulo
-

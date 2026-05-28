@@ -1,16 +1,19 @@
 """
-middleware.py — Middleware de Autenticacao do Portal VG 24H
+middleware.py — Middleware de autenticacao do Portal VG 24H
 
-[!] PONTO CRUCIAL: Este middleware injeta variaveis de sessao no PostgreSQL
-    via set_config(). As triggers e functions do banco (ver 03 e 04) usam
-    essas variaveis para saber qual usuario/pefil esta executando a acao.
+Este middleware eh executado automaticamente em toda requisicao HTTP.
+Suas responsabilidades sao:
 
-Executado AUTOMATICAMENTE em TODA requisicao HTTP.
-Fluxo:
-1. Usuario faz login → session['usuario_id'] e session['usuario_tipo'] salvos
-2. Toda requisicao → middleware le a sessao e busca o usuario no banco
-3. Coloca em request.portal_user → views podem verificar quem esta logado
-4. Chama set_config() no PostgreSQL para auditoria nas triggers
+1. Ler o cookie de sessao e buscar o usuario correspondente no banco
+   (via db.buscar_cidadao_por_id ou db.buscar_servidor_por_id).
+2. Disponibilizar o usuario em request.portal_user para todas as views.
+3. Injetar variaveis de sessao no PostgreSQL via set_config() para que
+   as triggers e funcoes PL/pgSQL saibam qual usuario esta executando
+   a acao (variaveis portal.perfil e portal.id_usuario_acao).
+
+O login salva usuario_id e usuario_tipo no cookie de sessao.
+Este middleware le esses valores a cada requisicao e reconstrói
+o objeto do usuario.
 """
 
 from django.db import connection
@@ -19,17 +22,16 @@ from portal import db
 
 
 def _usuario_da_sessao(request):
-    """
-    Le o cookie de sessao e busca o usuario correspondente no banco via SQL puro.
-    Retorna um objeto Cidadao ou Servidor, ou None se nao estiver logado.
+    """Le o cookie de sessao e busca o usuario no banco via SQL puro.
 
-    [!] Delega para db.buscar_cidadao_por_id / db.buscar_servidor_por_id
-        que executam SELECT SQL puro e montam o objeto manualmente.
+    Retorna um objeto Cidadao ou Servidor populado manualmente,
+    ou None se o usuario nao estiver logado. Se a sessao conter
+    um ID invalido (usuario desativado ou removido), limpa o cookie.
     """
-    uid = request.session.get("usuario_id")         # ID salvo no login
-    tipo = request.session.get("usuario_tipo")      # 'cidadao' ou 'servidor'
+    uid = request.session.get("usuario_id")
+    tipo = request.session.get("usuario_tipo")
     if not uid or not tipo:
-        return None                                 # Nao esta logado
+        return None
 
     try:
         if tipo == "servidor":
@@ -38,25 +40,25 @@ def _usuario_da_sessao(request):
             user = db.buscar_cidadao_por_id(uid)
 
         if not user:
-            request.session.flush()                 # Sessao invalida — limpa cookie
+            request.session.flush()
         return user
     except Exception:
-        # Usuario foi desativado ou removido? Limpa a sessao
         request.session.flush()
         return None
 
 
 def _postgres_sessao(perfil, id_acao):
-    """
-    [!] DESTAQUE: Injeta variaveis de sessao no PostgreSQL.
-    As triggers e functions (03_functions_triggers.sql, 04_rules.sql)
-    acessam essas variaveis para saber qual usuario/perfil esta agindo.
+    """Injeta variaveis de sessao no PostgreSQL para uso nas triggers.
 
-    Exemplo de uso na trigger:
-        SELECT current_setting('portal.perfil', true);  -- retorna 'CID'
-        SELECT current_setting('portal.id_usuario_acao', true);  -- retorna '5'
+    As triggers e funcoes PL/pgSQL (03_functions_triggers.sql) acessam
+    essas variaveis via current_setting() para saber qual usuario e
+    perfil estao executando a acao. Isso eh usado para:
+    - Bloquear operacoes indevidas (ex: cidadao nao pode mudar status)
+    - Registrar quem fez cada alteracao (auditoria)
+    - Gerar notificacoes para o cidadao correto
 
-    terceiro argumento = true → variavel local (so existe nesta conexao)
+    O terceiro parametro (true) indica que a variavel eh local a esta
+    conexao, ou seja, nao afeta outras requisicoes simultaneas.
     """
     perfil = perfil or ""
     id_acao = "" if id_acao is None else str(id_acao)
@@ -66,27 +68,19 @@ def _postgres_sessao(perfil, id_acao):
 
 
 class PortalUserMiddleware:
-    """
-    Middleware registrado em settings.py (MIDDLEWARE).
-    [!] Executado em TODA requisicao ANTES de chegar na view.
+    """Middleware registrado em settings.py. Executado em toda requisicao.
 
     Efeitos:
-      - request.portal_user → objeto do usuario logado (ou None)
-      - set_config() no PG → triggers sabem quem esta agindo
+    - request.portal_user: objeto do usuario logado (ou None)
+    - set_config() no PostgreSQL: triggers sabem quem esta agindo
     """
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        # 1. Busca o usuario logado a partir da sessao
         user = _usuario_da_sessao(request)
-
-        # 2. Disponibiliza em request.portal_user para todas as views/templates
         request.portal_user = user
 
-        # 3. [!] Informa ao PostgreSQL quem esta operando (para triggers/functions)
-        #     As variaveis 'portal.perfil' e 'portal.id_usuario_acao' ficam
-        #     disponiveis via current_setting() nas funcoes PL/pgSQL.
         if user:
             _postgres_sessao((user.perfil or "").strip(), user.pk)
         else:

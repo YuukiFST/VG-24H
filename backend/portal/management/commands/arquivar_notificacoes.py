@@ -1,9 +1,12 @@
 """
 Management command: arquivar_notificacoes
 
-Automatically archives notifications older than 30 days.
-Run via: python manage.py arquivar_notificacoes
-Schedule via cron or Render Cron Job for production.
+Arquiva automaticamente notificacoes com mais de 30 dias.
+Execucao manual: python manage.py arquivar_notificacoes
+Para producao, agendar via cron ou Render Cron Job.
+
+O parametro --dias permite configurar o periodo de corte
+(padrao: 30 dias).
 """
 
 from datetime import timedelta
@@ -15,21 +18,25 @@ from portal.models import Notificacao
 
 
 class Command(BaseCommand):
-    help = "Arquiva notificações com mais de 30 dias."
+    help = "Arquiva notificacoes com mais de 30 dias."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--dias",
             type=int,
             default=30,
-            help="Número de dias após os quais arquivar (padrão: 30).",
+            help="Numero de dias apos os quais arquivar (padrao: 30).",
         )
 
     def handle(self, *args, **options):
         dias = options["dias"]
         limite = timezone.now() - timedelta(days=dias)
+
+        # UPDATE em lote: marca como arquivadas todas as notificacoes
+        # nao arquivadas cuja data de envio eh anterior ao limite.
         qs = Notificacao.objects.filter(arquivada=False, dt_envio__lt=limite)
         total = qs.update(arquivada=True)
+
         self.stdout.write(
-            self.style.SUCCESS(f"{total} notificação(ões) arquivada(s).")
+            self.style.SUCCESS(f"{total} notificacao(oes) arquivada(s).")
         )

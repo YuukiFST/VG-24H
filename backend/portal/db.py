@@ -1,25 +1,18 @@
 """
-db.py — Camada de Acesso a Dados SQL Puro (Portal VG 24H)
+db.py — Camada de acesso a dados SQL puro (Portal VG 24H)
 
-[!] MODULO CENTRAL: Todas as consultas SQL do sistema estao concentradas aqui.
-    As views (views_*.py) chamam funcoes deste modulo em vez de escrever SQL inline.
+Este modulo concentra todas as consultas SQL do sistema. As views
+chamam funcoes deste modulo em vez de escrever SQL inline, seguindo
+o principio de separacao de responsabilidades.
 
-[!] POR QUE SQL PURO?
-    Este projeto usa SQL puro (cursor.execute) em vez do Django ORM como
-    requisito academico. Isso demonstra dominio de SQL e permite que a
-    professora avalie as queries diretamente no codigo Python.
+O projeto usa SQL puro (cursor.execute) em vez do Django ORM como
+requisito academico. Isso permite que as queries sejam avaliadas
+diretamente no codigo Python.
 
-[!] PADRAO DE HIDRATACAO:
-    Cada funcao executa um SELECT e converte as linhas (tuplas) em objetos
-    SimpleNamespace, que funcionam como objetos com atributos nomeados.
-    Exemplo: row[0] vira obj.id_chamado — mais legivel nos templates.
-
-Funcoes organizadas por entidade:
-  - Cidadao: buscar_cidadao_por_id, buscar_cidadao_por_email
-  - Servidor: buscar_servidor_por_id, buscar_servidor_por_email
-  - Chamado: buscar_chamado, popular_status, calcular_stats_semaforo
-  - Catalogo: listar_categorias_ativas, listar_bairros_ativos
-  - Paginacao: paginar
+Cada funcao executa um SELECT e converte as linhas (tuplas) em objetos
+SimpleNamespace, que funcionam como objetos com atributos nomeados.
+Exemplo: row[0] vira obj.id_chamado, o que torna o codigo mais legivel
+nos templates.
 """
 
 from types import SimpleNamespace
@@ -28,16 +21,16 @@ from django.db import connection
 from django.utils import timezone
 
 
-# ═══════════════════════════════════════════════════════════════
-# CIDADAO — Consultas na tabela cidadao
-# ═══════════════════════════════════════════════════════════════
+# ------------------------------------------------------------------
+# Cidadao — consultas na tabela cidadao
+# ------------------------------------------------------------------
 
 def buscar_cidadao_por_id(uid):
-    """
-    SQL puro: SELECT cidadao por ID (usado pelo middleware a cada requisicao).
+    """Busca cidadao por ID. Usado pelo middleware a cada requisicao.
 
-    Retorna um objeto Cidadao populado manualmente, ou None se nao encontrado.
-    [!] Importa Cidadao localmente para evitar import circular com models.py.
+    Retorna um objeto Cidadao populado manualmente (sem ORM) ou None
+    se nao encontrado ou inativo. O import local de Cidadao evita
+    import circular com models.py.
     """
     from portal.models import Cidadao
 
@@ -55,7 +48,7 @@ def buscar_cidadao_por_id(uid):
     if not row:
         return None
 
-    # Monta o objeto Cidadao manualmente (sem ORM)
+    # Monta o objeto Cidadao campo a campo (sem ORM).
     user = Cidadao()
     user.id_cidadao = row[0]
     user.nome_completo = row[1]
@@ -73,16 +66,14 @@ def buscar_cidadao_por_id(uid):
     user.cep_endereco = row[13]
     user.dt_cadastro = row[14]
     user.ativo = row[15]
-    user._state.adding = False  # Informa ao Django que o objeto existe no banco
+    user._state.adding = False  # Indica ao Django que o objeto ja existe no banco.
     return user
 
 
 def buscar_cidadao_por_email(email):
-    """
-    SQL puro: SELECT cidadao por email (usado no login dual).
+    """Busca cidadao por email (login dual). Retorna (objeto, 'cidadao') ou (None, None).
 
-    Retorna (objeto Cidadao, tipo='cidadao') ou (None, None).
-    [!] LOWER(email) garante busca case-insensitive.
+    LOWER(email) garante busca case-insensitive no PostgreSQL.
     """
     from portal.models import Cidadao
 
@@ -107,15 +98,14 @@ def buscar_cidadao_por_email(email):
     return user, "cidadao"
 
 
-# ═══════════════════════════════════════════════════════════════
-# SERVIDOR — Consultas na tabela servidor
-# ═══════════════════════════════════════════════════════════════
+# ------------------------------------------------------------------
+# Servidor — consultas na tabela servidor
+# ------------------------------------------------------------------
 
 def buscar_servidor_por_id(uid):
-    """
-    SQL puro: SELECT servidor por ID (usado pelo middleware a cada requisicao).
+    """Busca servidor por ID. Usado pelo middleware a cada requisicao.
 
-    Retorna um objeto Servidor populado manualmente, ou None.
+    Retorna um objeto Servidor populado manualmente ou None.
     """
     from portal.models import Servidor
 
@@ -150,11 +140,7 @@ def buscar_servidor_por_id(uid):
 
 
 def buscar_servidor_por_email(email):
-    """
-    SQL puro: SELECT servidor por email (usado no login dual).
-
-    Retorna (objeto Servidor, tipo='servidor') ou (None, None).
-    """
+    """Busca servidor por email (login dual). Retorna (objeto, 'servidor') ou (None, None)."""
     from portal.models import Servidor
 
     with connection.cursor() as cursor:
@@ -178,19 +164,18 @@ def buscar_servidor_por_email(email):
     return user, "servidor"
 
 
-# ═══════════════════════════════════════════════════════════════
-# CHAMADO — Consultas na tabela chamado (TABELA CENTRAL)
-# ═══════════════════════════════════════════════════════════════
+# ------------------------------------------------------------------
+# Chamado — consultas na tabela chamado (tabela central do sistema)
+# ------------------------------------------------------------------
 
 def buscar_chamado(pk):
-    """
-    SQL puro: SELECT chamado por ID com JOIN em servico e bairro.
+    """Busca chamado por ID com JOIN em servico e bairro.
 
     Retorna um SimpleNamespace com todos os campos do chamado,
-    incluindo dados do servico (nome, prazos) e bairro (nome_bairro).
-    Tambem popula status_atual, sigla_status e cor_semaforo.
+    incluindo dados do servico (nome, prazos) e bairro. Tambem
+    popula status_atual, sigla_status e cor_semaforo via popular_status().
 
-    [!] Usado por views_cidadao e views_equipe para detalhe do chamado.
+    Usado por views_cidadao e views_equipe para detalhe do chamado.
     """
     with connection.cursor() as cursor:
         cursor.execute(
@@ -225,30 +210,21 @@ def buscar_chamado(pk):
         ),
         id_bairro=SimpleNamespace(id_bairro=row[13], pk=row[13], nome_bairro=row[19]),
     )
-    # Popula status atual e cor do semaforo
     popular_status(ch)
     return ch
 
 
 def popular_status(ch):
-    """
-    SQL puro: busca o status ATUAL do chamado via ULTIMO registro de historico.
+    """Busca o status atual do chamado via ultimo registro de historico.
 
-    [!] LOGICA CENTRAL DO SISTEMA:
-        O chamado NAO tem campo de status direto. O status e determinado
-        pelo registro mais recente na tabela historico_chamado.
-        Esta funcao popula:
-          - ch.status_atual   → objeto com id_status, sigla, descricao
-          - ch.sigla_status   → string da sigla (ex: 'AB', 'CO')
-          - ch.cor_semaforo   → 'verde', 'amarelo' ou 'vermelho'
-
-    [!] SEMAFORO:
-        - 'verde':    dias aberto < prazo_amarelo_dias do servico
-        - 'amarelo':  dias aberto >= prazo_amarelo_dias e < prazo_vermelho_dias
-        - 'vermelho': dias aberto >= prazo_vermelho_dias
+    O chamado nao tem campo de status direto. O status eh determinado
+    pelo registro mais recente na tabela historico_chamado (event sourcing).
+    Esta funcao popula tres atributos no objeto ch:
+    - status_atual: objeto com id_status, sigla e descricao
+    - sigla_status: string da sigla (ex: 'AB', 'CO')
+    - cor_semaforo: 'verde', 'amarelo' ou 'vermelho'
     """
     with connection.cursor() as cursor:
-        # Busca o historico mais recente (ORDER BY DESC LIMIT 1)
         cursor.execute(
             "SELECT sc.id_status, sc.sigla, sc.descricao "
             "FROM historico_chamado hc "
@@ -268,15 +244,18 @@ def popular_status(ch):
         ch.status_atual = None
         ch.sigla_status = ""
 
-    # Calculo do semaforo baseado nos prazos do servico
-    ch.cor_semaforo = cor_semaforo(ch.dt_abertura, ch.id_servico.prazo_amarelo_dias, ch.id_servico.prazo_vermelho_dias)
+    ch.cor_semaforo = cor_semaforo(
+        ch.dt_abertura,
+        ch.id_servico.prazo_amarelo_dias,
+        ch.id_servico.prazo_vermelho_dias,
+    )
 
 
 def cor_semaforo(dt_abertura, prazo_amarelo_dias, prazo_vermelho_dias):
     """Classifica a urgencia do chamado com base nos prazos do servico.
 
-    Retorna 'verde', 'amarelo' ou 'vermelho'.
-    Funcao pura (sem side effects) — usada por popular_status e pelas views.
+    Retorna 'verde' (dentro do prazo), 'amarelo' (atencao) ou 'vermelho' (critico).
+    Funcao pura, sem efeitos colaterais.
     """
     dias = (timezone.now() - dt_abertura).days
     if dias >= prazo_vermelho_dias:
@@ -287,12 +266,11 @@ def cor_semaforo(dt_abertura, prazo_amarelo_dias, prazo_vermelho_dias):
 
 
 def calcular_stats_semaforo(cidadao_id=None):
-    """
-    SQL puro: calcula estatisticas do semaforo para chamados.
+    """Calcula estatisticas do semaforo para chamados em aberto.
 
-    Retorna dict: {'no_prazo': N, 'atencao': N, 'critico': N}
-
-    [!] Agregacao totalmente em SQL — sem loop Python.
+    Retorna dict com tres chaves: no_prazo, atencao, critico.
+    Se cidadao_id for informado, filtra apenas os chamados desse cidadao.
+    A agregacao eh feita totalmente em SQL (SUM + CASE WHEN).
     """
     where = ""
     where_params = []
@@ -318,15 +296,14 @@ def calcular_stats_semaforo(cidadao_id=None):
         cursor.execute(sql, params)
         row = cursor.fetchone()
     return {"no_prazo": row[0], "atencao": row[1], "critico": row[2]}
+
+
 def buscar_historicos(chamado_pk):
-    """
-    SQL puro: SELECT historicos de um chamado com JOIN em servidor e status.
+    """Busca historicos de um chamado com JOIN em servidor e status.
 
-    Retorna lista de SimpleNamespace com dados do historico,
-    servidor responsavel e status associado.
-
-    [!] LEFT JOIN em servidor: pode ser NULL quando o historico
-        foi criado pelo sistema (ex: abertura automatica pelo Trigger 1).
+    Retorna lista de SimpleNamespace ordenada por data (mais antigo primeiro).
+    LEFT JOIN em servidor permite que registros sem servidor (ex: abertura
+    automatica pelo Trigger 1) aparecam normalmente.
     """
     with connection.cursor() as cursor:
         cursor.execute(
@@ -353,10 +330,9 @@ def buscar_historicos(chamado_pk):
 
 
 def buscar_fotos(chamado_pk):
-    """
-    SQL puro: SELECT fotos de um chamado ordenadas por data de upload.
+    """Busca fotos de um chamado ordenadas por data de upload.
 
-    [!] Fotos armazenadas como URLs (Cloudinary ou filesystem local).
+    As fotos sao armazenadas como URLs (Cloudinary ou filesystem local).
     """
     with connection.cursor() as cursor:
         cursor.execute(
@@ -371,16 +347,12 @@ def buscar_fotos(chamado_pk):
         ]
 
 
-# ═══════════════════════════════════════════════════════════════
-# CATALOGO — Categorias, Servicos, Bairros
-# ═══════════════════════════════════════════════════════════════
+# ------------------------------------------------------------------
+# Catalogo — categorias, servicos, bairros, status
+# ------------------------------------------------------------------
 
 def listar_categorias_ativas():
-    """
-    SQL puro: SELECT categorias ativas ordenadas por nome.
-
-    Retorna lista de SimpleNamespace com id_categoria, nome, descricao.
-    """
+    """Lista categorias ativas ordenadas por nome."""
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_categoria, nome, descricao "
@@ -396,11 +368,7 @@ def listar_categorias_ativas():
 
 
 def listar_servicos_por_categoria(categoria_pk):
-    """
-    SQL puro: SELECT servicos ativos de uma categoria.
-
-    [!] Usado na pagina inicial, catalogo e formulario de novo chamado.
-    """
+    """Lista servicos ativos de uma categoria especifica."""
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_servico, nome, descricao, ativo "
@@ -418,11 +386,7 @@ def listar_servicos_por_categoria(categoria_pk):
 
 
 def listar_bairros_ativos():
-    """
-    SQL puro: SELECT bairros ativos ordenados por nome.
-
-    [!] Usado em formularios de cadastro, novo chamado e filtros.
-    """
+    """Lista bairros ativos ordenados por nome. Usado em formularios e filtros."""
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
@@ -440,11 +404,7 @@ def listar_bairros_ativos():
 
 
 def listar_statuses():
-    """
-    SQL puro: SELECT todos os status de chamado.
-
-    [!] Retorna os 5 status fixos: AB, EA, EE, CO, CA.
-    """
+    """Lista todos os status de chamado. Retorna os 5 status fixos: AB, EA, EE, CO, CA."""
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_status, sigla, descricao "
@@ -456,16 +416,17 @@ def listar_statuses():
         ]
 
 
-# ═══════════════════════════════════════════════════════════════
-# PAGINACAO — Funcao reutilizavel
-# ═══════════════════════════════════════════════════════════════
+# ------------------------------------------------------------------
+# Paginacao — funcao reutilizavel
+# ------------------------------------------------------------------
 
 class _PageObj:
     """Wrapper de paginacao compativel com templates Django.
 
-    Substitui SimpleNamespace porque o Python so enxerga metodos
-    dunder (__len__, __iter__) definidos na classe, nao no objeto.
+    Nao pode ser SimpleNamespace porque o Python so enxerga metodos
+    dunder (__len__, __iter__) definidos na classe, nao em instancias.
     """
+
     def __init__(self, object_list, number, paginator,
                  has_previous, has_next,
                  previous_page_number, next_page_number):
@@ -485,19 +446,14 @@ class _PageObj:
 
 
 def paginar(itens, pagina, por_pagina=15, total_count=None):
-    """
-    Paginacao manual para listas de objetos.
+    """Paginacao manual para listas de objetos.
 
-    Recebe uma lista de itens (pagina atual) e retorna um objeto _PageObj
-    compativel com os templates Django (page_obj), contendo:
-      - object_list: itens da pagina atual
-      - number: numero da pagina atual
-      - paginator.num_pages: total de paginas
-      - has_previous / has_next: navegacao
-      - previous_page_number / next_page_number
+    Recebe uma lista de itens (ja filtrados ou pagina atual) e retorna
+    um _PageObj compativel com os templates Django. O total_count permite
+    que o chamador passe o COUNT(*) do SQL para evitar contar em Python.
 
-    [!] total_count: se informado (via COUNT(*) SQL), usa ele para
-        calcular num_pages. Se None, usa len(itens).
+    Se total_count for informado, assume que 'itens' ja contem apenas
+    os registros da pagina atual (LIMIT/OFFSET feito no SQL).
     """
     if total_count is None:
         total_count = len(itens)
@@ -509,8 +465,6 @@ def paginar(itens, pagina, por_pagina=15, total_count=None):
         page_number = 1
     page_number = max(1, min(page_number, total_pages))
 
-    # Se total_count foi informado, o chamador ja fez LIMIT/OFFSET no SQL
-    # e 'itens' contem apenas os registros da pagina atual.
     if total_count is not None and total_count != len(itens):
         page_items = itens
     else:

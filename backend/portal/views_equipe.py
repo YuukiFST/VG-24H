@@ -1,20 +1,31 @@
 """
-views_equipe.py — Views da Equipe (Gestores e Colaboradores)
+views_equipe.py — Views da equipe (gestores e colaboradores — Portal VG 24H)
 
-[!] @perfis("COL", "GES") — APENAS servidores acessam. Cidadaos sao bloqueados.
-[!] Ao contrario de views_cidadao: aqui NAO filtra por id_cidadao — ve TODOS os chamados.
-[!] Mudanca de status = INSERT em historico_chamado (NAO update em chamado).
-    Trigger 2B trata dt_conclusao e notificacao automaticamente.
+Este modulo atende as rotas acessiveis por gestores (GES) e colaboradores
+(COL). A diferenca principal em relacao ao cidadao eh que a equipe:
+- Ve TODOS os chamados (nao apenas os proprios)
+- Pode alterar status dos chamados (transicoes de maquina de estados)
+- Pode adicionar observacoes e fotos a qualquer chamado
+- Tem acesso ao dashboard com graficos e metricas
 
-Diferenca chave:
-  - Cidadao: filtra WHERE c.id_cidadao = %s (privacidade)
-  - Equipe: sem filtro de cidadao (ve todos)
+O cidadao so pode cancelar seus proprios chamados e avalia-los quando
+concluidos. A equipe controla o fluxo completo de atendimento.
+
+Mudanca de status segue o padrao event sourcing: cada transicao gera
+um novo INSERT em historico_chamado, nunca UPDATE. Os triggers do banco
+disparam automaticamente apos cada INSERT:
+- Trigger 2A: atualiza atualizado_em na tabela chamado
+- Trigger 2B: se status = CO ou CA, seta dt_conclusao = NOW() e gera
+  notificacao para o cidadao
+
+Colaboradores (COL) nao podem alterar status de chamados ja encerrados
+(Concluido ou Cancelado). Apenas gestores (GES) podem fazer isso.
+Essa regra eh aplicada no Python e nao no banco de dados.
 """
-
-from types import SimpleNamespace
 
 import json
 from datetime import timedelta
+from types import SimpleNamespace
 
 from django.contrib import messages
 from django.db import connection, transaction
@@ -30,7 +41,12 @@ from portal.utils import salvar_foto_upload
 
 
 def _int_none(v):
-    """Converte string da query string para int, ou None se vazio/invalido."""
+    """Converte parametro de query string para int ou None.
+
+    Campos de select enviam string vazia quando "Todos" esta selecionado.
+    Essa funcao trata string vazia e None como None (para nao entrar
+    na clausula WHERE do SQL) e tenta converter o resto para int.
+    """
     if v is None or v == "":
         return None
     try:
@@ -39,15 +55,26 @@ def _int_none(v):
         return None
 
 
+# ------------------------------------------------------------------
+# Listar todos os chamados (GET /equipe/chamados/)
+# ------------------------------------------------------------------
 
-# ═══════════════════════════════════════════════════════════════
-# READ — Listar TODOS os chamados — Rota: /equipe/chamados/
-# ═══════════════════════════════════════════════════════════════
-# [!] Diferenca do cidadao: aqui NAO filtra por id_cidadao (ve TODOS)
-#     WHERE TRUE permite concatenar filtros opcionais com AND
 @perfis("COL", "GES")
 def equipe_chamados_lista(request):
-    stats = db.calcular_stats_semaforo()
+    """Lista todos os chamados do sistema com filtros, paginacao e ordenacao.
+
+    Diferente da view do cidadao, esta nao filtra por id_cidadao.
+    A equipe ve todos os chamados. O WHERE comeca com TRUE para permitir
+    concatenar filtros opcionais com AND sem logica condicional.
+
+    A ordenacao padrao eh por prioridade DESC (urgentes primeiro),
+    com dt_abertura DESC como criterio de desempate. O usuario pode
+    alterar a ordenacao pelos botoes de cabecalho (parametros
+    ordenar_por e direcao na query string).
+
+    A coluna "Dias em Aberto" eh calculada no Python como
+    (hoje - dt_abertura).days, sem os pontos coloridos do semaforo antigo.
+    """
     try:
         pagina = max(1, int(request.GET.get("pagina") or 1))
     except (ValueError, TypeError):
@@ -55,6 +82,7 @@ def equipe_chamados_lista(request):
     por_pagina = 15
     offset = (pagina - 1) * por_pagina
 
+    # Clase base do FROM/WHERE. WHERE TRUE permite concatenar filtros.
     sql_base = (
         "FROM chamado c "
         "JOIN servico s ON c.id_servico = s.id_servico "
@@ -80,10 +108,13 @@ def equipe_chamados_lista(request):
     )
     params = []
 
+    # Filtros opcionais da query string.
     bairro = _int_none(request.GET.get("bairro"))
     st = _int_none(request.GET.get("status"))
     d0 = request.GET.get("de")
     d1 = request.GET.get("ate")
+    ordenar_por = request.GET.get("ordenar_por", "prioridade")
+    direcao = request.GET.get("direcao", "desc")
 
     if bairro:
         sql_base += "AND c.id_bairro = %s "
@@ -92,24 +123,41 @@ def equipe_chamados_lista(request):
         sql_base += "AND ultimo.id_status = %s "
         params.append(st)
     if d0:
+        # ::date faz o cast para comparar apenas o dia.
         sql_base += "AND c.dt_abertura::date >= %s "
         params.append(d0)
     if d1:
         sql_base += "AND c.dt_abertura::date <= %s "
         params.append(d1)
 
+    # Conta total para a paginacao.
     count_sql = "SELECT COUNT(*) " + sql_base
     with connection.cursor() as cursor:
         cursor.execute(count_sql, params)
         total_count = cursor.fetchone()[0]
 
-    data_sql = select_cols + sql_base + "ORDER BY c.dt_abertura DESC LIMIT %s OFFSET %s"
+    # Mapeia o nome da coluna (vindo da UI) para a expressao SQL.
+    # dias_aberto usa intervalo PostgreSQL (NOW() - dt_abertura).
+    coluna_ordem = {
+        "prioridade": "c.prioridade",
+        "dt_abertura": "c.dt_abertura",
+        "protocolo": "c.num_protocolo",
+        "dias_aberto": "NOW() - c.dt_abertura",
+    }.get(ordenar_por, "c.prioridade")
+    ordem_direcao = "DESC" if direcao == "desc" else "ASC"
+
+    # Para prioridade, adiciona dt_abertura DESC como desempate.
+    if ordenar_por == "prioridade":
+        data_sql = select_cols + sql_base + f"ORDER BY {coluna_ordem} {ordem_direcao}, c.dt_abertura DESC LIMIT %s OFFSET %s"
+    else:
+        data_sql = select_cols + sql_base + f"ORDER BY {coluna_ordem} {ordem_direcao} LIMIT %s OFFSET %s"
     data_params = params + [por_pagina, offset]
 
     with connection.cursor() as cursor:
         cursor.execute(data_sql, data_params)
         rows = cursor.fetchall()
 
+    # Hidratacao: tuplas do banco viram objetos com atributos nomeados.
     linhas = []
     for r in rows:
         cor = db.cor_semaforo(r[4], r[10], r[11])
@@ -124,11 +172,26 @@ def equipe_chamados_lista(request):
             sigla_status=sigla, cor_semaforo=cor,
             status_atual=SimpleNamespace(sigla=sigla, descricao=status_desc),
         )
-        linhas.append({"ch": ch, "cor": cor})
+        # Dias em aberto: (hoje - data de abertura).
+        dias = (timezone.now().date() - ch.dt_abertura.date()).days
+        linhas.append({"ch": ch, "cor": cor, "dias_aberto": dias})
 
-    # Catalogo de bairros e statuses para os filtros do template
+    # Catalogos para os filtros do template.
     bairros_lista = db.listar_bairros_ativos()
     statuses_lista = db.listar_statuses()
+
+    # Estatisticas do semaforo para os cards no topo.
+    stats = db.calcular_stats_semaforo()
+
+    DEFAULT_PRAZO_AMARELO = 15
+    DEFAULT_PRAZO_VERMELHO = 30
+    prazo_amarelo_txt = f"{DEFAULT_PRAZO_AMARELO} dias"
+    prazo_vermelho_txt = f"{DEFAULT_PRAZO_VERMELHO} dias"
+
+    # Percentuais para as barras de progresso no template.
+    pct_no_prazo = round(stats["no_prazo"] / max(total_count, 1) * 100)
+    pct_atencao = round(stats["atencao"] / max(total_count, 1) * 100)
+    pct_critico = round(stats["critico"] / max(total_count, 1) * 100)
 
     page_obj, _ = db.paginar(linhas, pagina, por_pagina=por_pagina, total_count=total_count)
 
@@ -146,12 +209,42 @@ def equipe_chamados_lista(request):
             "filtro_status": st,
             "filtro_de": d0 or "",
             "filtro_ate": d1 or "",
+            "ordenar_por": ordenar_por,
+            "direcao": direcao,
+            "prazo_amarelo_txt": prazo_amarelo_txt,
+            "prazo_vermelho_txt": prazo_vermelho_txt,
+            "pct_no_prazo": pct_no_prazo,
+            "pct_atencao": pct_atencao,
+            "pct_critico": pct_critico,
         },
     )
+
+
+# ------------------------------------------------------------------
+# Detalhe do chamado + acoes (GET/POST /equipe/chamados/<pk>/)
+# ------------------------------------------------------------------
+
 @perfis("COL", "GES")
 @require_http_methods(["GET", "POST"])
 def equipe_chamado_detalhe(request, pk):
-    # SELECT chamado com JOINs completos (servico + bairro + cidadao + categoria)
+    """Exibe detalhes do chamado e processa acoes da equipe.
+
+    Esta view eh hibrida: GET mostra o detalhe completo (com historico,
+    fotos e dados do cidadao), POST executa uma acao determinada pelo
+    campo oculto "acao" no formulario HTML.
+
+    Acoes disponiveis:
+    - status: altera o status do chamado (INSERT historico_chamado).
+      Pode atualizar prioridade e resolucao junto. Colaboradores nao
+      podem alterar status de chamados encerrados (CO ou CA).
+    - obs: adiciona observacao mantendo o mesmo status.
+    - foto: faz upload de nova foto para o chamado.
+
+    A flag bloqueia_status_col controla se o formulario de status
+    aparece no template. Quando True (COL com chamado encerrado),
+    o formulario nao eh renderizado.
+    """
+    # Busca o chamado com todos os JOINs em uma unica query.
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT c.id_chamado, c.num_protocolo, c.prioridade, "
@@ -177,6 +270,7 @@ def equipe_chamado_detalhe(request, pk):
     if not row:
         raise Http404()
 
+    # Monta o objeto chamado com dados aninhados (servico, bairro, cidadao).
     ch = SimpleNamespace(
         id_chamado=row[0], pk=row[0], num_protocolo=row[1], prioridade=row[2],
         ponto_de_referencia=row[3], descricao=row[4], resolucao=row[5],
@@ -196,31 +290,28 @@ def equipe_chamado_detalhe(request, pk):
         ),
     )
 
-    # Busca status atual e semaforo (via db.py — logica centralizada)
+    # Popula status atual e cor do semaforo via db.py.
     db.popular_status(ch)
 
-    # [!] REGRA DE NEGOCIO: COL nao pode alterar status de chamado encerrado (CO/CA)
-    #     GES pode sempre (isento). Essa validacao e feita na view (Python),
-    #     NAO no banco — substitui a Rule R4 que foi removida.
+    # Verifica o perfil do usuario e aplica a regra de bloqueio para COL.
     p = perfil_codigo(request.portal_user)
     ts = ch.sigla_status
     bloqueia_status_col = p == "COL" and ts in ("CO", "CA")
     pode_status = not bloqueia_status_col
 
+    # Processa POST (acoes).
     form_status_erro = None
     if request.method == "POST":
         acao = request.POST.get("acao")
+
+        # Acao: alterar status.
+        # INSERT historico com o novo status. O status atual eh sempre
+        # o ultimo registro de historico (event sourcing).
         if acao == "status" and pode_status:
             form_s = EquipeStatusForm(request.POST)
             if form_s.is_valid():
                 novo = form_s.cleaned_data["id_status"]
-                # [!] MUDANCA DE STATUS = INSERT em historico_chamado
-                #     NAO e UPDATE em chamado! O status atual = ULTIMO registro.
-                #     Trigger 2B dispara automaticamente:
-                #       → Se CO/CA: UPDATE chamado SET dt_conclusao = NOW()
-                #       → Se AB/EA/EE: UPDATE chamado SET dt_conclusao = NULL
-                #       → INSERT notificacao (aviso ao cidadao)
-                #     id_servidor = quem esta logado (rastreabilidade)
+
                 with transaction.atomic(), connection.cursor() as cursor:
                     cursor.execute(
                         "INSERT INTO historico_chamado "
@@ -228,7 +319,7 @@ def equipe_chamado_detalhe(request, pk):
                         "VALUES (%s, %s, %s, %s)",
                         [pk, request.portal_user.pk, novo.pk, timezone.now()],
                     )
-                    # UPDATE resolução (somente para CO/CA) e prioridade
+
                     nova_sigla = novo.sigla.strip().upper()
                     pri = request.POST.get("prioridade")
                     prioridade_val = ch.prioridade
@@ -237,7 +328,9 @@ def equipe_chamado_detalhe(request, pk):
                             prioridade_val = max(0, min(5, int(pri)))
                         except (ValueError, TypeError):
                             pass
+
                     if nova_sigla in ("CO", "CA"):
+                        # Status final: salva resolucao e prioridade.
                         resolucao = form_s.cleaned_data.get("resolucao") or None
                         cursor.execute(
                             "UPDATE chamado SET resolucao = %s, prioridade = %s "
@@ -245,20 +338,29 @@ def equipe_chamado_detalhe(request, pk):
                             [resolucao, prioridade_val, pk],
                         )
                     else:
+                        # Status intermediario: so atualiza prioridade.
                         cursor.execute(
                             "UPDATE chamado SET prioridade = %s "
                             "WHERE id_chamado = %s",
                             [prioridade_val, pk],
                         )
+
+                # Trigger 2B dispara automaticamente apos o INSERT:
+                # - Se CO ou CA: seta dt_conclusao = NOW()
+                # - Se AB/EA/EE: seta dt_conclusao = NULL
+                # - Sempre: gera notificacao para o cidadao
+
                 messages.success(request, "Status atualizado.")
                 return redirect("portal:equipe_chamado", pk=pk)
             form_status_erro = form_s
             for e in form_s.non_field_errors():
                 messages.error(request, e)
+
+        # Acao: adicionar observacao.
+        # INSERT historico mantendo o mesmo status, so com texto.
         if acao == "obs":
             form_o = ObservacaoForm(request.POST)
             if form_o.is_valid():
-                # SQL puro: INSERT observação no historico_chamado
                 status_id = ch.status_atual.pk if ch.status_atual else None
                 with connection.cursor() as cursor:
                     cursor.execute(
@@ -268,8 +370,10 @@ def equipe_chamado_detalhe(request, pk):
                         [pk, request.portal_user.pk, status_id,
                          form_o.cleaned_data["texto"], timezone.now()],
                     )
-                messages.success(request, "Observação registrada.")
+                messages.success(request, "Observacao registrada.")
             return redirect("portal:equipe_chamado", pk=pk)
+
+        # Acao: upload de foto.
         if acao == "foto":
             if request.FILES.get("foto"):
                 form_f = FotoForm(request.POST, request.FILES)
@@ -279,7 +383,6 @@ def equipe_chamado_detalhe(request, pk):
                     except ValueError as e:
                         messages.error(request, str(e))
                     else:
-                        # SQL puro: INSERT foto no foto_chamado
                         with connection.cursor() as cursor:
                             cursor.execute(
                                 "INSERT INTO foto_chamado "
@@ -296,15 +399,15 @@ def equipe_chamado_detalhe(request, pk):
                 messages.error(request, "Selecione uma imagem.")
             return redirect("portal:equipe_chamado", pk=pk)
 
-    # SQL puro: busca historicos e fotos (via db.py)
+    # GET: busca dados auxiliares para o template.
     historicos = db.buscar_historicos(pk)
     fotos = db.buscar_fotos(pk)
-
     observacoes = [h for h in historicos if h.observacao]
 
     if form_status_erro:
         form_status = form_status_erro
     else:
+        # Pre-preenche o form com status e resolucao atuais.
         form_status = EquipeStatusForm(
             initial={
                 "id_status": ch.status_atual,
@@ -312,16 +415,18 @@ def equipe_chamado_detalhe(request, pk):
             }
         )
 
+    # Prioridades para o select no template.
     PRIORIDADES = [
-        (0, "0 — Sem classificação"),
+        (0, "0 — Sem classificacao"),
         (1, "1 — Muito baixa"),
         (2, "2 — Baixa"),
-        (3, "3 — Média"),
+        (3, "3 — Media"),
         (4, "4 — Alta"),
         (5, "5 — Urgente"),
     ]
 
-    # Mapa PK → sigla para o JS saber quais status são CO/CA
+    # Mapa PK → sigla para o JavaScript saber quais status sao finais.
+    # Usado no frontend para mostrar/ocultar o campo de resolucao.
     with connection.cursor() as cursor:
         cursor.execute("SELECT id_status, sigla FROM status_chamado")
         status_sigla_map = {r[0]: r[1].strip() for r in cursor.fetchall()}
@@ -344,15 +449,29 @@ def equipe_chamado_detalhe(request, pk):
             "status_sigla_map_json": json.dumps(status_sigla_map),
         },
     )
-# ========================================================================
-# DELETE — Exclusao de chamado — Rota: /equipe/chamados/<pk>/excluir/
-# ========================================================================
-# [!] Somente GES (Gestor). Requer justificativa obrigatoria.
-#     Fluxo: log de auditoria -> DELETE filhos -> DELETE chamado
+
+
+# ------------------------------------------------------------------
+# Excluir chamado (POST /equipe/chamados/<pk>/excluir/)
+# ------------------------------------------------------------------
+
 @perfis("GES")
 @require_http_methods(["POST"])
 def gestao_chamado_excluir(request, pk):
-    # SQL puro: busca o chamado para verificar se existe
+    """Exclui permanentemente um chamado (apenas gestores).
+
+    A exclusao requer justificativa obrigatoria e segue estes passos:
+    1. Verifica se o chamado existe.
+    2. Ativa a flag portal.excluindo na sessao PostgreSQL para permitir
+       que os triggers de protecao (fn_historico_sem_delete) deixem
+       o DELETE passar. Sem essa flag, os triggers bloqueiam.
+    3. Registra log de auditoria no historico com a justificativa.
+    4. Deleta em cascata manual: fotos, historicos, notificacoes e
+       o chamado. A ordem importa por causa das foreign keys.
+
+    Tudo acontece dentro de transaction.atomic() — se qualquer passo
+    falhar, tudo eh desfeito.
+    """
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_chamado, num_protocolo FROM chamado "
@@ -370,14 +489,14 @@ def gestao_chamado_excluir(request, pk):
         messages.error(request, "E obrigatorio informar uma justificativa para excluir o chamado.")
         return redirect("portal:equipe_chamado", pk=pk)
 
-    # Log de auditoria + delecao atomica
     with transaction.atomic():
         with connection.cursor() as cursor:
-            # Habilita bypass dos triggers de protecao DELETE
-            # (fn_historico_sem_delete + fn_chamado_sem_delete)
+            # Ativa bypass dos triggers de protecao DELETE.
+            # O terceiro parametro (true) indica que a config vale
+            # para toda a transacao atual (nao so esta query).
             cursor.execute("SELECT set_config('portal.excluindo', 'true', true)")
 
-            # Busca status atual para o log
+            # Busca o status atual para incluir no log de auditoria.
             cursor.execute(
                 "SELECT hc.id_status FROM historico_chamado hc "
                 "WHERE hc.id_chamado = %s "
@@ -387,17 +506,18 @@ def gestao_chamado_excluir(request, pk):
             st_row = cursor.fetchone()
             status_id = st_row[0] if st_row else None
 
-            # INSERT log de auditoria
+            # Registra a exclusao no historico antes de deletar.
+            # O prefixo [EXCL] facilita buscas de auditoria futuras.
             cursor.execute(
                 "INSERT INTO historico_chamado "
                 "(id_chamado, id_servidor, id_status, observacao, dt_alteracao) "
                 "VALUES (%s, %s, %s, %s, %s)",
                 [pk, request.portal_user.pk, status_id,
-                 f"[EXCLUSAO] Chamado excluido. Justificativa: {justificativa}",
+                 f"[EXCL] Chamado excluido. Justificativa: {justificativa}",
                  timezone.now()],
             )
 
-            # DELETE via SQL direto — triggers so permitem com portal.excluindo='true'
+            # Delete em cascata manual (ordem respeita as FKs).
             cursor.execute("DELETE FROM foto_chamado WHERE id_chamado = %s", [pk])
             cursor.execute("DELETE FROM historico_chamado WHERE id_chamado = %s", [pk])
             cursor.execute("DELETE FROM notificacao WHERE id_chamado = %s", [pk])
@@ -405,98 +525,97 @@ def gestao_chamado_excluir(request, pk):
 
     messages.success(request, f"Chamado {protocolo} excluido com sucesso.")
     return redirect("portal:equipe_chamados")
-# ═══════════════════════════════════════════════════════════════
-# ESTATISTICAS — Dashboard com graficos — Rota: /equipe/
-# ═══════════════════════════════════════════════════════════════
-# [!] Calcula 4 metricas via SQL puro:
-#     1. Atendidas hoje (COUNT com dt_conclusao = hoje)
-#     2. Atendidas semana (COUNT com dt_conclusao >= 7 dias atras)
-#     3. Status geral (GROUP BY para grafico de pizza)
-#     4. Distribuicao por bairro (TOP 10 para grafico de barras)
-#
-# [!] dt_conclusao e preenchido AUTOMATICAMENTE pelo Trigger 2B
-#     quando um INSERT em historico_chamado tem status CO ou CA.
-#     O Python NUNCA seta dt_conclusao para conclusao — so o trigger.
+
+
+# ------------------------------------------------------------------
+# Dashboard com graficos (GET /equipe/)
+# ------------------------------------------------------------------
+
 @perfis("COL", "GES")
 @require_http_methods(["GET"])
 def equipe_dashboard(request):
+    """Dashboard com metricas e dados para graficos (Chart.js).
+
+    Gera quatro metricas:
+    - atendidas_hoje: chamados concluidos hoje (dt_conclusao = hoje)
+    - atendidas_semana: chamados concluidos nos ultimos 7 dias
+    - status_labels/data: distribuicao por status (para grafico de pizza)
+    - bairros_labels/data: top 10 bairros com mais chamados (para barras)
+
+    O campo dt_conclusao eh preenchido automaticamente pelo Trigger 2B
+    quando um INSERT em historico_chamado tem status CO ou CA. Nao eh
+    setado manualmente pelo codigo Python.
+    """
     agora = timezone.now()
-    hoje = agora.date()                         # Data de hoje (so dia, sem hora)
-    inicio_semana = hoje - timedelta(days=7)    # 7 dias atras
+    hoje = agora.date()
+    inicio_semana = hoje - timedelta(days=7)
 
     with connection.cursor() as cursor:
-            # METRICA 1: Chamados concluidos HOJE
-            # Conta chamados cujo status atual = 'CO' E dt_conclusao = hoje
-            # [!] Subquery busca o status ATUAL (ultimo historico)
-            # [!] dt_conclusao::date = cast para comparar so o dia (sem hora)
-            cursor.execute('''
-                SELECT COUNT(*) FROM chamado c
-                WHERE (
-                    SELECT sc.sigla FROM historico_chamado hc
-                    JOIN status_chamado sc ON hc.id_status = sc.id_status
-                    WHERE hc.id_chamado = c.id_chamado
-                    ORDER BY hc.dt_alteracao DESC LIMIT 1
-                ) = 'CO'
-                AND c.dt_conclusao::date = %s
-            ''', [hoje])
-            atendidas_hoje_row = cursor.fetchone()
-            atendidas_hoje = atendidas_hoje_row[0] if atendidas_hoje_row else 0
+        # Chamados concluidos hoje.
+        # Subquery verifica se o ultimo historico tem sigla "CO".
+        cursor.execute('''
+            SELECT COUNT(*) FROM chamado c
+            WHERE (
+                SELECT sc.sigla FROM historico_chamado hc
+                JOIN status_chamado sc ON hc.id_status = sc.id_status
+                WHERE hc.id_chamado = c.id_chamado
+                ORDER BY hc.dt_alteracao DESC LIMIT 1
+            ) = 'CO'
+            AND c.dt_conclusao::date = %s
+        ''', [hoje])
+        atendidas_hoje = cursor.fetchone()[0] or 0
 
-            # METRICA 2: Chamados concluidos nos ultimos 7 DIAS
-            # Mesma logica, mas com >= (a partir de 7 dias atras ate hoje)
-            cursor.execute('''
-                SELECT COUNT(*) FROM chamado c
-                WHERE (
-                    SELECT sc.sigla FROM historico_chamado hc
-                    JOIN status_chamado sc ON hc.id_status = sc.id_status
-                    WHERE hc.id_chamado = c.id_chamado
-                    ORDER BY hc.dt_alteracao DESC LIMIT 1
-                ) = 'CO'
-                AND c.dt_conclusao::date >= %s
-            ''', [inicio_semana])
-            atendidas_semana_row = cursor.fetchone()
-            atendidas_semana = atendidas_semana_row[0] if atendidas_semana_row else 0
+        # Chamados concluidos nos ultimos 7 dias.
+        cursor.execute('''
+            SELECT COUNT(*) FROM chamado c
+            WHERE (
+                SELECT sc.sigla FROM historico_chamado hc
+                JOIN status_chamado sc ON hc.id_status = sc.id_status
+                WHERE hc.id_chamado = c.id_chamado
+                ORDER BY hc.dt_alteracao DESC LIMIT 1
+            ) = 'CO'
+            AND c.dt_conclusao::date >= %s
+        ''', [inicio_semana])
+        atendidas_semana = cursor.fetchone()[0] or 0
 
-            # METRICA 3: Distribuicao por status (para grafico de pizza/barras)
-            # Resultado: [("Aberto", 15), ("Concluido", 42), ...]
-            # [!] Subquery no WHERE garante que pega APENAS o ultimo historico de cada chamado
-            cursor.execute('''
-                SELECT sc.descricao, COUNT(c.id_chamado) 
-                FROM chamado c
-                JOIN historico_chamado hc ON hc.id_chamado = c.id_chamado
-                JOIN status_chamado sc ON sc.id_status = hc.id_status
-                WHERE hc.id_historico_chamado = (
-                    SELECT id_historico_chamado FROM historico_chamado 
-                    WHERE id_chamado = c.id_chamado 
-                    ORDER BY dt_alteracao DESC LIMIT 1
-                )
-                GROUP BY sc.descricao
-            ''')
-            status_geral_rows = cursor.fetchall()
-            status_labels = [row[0] for row in status_geral_rows]  # ["Aberto", "Concluido", ...]
-            status_data = [row[1] for row in status_geral_rows]    # [15, 42, ...]
+        # Distribuicao por status (para grafico de pizza/barras).
+        cursor.execute('''
+            SELECT sc.descricao, COUNT(c.id_chamado)
+            FROM chamado c
+            JOIN historico_chamado hc ON hc.id_chamado = c.id_chamado
+            JOIN status_chamado sc ON sc.id_status = hc.id_status
+            WHERE hc.id_historico_chamado = (
+                SELECT id_historico_chamado FROM historico_chamado
+                WHERE id_chamado = c.id_chamado
+                ORDER BY dt_alteracao DESC LIMIT 1
+            )
+            GROUP BY sc.descricao
+        ''')
+        status_geral_rows = cursor.fetchall()
+        status_labels = [row[0] for row in status_geral_rows]
+        status_data = [row[1] for row in status_geral_rows]
 
-            # METRICA 4: Top 10 bairros com mais chamados (para grafico de barras)
-            cursor.execute('''
-                SELECT b.nome_bairro, COUNT(c.id_chamado) as qtd
-                FROM chamado c
-                JOIN bairro b ON c.id_bairro = b.id_bairro
-                GROUP BY b.nome_bairro
-                ORDER BY qtd DESC
-                LIMIT 10
-            ''')
-            bairros_rows = cursor.fetchall()
-            bairros_labels = [row[0] for row in bairros_rows]  # ["Centro", "Jardim", ...]
-            bairros_data = [row[1] for row in bairros_rows]    # [30, 25, ...]
+        # Top 10 bairros com mais chamados.
+        cursor.execute('''
+            SELECT b.nome_bairro, COUNT(c.id_chamado) as qtd
+            FROM chamado c
+            JOIN bairro b ON c.id_bairro = b.id_bairro
+            GROUP BY b.nome_bairro
+            ORDER BY qtd DESC
+            LIMIT 10
+        ''')
+        bairros_rows = cursor.fetchall()
+        bairros_labels = [row[0] for row in bairros_rows]
+        bairros_data = [row[1] for row in bairros_rows]
 
-    # Converte listas para JSON (usado pelo Chart.js no template)
+    # Converte listas para JSON (consumido pelo Chart.js no template).
     context = {
-            'atendidas_hoje': atendidas_hoje,          # Numero inteiro
-            'atendidas_semana': atendidas_semana,      # Numero inteiro
-            'status_labels_json': json.dumps(status_labels),   # JSON para Chart.js
-            'status_data_json': json.dumps(status_data),       # JSON para Chart.js
-            'bairros_labels_json': json.dumps(bairros_labels),
-            'bairros_data_json': json.dumps(bairros_data),
+        'atendidas_hoje': atendidas_hoje,
+        'atendidas_semana': atendidas_semana,
+        'status_labels_json': json.dumps(status_labels),
+        'status_data_json': json.dumps(status_data),
+        'bairros_labels_json': json.dumps(bairros_labels),
+        'bairros_data_json': json.dumps(bairros_data),
     }
 
     return render(request, "portal/equipe/estatisticas_graficos.html", context)
