@@ -33,22 +33,19 @@ from portal.utils import salvar_foto_upload
 
 
 def root_view(request):
-    """Pagina inicial — landing page publica (nao exige login).
+    """Pagina inicial (root) — Publica, nao requer login.
 
-    Consulta banners ativos ordenados por ordem (campo gerenciado pelo
-    gestor via painel administrativo). A consulta eh feita com SQL puro
-    e os resultados sao hidratados em objetos SimpleNamespace para que
-    o template possa acessar os campos por nome (banner.titulo, etc.).
-
-    A landing page tambem exibe os servicos publicos mais procurados
-    com base na contagem de chamados (JOIN em servico + chamado).
-    Os servicos com contagem zero aparecem no final da lista.
+    Consulta os banners ativos ordenados pela ordem definida pelo gestor,
+    as categorias com seus respectivos servicos para navegacao, e
+    as estatisticas da plataforma (chamados resolvidos, bairros e servicos).
+    Tudo feito utilizando SQL puro com hidratacao manual para objetos simples.
     """
     banners = []
-    servicos = []
+    categorias = []
+    stats = {}
 
-    # Busca banners ativos ordenados pela posicao configurada pelo gestor
     with connection.cursor() as cursor:
+        # 1. Busca banners ativos ordenados por ordem
         cursor.execute(
             "SELECT id_banner, titulo, descricao, url_imagem, link "
             "FROM banner_publicacao "
@@ -59,36 +56,69 @@ def root_view(request):
             banners.append(
                 SimpleNamespace(
                     id_banner=row[0], titulo=row[1], descricao=row[2],
-                    url_imagem=row[3], link=row[4],
+                    url_imagem=row[3], link=row[4], pk=row[0]
                 )
             )
 
-    # Busca servicos ativos com contagem de chamados associados.
-    # LEFT JOIN preserva servicos mesmo sem chamados (contagem = 0).
-    # ORDER BY COUNT DESC coloca os mais procurados primeiro.
-    with connection.cursor() as cursor:
+        # 2. Busca categorias ativas com seus respectivos servicos
         cursor.execute(
-            "SELECT s.id_servico, s.nome, s.descricao, "
-            "COUNT(c.id_chamado) AS total_chamados "
-            "FROM servico s "
-            "LEFT JOIN chamado c ON c.id_servico = s.id_servico "
-            "WHERE s.ativo = TRUE "
-            "GROUP BY s.id_servico, s.nome, s.descricao "
-            "ORDER BY total_chamados DESC, s.nome"
+            "SELECT id_categoria, nome, descricao "
+            "FROM categoria_servico "
+            "WHERE ativo = TRUE "
+            "ORDER BY nome"
         )
-        for row in cursor.fetchall():
-            servicos.append(
-                SimpleNamespace(
-                    id_servico=row[0], nome=row[1],
-                    descricao=row[2], total_chamados=row[3],
-                )
+        cats = cursor.fetchall()
+
+        for cat_row in cats:
+            cat = SimpleNamespace(
+                id_categoria=cat_row[0], nome=cat_row[1],
+                descricao=cat_row[2], pk=cat_row[0]
             )
+            cursor.execute(
+                "SELECT id_servico, nome, descricao "
+                "FROM servico "
+                "WHERE id_categoria = %s AND ativo = TRUE "
+                "ORDER BY nome",
+                [cat.pk]
+            )
+            svcs = [
+                SimpleNamespace(id_servico=r[0], nome=r[1], descricao=r[2], pk=r[0])
+                for r in cursor.fetchall()
+            ]
+            categorias.append({"categoria": cat, "servicos": svcs})
 
-    return render(request, "portal/public/landing.html", {
+        # 3. Busca estatisticas
+        # Conta total de chamados resolvidos (sigla de status 'CO')
+        cursor.execute(
+            "SELECT COUNT(*) FROM chamado c "
+            "WHERE ("
+            "  SELECT sc.sigla FROM historico_chamado hc "
+            "  JOIN status_chamado sc ON hc.id_status = sc.id_status "
+            "  WHERE hc.id_chamado = c.id_chamado "
+            "  ORDER BY hc.dt_alteracao DESC LIMIT 1"
+            ") = 'CO'"
+        )
+        total_resolvidos = cursor.fetchone()[0]
+
+        # Conta bairros ativos
+        cursor.execute("SELECT COUNT(*) FROM bairro WHERE ativo = TRUE")
+        total_bairros = cursor.fetchone()[0]
+
+        # Conta servicos ativos
+        cursor.execute("SELECT COUNT(*) FROM servico WHERE ativo = TRUE")
+        total_servicos = cursor.fetchone()[0]
+
+        stats = {
+            "total_resolvidos": total_resolvidos,
+            "total_bairros": total_bairros,
+            "total_servicos": total_servicos,
+        }
+
+    return render(request, "portal/root.html", {
         "banners": banners,
-        "servicos_mais_procurados": servicos,
+        "categorias": categorias,
+        "stats": stats,
     })
-
 
 # ------------------------------------------------------------------
 # TROCA DE SENHA (obrigatoria para servidores com senha_temporaria='1')
