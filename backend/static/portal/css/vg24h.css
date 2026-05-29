@@ -683,6 +683,7 @@ img {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    border: none !important;
 }
 
 /* GOV DS .br-input does not style native <select> — match input sizing */

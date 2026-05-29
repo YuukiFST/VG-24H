@@ -48,19 +48,18 @@
         <div class="info-row">
           <span class="info-label">Status Atual</span>
           <span class="info-value">
-            <span class="br-tag count {% with s=sigla_status|lower %}{% if s == 'ab' %}info{% elif s == 'ea' %}warning{% elif s == 'ee' %}ee-status{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ ch.status_atual.descricao }}</span>
+            <span class="br-tag count vg-tag-fixed {% with s=sigla_status|lower %}{% if s == 'ab' %}info{% elif s == 'ea' %}warning{% elif s == 'ee' %}ee-status{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ ch.status_atual.descricao }}</span>
           </span>
         </div>
         <div class="info-row">
           <span class="info-label">Prioridade</span>
           <span class="info-value">
-            {% if ch.prioridade == 5 %}<span class="br-tag" style="background:var(--vg-priority-5); color:var(--vg-priority-5-fg);">Urgente</span>
-            {% elif ch.prioridade == 4 %}<span class="br-tag" style="background:var(--vg-priority-4); color:var(--vg-priority-4-fg);">Alta</span>
-            {% elif ch.prioridade == 3 %}<span class="br-tag" style="background:var(--vg-priority-3); color:var(--vg-priority-3-fg);">Média</span>
-            {% elif ch.prioridade == 2 %}<span class="br-tag" style="background:var(--vg-priority-2); color:var(--vg-priority-2-fg);">Baixa</span>
-            {% elif ch.prioridade == 1 %}<span class="br-tag" style="background:var(--vg-priority-1); color:var(--vg-priority-1-fg);">Muito baixa</span>
-            {% else %}<span class="br-tag" style="background:var(--vg-priority-0); color:var(--vg-priority-0-fg);">Sem classificação</span>{% endif %}
-          </span>
+            {% if ch.prioridade == 5 %}<span class="br-tag vg-tag-fixed" style="background:var(--vg-priority-5); color:var(--vg-priority-5-fg);">Urgente</span>
+            {% elif ch.prioridade == 4 %}<span class="br-tag vg-tag-fixed" style="background:var(--vg-priority-4); color:var(--vg-priority-4-fg);">Alta</span>
+            {% elif ch.prioridade == 3 %}<span class="br-tag vg-tag-fixed" style="background:var(--vg-priority-3); color:var(--vg-priority-3-fg);">Média</span>
+            {% elif ch.prioridade == 2 %}<span class="br-tag vg-tag-fixed" style="background:var(--vg-priority-2); color:var(--vg-priority-2-fg);">Baixa</span>
+            {% elif ch.prioridade == 1 %}<span class="br-tag vg-tag-fixed" style="background:var(--vg-priority-1); color:var(--vg-priority-1-fg);">Muito baixa</span>
+            {% else %}<span class="br-tag vg-tag-fixed" style="background:var(--vg-priority-0); color:var(--vg-priority-0-fg);">Sem classificação</span>{% endif %}
         </div>
         <div class="info-row">
           <span class="info-label">Localização</span>
