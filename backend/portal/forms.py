@@ -81,7 +81,10 @@ class TrocaSenhaObrigatoriaForm(RedefinirSenhaForm):
 
     Herda RedefinirSenhaForm com a mesma validacao (senha + confirmacao).
     """
-    pass
+
+class NovaSenhaForm(forms.Form):
+    """Formulario para troca de senha (campo unico)."""
+    nova_senha = forms.CharField(widget=forms.PasswordInput, min_length=6, label="Nova senha")
 
 
 class ChamadoNovoForm(forms.Form):

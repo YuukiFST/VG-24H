@@ -26,7 +26,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from portal import db
-from portal.decorators import autenticado, exige_troca_senha
+from portal.decorators import autenticado
 from portal.forms import NovaSenhaForm
 from portal.models import Cidadao
 from portal.utils import salvar_foto_upload
@@ -84,11 +84,15 @@ def root_view(request):
                 )
             )
 
-    return render(request, "portal/landing.html", {
+    return render(request, "portal/public/landing.html", {
         "banners": banners,
         "servicos_mais_procurados": servicos,
     })
 
+def catalogo_servicos(request):
+    """Catalogo publico de servicos."""
+    servicos = db.listar_categorias_ativas()
+    return render(request, "portal/public/catalogo_servicos.html", {"categorias": servicos})
 
 # ------------------------------------------------------------------
 # TROCA DE SENHA (obrigatoria para servidores com senha_temporaria='1')
