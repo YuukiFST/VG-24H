@@ -121,7 +121,7 @@ class Bairro(models.Model):
     """
     id_bairro = models.AutoField(primary_key=True)
     nome_bairro = models.CharField(max_length=100, unique=True)
-    cid = models.CharField(max_length=8)
+    cep = models.CharField(max_length=8)
     regiao = models.CharField(max_length=200, blank=True, null=True)
     ativo = models.BooleanField(default=True)
 

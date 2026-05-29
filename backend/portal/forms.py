@@ -84,6 +84,11 @@ class TrocaSenhaObrigatoriaForm(RedefinirSenhaForm):
     pass
 
 
+class NovaSenhaForm(forms.Form):
+    """Formulario para troca de senha (campo unico)."""
+    nova_senha = forms.CharField(widget=forms.PasswordInput, min_length=6, label="Nova senha")
+
+
 class ChamadoNovoForm(forms.Form):
     """Formulario de abertura de chamado pelo cidadao.
 
