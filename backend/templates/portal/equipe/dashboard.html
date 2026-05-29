@@ -76,25 +76,61 @@
         <form method="get" class="row align-items-end" id="form-filtros">
             <div class="col-md-2 mb-2x">
                 <label for="filter-status" class="small font-weight-bold">Status</label>
-                <div class="br-input">
-                    <select id="filter-status" name="status">
-                        <option value="">Todos os Status</option>
+                <div class="br-select" id="br-select-status">
+                    <div class="br-input">
+                        <input id="filter-status-input" type="text" placeholder="Todos os Status"
+                            value="{% if filtro_status %}{% for s in statuses %}{% if filtro_status == s.id_status %}{{ s.descricao }}{% endif %}{% endfor %}{% endif %}" />
+                        <button class="br-button circle small" type="button" data-trigger aria-label="Exibir lista">
+                            <i class="fas fa-angle-down" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="br-list" tabindex="0">
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="status-radio" value="" id="status-todos" {% if not filtro_status %}checked{% endif %} />
+                                <label for="status-todos">Todos os Status</label>
+                            </div>
+                        </div>
                         {% for s in statuses %}
-                        <option value="{{ s.id_status }}" {% if filtro_status == s.id_status %}selected{% endif %}>{{ s.descricao }}</option>
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="status-radio" value="{{ s.id_status }}" id="status-{{ s.id_status }}" {% if filtro_status == s.id_status %}checked{% endif %} />
+                                <label for="status-{{ s.id_status }}">{{ s.descricao }}</label>
+                            </div>
+                        </div>
                         {% endfor %}
-                    </select>
+                    </div>
                 </div>
+                <input type="hidden" name="status" id="filter-status-hidden" value="{{ filtro_status|default:'' }}" />
             </div>
             <div class="col-md-2 mb-2x">
                 <label for="filter-bairro" class="small font-weight-bold">Bairro</label>
-                <div class="br-input">
-                    <select id="filter-bairro" name="bairro">
-                        <option value="">Todos os Bairros</option>
+                <div class="br-select" id="br-select-bairro">
+                    <div class="br-input">
+                        <input id="filter-bairro-input" type="text" placeholder="Todos os Bairros"
+                            value="{% if filtro_bairro %}{% for b in bairros %}{% if filtro_bairro == b.id_bairro %}{{ b.nome_bairro }}{% endif %}{% endfor %}{% endif %}" />
+                        <button class="br-button circle small" type="button" data-trigger aria-label="Exibir lista">
+                            <i class="fas fa-angle-down" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="br-list" tabindex="0">
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="bairro-radio" value="" id="bairro-todos" {% if not filtro_bairro %}checked{% endif %} />
+                                <label for="bairro-todos">Todos os Bairros</label>
+                            </div>
+                        </div>
                         {% for b in bairros %}
-                        <option value="{{ b.id_bairro }}" {% if filtro_bairro == b.id_bairro %}selected{% endif %}>{{ b.nome_bairro }}</option>
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="bairro-radio" value="{{ b.id_bairro }}" id="bairro-{{ b.id_bairro }}" {% if filtro_bairro == b.id_bairro %}checked{% endif %} />
+                                <label for="bairro-{{ b.id_bairro }}">{{ b.nome_bairro }}</label>
+                            </div>
+                        </div>
                         {% endfor %}
-                    </select>
+                    </div>
                 </div>
+                <input type="hidden" name="bairro" id="filter-bairro-hidden" value="{{ filtro_bairro|default:'' }}" />
             </div>
             <div class="col-md-2 mb-2x">
                 <label for="filter-de" class="small font-weight-bold">De</label>
@@ -222,4 +258,37 @@
         </div>
     </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.getElementById('form-filtros');
+
+        // Status br-select
+        var statusSelectEl = document.getElementById('br-select-status');
+        var statusHidden = document.getElementById('filter-status-hidden');
+        if (statusSelectEl && statusHidden && form) {
+            form.addEventListener('submit', function () {
+                var checked = statusSelectEl.querySelector('.br-list .br-radio input[type="radio"]:checked');
+                statusHidden.value = checked ? checked.value : '';
+            });
+        }
+        if (typeof core !== 'undefined' && core.BRSelect && statusSelectEl) {
+            new core.BRSelect('br-select', statusSelectEl);
+        }
+
+        // Bairro br-select
+        var bairroSelectEl = document.getElementById('br-select-bairro');
+        var bairroHidden = document.getElementById('filter-bairro-hidden');
+        if (bairroSelectEl && bairroHidden && form) {
+            form.addEventListener('submit', function () {
+                var checked = bairroSelectEl.querySelector('.br-list .br-radio input[type="radio"]:checked');
+                bairroHidden.value = checked ? checked.value : '';
+            });
+        }
+        if (typeof core !== 'undefined' && core.BRSelect && bairroSelectEl) {
+            new core.BRSelect('br-select', bairroSelectEl);
+        }
+    });
+</script>
 {% endblock %}

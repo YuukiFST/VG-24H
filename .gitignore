@@ -67,7 +67,6 @@ docs/agents/
 .skills/
 .gemini/
 .antigravity/
-.agents/
 .git_backup2/
 AGENTS.md
 skills-lock.json

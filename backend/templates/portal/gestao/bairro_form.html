@@ -28,17 +28,62 @@
         <label for="id_cep">CEP</label>
         <input id="id_cep" name="cep" type="text" value="{{ bairro.cep|default:'' }}" />
       </div>
-      <div class="br-input mb-3x">
-        <label for="id_regiao">Região</label>
-        <select id="id_regiao" name="regiao">
-          <option value="">Selecione...</option>
-          <option value="Central" {% if bairro.regiao == 'Central' %}selected{% endif %}>Central</option>
-          <option value="Norte" {% if bairro.regiao == 'Norte' %}selected{% endif %}>Norte</option>
-          <option value="Sul" {% if bairro.regiao == 'Sul' %}selected{% endif %}>Sul</option>
-          <option value="Leste" {% if bairro.regiao == 'Leste' %}selected{% endif %}>Leste</option>
-          <option value="Oeste" {% if bairro.regiao == 'Oeste' %}selected{% endif %}>Oeste</option>
-          <option value="Rural" {% if bairro.regiao == 'Rural' %}selected{% endif %}>Rural</option>
-        </select>
+      <div class="mb-3x">
+        <label for="id_regiao" class="small font-weight-bold">Região</label>
+        <div class="br-select" id="br-select-regiao">
+          <div class="br-input">
+            <input id="id_regiao_input" type="text" placeholder="Selecione a região"
+                value="{{ bairro.regiao|default:'' }}" />
+            <button class="br-button circle small" type="button" data-trigger aria-label="Exibir lista">
+              <i class="fas fa-angle-down" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="br-list" tabindex="0">
+            <div class="br-item">
+              <div class="br-radio">
+                <input type="radio" name="regiao-radio" value="" id="regiao-nenhuma" {% if not bairro.regiao %}checked{% endif %} />
+                <label for="regiao-nenhuma">Selecione a região</label>
+              </div>
+            </div>
+            <div class="br-item">
+              <div class="br-radio">
+                <input type="radio" name="regiao-radio" value="Central" id="regiao-central" {% if bairro.regiao == 'Central' %}checked{% endif %} />
+                <label for="regiao-central">Central</label>
+              </div>
+            </div>
+            <div class="br-item">
+              <div class="br-radio">
+                <input type="radio" name="regiao-radio" value="Norte" id="regiao-norte" {% if bairro.regiao == 'Norte' %}checked{% endif %} />
+                <label for="regiao-norte">Norte</label>
+              </div>
+            </div>
+            <div class="br-item">
+              <div class="br-radio">
+                <input type="radio" name="regiao-radio" value="Sul" id="regiao-sul" {% if bairro.regiao == 'Sul' %}checked{% endif %} />
+                <label for="regiao-sul">Sul</label>
+              </div>
+            </div>
+            <div class="br-item">
+              <div class="br-radio">
+                <input type="radio" name="regiao-radio" value="Leste" id="regiao-leste" {% if bairro.regiao == 'Leste' %}checked{% endif %} />
+                <label for="regiao-leste">Leste</label>
+              </div>
+            </div>
+            <div class="br-item">
+              <div class="br-radio">
+                <input type="radio" name="regiao-radio" value="Oeste" id="regiao-oeste" {% if bairro.regiao == 'Oeste' %}checked{% endif %} />
+                <label for="regiao-oeste">Oeste</label>
+              </div>
+            </div>
+            <div class="br-item">
+              <div class="br-radio">
+                <input type="radio" name="regiao-radio" value="Rural" id="regiao-rural" {% if bairro.regiao == 'Rural' %}checked{% endif %} />
+                <label for="regiao-rural">Rural</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" name="regiao" id="id_regiao" value="{{ bairro.regiao|default:'' }}" />
       </div>
       <div class="br-checkbox mb-4x">
         <input id="id_ativo" name="ativo" type="checkbox" {% if bairro.ativo %}checked{% endif %} />
@@ -51,4 +96,22 @@
     </form>
   </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var selectEl = document.getElementById('br-select-regiao');
+    var hiddenInput = document.getElementById('id_regiao');
+    var form = selectEl && selectEl.closest('form');
+    if (selectEl && hiddenInput && form) {
+      form.addEventListener('submit', function () {
+        var checked = selectEl.querySelector('.br-list .br-radio input[type="radio"]:checked');
+        hiddenInput.value = checked ? checked.value : '';
+      });
+    }
+    if (typeof core !== 'undefined' && core.BRSelect && selectEl) {
+      new core.BRSelect('br-select', selectEl);
+    }
+  });
+</script>
 {% endblock %}
