@@ -53,6 +53,7 @@ urlpatterns = [
     path("gestao/bairros/<int:pk>/ativar/", views_gestao.gestao_bairro_ativar, name="gestao_bairro_ativar"),
     path("gestao/colaboradores/", views_gestao.gestao_colaboradores, name="gestao_colaboradores"),
     path("gestao/colaboradores/<int:pk>/toggle/", views_gestao.gestao_colaborador_toggle, name="gestao_colaborador_toggle"),
+    path("gestao/colaboradores/<int:pk>/resetar-senha/", views_gestao.gestao_colaborador_reset_senha, name="gestao_colaborador_reset_senha"),
 
     # Banners (painel de gestao).
     path("gestao/banners/", views_gestao.gestao_banners, name="gestao_banners"),

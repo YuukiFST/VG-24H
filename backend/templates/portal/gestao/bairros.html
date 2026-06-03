@@ -29,40 +29,9 @@
       <h1>Bairros e Regiões</h1>
       <p class="text-muted">Gerencie as áreas geográficas atendidas pelo VG 24H.</p>
     </div>
-    <a href="#" class="br-button primary" onclick="document.getElementById('form-novo-bairro').style.display='block'; this.style.display='none'; return false;">
+    <button class="br-button primary" type="button" data-modal-open="modal-novo-bairro">
       <i class="fas fa-plus" aria-hidden="true"></i> Novo Bairro
-    </a>
-  </div>
-
-  <div id="form-novo-bairro" class="br-card p-4 mb-4x" style="display:none; max-width:600px;">
-    <h3 class="h4 mb-3x">Novo Bairro</h3>
-    <form method="post" action="{% url 'portal:gestao_bairros' %}">
-      {% csrf_token %}
-      <div class="br-input mb-2x">
-        <label for="id_nome_bairro_novo">Nome do Bairro *</label>
-        <input id="id_nome_bairro_novo" name="nome_bairro" type="text" required />
-      </div>
-      <div class="br-input mb-2x">
-        <label for="id_cep_novo">CEP</label>
-        <input id="id_cep_novo" name="cep" type="text" />
-      </div>
-      <div class="br-input mb-3x">
-        <label for="id_regiao_novo">Região</label>
-        <select id="id_regiao_novo" name="regiao">
-          <option value="">Selecione...</option>
-          <option value="Central">Central</option>
-          <option value="Norte">Norte</option>
-          <option value="Sul">Sul</option>
-          <option value="Leste">Leste</option>
-          <option value="Oeste">Oeste</option>
-          <option value="Rural">Rural</option>
-        </select>
-      </div>
-      <div class="d-flex" style="gap:var(--spacing-scale-2x);">
-        <button type="submit" class="br-button primary">Salvar</button>
-        <button type="button" class="br-button secondary" onclick="document.getElementById('form-novo-bairro').style.display='none'; document.querySelector('.dashboard-header .br-button.primary').style.display=''; return false;">Cancelar</button>
-      </div>
-    </form>
+    </button>
   </div>
 
   <div class="br-card p-4">
@@ -123,5 +92,56 @@
   </div>
 </div>
 
+<!-- Modal Adicionar Bairro -->
+<div class="vg-modal-overlay" id="modal-novo-bairro">
+  <div class="br-modal">
+    <div class="br-modal-header">
+      <div class="modal-title">Novo Bairro</div>
+      <button class="close" type="button" data-modal-close>
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="br-modal-body">
+      <form method="post" action="{% url 'portal:gestao_bairros' %}" id="form-novo-bairro">
+        {% csrf_token %}
+        <div class="br-input mb-2x">
+          <label for="id_nome_bairro_novo">Nome do Bairro *</label>
+          <input id="id_nome_bairro_novo" name="nome_bairro" type="text" required value="{{ form.nome_bairro.value|default_if_none:'' }}" />
+        </div>
+        <div class="br-input mb-2x">
+          <label for="id_cep_novo">CEP (Opcional)</label>
+          <input id="id_cep_novo" name="cep" type="text" value="{{ form.cep.value|default_if_none:'' }}" />
+        </div>
+        <div class="br-input mb-3x">
+          <label for="id_regiao_novo">Região</label>
+          <select id="id_regiao_novo" name="regiao">
+            <option value="">Selecione...</option>
+            <option value="Central" {% if form.regiao.value == 'Central' %}selected{% endif %}>Central</option>
+            <option value="Norte" {% if form.regiao.value == 'Norte' %}selected{% endif %}>Norte</option>
+            <option value="Sul" {% if form.regiao.value == 'Sul' %}selected{% endif %}>Sul</option>
+            <option value="Leste" {% if form.regiao.value == 'Leste' %}selected{% endif %}>Leste</option>
+            <option value="Oeste" {% if form.regiao.value == 'Oeste' %}selected{% endif %}>Oeste</option>
+            <option value="Rural" {% if form.regiao.value == 'Rural' %}selected{% endif %}>Rural</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="br-modal-footer justify-content-end mt-4x">
+      <button class="br-button secondary mr-2" type="button" data-modal-close>Cancelar</button>
+      <button class="br-button primary" type="submit" form="form-novo-bairro">Salvar</button>
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    {% if mostrar_form %}
+    const overlay = document.getElementById('modal-novo-bairro');
+    if (overlay) overlay.classList.add('active');
+    {% endif %}
+  });
+</script>
+{% endblock %}
 
 {% endblock %}

@@ -316,9 +316,12 @@ def gestao_bairros(request):
                     [d["nome_bairro"], d["cep"], d.get("regiao"), True],
                 )
             messages.success(request, "Bairro criado.")
-        return redirect("portal:gestao_bairros")
+            return redirect("portal:gestao_bairros")
+        else:
+            messages.error(request, "Corrija os erros no formulario.")
+            mostrar_form = True
 
-    form = BairroForm()
+    form = locals().get("form", BairroForm())
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
@@ -334,7 +337,7 @@ def gestao_bairros(request):
     return render(
         request,
         "portal/gestao/bairros.html",
-        {"form": form, "lista": lista},
+        {"form": form, "lista": lista, "mostrar_form": locals().get("mostrar_form", False)},
     )
 
 
@@ -499,6 +502,26 @@ def gestao_colaborador_toggle(request, pk):
 
     status = "ativado" if novo_ativo else "inativado"
     messages.success(request, f"Colaborador {nome} {status}.")
+    return redirect("portal:gestao_colaboradores")
+
+
+@perfis("GES")
+@require_http_methods(["POST"])
+def gestao_colaborador_reset_senha(request, pk):
+    """Redefine a senha de um colaborador com senha provisoria."""
+    nova = request.POST.get("nova_senha_provisoria", "").strip()
+    if len(nova) < 6:
+        messages.error(request, "Senha deve ter no minimo 6 caracteres.")
+        return redirect("portal:gestao_colaboradores")
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "UPDATE servidor SET senha_hash = %s, senha_temporaria = '1' "
+            "WHERE id_servidor = %s AND perfil = 'COL'",
+            [make_password(nova), pk],
+        )
+        if cursor.rowcount == 0:
+            raise Http404
+    messages.success(request, "Senha redefinida com sucesso! Colaborador deve trocar no proximo acesso.")
     return redirect("portal:gestao_colaboradores")
 
 

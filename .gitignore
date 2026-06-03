@@ -68,7 +68,6 @@ docs/agents/
 .gemini/
 .antigravity/
 .git_backup2/
-AGENTS.md
 skills-lock.json
 CONTEXT.md
 rewrite*.sh

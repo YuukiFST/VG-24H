@@ -69,6 +69,11 @@
                       </button>
                     {% endif %}
                   </form>
+                  {% if colab.ativo %}
+                  <button class="br-button small" type="button" data-toggle="modal" data-target="#modal-reset-{{ colab.pk }}" title="Redefinir senha">
+                    <i class="fas fa-key mr-1" aria-hidden="true"></i> Redefinir Senha
+                  </button>
+                  {% endif %}
                 </td>
               </tr>
             {% empty %}
@@ -88,7 +93,7 @@
     <button class="close" type="button" data-dismiss="modal"><i class="fas fa-times"></i></button>
   </div>
   <div class="br-modal-body">
-    <form action="{% url 'portal:gestao_colaboradores' %}" method="post">
+    <form action="{% url 'portal:gestao_colaboradores' %}" method="post" id="form-add-colab">
       {% csrf_token %}
       <div class="br-input mt-3x">
         <label for="id_nome_c">Nome Completo *</label>
@@ -130,7 +135,53 @@
   </div>
   <div class="br-modal-footer justify-content-end mt-4x">
     <button class="br-button secondary mr-2" type="button" data-dismiss="modal">Cancelar</button>
-    <button class="br-button primary" type="submit">Criar Conta</button>
+    <button class="br-button primary" type="submit" form="form-add-colab">Criar Conta</button>
   </div>
 </div>
+
+{% for colab in lista %}
+{% if colab.ativo %}
+<div class="br-modal" id="modal-reset-{{ colab.pk }}">
+  <div class="br-modal-header">
+    <div class="modal-title">Redefinir Senha</div>
+    <button class="close" type="button" data-dismiss="modal">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  <div class="br-modal-body">
+    <p class="mb-3x">Defina uma nova senha provisoria para
+       <strong>{{ colab.nome_completo }}</strong>.</p>
+    <form action="{% url 'portal:gestao_colaborador_reset_senha' colab.pk %}"
+          method="post" id="form-reset-{{ colab.pk }}">
+      {% csrf_token %}
+      <div class="br-input mb-3x">
+        <label for="id_nova_senha_{{ colab.pk }}">Nova senha provisoria</label>
+        <input id="id_nova_senha_{{ colab.pk }}"
+               name="nova_senha_provisoria" type="password"
+               minlength="6" required />
+      </div>
+    </form>
+  </div>
+  <div class="br-modal-footer justify-content-end mt-4x">
+    <button class="br-button secondary mr-2" type="button"
+            data-dismiss="modal">Cancelar</button>
+    <button class="br-button primary" type="submit"
+            form="form-reset-{{ colab.pk }}">Confirmar</button>
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    if (typeof core !== 'undefined' && core.BRModal) {
+      document.querySelectorAll('.br-modal').forEach(function (el) {
+        new core.BRModal('br-modal', el);
+      });
+    }
+  });
+</script>
+{% endblock %}
+
 {% endblock %}
