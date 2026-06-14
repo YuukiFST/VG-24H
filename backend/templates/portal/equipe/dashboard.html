@@ -25,6 +25,13 @@
             <h1 class="h3 mb-0">Gestão de Chamados</h1>
             <p class="text-muted mb-0">Boas-vindas, <strong>{{ request.portal_user.nome_completo }}</strong>.</p>
         </div>
+        {% if request.portal_user.perfil == 'GES' %}
+        <div>
+            <a href="{% url 'portal:gestao_prazos' %}" class="br-button circle small" title="Gerenciar prazos dos servicos">
+                <i class="fas fa-cog"></i>
+            </a>
+        </div>
+        {% endif %}
     </div>
 
     <!-- ====== SUMMARY CARDS (Semáforo) ====== -->
@@ -59,21 +66,86 @@
         <div class="icon"><i class="fas fa-info-circle fa-lg" aria-hidden="true"></i></div>
         <div class="content">
             <span class="message-title">Como funciona o semáforo de prazos</span>
-            <span class="message-body">
-                A cor indica o tempo em que o chamado está aberto. Os prazos podem variar de acordo com o serviço solicitado.
-                <br>
-                <strong>Verde:</strong> dentro do prazo esperado.
-                <br>
-                <strong>Amarelo:</strong> a partir de {{ prazo_amarelo_txt }}.
-                <br>
-                <strong>Vermelho:</strong> a partir de {{ prazo_vermelho_txt }}.
-            </span>
+            <div class="message-body">
+                <p class="mb-3">A cor indica o tempo em que o chamado está aberto. Cada serviço tem seus próprios prazos.</p>
+                <div class="mb-2">
+                    <span class="br-tag" style="background:#d4edda;color:#155724;font-weight:600;margin-right:4px;">Verde</span>
+                    dentro do prazo
+                    <span class="br-tag" style="background:#fff3cd;color:#856404;font-weight:600;margin:0 4px 0 12px;">Amarelo</span>
+                    próximo ao vencimento
+                    <span class="br-tag" style="background:#f8d7da;color:#721c24;font-weight:600;margin:0 4px 0 12px;">Vermelho</span>
+                    prazo vencido
+                </div>
+                {% for sv in servicos_stats %}
+                <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-top:6px;">
+                    <strong style="min-width:200px;">{{ sv.nome }}:</strong>
+                    <span style="color:#155724;">verde até {{ sv.prazo_amarelo_dias }} dias</span>
+                    <span style="color:#856404;">amarelo de {{ sv.prazo_amarelo_dias }} a {{ sv.prazo_vermelho_dias }} dias</span>
+                    <span style="color:#721c24;">vermelho acima de {{ sv.prazo_vermelho_dias }} dias</span>
+                </div>
+                {% empty %}
+                <div class="mt-2">
+                    <span style="color:#155724;font-weight:600;">Verde:</span> dentro do prazo esperado.
+                    <span style="color:#856404;font-weight:600;margin-left:12px;">Amarelo:</span> em atenção.
+                    <span style="color:#721c24;font-weight:600;margin-left:12px;">Vermelho:</span> crítico.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== BREAKDOWN POR SERVICO ====== -->
+    <div class="br-card p-3 mb-4x">
+        <div class="d-flex align-items-center mb-3">
+            <h2 class="h5 mb-0">Situação por Serviço</h2>
+        </div>
+        <div class="vg-table-wrapper">
+            <table class="br-table" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th style="padding:8px;text-align:left;border-bottom:2px solid #ddd;">Serviço</th>
+                        <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Total</th>
+                        <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;background:#d4edda;">🟢 Verde</th>
+                        <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;background:#fff3cd;">🟡 Amarelo</th>
+                        <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;background:#f8d7da;">🔴 Vermelho</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sv in servicos_stats %}
+                    <tr>
+                        <td style="padding:8px;border-bottom:1px solid #eee;font-weight:500;">
+                            <a href="?servico={{ sv.id_servico }}{% if filtro_status %}&amp;status={{ filtro_status }}{% endif %}{% if filtro_bairro %}&amp;bairro={{ filtro_bairro }}{% endif %}{% if filtro_de %}&amp;de={{ filtro_de }}{% endif %}{% if filtro_ate %}&amp;ate={{ filtro_ate }}{% endif %}#tabela-chamados" style="text-decoration:none;color:inherit;">
+                                {{ sv.nome }}
+                            </a>
+                        </td>
+                        <td style="padding:8px;text-align:center;border-bottom:1px solid #eee;">{{ sv.total }}</td>
+                        <td style="padding:8px;text-align:center;border-bottom:1px solid #eee;color:#155724;">
+                            {{ sv.no_prazo }} ({% widthratio sv.no_prazo sv.total 100 %}%)
+                        </td>
+                        <td style="padding:8px;text-align:center;border-bottom:1px solid #eee;color:#856404;">
+                            {{ sv.atencao }} ({% widthratio sv.atencao sv.total 100 %}%)
+                        </td>
+                        <td style="padding:8px;text-align:center;border-bottom:1px solid #eee;color:#721c24;">
+                            {{ sv.critico }} ({% widthratio sv.critico sv.total 100 %}%)
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-3 text-muted">Nenhum chamado encontrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-2 small text-muted">
+            <em>Clique no nome do serviço para filtrar a lista abaixo.</em>
         </div>
     </div>
 
     <!-- ====== FILTER BAR ====== -->
     <div class="br-card p-3 mb-4x">
-        <form method="get" class="row align-items-end" id="form-filtros">
+        <form method="get" id="form-filtros">
+            <div class="row align-items-end">
             <div class="col-md-2 mb-2x">
                 <label for="filter-status" class="small font-weight-bold">Status</label>
                 <div class="br-select" id="br-select-status">
@@ -133,6 +205,35 @@
                 <input type="hidden" name="bairro" id="filter-bairro-hidden" value="{{ filtro_bairro|default:'' }}" />
             </div>
             <div class="col-md-2 mb-2x">
+                <label for="filter-servico" class="small font-weight-bold">Serviço</label>
+                <div class="br-select" id="br-select-servico">
+                    <div class="br-input">
+                        <input id="filter-servico-input" type="text" placeholder="Todos os Serviços"
+                            value="{% if filtro_servico %}{% for s in servicos %}{% if filtro_servico == s.id_servico %}{{ s.nome }}{% endif %}{% endfor %}{% endif %}" />
+                        <button class="br-button circle small" type="button" data-trigger aria-label="Exibir lista">
+                            <i class="fas fa-angle-down" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="br-list" tabindex="0">
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="servico-radio" value="" id="servico-todos" {% if not filtro_servico %}checked{% endif %} />
+                                <label for="servico-todos">Todos os Serviços</label>
+                            </div>
+                        </div>
+                        {% for s in servicos %}
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="servico-radio" value="{{ s.id_servico }}" id="servico-{{ s.id_servico }}" {% if filtro_servico == s.id_servico %}checked{% endif %} />
+                                <label for="servico-{{ s.id_servico }}">{{ s.nome }}</label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <input type="hidden" name="servico" id="filter-servico-hidden" value="{{ filtro_servico|default:'' }}" />
+            </div>
+            <div class="col-md-2 mb-2x">
                 <label for="filter-de" class="small font-weight-bold">De</label>
                 <div class="br-input"><input id="filter-de" name="de" type="date" value="{{ filtro_de }}" /></div>
             </div>
@@ -140,11 +241,19 @@
                 <label for="filter-ate" class="small font-weight-bold">Até</label>
                 <div class="br-input"><input id="filter-ate" name="ate" type="date" value="{{ filtro_ate }}" /></div>
             </div>
+        </div>
+        <div class="row">
             <div class="col-md-2 mb-2x">
                 <button class="br-button primary w-100" type="submit">
                     <i class="fas fa-filter mr-1"></i> Filtrar
                 </button>
             </div>
+            <div class="col-md-2 mb-2x">
+                <a href="{% url 'portal:equipe_chamados' %}" class="br-button secondary w-100">
+                    <i class="fas fa-eraser mr-1"></i> Limpar Filtros
+                </a>
+            </div>
+        </div>
         </form>
     </div>
 
@@ -159,7 +268,7 @@
             <thead>
                 <tr>
                     <th scope="col">
-                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=prioridade&direcao={% if ordenar_por == 'prioridade' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
+                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_servico %}servico={{ filtro_servico }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=prioridade&direcao={% if ordenar_por == 'prioridade' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
                             Prioridade
                             {% if ordenar_por == 'prioridade' %}
                                 <i class="fas fa-sort-{% if direcao == 'desc' %}down{% else %}up{% endif %}" aria-hidden="true"></i>
@@ -169,7 +278,7 @@
                         </a>
                     </th>
                     <th scope="col">
-                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=protocolo&direcao={% if ordenar_por == 'protocolo' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
+                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_servico %}servico={{ filtro_servico }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=protocolo&direcao={% if ordenar_por == 'protocolo' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
                             Protocolo
                             {% if ordenar_por == 'protocolo' %}
                                 <i class="fas fa-sort-{% if direcao == 'desc' %}down{% else %}up{% endif %}" aria-hidden="true"></i>
@@ -179,7 +288,7 @@
                         </a>
                     </th>
                     <th scope="col">
-                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=dt_abertura&direcao={% if ordenar_por == 'dt_abertura' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
+                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_servico %}servico={{ filtro_servico }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=dt_abertura&direcao={% if ordenar_por == 'dt_abertura' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
                             Abertura
                             {% if ordenar_por == 'dt_abertura' %}
                                 <i class="fas fa-sort-{% if direcao == 'desc' %}down{% else %}up{% endif %}" aria-hidden="true"></i>
@@ -189,7 +298,7 @@
                         </a>
                     </th>
                     <th scope="col">
-                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=dias_aberto&direcao={% if ordenar_por == 'dias_aberto' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
+                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_servico %}servico={{ filtro_servico }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=dias_aberto&direcao={% if ordenar_por == 'dias_aberto' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
                             Dias em Aberto
                             {% if ordenar_por == 'dias_aberto' %}
                                 <i class="fas fa-sort-{% if direcao == 'desc' %}down{% else %}up{% endif %}" aria-hidden="true"></i>
@@ -264,30 +373,28 @@
     document.addEventListener('DOMContentLoaded', function () {
         var form = document.getElementById('form-filtros');
 
-        // Status br-select
-        var statusSelectEl = document.getElementById('br-select-status');
-        var statusHidden = document.getElementById('filter-status-hidden');
-        if (statusSelectEl && statusHidden && form) {
-            form.addEventListener('submit', function () {
-                var checked = statusSelectEl.querySelector('.br-list .br-radio input[type="radio"]:checked');
-                statusHidden.value = checked ? checked.value : '';
-            });
-        }
-        if (typeof core !== 'undefined' && core.BRSelect && statusSelectEl) {
-            new core.BRSelect('br-select', statusSelectEl);
-        }
+        var notFoundMsg = '<div class="br-item not-found"><div class="container"><div class="row"><div class="col"><p><strong>Ops!</strong> Nenhum item encontrado.</p></div></div></div></div>';
 
-        // Bairro br-select
-        var bairroSelectEl = document.getElementById('br-select-bairro');
+        ['br-select-status', 'br-select-bairro', 'br-select-servico'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el && typeof core !== 'undefined' && core.BRSelect) {
+                new core.BRSelect('br-select', el, notFoundMsg);
+            }
+        });
+
+        // Sincroniza radio -> hidden input no submit
+        var statusHidden = document.getElementById('filter-status-hidden');
         var bairroHidden = document.getElementById('filter-bairro-hidden');
-        if (bairroSelectEl && bairroHidden && form) {
+        var servicoHidden = document.getElementById('filter-servico-hidden');
+        if (form) {
             form.addEventListener('submit', function () {
-                var checked = bairroSelectEl.querySelector('.br-list .br-radio input[type="radio"]:checked');
-                bairroHidden.value = checked ? checked.value : '';
+                var statusChecked = document.querySelector('#br-select-status .br-list .br-radio input[type="radio"]:checked');
+                statusHidden.value = statusChecked ? statusChecked.value : '';
+                var bairroChecked = document.querySelector('#br-select-bairro .br-list .br-radio input[type="radio"]:checked');
+                bairroHidden.value = bairroChecked ? bairroChecked.value : '';
+                var servicoChecked = document.querySelector('#br-select-servico .br-list .br-radio input[type="radio"]:checked');
+                servicoHidden.value = servicoChecked ? servicoChecked.value : '';
             });
-        }
-        if (typeof core !== 'undefined' && core.BRSelect && bairroSelectEl) {
-            new core.BRSelect('br-select', bairroSelectEl);
         }
     });
 </script>

@@ -298,6 +298,45 @@ def calcular_stats_semaforo(cidadao_id=None):
     return {"no_prazo": row[0], "atencao": row[1], "critico": row[2]}
 
 
+def calcular_stats_semaforo_por_servico():
+    """Retorna estatisticas do semaforo agregadas por servico.
+
+    Cada linha contem: id_servico, nome, prazo_amarelo_dias,
+    prazo_vermelho_dias, no_prazo, atencao, critico, total.
+    Ordenado por nome do servico.
+    """
+    now = timezone.now()
+    sql = (
+        "SELECT "
+        "  s.id_servico, s.nome, s.prazo_amarelo_dias, s.prazo_vermelho_dias, "
+        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) < make_interval(days := s.prazo_amarelo_dias) THEN 1 ELSE 0 END), 0), "
+        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := s.prazo_amarelo_dias) "
+        "    AND (%s - c.dt_abertura) < make_interval(days := s.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0), "
+        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := s.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0), "
+        "  COUNT(*) "
+        "FROM chamado c "
+        "JOIN servico s ON c.id_servico = s.id_servico "
+        "GROUP BY s.id_servico, s.nome, s.prazo_amarelo_dias, s.prazo_vermelho_dias "
+        "ORDER BY s.nome"
+    )
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [now, now, now, now])
+        rows = cursor.fetchall()
+    return [
+        {
+            "id_servico": r[0],
+            "nome": r[1],
+            "prazo_amarelo_dias": r[2],
+            "prazo_vermelho_dias": r[3],
+            "no_prazo": r[4],
+            "atencao": r[5],
+            "critico": r[6],
+            "total": r[7],
+        }
+        for r in rows
+    ]
+
+
 def buscar_historicos(chamado_pk):
     """Busca historicos de um chamado com JOIN em servidor e status.
 

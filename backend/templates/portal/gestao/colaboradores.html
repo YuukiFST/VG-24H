@@ -20,122 +20,73 @@
       <h1>Equipe Técnica e Colaboradores</h1>
       <p class="text-muted">Gerencie as contas de acesso para a equipe da Prefeitura.</p>
     </div>
-    <button class="br-button primary" type="button" data-toggle="modal" data-target="#modal-add-colab">
+    <a href="{% url 'portal:gestao_colaborador_novo' %}" class="br-button primary">
       <i class="fas fa-user-plus mr-1"></i> Novo Colaborador
-    </button>
+    </a>
   </div>
 
-  <div class="br-card p-4">
-    <div class="vg-table-wrapper">
-      <div class="br-table">
-        <div class="table-header">
-          <div class="top-bar">
-            <div class="table-title">Colaboradores</div>
+  <div class="br-card">
+    <div class="card-content">
+      <div class="vg-table-wrapper">
+        <div class="br-table">
+          <div class="table-header">
+            <div class="top-bar">
+              <div class="table-title">Colaboradores</div>
+            </div>
           </div>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Nome Completo</th>
-              <th>E-mail</th>
-              <th>CPF</th>
-              <th>Status</th>
-              <th class="text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for colab in lista %}
-              <tr{% if not colab.ativo %} style="opacity: 0.6;"{% endif %}>
-                <td><strong>{{ colab.nome_completo }}</strong></td>
-                <td>{{ colab.email }}</td>
-                <td>{{ colab.cpf }}</td>
-                <td>
-                  {% if colab.ativo %}
-                    <span class="br-tag success">Ativo</span>
-                  {% else %}
-                    <span class="br-tag danger">Inativo</span>
-                  {% endif %}
-                </td>
-                <td class="text-center">
-                  <form action="{% url 'portal:gestao_colaborador_toggle' colab.pk %}" method="post" style="display:inline;">
-                    {% csrf_token %}
-                    {% if colab.ativo %}
-                      <button class="br-button small danger" type="submit" title="Inativar colaborador">
-                        <i class="fas fa-user-slash mr-1" aria-hidden="true"></i> Inativar
-                      </button>
-                    {% else %}
-                      <button class="br-button small success" type="submit" title="Reativar colaborador">
-                        <i class="fas fa-user-check mr-1" aria-hidden="true"></i> Reativar
-                      </button>
-                    {% endif %}
-                  </form>
-                  {% if colab.ativo %}
-                  <button class="br-button small" type="button" data-toggle="modal" data-target="#modal-reset-{{ colab.pk }}" title="Redefinir senha">
-                    <i class="fas fa-key mr-1" aria-hidden="true"></i> Redefinir Senha
-                  </button>
-                  {% endif %}
-                </td>
+          <table>
+            <thead>
+              <tr>
+                <th>Nome Completo</th>
+                <th>E-mail</th>
+                <th>CPF</th>
+                <th>Status</th>
+                <th class="text-center">Ações</th>
               </tr>
-            {% empty %}
-              <tr><td colspan="5" class="text-center">Nenhum colaborador cadastrado.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for colab in lista %}
+                <tr{% if not colab.ativo %} style="opacity: 0.6;"{% endif %}>
+                  <td><strong>{{ colab.nome_completo }}</strong></td>
+                  <td>{{ colab.email }}</td>
+                  <td>{{ colab.cpf }}</td>
+                  <td>
+                    {% if colab.ativo %}
+                      <span class="br-tag success">Ativo</span>
+                    {% else %}
+                      <span class="br-tag danger">Inativo</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    <div class="d-flex justify-content-center gap-1">
+                      <form action="{% url 'portal:gestao_colaborador_toggle' colab.pk %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        {% if colab.ativo %}
+                          <button class="br-button small danger" type="submit" title="Inativar colaborador">
+                            <i class="fas fa-user-slash mr-1" aria-hidden="true"></i> Inativar
+                          </button>
+                        {% else %}
+                          <button class="br-button small success" type="submit" title="Reativar colaborador">
+                            <i class="fas fa-user-check mr-1" aria-hidden="true"></i> Reativar
+                          </button>
+                        {% endif %}
+                      </form>
+                      {% if colab.ativo %}
+                      <button class="br-button small" type="button" data-toggle="modal" data-target="#modal-reset-{{ colab.pk }}" title="Redefinir senha">
+                        <i class="fas fa-key mr-1" aria-hidden="true"></i> Redefinir Senha
+                      </button>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="5" class="text-center">Nenhum colaborador cadastrado.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- Modal Adicionar Colaborador -->
-<div class="br-modal" id="modal-add-colab">
-  <div class="br-modal-header">
-    <div class="modal-title">Novo Colaborador</div>
-    <button class="close" type="button" data-dismiss="modal"><i class="fas fa-times"></i></button>
-  </div>
-  <div class="br-modal-body">
-    <form action="{% url 'portal:gestao_colaboradores' %}" method="post" id="form-add-colab">
-      {% csrf_token %}
-      <div class="br-input mt-3x">
-        <label for="id_nome_c">Nome Completo *</label>
-        <input id="id_nome_c" name="nome_completo" type="text" required />
-      </div>
-      <div class="form-row">
-        <div class="col-6">
-          <div class="br-input mb-3x">
-            <label for="id_cpf_c">CPF *</label>
-            <input id="id_cpf_c" name="cpf" type="text" maxlength="11" placeholder="Somente números" required />
-          </div>
-        </div>
-        <div class="col-6">
-          <div class="br-input mb-3x">
-            <label for="id_nasc">Dt. Nascimento *</label>
-            <input id="id_nasc" name="dt_nascimento" type="date" required />
-          </div>
-        </div>
-      </div>
-      <div class="br-input mb-3x">
-        <label for="id_email_c">E-mail *</label>
-        <input id="id_email_c" name="email" type="email" required />
-      </div>
-      <div class="form-row">
-        <div class="col-6">
-          <div class="br-input mb-3x">
-            <label for="id_tel">Telefone *</label>
-            <input id="id_tel" name="telefone" type="text" required />
-          </div>
-        </div>
-        <div class="col-6">
-          <div class="br-input mb-3x">
-            <label for="id_pass">Senha Provisória *</label>
-            <input id="id_pass" name="senha_provisoria" type="password" required />
-          </div>
-        </div>
-      </div>
-    </form>
-  </div>
-  <div class="br-modal-footer justify-content-end mt-4x">
-    <button class="br-button secondary mr-2" type="button" data-dismiss="modal">Cancelar</button>
-    <button class="br-button primary" type="submit" form="form-add-colab">Criar Conta</button>
   </div>
 </div>
 

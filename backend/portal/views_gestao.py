@@ -31,6 +31,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
+from portal import db
 from portal.decorators import perfis
 from portal.forms import (
     BairroForm,
@@ -47,6 +48,104 @@ from portal.models import (
     Servidor,
 )
 from portal.utils import salvar_foto_upload
+
+# ------------------------------------------------------------------
+# Servico — Criar (GET/POST /gestao/servicos/novo/)
+# ------------------------------------------------------------------
+
+@perfis("GES")
+@require_http_methods(["GET", "POST"])
+def gestao_servico_novo(request):
+    """Cria um novo servico (pagina dedicada, sem modal)."""
+    if request.method == "POST":
+        form = ServicoForm(request.POST)
+        if form.is_valid():
+            d = form.cleaned_data
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO servico (nome, descricao, ativo, id_categoria, "
+                    "prazo_amarelo_dias, prazo_vermelho_dias) "
+                    "VALUES (%s, %s, %s, %s, %s, %s)",
+                    [
+                        d["nome"], d.get("descricao"), True,
+                        d["id_categoria"].pk,
+                        d["prazo_amarelo_dias"],
+                        d["prazo_vermelho_dias"],
+                    ],
+                )
+            messages.success(request, "Servico criado.")
+            return redirect("portal:gestao_servicos")
+
+    form = ServicoForm()
+    categorias = db.listar_categorias_ativas()
+    return render(
+        request,
+        "portal/gestao/servico_novo.html",
+        {"form": form, "categorias": categorias},
+    )
+
+
+# ------------------------------------------------------------------
+# Colaborador — Criar (GET/POST /gestao/colaboradores/novo/)
+# ------------------------------------------------------------------
+
+@perfis("GES")
+@require_http_methods(["GET", "POST"])
+def gestao_colaborador_novo(request):
+    """Cria um novo colaborador (pagina dedicada, sem modal)."""
+    if request.method == "POST":
+        form = ColaboradorNovoForm(request.POST)
+        if form.is_valid():
+            d = form.cleaned_data
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT EXISTS("
+                    "  SELECT 1 FROM servidor WHERE LOWER(email) = %s"
+                    ") OR EXISTS("
+                    "  SELECT 1 FROM servidor WHERE cpf = %s"
+                    ")",
+                    [d["email"].lower(), d["cpf"]],
+                )
+                ja_existe = cursor.fetchone()[0]
+
+            if ja_existe:
+                messages.error(request, "E-mail ou CPF ja existe.")
+            else:
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT id_secretaria FROM secretaria LIMIT 1")
+                    sec_row = cursor.fetchone()
+                    sec_id = sec_row[0] if sec_row else None
+
+                    cursor.execute(
+                        "INSERT INTO servidor "
+                        "(nome_completo, cpf, dt_nascimento, telefone, email, "
+                        "senha_hash, senha_temporaria, perfil, ativo, dt_cadastro, "
+                        "id_secretaria) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                        [
+                            d["nome_completo"],
+                            d["cpf"],
+                            d["dt_nascimento"],
+                            d["telefone"],
+                            d["email"].lower(),
+                            make_password(d["senha_provisoria"]),
+                            "1",
+                            "COL",
+                            True,
+                            timezone.now(),
+                            sec_id,
+                        ],
+                    )
+                messages.success(request, "Colaborador criado. Deve trocar a senha no 1o acesso.")
+            return redirect("portal:gestao_colaboradores")
+
+    form = ColaboradorNovoForm()
+    return render(
+        request,
+        "portal/gestao/colaborador_novo.html",
+        {"form": form},
+    )
 
 
 # ------------------------------------------------------------------
@@ -206,8 +305,8 @@ def gestao_servicos(request):
                     [
                         d["nome"], d.get("descricao"), True,
                         d["id_categoria"].pk,
-                        d.get("prazo_amarelo_dias", 15),
-                        d.get("prazo_vermelho_dias", 30),
+                        d["prazo_amarelo_dias"],
+                        d["prazo_vermelho_dias"],
                     ],
                 )
             messages.success(request, "Servico criado.")
@@ -231,10 +330,11 @@ def gestao_servicos(request):
             )
             for r in cursor.fetchall()
         ]
+    categorias = db.listar_categorias_ativas()
     return render(
         request,
         "portal/gestao/servicos.html",
-        {"form": form, "lista": lista},
+        {"form": form, "lista": lista, "categorias": categorias},
     )
 
 
@@ -270,13 +370,13 @@ def gestao_servico_edit(request, pk):
             with connection.cursor() as cursor:
                 cursor.execute(
                     "UPDATE servico SET nome = %s, descricao = %s, "
-                    "id_categoria = %s, prazo_amarelo_dias = %s, prazo_vermelho_dias = %s "
+                    "id_categoria = %s, "
+                    "prazo_amarelo_dias = %s, prazo_vermelho_dias = %s "
                     "WHERE id_servico = %s",
                     [
                         d["nome"], d.get("descricao"),
                         d["id_categoria"].pk,
-                        d.get("prazo_amarelo_dias", 15),
-                        d.get("prazo_vermelho_dias", 30),
+                        d["prazo_amarelo_dias"], d["prazo_vermelho_dias"],
                         pk,
                     ],
                 )
@@ -288,7 +388,7 @@ def gestao_servico_edit(request, pk):
     return render(
         request,
         "portal/gestao/servico_form.html",
-        {"form": form, "obj": obj},
+        {"form": form, "srv": obj, "categorias": CategoriaServico.objects.all()},
     )
 
 

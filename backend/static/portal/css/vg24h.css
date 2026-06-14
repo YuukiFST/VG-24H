@@ -664,6 +664,11 @@ img {
    (.info, .warning, .success, .danger). Custom status-* classes removed.
    =================================================================== */
 
+/* Warning (yellow) status tags — black text for readability */
+.br-tag.warning {
+  color: #000 !important;
+}
+
 /* Status "Em Execução" (EE) — orange, distinct from EA (warning/yellow) */
 .br-tag.ee-status {
   background: var(--orange-vivid-30);
@@ -782,9 +787,21 @@ img {
 /* ===================================================================
    TICKET DETAIL / PROTOCOL VIEW
    =================================================================== */
-.ticket-detail {
+.ticket-status-bar .ticket-info-card form {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ticket-status-bar .br-input {
+  width: auto;
+  flex: 1 1 0;
+}
+
+.ticket-details-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
 }
 
@@ -1099,6 +1116,50 @@ img {
 }
 
 /* ===================================================================
+   FOTO LIGHTBOX (Chamado Detalhe)
+   =================================================================== */
+.lightbox-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.85);
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-overlay.active {
+  display: flex;
+}
+
+.lightbox-overlay img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 4px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+/* ===================================================================
+   FOTO THUMBNAILS (Chamado Detalhe)
+   =================================================================== */
+.foto-thumb {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: var(--surface-rounder-sm);
+  cursor: pointer;
+  box-shadow: var(--surface-shadow-sm);
+  transition: transform var(--duration-fast) var(--animation-ease),
+              box-shadow var(--duration-fast) var(--animation-ease);
+}
+
+.foto-thumb:hover {
+  transform: scale(1.05);
+  box-shadow: var(--surface-shadow-lg);
+}
+
+/* ===================================================================
    UPLOAD AREA
    =================================================================== */
 .upload-area {
@@ -1184,7 +1245,7 @@ img {
     gap: 24px;
   }
 
-  .ticket-detail {
+  .ticket-details-grid {
     grid-template-columns: 1fr;
   }
 

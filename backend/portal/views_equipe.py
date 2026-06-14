@@ -37,6 +37,7 @@ from django.views.decorators.http import require_http_methods
 from portal import db
 from portal.decorators import perfil_codigo, perfis
 from portal.forms import EquipeStatusForm, FotoForm, ObservacaoForm
+from portal.models import Servico
 from portal.utils import salvar_foto_upload
 
 
@@ -111,6 +112,7 @@ def equipe_chamados_lista(request):
     # Filtros opcionais da query string.
     bairro = _int_none(request.GET.get("bairro"))
     st = _int_none(request.GET.get("status"))
+    servico_filter = _int_none(request.GET.get("servico"))
     d0 = request.GET.get("de")
     d1 = request.GET.get("ate")
     ordenar_por = request.GET.get("ordenar_por", "prioridade")
@@ -122,8 +124,10 @@ def equipe_chamados_lista(request):
     if st:
         sql_base += "AND ultimo.id_status = %s "
         params.append(st)
+    if servico_filter:
+        sql_base += "AND c.id_servico = %s "
+        params.append(servico_filter)
     if d0:
-        # ::date faz o cast para comparar apenas o dia.
         sql_base += "AND c.dt_abertura::date >= %s "
         params.append(d0)
     if d1:
@@ -183,10 +187,11 @@ def equipe_chamados_lista(request):
     # Estatisticas do semaforo para os cards no topo.
     stats = db.calcular_stats_semaforo()
 
-    DEFAULT_PRAZO_AMARELO = 15
-    DEFAULT_PRAZO_VERMELHO = 30
-    prazo_amarelo_txt = f"{DEFAULT_PRAZO_AMARELO} dias"
-    prazo_vermelho_txt = f"{DEFAULT_PRAZO_VERMELHO} dias"
+    # Estatisticas por servico para a tabela de breakdown.
+    servicos_stats = db.calcular_stats_semaforo_por_servico()
+
+    # Catalogo de servicos ativos para o filtro e legenda.
+    servicos_catalogo = Servico.objects.filter(ativo=True).order_by("nome")
 
     # Percentuais para as barras de progresso no template.
     pct_no_prazo = round(stats["no_prazo"] / max(total_count, 1) * 100)
@@ -207,16 +212,86 @@ def equipe_chamados_lista(request):
             "statuses": statuses_lista,
             "filtro_bairro": bairro,
             "filtro_status": st,
+            "filtro_servico": servico_filter,
             "filtro_de": d0 or "",
             "filtro_ate": d1 or "",
             "ordenar_por": ordenar_por,
             "direcao": direcao,
-            "prazo_amarelo_txt": prazo_amarelo_txt,
-            "prazo_vermelho_txt": prazo_vermelho_txt,
+            "servicos_stats": servicos_stats,
+            "servicos": servicos_catalogo,
             "pct_no_prazo": pct_no_prazo,
             "pct_atencao": pct_atencao,
             "pct_critico": pct_critico,
         },
+    )
+
+
+# ------------------------------------------------------------------
+# Gerenciar prazos dos servicos (GET/POST /equipe/chamados/prazos/)
+# ------------------------------------------------------------------
+
+@require_http_methods(["GET", "POST"])
+def gestao_prazos(request):
+    """Lista servicos com prazos editaveis (amarelo/vermelho).
+
+    Acessivel apenas por gestores (GES) via icone de engrenagem na pagina
+    de Gestao de Chamados. Ao salvar, atualiza os prazos no banco para
+    os servicos cujos valores foram alterados.
+    """
+    u = request.portal_user
+    if not u:
+        return redirect("portal:login")
+    if u.perfil != "GES":
+        messages.error(
+            request,
+            "Voce nao tem permissao para alterar os prazos dos servicos. "
+            "Apenas o Gestor pode realizar esta configuracao."
+        )
+        return redirect("portal:equipe_chamados")
+
+    if request.method == "POST":
+        with connection.cursor() as cursor:
+            for key, val in request.POST.items():
+                if key.startswith("prazo_amarelo_"):
+                    pk = key.replace("prazo_amarelo_", "")
+                    try:
+                        dias = int(val)
+                        cursor.execute(
+                            "UPDATE servico SET prazo_amarelo_dias = %s WHERE id_servico = %s",
+                            [dias, pk],
+                        )
+                    except (ValueError, TypeError):
+                        pass
+                elif key.startswith("prazo_vermelho_"):
+                    pk = key.replace("prazo_vermelho_", "")
+                    try:
+                        dias = int(val)
+                        cursor.execute(
+                            "UPDATE servico SET prazo_vermelho_dias = %s WHERE id_servico = %s",
+                            [dias, pk],
+                        )
+                    except (ValueError, TypeError):
+                        pass
+        messages.success(request, "Prazos atualizados.")
+        return redirect("portal:gestao_prazos")
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT id_servico, nome, prazo_amarelo_dias, prazo_vermelho_dias "
+            "FROM servico ORDER BY nome"
+        )
+        servicos = [
+            SimpleNamespace(
+                id_servico=r[0], nome=r[1],
+                prazo_amarelo_dias=r[2], prazo_vermelho_dias=r[3],
+            )
+            for r in cursor.fetchall()
+        ]
+
+    return render(
+        request,
+        "portal/equipe/servico_prazos.html",
+        {"servicos": servicos},
     )
 
 
@@ -292,6 +367,9 @@ def equipe_chamado_detalhe(request, pk):
 
     # Popula status atual e cor do semaforo via db.py.
     db.popular_status(ch)
+
+    # Dias em aberto para exibicao no template.
+    dias_aberto = (timezone.now().date() - ch.dt_abertura.date()).days
 
     # Verifica o perfil do usuario e aplica a regra de bloqueio para COL.
     p = perfil_codigo(request.portal_user)
@@ -436,6 +514,7 @@ def equipe_chamado_detalhe(request, pk):
         "portal/equipe/chamado_detalhe.html",
         {
             "ch": ch,
+            "dias_aberto": dias_aberto,
             "sigla_status": ts,
             "pode_status": pode_status,
             "bloqueia_status_col": bloqueia_status_col,

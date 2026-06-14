@@ -196,7 +196,7 @@ class CategoriaForm(forms.ModelForm):
 
 
 class ServicoForm(forms.ModelForm):
-    """Formulario de servico, incluindo prazos do semaforo (amarelo/vermelho)."""
+    """Formulario de servico."""
     class Meta:
         model = Servico
         fields = ["id_categoria", "nome", "descricao", "prazo_amarelo_dias", "prazo_vermelho_dias"]

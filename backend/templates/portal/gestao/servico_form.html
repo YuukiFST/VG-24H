@@ -36,17 +36,17 @@
         </div>
       </div>
 
-      <div class="form-row mb-3x">
-        <div class="col-6">
+      <div class="row mb-3x">
+        <div class="col-sm-6">
           <div class="br-input">
-            <label for="id_y">SLA Amarelo (dias) *</label>
-            <input id="id_y" name="prazo_amarelo_dias" type="number" value="{{ srv.prazo_amarelo_dias }}" required />
+            <label for="id_prazo_amarelo_dias">Prazo Amarelo (dias) *</label>
+            <input id="id_prazo_amarelo_dias" name="prazo_amarelo_dias" type="number" value="{{ srv.prazo_amarelo_dias }}" min="1" required />
           </div>
         </div>
-        <div class="col-6">
+        <div class="col-sm-6">
           <div class="br-input">
-            <label for="id_r">SLA Vermelho (dias) *</label>
-            <input id="id_r" name="prazo_vermelho_dias" type="number" value="{{ srv.prazo_vermelho_dias }}" required />
+            <label for="id_prazo_vermelho_dias">Prazo Vermelho (dias) *</label>
+            <input id="id_prazo_vermelho_dias" name="prazo_vermelho_dias" type="number" value="{{ srv.prazo_vermelho_dias }}" min="1" required />
           </div>
         </div>
       </div>

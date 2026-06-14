@@ -37,6 +37,7 @@ urlpatterns = [
     # Equipe (perfis COL e GES): dashboard, chamados, detalhe.
     path("equipe/", views_equipe.equipe_dashboard, name="equipe_dashboard"),
     path("equipe/chamados/", views_equipe.equipe_chamados_lista, name="equipe_chamados"),
+    path("equipe/chamados/prazos/", views_equipe.gestao_prazos, name="gestao_prazos"),
     path("equipe/chamados/<int:pk>/", views_equipe.equipe_chamado_detalhe, name="equipe_chamado"),
     path("equipe/chamados/<int:pk>/excluir/", views_equipe.gestao_chamado_excluir, name="gestao_chamado_excluir"),
 
@@ -45,6 +46,7 @@ urlpatterns = [
     path("gestao/categorias/", views_gestao.gestao_categorias, name="gestao_categorias"),
     path("gestao/categorias/<int:pk>/editar/", views_gestao.gestao_categoria_edit, name="gestao_categoria_editar"),
     path("gestao/servicos/", views_gestao.gestao_servicos, name="gestao_servicos"),
+    path("gestao/servicos/novo/", views_gestao.gestao_servico_novo, name="gestao_servico_novo"),
     path("gestao/servicos/<int:pk>/editar/", views_gestao.gestao_servico_edit, name="gestao_servico_editar"),
     path("gestao/servicos/<int:pk>/desativar/", views_gestao.gestao_servico_desativar, name="gestao_servico_desativar"),
     path("gestao/bairros/", views_gestao.gestao_bairros, name="gestao_bairros"),
@@ -52,6 +54,7 @@ urlpatterns = [
     path("gestao/bairros/<int:pk>/desativar/", views_gestao.gestao_bairro_desativar, name="gestao_bairro_desativar"),
     path("gestao/bairros/<int:pk>/ativar/", views_gestao.gestao_bairro_ativar, name="gestao_bairro_ativar"),
     path("gestao/colaboradores/", views_gestao.gestao_colaboradores, name="gestao_colaboradores"),
+    path("gestao/colaboradores/novo/", views_gestao.gestao_colaborador_novo, name="gestao_colaborador_novo"),
     path("gestao/colaboradores/<int:pk>/toggle/", views_gestao.gestao_colaborador_toggle, name="gestao_colaborador_toggle"),
     path("gestao/colaboradores/<int:pk>/resetar-senha/", views_gestao.gestao_colaborador_reset_senha, name="gestao_colaborador_reset_senha"),
 
