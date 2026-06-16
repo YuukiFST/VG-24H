@@ -339,22 +339,8 @@
 
     {% block extra_js %}{% endblock %}
 
-    {# Instanciacao dos componentes GOV.BR (Menu + Footer) #}
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            /* [!] BRMenu — instancia o menu lateral com toggle/scrim/folders */
-            if (typeof core !== 'undefined' && core.BRMenu) {
-                document.querySelectorAll('.br-menu').forEach(function (el) {
-                    new core.BRMenu('br-menu', el);
-                });
-            }
-            /* [!] BRFooter — accordion do rodape em mobile */
-            if (typeof core !== 'undefined' && core.BRFooter) {
-                document.querySelectorAll('.br-footer').forEach(function (el) {
-                    new core.BRFooter('br-footer', el);
-                });
-            }
-        });
-    </script>
+    {# [!] core-init.min.js ja auto-inicializa BRMenu, BRFooter e demais
+         componentes GOV.BR. NAO instanciar manualmente aqui para evitar
+         handlers duplicados (double-toggle no hamburguer). #}
 </body>
 </html>

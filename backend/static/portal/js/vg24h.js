@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSelectionCards();
   initModals();
   initTabs();
-  initMobileMenu();
+
   initRatingStars();
   initAnimateOnScroll();
   initPasswordToggles();
@@ -162,30 +162,8 @@ function initTabs() {
 }
 
 /* ------- Mobile Menu ------- */
-function initMobileMenu() {
-  const menuTrigger = document.querySelector('.header-menu-trigger button');
-  const menu = document.getElementById('main-navigation');
-
-  if (menuTrigger && menu) {
-    menuTrigger.addEventListener('click', () => {
-      menu.classList.toggle('active');
-    });
-  }
-
-  const closeBtn = menu?.querySelector('[data-dismiss="menu"]');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      menu.classList.remove('active');
-    });
-  }
-
-  const scrim = menu?.querySelector('.menu-scrim');
-  if (scrim) {
-    scrim.addEventListener('click', () => {
-      menu.classList.remove('active');
-    });
-  }
-}
+/* [!] Removido: initMobileMenu() conflitava com core.BRMenu (base.html).
+   O BRMenu ja gerencia toggle, close e scrim do menu lateral. */
 
 /* ------- Rating Stars ------- */
 function initRatingStars() {
