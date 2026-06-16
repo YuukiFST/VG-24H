@@ -32,24 +32,32 @@ def proximo_protocolo():
 
     Exemplo: 2026000001 (ano 2026, sequencial 000001).
 
-    A operacao eh atomica graças ao INSERT ... ON CONFLICT DO UPDATE RETURNING.
-    Se duas requisicoes concorrentes chamarem esta funcao, cada uma recebe um
-    numero unico. O banco serializa o acesso via row-level lock na tabela
-    protocolo_seq (criada pelo script 01_schema.sql).
+    A operacao base eh atomica (INSERT ... ON CONFLICT DO UPDATE RETURNING).
+    Se o numero gerado ja existir em chamado (dessincronizacao), avanca
+    automaticamente para o proximo. Gaps na sequencia sao aceitaveis.
     """
     y = timezone.now().year
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "INSERT INTO protocolo_seq (ano, ultimo_numero) VALUES (%s, 1) "
-            "ON CONFLICT (ano) DO UPDATE SET ultimo_numero = protocolo_seq.ultimo_numero + 1 "
-            "RETURNING ultimo_numero",
-            [y],
-        )
-        row = cursor.fetchone()
-        if not row:
-            raise RuntimeError("protocolo_seq INSERT/RETURNING nao retornou linha")
-        n = row[0]
-    return f"{y}{n:06d}"
+    for _ in range(100):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO protocolo_seq (ano, ultimo_numero) VALUES (%s, 1) "
+                "ON CONFLICT (ano) DO UPDATE SET ultimo_numero = protocolo_seq.ultimo_numero + 1 "
+                "RETURNING ultimo_numero",
+                [y],
+            )
+            row = cursor.fetchone()
+            if not row:
+                raise RuntimeError("protocolo_seq INSERT/RETURNING nao retornou linha")
+            n = row[0]
+        protocolo = f"{y}{n:06d}"
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT 1 FROM chamado WHERE num_protocolo = %s",
+                [protocolo],
+            )
+            if not cursor.fetchone():
+                return protocolo
+    raise RuntimeError("Nao foi possivel gerar protocolo unico apos 100 tentativas")
 
 
 def salvar_foto_upload(arquivo, request=None):

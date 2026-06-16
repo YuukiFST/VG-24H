@@ -33,7 +33,7 @@ revelar a existencia do recurso).
 from types import SimpleNamespace
 
 from django.contrib import messages
-from django.db import connection, transaction
+from django.db import IntegrityError, connection, transaction
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -247,39 +247,52 @@ def cidadao_chamado_novo(request):
 
             now = timezone.now()
 
-            # transaction.atomic() garante que todos os INSERTs acontecam
-            # juntos. Se qualquer um falhar, tudo eh desfeito (ROLLBACK).
-            with transaction.atomic(), connection.cursor() as cursor:
-                # Gera o proximo numero de protocolo (ex: "2026000042").
-                protocolo = proximo_protocolo()
+            # Gera protocolo FORA do atomic() para que o incremento em
+            # protocolo_seq persista mesmo se a transacao abaixo falhar.
+            # Se houver colisao com protocolo existente, proximo_protocolo()
+            # consome o numero conflitante e tenta o proximo automaticamente.
+            protocolo = proximo_protocolo()
+            chamado_id = None
 
-                # INSERT na tabela chamado. Nao insere status aqui porque
-                # o Trigger 1 cria automaticamente o historico com status "AB".
-                # RETURNING id_chamado evita uma segunda query para descobrir
-                # o ID gerado pelo SERIAL.
-                cursor.execute(
-                    "INSERT INTO chamado "
-                    "(num_protocolo, prioridade, ponto_de_referencia, descricao, "
-                    "dt_abertura, atualizado_em, id_cidadao, id_servico, id_bairro) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
-                    "RETURNING id_chamado",
-                    [
-                        protocolo, 0,
-                        d.get("ponto_de_referencia") or None,
-                        d["descricao"], now, now,
-                        request.portal_user.pk,
-                        d["id_servico"].pk,
-                        d["id_bairro"].pk,
-                    ],
-                )
-                chamado_id = cursor.fetchone()[0]
+            # Retry loop: em condicao de corrida rara (dois requests
+            # simultaneos obterem o mesmo protocolo), capturamos o
+            # IntegrityError e tentamos com o proximo numero.
+            for _ in range(100):
+                try:
+                    with transaction.atomic(), connection.cursor() as cursor:
+                        # INSERT na tabela chamado. Nao insere status aqui
+                        # porque o Trigger 1 cria automaticamente o historico
+                        # com status "AB".
+                        # RETURNING id_chamado evita uma segunda query para
+                        # descobrir o ID gerado pelo SERIAL.
+                        cursor.execute(
+                            "INSERT INTO chamado "
+                            "(num_protocolo, prioridade, ponto_de_referencia, descricao, "
+                            "dt_abertura, atualizado_em, id_cidadao, id_servico, id_bairro) "
+                            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                            "RETURNING id_chamado",
+                            [
+                                protocolo, 0,
+                                d.get("ponto_de_referencia") or None,
+                                d["descricao"], now, now,
+                                request.portal_user.pk,
+                                d["id_servico"].pk,
+                                d["id_bairro"].pk,
+                            ],
+                        )
+                        chamado_id = cursor.fetchone()[0]
 
-                # Registra a foto associada ao chamado.
-                cursor.execute(
-                    "INSERT INTO foto_chamado (id_chamado, url_foto, dt_upload) "
-                    "VALUES (%s, %s, %s)",
-                    [chamado_id, url, now],
-                )
+                        # Registra a foto associada ao chamado.
+                        cursor.execute(
+                            "INSERT INTO foto_chamado (id_chamado, url_foto, dt_upload) "
+                            "VALUES (%s, %s, %s)",
+                            [chamado_id, url, now],
+                        )
+                    break
+                except IntegrityError:
+                    if chamado_id is not None:
+                        raise
+                    protocolo = proximo_protocolo()
 
             messages.success(request, f"Chamado aberto. Protocolo: {protocolo}")
             return redirect("portal:cidadao_chamado", pk=chamado_id)
