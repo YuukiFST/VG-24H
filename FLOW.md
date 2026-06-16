@@ -8,7 +8,7 @@ Stack: Django + PostgreSQL (NeonDB) + GOV.br Design System. Django root: `backen
 
 No code will be written. Read the existing project and document the flows.
 
----
+----
 
 ## Step 0 — Required reading before any output
 
@@ -24,7 +24,7 @@ Read in this order. Produce nothing until done.
    focus on login, registration, home/dashboard, ticket list and ticket detail
 6. If `.claude/ARCHITECTURE_MAP.md` exists, read it too
 
----
+----
 
 ## What to document
 
