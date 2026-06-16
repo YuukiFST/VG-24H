@@ -51,6 +51,14 @@ class CadastroCidadaoForm(forms.Form):
         cpf = self.cleaned_data.get("cpf", "")
         return "".join(filter(str.isdigit, cpf))
 
+    def clean_telefone(self):
+        """Remove caracteres nao numericos do telefone."""
+        tel = self.cleaned_data.get("telefone", "")
+        tel = "".join(filter(str.isdigit, tel))
+        if len(tel) < 8:
+            raise forms.ValidationError("Telefone deve ter pelo menos 8 digitos.")
+        return tel
+
     def clean(self):
         """Valida que as duas senhas digitadas sao iguais."""
         d = super().clean()
@@ -224,6 +232,18 @@ class ColaboradorNovoForm(forms.Form):
     dt_nascimento = forms.DateField()
     telefone = forms.CharField(max_length=20)
     email = forms.EmailField(max_length=255)
+
+    def clean_cpf(self):
+        cpf = self.cleaned_data.get("cpf", "")
+        return "".join(filter(str.isdigit, cpf))
+
+    def clean_telefone(self):
+        tel = self.cleaned_data.get("telefone", "")
+        tel = "".join(filter(str.isdigit, tel))
+        if len(tel) < 8:
+            raise forms.ValidationError("Telefone deve ter pelo menos 8 digitos.")
+        return tel
+
     senha_provisoria = forms.CharField(
         min_length=6,
         widget=forms.PasswordInput,

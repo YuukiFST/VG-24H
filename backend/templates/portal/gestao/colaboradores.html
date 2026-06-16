@@ -92,7 +92,7 @@
 
 {% for colab in lista %}
 {% if colab.ativo %}
-<div class="br-modal" id="modal-reset-{{ colab.pk }}">
+<div class="br-scrim foco"><div class="br-modal" id="modal-reset-{{ colab.pk }}">
   <div class="br-modal-header">
     <div class="modal-title">Redefinir Senha</div>
     <button class="close" type="button" data-dismiss="modal">
@@ -105,11 +105,14 @@
     <form action="{% url 'portal:gestao_colaborador_reset_senha' colab.pk %}"
           method="post" id="form-reset-{{ colab.pk }}">
       {% csrf_token %}
-      <div class="br-input mb-3x">
+      <div class="br-input input-button mb-3x">
         <label for="id_nova_senha_{{ colab.pk }}">Nova senha provisoria</label>
         <input id="id_nova_senha_{{ colab.pk }}"
                name="nova_senha_provisoria" type="password"
                minlength="6" required />
+        <button class="br-button circle small" type="button" aria-label="Mostrar senha">
+          <i class="fas fa-eye" aria-hidden="true"></i>
+        </button>
       </div>
     </form>
   </div>
@@ -119,20 +122,9 @@
     <button class="br-button primary" type="submit"
             form="form-reset-{{ colab.pk }}">Confirmar</button>
   </div>
+  </div>
 </div>
 {% endif %}
 {% endfor %}
-
-{% block extra_js %}
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    if (typeof core !== 'undefined' && core.BRModal) {
-      document.querySelectorAll('.br-modal').forEach(function (el) {
-        new core.BRModal('br-modal', el);
-      });
-    }
-  });
-</script>
-{% endblock %}
 
 {% endblock %}

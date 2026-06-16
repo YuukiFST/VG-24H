@@ -5,13 +5,22 @@
   <p class="text-down-01 mb-3x">Obrigatório no primeiro acesso com senha provisória.</p>
   <form method="post" class="col-md-6">
     {% csrf_token %}
-    {% for field in form %}
-    <div class="br-input mb-3x">
-      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-      {{ field.errors }}
-      {{ field }}
+    <div class="br-input input-button mb-3x">
+      <label for="{{ form.senha.id_for_label }}">{{ form.senha.label }}</label>
+      {{ form.senha.errors }}
+      {{ form.senha }}
+      <button class="br-button circle small" type="button" aria-label="Mostrar senha" >
+        <i class="fas fa-eye" aria-hidden="true"></i>
+      </button>
     </div>
-    {% endfor %}
+    <div class="br-input input-button mb-3x">
+      <label for="{{ form.senha2.id_for_label }}">{{ form.senha2.label }}</label>
+      {{ form.senha2.errors }}
+      {{ form.senha2 }}
+      <button class="br-button circle small" type="button" aria-label="Mostrar senha" >
+        <i class="fas fa-eye" aria-hidden="true"></i>
+      </button>
+    </div>
     <button type="submit" class="br-button primary">Confirmar</button>
   </form>
 {% endblock %}

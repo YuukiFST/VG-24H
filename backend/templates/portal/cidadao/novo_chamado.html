@@ -35,8 +35,23 @@
     </div>
   </div>
 
-  <form id="novo-chamado-form" action="{% url 'portal:cidadao_chamado_novo' %}" method="post" enctype="multipart/form-data">
+  <form id="novo-chamado-form" action="{% url 'portal:cidadao_chamado_novo' %}" method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
+    {% if form.errors %}
+    <div class="br-message danger mb-4x" role="alert">
+      <div class="icon"><i class="fas fa-exclamation-triangle fa-lg" aria-hidden="true"></i></div>
+      <div class="content">
+        <strong>Corrija os erros abaixo:</strong>
+        <ul class="mb-0 mt-1">
+          {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+              <li>{{ field|title }}: {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
     <input type="hidden" name="id_servico" id="input-servico" value="{{ form.id_servico.value|default:'' }}" required />
     
     <div class="wizard-container">
@@ -85,6 +100,7 @@
               maxlength="500"
               required
             >{{ form.descricao.value|default:'' }}</textarea>
+            {% if form.descricao.errors %}<div class="feedback danger" role="alert"><span>{{ form.descricao.errors.0 }}</span></div>{% endif %}
           </div>
           <div class="char-counter">0/500 caracteres</div>
         </div>
@@ -112,6 +128,7 @@
                 <option value="{{ bairro.id_bairro }}" {% if form.id_bairro.value|add:0 == bairro.id_bairro %}selected{% endif %}>{{ bairro.nome_bairro }}</option>
               {% endfor %}
             </select>
+            {% if form.id_bairro.errors %}<div class="feedback danger" role="alert"><span>{{ form.id_bairro.errors.0 }}</span></div>{% endif %}
           </div>
         </div>
         <div class="form-group mt-3x">
@@ -151,6 +168,7 @@
           <p class="upload-hint">Formatos aceitos: JPG, PNG, WEBP — Máx. 10MB</p>
         </div>
         <input type="file" id="chamado-foto" name="foto" accept="image/*" style="display:none;" required />
+        {% if form.foto.errors %}<div class="feedback danger" role="alert"><span>{{ form.foto.errors.0 }}</span></div>{% endif %}
         <div id="upload-preview" style="margin-top:16px; display:none;">
           <div style="display:flex; align-items:center; gap:12px; padding:12px; background:var(--gray-2); border-radius:8px;">
             <i class="fas fa-image" style="font-size:1.5rem; color:var(--vg-primary);" aria-hidden="true"></i>
@@ -210,7 +228,8 @@
             <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Voltar
           </button>
           <button class="br-button primary" type="submit" id="btn-enviar-chamado">
-            <i class="fas fa-paper-plane" aria-hidden="true"></i> Confirmar e Enviar
+            <i class="fas fa-paper-plane" aria-hidden="true"></i> <span class="btn-text">Confirmar e Enviar</span>
+            <i class="fas fa-spinner fa-pulse" id="btn-spinner" style="display:none" aria-hidden="true"></i>
           </button>
         </div>
       </div>
@@ -264,6 +283,21 @@
     const counter = document.querySelector('.char-counter');
     textarea.addEventListener('input', () => {
       counter.textContent = `${textarea.value.length}/500 caracteres`;
+    });
+
+    // Form submit loading state
+    const form = document.getElementById('novo-chamado-form');
+    const btnSubmit = document.getElementById('btn-enviar-chamado');
+    const btnText = btnSubmit.querySelector('.btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+    let submitted = false;
+
+    form.addEventListener('submit', () => {
+      if (submitted) return;
+      submitted = true;
+      btnSubmit.disabled = true;
+      btnText.textContent = 'Enviando...';
+      btnSpinner.style.display = 'inline-block';
     });
 
     // Populate summary

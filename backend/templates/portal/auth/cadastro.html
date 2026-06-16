@@ -61,7 +61,7 @@
       <div class="form-group mb-3x">
         <div class="br-input">
           <label for="cad-telefone">Telefone <i class="fas fa-question-circle help-icon" title="Ex: (65) 99123-4567"></i></label>
-          <input id="cad-telefone" name="telefone" type="tel" placeholder="(65) 99999-0000" required />
+          <input id="cad-telefone" name="telefone" type="tel" placeholder="(65) 99999-0000" required oninput="this.value=this.value.replace(/\D/g,'')" />
         </div>
       </div>
 

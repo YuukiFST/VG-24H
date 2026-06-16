@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
   initRatingStars();
   initAnimateOnScroll();
+  initPasswordToggles();
 });
 
 /* ------- Character Counter ------- */
@@ -95,7 +96,7 @@ function initSelectionCards() {
 
 /* ------- Modals ------- */
 function initModals() {
-  // Open
+  // Open (custom data-modal-open)
   document.querySelectorAll('[data-modal-open]').forEach(trigger => {
     trigger.addEventListener('click', (e) => {
       e.preventDefault();
@@ -104,17 +105,37 @@ function initModals() {
     });
   });
 
-  // Close
+  // Close (custom data-modal-close)
   document.querySelectorAll('[data-modal-close]').forEach(btn => {
     btn.addEventListener('click', () => {
       btn.closest('.vg-modal-overlay').classList.remove('active');
     });
   });
 
-  // Click overlay to close
+  // Click overlay to close (custom)
   document.querySelectorAll('.vg-modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) overlay.classList.remove('active');
+    });
+  });
+
+  // GOV.br modal: data-toggle="modal" → show scrim
+  document.querySelectorAll('[data-toggle="modal"]').forEach(trigger => {
+    trigger.addEventListener('click', () => {
+      const targetId = trigger.getAttribute('data-target');
+      if (!targetId) return;
+      const modal = document.querySelector(targetId);
+      if (!modal) return;
+      const scrim = modal.closest('.br-scrim');
+      if (scrim) scrim.classList.add('active');
+    });
+  });
+
+  // GOV.br modal: data-dismiss="modal" → hide scrim
+  document.querySelectorAll('[data-dismiss="modal"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const scrim = btn.closest('.br-scrim');
+      if (scrim) scrim.classList.remove('active');
     });
   });
 }
@@ -209,6 +230,27 @@ function initAnimateOnScroll() {
   }, { threshold: 0.15 });
 
   elements.forEach(el => observer.observe(el));
+}
+
+/* ------- Password Toggle ------- */
+function initPasswordToggles() {
+  document.querySelectorAll('.br-input.input-button .br-button[aria-label="Mostrar senha"]').forEach(btn => {
+    const clone = btn.cloneNode(true);
+    btn.parentNode.replaceChild(clone, btn);
+    clone.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const input = clone.parentElement.querySelector('input');
+      const icon = clone.querySelector('i');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    });
+  });
 }
 
 /* ------- Utility: Animated Counter ------- */

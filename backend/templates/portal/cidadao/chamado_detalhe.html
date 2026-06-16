@@ -207,7 +207,7 @@
 
 {% if pode_cancelar %}
 <!-- Modal Cancelamento -->
-<div class="br-modal" id="modal-cancel">
+<div class="br-scrim foco"><div class="br-modal" id="modal-cancel">
   <div class="br-modal-header">
     <div class="modal-title">Confirmar Cancelamento</div>
     <button class="close" type="button" data-dismiss="modal" aria-label="Fechar"><i class="fas fa-times"></i></button>
@@ -227,6 +227,7 @@
       </div>
     </form>
   </div>
+</div>
 </div>
 {% endif %}
 {% endblock %}

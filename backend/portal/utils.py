@@ -59,7 +59,8 @@ def salvar_foto_upload(arquivo, request=None):
     para o Cloudinary e retorna a URL segura (https). Caso contrario,
     salva localmente em MEDIA_ROOT/chamados/{uuid}.{ext} e retorna a URL.
 
-    Levanta ValueError se nenhum arquivo for fornecido.
+    Levanta ValueError se nenhum arquivo for fornecido, ou se o upload
+    falhar (timeout, erro de rede, erro da API).
     Levanta ImportError se Cloudinary estiver configurado mas nao instalado.
     """
     if not arquivo:
@@ -75,10 +76,14 @@ def salvar_foto_upload(arquivo, request=None):
                 "Cloudinary nao instalado. Execute: pip install cloudinary"
             )
         cloudinary.config(cloudinary_url=cu)
-        r = cloudinary.uploader.upload(
-            arquivo, folder="vg_portal", resource_type="image"
-        )
-        return r["secure_url"]
+        try:
+            r = cloudinary.uploader.upload(
+                arquivo, folder="vg_portal", resource_type="image", timeout=30
+            )
+            return r["secure_url"]
+        except Exception as e:
+            msg = str(e) or "Erro ao fazer upload da foto."
+            raise ValueError(msg)
 
     # Fallback: salva localmente com nome unico (UUID).
     ext_raw = os.path.splitext(arquivo.name)[1].lower()
