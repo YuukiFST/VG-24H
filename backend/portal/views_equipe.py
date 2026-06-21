@@ -267,7 +267,7 @@ def gestao_prazos(request):
             prazo_amarelo = int(request.POST.get("prazo_amarelo_dias", 15))
             prazo_vermelho = int(request.POST.get("prazo_vermelho_dias", 30))
         except (ValueError, TypeError):
-            messages.error(request, "Valores invalidos.")
+            messages.error(request, "Valores inválidos.")
             return redirect("portal:gestao_prazos")
 
         with connection.cursor() as cursor:
@@ -597,7 +597,7 @@ def gestao_chamado_excluir(request, pk):
                 "(id_chamado, id_servidor, id_status, observacao, dt_alteracao) "
                 "VALUES (%s, %s, %s, %s, %s)",
                 [pk, request.portal_user.pk, status_id,
-                 f"[EXCL] Chamado excluido. Justificativa: {justificativa}",
+                 f"[EXCL] Chamado excluído. Justificativa: {justificativa}",
                  timezone.now()],
             )
 
@@ -607,7 +607,7 @@ def gestao_chamado_excluir(request, pk):
             cursor.execute("DELETE FROM notificacao WHERE id_chamado = %s", [pk])
             cursor.execute("DELETE FROM chamado WHERE id_chamado = %s", [pk])
 
-    messages.success(request, f"Chamado {protocolo} excluido com sucesso.")
+    messages.success(request, f"Chamado {protocolo} excluído com sucesso.")
     return redirect("portal:equipe_chamados")
 
 

@@ -16,8 +16,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <meta name="description"
-        content="VG 24H — Portal de servicos publicos da Prefeitura de Varzea Grande. Registro e acompanhamento de chamados urbanos com padrao Gov.br." />
-    <title>{% block title %}VG 24H — Portal de Servicos Publicos{% endblock %} | Prefeitura de Varzea Grande</title>
+        content="VG 24H — Portal de serviços públicos da Prefeitura de Várzea Grande. Registro e acompanhamento de chamados urbanos com padrão Gov.br." />
+    <title>{% block title %}VG 24H — Portal de Serviços Públicos{% endblock %} | Prefeitura de Várzea Grande</title>
     {# Fontes do Design System GOV.BR: Rawline (primaria) + Raleway (fallback) #}
     <link rel="stylesheet"
         href="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/fonts/rawline/css/rawline.css" />
@@ -112,7 +112,7 @@
                         </div>
                         <div class="header-info">
                             <div class="header-title">VG 24H</div>
-                            <div class="header-subtitle">Portal de Servicos Publicos</div>
+                            <div class="header-subtitle">Portal de Serviços Públicos</div>
                         </div>
                     </div>
                 </div>
@@ -138,7 +138,7 @@
                     <nav class="menu-body" role="tree">
                         <a class="menu-item divider" href="{% url 'portal:root' %}" role="treeitem">
                             <span class="icon"><i class="fas fa-home" aria-hidden="true"></i></span>
-                            <span class="content">Pagina Inicial</span>
+                            <span class="content">Página Inicial</span>
                         </a>
                         {# NAO logado: opcoes de login/cadastro #}
                         {% if not request.portal_user %}
@@ -170,7 +170,7 @@
                         </a>
                         <a class="menu-item divider" href="{% url 'portal:equipe_chamados' %}" role="treeitem">
                             <span class="icon"><i class="fas fa-tasks" aria-hidden="true"></i></span>
-                            <span class="content">Gestao de Chamados</span>
+                            <span class="content">Gestão de Chamados</span>
                         </a>
                         {# Gestão de Bairros — COL + GES #}
                         <a class="menu-item divider" href="{% url 'portal:gestao_bairros' %}" role="treeitem">
@@ -233,7 +233,7 @@
                 <div class="br-message warning" role="alert">
                     <div class="icon"><i class="fas fa-exclamation-triangle fa-lg" aria-hidden="true"></i></div>
                     <div class="content" aria-label="{{ message }}">
-                        <span class="message-title">Atencao.</span>
+                        <span class="message-title">Atenção.</span>
                         <span class="message-body"> {{ message }}</span>
                     </div>
                     <div class="close">
@@ -244,7 +244,7 @@
                 <div class="br-message info" role="alert">
                     <div class="icon"><i class="fas fa-info-circle fa-lg" aria-hidden="true"></i></div>
                     <div class="content" aria-label="{{ message }}">
-                        <span class="message-title">Informacao.</span>
+                        <span class="message-title">Informação.</span>
                         <span class="message-body"> {{ message }}</span>
                     </div>
                     <div class="close">
@@ -271,7 +271,7 @@
                         </a>
                         <div class="br-list">
                             <span class="br-divider d-md-none"></span>
-                            <a class="br-item" href="{% url 'portal:catalogo_servicos' %}"><div class="content">Catalogo de Servicos</div></a>
+                            <a class="br-item" href="{% url 'portal:catalogo_servicos' %}"><div class="content">Catálogo de Serviços</div></a>
                             <span class="br-divider d-md-none"></span>
                         </div>
                     </div>
@@ -283,19 +283,19 @@
                         <div class="br-list">
                             <span class="br-divider d-md-none"></span>
                             <a class="br-item" href="javascript:void(0)"><div class="content">Sobre o VG 24H</div></a>
-                            <a class="br-item" href="javascript:void(0)"><div class="content">Politica de Privacidade</div></a>
+                            <a class="br-item" href="javascript:void(0)"><div class="content">Política de Privacidade</div></a>
                             <a class="br-item" href="javascript:void(0)"><div class="content">Termos de Uso</div></a>
                             <span class="br-divider d-md-none"></span>
                         </div>
                     </div>
                     <div class="col-2">
                         <a class="br-item header" href="javascript:void(0)">
-                            <div class="content text-down-01 text-bold text-uppercase">Navegacao</div>
+                            <div class="content text-down-01 text-bold text-uppercase">Navegação</div>
                             <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div>
                         </a>
                         <div class="br-list">
                             <span class="br-divider d-md-none"></span>
-                            <a class="br-item" href="{% url 'portal:root' %}"><div class="content">Pagina Inicial</div></a>
+                            <a class="br-item" href="{% url 'portal:root' %}"><div class="content">Página Inicial</div></a>
                             <a class="br-item" href="{% url 'portal:login' %}"><div class="content">Entrar</div></a>
                             <a class="br-item" href="{% url 'portal:cadastro' %}"><div class="content">Criar Conta</div></a>
                             <span class="br-divider d-md-none"></span>
@@ -323,8 +323,8 @@
             <div class="container-lg">
                 <div class="info">
                     <div class="text-down-01 text-medium pb-3x">
-                        Todo o conteudo deste site esta publicado sob a licenca
-                        <strong>Creative Commons Atribuicao-SemDerivacoes 3.0.</strong>
+                        Todo o conteúdo deste site está publicado sob a licença
+                        <strong>Creative Commons Atribuição-SemDerivações 3.0.</strong>
                     </div>
                 </div>
             </div>

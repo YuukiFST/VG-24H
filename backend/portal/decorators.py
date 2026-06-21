@@ -73,7 +73,7 @@ def perfis(*codigos):
             if not u:
                 return redirect("portal:login")
             if perfil_codigo(u) not in codigos:
-                messages.error(request, "Sem permissao para acessar esta area.")
+                messages.error(request, "Sem permissão para acessar esta área.")
                 return redirect("portal:root")
             return view(request, *args, **kwargs)
         return w

@@ -230,7 +230,7 @@ def notificacoes(request):
                     ")",
                     [nid, uid],
                 )
-            messages.info(request, "Notificacao removida.")
+            messages.info(request, "Notificação removida.")
         return redirect("portal:notificacoes")
 
     return render(request, "portal/notificacoes.html", {"lista": notifs})

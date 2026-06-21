@@ -70,7 +70,7 @@ def gestao_servico_novo(request):
                         d["id_categoria"].pk,
                     ],
                 )
-            messages.success(request, "Servico criado.")
+            messages.success(request, "Serviço criado.")
             return redirect("portal:gestao_servicos")
 
     form = ServicoForm()
@@ -107,7 +107,7 @@ def gestao_colaborador_novo(request):
                 ja_existe = cursor.fetchone()[0]
 
             if ja_existe:
-                messages.error(request, "E-mail ou CPF ja existe.")
+                messages.error(request, "E-mail ou CPF já existe.")
             else:
                 with connection.cursor() as cursor:
                     cursor.execute("SELECT id_secretaria FROM secretaria LIMIT 1")
@@ -303,7 +303,7 @@ def gestao_servicos(request):
                         d["id_categoria"].pk,
                     ],
                 )
-            messages.success(request, "Servico criado.")
+            messages.success(request, "Serviço criado.")
         return redirect("portal:gestao_servicos")
 
     form = ServicoForm()
@@ -369,7 +369,7 @@ def gestao_servico_edit(request, pk):
                         pk,
                     ],
                 )
-            messages.success(request, "Servico atualizado.")
+            messages.success(request, "Serviço atualizado.")
             return redirect("portal:gestao_servicos")
     else:
         form = ServicoForm(instance=obj)
@@ -407,7 +407,7 @@ def gestao_bairros(request):
             messages.success(request, "Bairro criado.")
             return redirect("portal:gestao_bairros")
         else:
-            messages.error(request, "Corrija os erros no formulario.")
+            messages.error(request, "Corrija os erros no formulário.")
             mostrar_form = True
 
     form = locals().get("form", BairroForm())
@@ -512,7 +512,7 @@ def gestao_colaboradores(request):
                 ja_existe = cursor.fetchone()[0]
 
             if ja_existe:
-                messages.error(request, "E-mail ou CPF ja existe.")
+                messages.error(request, "E-mail ou CPF já existe.")
             else:
                 with connection.cursor() as cursor:
                     cursor.execute("SELECT id_secretaria FROM secretaria LIMIT 1")
@@ -600,7 +600,7 @@ def gestao_colaborador_reset_senha(request, pk):
     """Redefine a senha de um colaborador com senha provisoria."""
     nova = request.POST.get("nova_senha_provisoria", "").strip()
     if len(nova) < 6:
-        messages.error(request, "Senha deve ter no minimo 6 caracteres.")
+        messages.error(request, "Senha deve ter no mínimo 6 caracteres.")
         return redirect("portal:gestao_colaboradores")
     with connection.cursor() as cursor:
         cursor.execute(
@@ -631,7 +631,7 @@ def gestao_servico_desativar(request, pk):
         if not cursor.fetchone():
             raise Http404()
         cursor.execute("UPDATE servico SET ativo = FALSE WHERE id_servico = %s", [pk])
-    messages.info(request, "Servico inativado.")
+    messages.info(request, "Serviço inativado.")
     return redirect("portal:gestao_servicos")
 
 
@@ -702,13 +702,13 @@ def gestao_banner_novo(request):
         foto = request.FILES.get("imagem")
 
         if not titulo:
-            messages.error(request, "Titulo e obrigatorio.")
+            messages.error(request, "Título é obrigatório.")
             return redirect("portal:gestao_banner_novo")
         if not foto:
-            messages.error(request, "Imagem e obrigatoria.")
+            messages.error(request, "Imagem é obrigatória.")
             return redirect("portal:gestao_banner_novo")
         if foto.size > 5 * 1024 * 1024:
-            messages.error(request, "A imagem excede o tamanho maximo de 5MB.")
+            messages.error(request, "A imagem excede o tamanho máximo de 5MB.")
             return redirect("portal:gestao_banner_novo")
 
         url_imagem = salvar_foto_upload(foto)
@@ -761,7 +761,7 @@ def gestao_banner_editar(request, pk):
         foto = request.FILES.get("imagem")
         if foto:
             if foto.size > 5 * 1024 * 1024:
-                messages.error(request, "A imagem excede o tamanho maximo de 5MB.")
+                messages.error(request, "A imagem excede o tamanho máximo de 5MB.")
                 return redirect("portal:gestao_banner_editar", pk=pk)
             url_imagem = salvar_foto_upload(foto)
 
@@ -787,7 +787,7 @@ def gestao_banner_excluir(request, pk):
         if not cursor.fetchone():
             raise Http404()
         cursor.execute("DELETE FROM banner_publicacao WHERE id_banner = %s", [pk])
-    messages.info(request, "Banner excluido.")
+    messages.info(request, "Banner excluído.")
     return redirect("portal:gestao_banners")
 
 

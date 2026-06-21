@@ -106,7 +106,7 @@ class ChamadoNovoForm(forms.Form):
     """
     id_servico = forms.ModelChoiceField(
         queryset=Servico.objects.filter(ativo=True).select_related("id_categoria"),
-        label="Servico",
+        label="Serviço",
     )
     id_bairro = forms.ModelChoiceField(
         queryset=Bairro.objects.filter(ativo=True),
@@ -115,14 +115,14 @@ class ChamadoNovoForm(forms.Form):
     descricao = forms.CharField(
         max_length=500,
         widget=forms.Textarea(attrs={"rows": 4}),
-        label="Descricao do problema",
+        label="Descrição do problema",
     )
     ponto_de_referencia = forms.CharField(
         max_length=100,
         required=False,
-        label="Ponto de referencia",
+        label="Ponto de referência",
     )
-    foto = forms.ImageField(label="Foto (obrigatoria)")
+    foto = forms.ImageField(label="Foto (obrigatória)")
 
 
 class ObservacaoForm(forms.Form):
@@ -145,7 +145,7 @@ class AvaliacaoForm(forms.Form):
         max_length=500,
         required=False,
         widget=forms.Textarea(attrs={"rows": 3}),
-        label="Comentario (opcional)",
+        label="Comentário (opcional)",
     )
 
 
@@ -177,7 +177,7 @@ class EquipeStatusForm(forms.Form):
         max_length=500,
         required=False,
         widget=forms.Textarea(attrs={"rows": 3}),
-        label="Resolucao / motivo (obrigatorio ao concluir ou cancelar)",
+        label="Resolução / motivo (obrigatório ao concluir ou cancelar)",
     )
 
     def clean(self):
@@ -186,7 +186,7 @@ class EquipeStatusForm(forms.Form):
         r = (d.get("resolucao") or "").strip()
         if st and st.sigla.strip() in ("CO", "CA") and not r:
             raise forms.ValidationError(
-                "Informe a resolucao ou motivo ao concluir ou cancelar."
+                "Informe a resolução ou motivo ao concluir ou cancelar."
             )
         return d
 
@@ -247,5 +247,5 @@ class ColaboradorNovoForm(forms.Form):
     senha_provisoria = forms.CharField(
         min_length=6,
         widget=forms.PasswordInput,
-        label="Senha provisoria",
+        label="Senha provisória",
     )

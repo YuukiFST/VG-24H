@@ -100,13 +100,13 @@
     </button>
   </div>
   <div class="br-modal-body">
-    <p class="mb-3x">Defina uma nova senha provisoria para
+    <p class="mb-3x">Defina uma nova senha provisória para
        <strong>{{ colab.nome_completo }}</strong>.</p>
     <form action="{% url 'portal:gestao_colaborador_reset_senha' colab.pk %}"
           method="post" id="form-reset-{{ colab.pk }}">
       {% csrf_token %}
       <div class="br-input input-button mb-3x large">
-        <label for="id_nova_senha_{{ colab.pk }}">Nova senha provisoria</label>
+        <label for="id_nova_senha_{{ colab.pk }}">Nova senha provisória</label>
         <input id="id_nova_senha_{{ colab.pk }}"
                name="nova_senha_provisoria" type="password"
                minlength="6" required />

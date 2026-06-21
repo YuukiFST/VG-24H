@@ -362,7 +362,7 @@ def cidadao_chamado_detalhe(request, pk):
                         "VALUES (%s, %s, %s, %s, %s)",
                         [pk, None, status_id, form_o.cleaned_data["texto"], timezone.now()],
                     )
-                messages.success(request, "Observacao registrada.")
+                messages.success(request, "Observação registrada.")
             return redirect("portal:cidadao_chamado", pk=pk)
 
         # Acao: upload de foto.
@@ -402,7 +402,7 @@ def cidadao_chamado_detalhe(request, pk):
                     )
                     ca_row = cursor.fetchone()
                     if not ca_row:
-                        messages.error(request, "Erro interno: status CA nao encontrado.")
+                        messages.error(request, "Erro interno: status CA não encontrado.")
                         return redirect("portal:cidadao_chamado", pk=pk)
                     ca_id = ca_row[0]
 
@@ -439,7 +439,7 @@ def cidadao_chamado_detalhe(request, pk):
                             pk,
                         ],
                     )
-                messages.success(request, "Avaliacao registrada.")
+                messages.success(request, "Avaliação registrada.")
             return redirect("portal:cidadao_chamado", pk=pk)
 
     # GET: busca historicos e fotos para renderizar o detalhe.
@@ -524,7 +524,7 @@ def cidadao_notificacoes(request):
                     ")",
                     [nid, uid],
                 )
-            messages.info(request, "Notificacao removida.")
+            messages.info(request, "Notificação removida.")
         return redirect("portal:cidadao_notificacoes")
 
     return render(

@@ -86,7 +86,7 @@ def login_view(request):
                 request.session["forcar_troca_senha"] = True
                 return redirect("portal:troca_senha_obrigatoria")
 
-            messages.success(request, f"Ola, {user.nome_completo}.")
+            messages.success(request, f"Olá, {user.nome_completo}.")
 
             # Redireciona conforme o perfil.
             if tipo == "servidor":
@@ -111,7 +111,7 @@ def logout_view(request):
     incluindo usuario_id e usuario_tipo.
     """
     request.session.flush()
-    messages.info(request, "Sessao encerrada.")
+    messages.info(request, "Sessão encerrada.")
     return redirect("portal:login")
 
 
@@ -155,7 +155,7 @@ def cadastro_view(request):
                 ja_existe = cursor.fetchone()[0]
 
             if ja_existe:
-                messages.error(request, "E-mail ou CPF ja cadastrado.")
+                messages.error(request, "E-mail ou CPF já cadastrado.")
             else:
                 # INSERT do novo cidadao com senha hasheada.
                 with connection.cursor() as cursor:
@@ -182,7 +182,7 @@ def cadastro_view(request):
                             timezone.now(),
                         ],
                     )
-                messages.success(request, "Cadastro concluido. Faca login.")
+                messages.success(request, "Cadastro concluído. Faça login.")
                 return redirect("portal:login")
     else:
         form = CadastroCidadaoForm()
@@ -226,7 +226,7 @@ def recuperar_senha_view(request):
             if not row:
                 messages.info(
                     request,
-                    "Se o e-mail existir, voce recebera instrucoes em instantes.",
+                    "Se o e-mail existir, você receberá instruções em instantes.",
                 )
                 return redirect("portal:login")
 
@@ -273,7 +273,7 @@ def redefinir_senha_view(request, token):
     try:
         data = signing.loads(token, salt="vg.pwreset", max_age=86400 * 3)
     except signing.BadSignature:
-        messages.error(request, "Link invalido ou expirado.")
+        messages.error(request, "Link inválido ou expirado.")
         return redirect("portal:login")
 
     # Verifica se o cidadao ainda existe e esta ativo.
