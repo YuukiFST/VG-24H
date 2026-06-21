@@ -14,9 +14,11 @@ encontrar, busca na tabela servidor. Isso permite que cidadaos e
 servidores usem a mesma tela de login.
 """
 
+import time
+
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.hashers import check_password
 from django.core import signing
 from django.core.mail import send_mail
 from django.db import connection
@@ -33,6 +35,27 @@ from portal.forms import (
     RedefinirSenhaForm,
     TrocaSenhaObrigatoriaForm,
 )
+
+
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_TIMEOUT = 300  # 5 minutes
+
+
+def _check_login_rate_limit(request):
+    ip = request.META.get("REMOTE_ADDR", "")
+    attempts = request.session.get("login_attempts", [])
+    now = time.time()
+    attempts = [t for t in attempts if now - t < LOGIN_TIMEOUT]
+    if len(attempts) >= MAX_LOGIN_ATTEMPTS:
+        return True
+    request.session["login_attempts"] = attempts
+    return False
+
+
+def _record_login_attempt(request):
+    attempts = request.session.get("login_attempts", [])
+    attempts.append(time.time())
+    request.session["login_attempts"] = attempts
 
 
 # ------------------------------------------------------------------
@@ -59,6 +82,10 @@ def login_view(request):
         return redirect("portal:root")
 
     if request.method == "POST":
+        if _check_login_rate_limit(request):
+            messages.error(request, "Muitas tentativas. Aguarde 5 minutos.")
+            return render(request, "portal/auth/login.html")
+
         email = (request.POST.get("email") or "").strip().lower()
         senha = request.POST.get("password") or ""
 
@@ -71,11 +98,12 @@ def login_view(request):
             user, tipo = db.buscar_servidor_por_email(email)
 
         if user is None:
-            # Email nao encontrado em nenhuma tabela.
+            _record_login_attempt(request)
             messages.error(request, "E-mail ou senha incorretos.")
 
         elif check_password(senha, user.senha_hash):
-            # Senha confere. Cria a sessao no cookie.
+            # Senha confere. Limpa tentativas e cria a sessao no cookie.
+            request.session.pop("login_attempts", None)
             request.session.cycle_key()  # Novo sessionid (previne Session Fixation)
             request.session["usuario_id"] = user.pk
             request.session["usuario_tipo"] = tipo
@@ -93,7 +121,7 @@ def login_view(request):
                 return redirect("portal:equipe_dashboard")
             return redirect("portal:root")
         else:
-            # Senha incorreta (email existe, mas senha nao confere).
+            _record_login_attempt(request)
             messages.error(request, "E-mail ou senha incorretos.")
 
     return render(request, "portal/auth/login.html")
@@ -143,45 +171,12 @@ def cadastro_view(request):
             d = form.cleaned_data
 
             # Verifica duplicidade de email ou CPF.
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "SELECT EXISTS("
-                    "  SELECT 1 FROM cidadao WHERE LOWER(email) = %s"
-                    ") OR EXISTS("
-                    "  SELECT 1 FROM cidadao WHERE cpf = %s"
-                    ")",
-                    [d["email"].lower(), d["cpf"]],
-                )
-                ja_existe = cursor.fetchone()[0]
+            ja_existe = db.existe_email_ou_cpf("cidadao", d["email"].lower(), d["cpf"])
 
             if ja_existe:
                 messages.error(request, "E-mail ou CPF já cadastrado.")
             else:
-                # INSERT do novo cidadao com senha hasheada.
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        "INSERT INTO cidadao "
-                        "(nome_completo, cpf, dt_nascimento, telefone, email, "
-                        "senha_hash, rua, num_endereco, complemento_endereco, "
-                        "bairro_endereco, cep_endereco, perfil, ativo, dt_cadastro) "
-                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                        [
-                            d["nome_completo"],
-                            d["cpf"],
-                            d["dt_nascimento"],
-                            d["telefone"],
-                            d["email"].lower(),
-                            make_password(d["senha"]),
-                            d.get("rua"),
-                            d.get("num_endereco"),
-                            d.get("complemento_endereco"),
-                            d.get("bairro_endereco"),
-                            d.get("cep_endereco"),
-                            "CID",
-                            True,
-                            timezone.now(),
-                        ],
-                    )
+                db.inserir_cidadao(d)
                 messages.success(request, "Cadastro concluído. Faça login.")
                 return redirect("portal:login")
     else:
@@ -214,14 +209,7 @@ def recuperar_senha_view(request):
         if form.is_valid():
             email = form.cleaned_data["email"].lower()
 
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "SELECT id_cidadao, email "
-                    "FROM cidadao "
-                    "WHERE LOWER(email) = %s AND ativo = TRUE",
-                    [email],
-                )
-                row = cursor.fetchone()
+            row = db.buscar_cidadao_para_reset(email)
 
             if not row:
                 messages.info(
@@ -293,12 +281,7 @@ def redefinir_senha_view(request, token):
         form = RedefinirSenhaForm(request.POST)
         if form.is_valid():
             # Atualiza o hash da senha no banco.
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "UPDATE cidadao SET senha_hash = %s "
-                    "WHERE id_cidadao = %s",
-                    [make_password(form.cleaned_data["senha"]), uid],
-                )
+            db.atualizar_senha_cidadao(uid, form.cleaned_data["senha"])
             messages.success(request, "Senha atualizada. Entre com a nova senha.")
             return redirect("portal:login")
     else:
@@ -330,12 +313,7 @@ def troca_senha_obrigatoria_view(request):
         form = TrocaSenhaObrigatoriaForm(request.POST)
         if form.is_valid():
             u = request.portal_user
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "UPDATE servidor SET senha_hash = %s, senha_temporaria = NULL "
-                    "WHERE id_servidor = %s",
-                    [make_password(form.cleaned_data["senha"]), u.pk],
-                )
+            db.atualizar_senha_servidor(u.pk, form.cleaned_data["senha"])
             del request.session["forcar_troca_senha"]
             messages.success(request, "Senha alterada.")
             return redirect("portal:root")

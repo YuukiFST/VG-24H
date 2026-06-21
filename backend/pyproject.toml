@@ -5,8 +5,36 @@ description = "Backend Django do Portal VG 24H (PostgreSQL)"
 requires-python = ">=3.12"
 dependencies = [
     "cloudinary>=1.44.1",
-    "django>=6.0.3",
+    "django>=5.1,<6.0",
+    "gunicorn>=22.0",
     "pillow>=12.1.1",
     "psycopg[binary]>=3.3.3",
     "python-dotenv>=1.2.2",
+    "whitenoise>=6.7",
 ]
+
+[project.optional-dependencies]
+test = [
+    "pytest-django>=4.9",
+]
+dev = [
+    "ruff>=0.11.0",
+    "pytest-django>=4.9",
+    "pre-commit>=4.0",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "S", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/migrations/*" = ["E"]
+"tests/**" = ["S101"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+testpaths = ["portal/tests"]
+required_plugins = ["pytest-django"]

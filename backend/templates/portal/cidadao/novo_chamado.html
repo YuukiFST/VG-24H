@@ -66,7 +66,7 @@
           <div class="category-group mb-4x">
             <h3 class="h6 mb-2x text-uppercase text-muted" style="font-size:0.75rem; letter-spacing:1px; font-weight:700;">{{ cat.nome }}</h3>
             <div class="selection-grid">
-              {% for svc in cat.servicos.all %}
+              {% for svc in cat.servicos_list %}
                 <div class="selection-card {% if form.id_servico.value|add:0 == svc.id_servico %}selected{% endif %}" data-value="{{ svc.id_servico }}">
                   <i class="fas {% if 'Iluminação' in cat.nome %}fa-lightbulb{% elif 'Pavimentação' in cat.nome %}fa-road{% elif 'Saneamento' in cat.nome %}fa-water{% elif 'Trânsito' in cat.nome %}fa-traffic-light{% else %}fa-heartbeat{% endif %}" aria-hidden="true"></i>
                   <span>{{ svc.nome }}</span>

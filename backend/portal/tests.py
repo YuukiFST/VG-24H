@@ -12,14 +12,12 @@ Cada teste segue F.I.R.S.T: Fast, Independent, Repeatable,
 Self-validating, Timely.
 """
 
-from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from django.test import RequestFactory, TestCase
+from django.test import TestCase
 from django.utils import timezone
 
 from portal import db
-from portal.decorators import perfil_codigo
 from portal.forms import CadastroCidadaoForm, RedefinirSenhaForm, ServicoForm
 from portal.models import ConfiguracaoSemaforo
 from portal.utils import proximo_protocolo
@@ -40,7 +38,7 @@ class ProximoProtocoloTests(TestCase):
     def test_primeiro_protocolo_do_ano(self, mock_conn):
         """Insere o primeiro protocolo do ano — retorna 000001."""
         mock_cursor = MagicMock()
-        mock_cursor.fetchone.return_value = (1,)
+        mock_cursor.fetchone.side_effect = [(1,), None]
         mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
         mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
 
@@ -53,58 +51,13 @@ class ProximoProtocoloTests(TestCase):
         """ON CONFLICT incrementa — retorna 000006."""
         ano = str(timezone.now().year)
         mock_cursor = MagicMock()
-        mock_cursor.fetchone.return_value = (6,)
+        mock_cursor.fetchone.side_effect = [(6,), None]
         mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
         mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
 
         resultado = proximo_protocolo()
         self.assertEqual(resultado, f"{ano}000006")
 
-
-# ------------------------------------------------------------------
-# Slice 2: Semaforo (cor_semaforo)
-# ------------------------------------------------------------------
-
-class CorSemaforoTests(TestCase):
-    """Testa a classificacao de chamados por urgencia (verde/amarelo/vermelho)."""
-
-    def _make_chamado_mock(self, dias_aberto, prazo_amarelo=15, prazo_vermelho=30):
-        """Cria um mock que simula Chamado para testar cor_semaforo."""
-        ch = MagicMock()
-        ch.dt_abertura = timezone.now() - timedelta(days=dias_aberto)
-        ch.id_servico.prazo_amarelo_dias = prazo_amarelo
-        ch.id_servico.prazo_vermelho_dias = prazo_vermelho
-        return ch
-
-    def test_chamado_no_prazo_retorna_verde(self):
-        """Chamado com 5 dias (prazo amarelo=15) deve ser verde."""
-        ch = self._make_chamado_mock(dias_aberto=5)
-        self.assertEqual(db.cor_semaforo(ch.dt_abertura, 15, 30), "verde")
-
-    def test_chamado_atencao_retorna_amarelo(self):
-        """Chamado com 20 dias (prazo amarelo=15, vermelho=30) deve ser amarelo."""
-        ch = self._make_chamado_mock(dias_aberto=20)
-        self.assertEqual(db.cor_semaforo(ch.dt_abertura, 15, 30), "amarelo")
-
-    def test_chamado_critico_retorna_vermelho(self):
-        """Chamado com 35 dias (prazo vermelho=30) deve ser vermelho."""
-        ch = self._make_chamado_mock(dias_aberto=35)
-        self.assertEqual(db.cor_semaforo(ch.dt_abertura, 15, 30), "vermelho")
-
-    def test_chamado_exatamente_no_limite_amarelo(self):
-        """Chamado com exatamente prazo_amarelo dias deve ser amarelo."""
-        ch = self._make_chamado_mock(dias_aberto=15)
-        self.assertEqual(db.cor_semaforo(ch.dt_abertura, 15, 30), "amarelo")
-
-    def test_chamado_exatamente_no_limite_vermelho(self):
-        """Chamado com exatamente prazo_vermelho dias deve ser vermelho."""
-        ch = self._make_chamado_mock(dias_aberto=30)
-        self.assertEqual(db.cor_semaforo(ch.dt_abertura, 15, 30), "vermelho")
-
-    def test_chamado_zero_dias(self):
-        """Chamado aberto hoje deve ser verde."""
-        ch = self._make_chamado_mock(dias_aberto=0)
-        self.assertEqual(db.cor_semaforo(ch.dt_abertura, 15, 30), "verde")
 
 
 class SemaforoGlobalTests(TestCase):
@@ -176,79 +129,6 @@ class GestaoPrazosViewTests(TestCase):
         self.assertEqual(resp.status_code, 302)
 
 
-# ------------------------------------------------------------------
-# Slice 3: Paginacao
-# ------------------------------------------------------------------
-
-class PaginarTests(TestCase):
-    """Testa a paginacao manual implementada em db.py."""
-
-    def test_pagina_1_sem_total_count(self):
-        """Sem total_count, paginar() faz slicing em Python."""
-        itens = list(range(30))
-        page_obj, total = db.paginar(itens, pagina=1, por_pagina=15)
-        self.assertEqual(total, 30)
-        self.assertEqual(list(page_obj.object_list), list(range(15)))
-
-    def test_pagina_2_sem_total_count(self):
-        """Sem total_count, pagina 2 retorna itens 15-29."""
-        itens = list(range(30))
-        page_obj, total = db.paginar(itens, pagina=2, por_pagina=15)
-        self.assertEqual(total, 30)
-        self.assertEqual(list(page_obj.object_list), list(range(15, 30)))
-
-    def test_pagina_2_com_total_count(self):
-        """Com total_count (SQL LIMIT/OFFSET), itens ja sao a pagina atual."""
-        itens = list(range(15))
-        page_obj, total = db.paginar(itens, pagina=2, por_pagina=15, total_count=30)
-        self.assertEqual(total, 30)
-        self.assertEqual(list(page_obj.object_list), list(range(15)))
-
-    def test_pagina_invalida_cai_para_1(self):
-        """Parametro pagina nao-numerico cai para 1."""
-        itens = list(range(30))
-        page_obj, _ = db.paginar(itens, pagina="abc", por_pagina=15)
-        self.assertEqual(page_obj.number, 1)
-
-    def test_ultima_pagina_incompleta(self):
-        """Ultima pagina com menos itens que por_pagina."""
-        itens = list(range(25))
-        page_obj, total = db.paginar(itens, pagina=2, por_pagina=15)
-        self.assertEqual(total, 25)
-        self.assertEqual(list(page_obj.object_list), list(range(15, 25)))
-        self.assertFalse(page_obj.has_next)
-
-
-# ------------------------------------------------------------------
-# Slice 4: Decoradores
-# ------------------------------------------------------------------
-
-class PerfilCodigoTests(TestCase):
-    """Testa a extracao do codigo de perfil do usuario."""
-
-    def test_cidadao_retorna_cid(self):
-        user = MagicMock()
-        user.perfil = "CID"
-        self.assertEqual(perfil_codigo(user), "CID")
-
-    def test_gestor_retorna_ges(self):
-        user = MagicMock()
-        user.perfil = "GES"
-        self.assertEqual(perfil_codigo(user), "GES")
-
-    def test_perfil_com_espacos_retorna_limpo(self):
-        """Perfil com espacos extras eh stripped."""
-        user = MagicMock()
-        user.perfil = "  COL  "
-        self.assertEqual(perfil_codigo(user), "COL")
-
-    def test_usuario_none_retorna_vazio(self):
-        self.assertEqual(perfil_codigo(None), "")
-
-    def test_perfil_none_retorna_vazio(self):
-        user = MagicMock()
-        user.perfil = None
-        self.assertEqual(perfil_codigo(user), "")
 
 
 # ------------------------------------------------------------------

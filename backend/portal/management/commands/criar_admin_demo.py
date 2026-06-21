@@ -9,9 +9,8 @@ Execucao: python manage.py criar_admin_demo
 
 from django.contrib.auth.hashers import make_password
 from django.core.management.base import BaseCommand
+from django.db import connection
 from django.utils import timezone
-
-from portal.models import Secretaria, Servidor
 
 
 class Command(BaseCommand):
@@ -20,30 +19,42 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         email = "gestor@portal.vg"
 
-        # Verifica se o gestor demo ja existe (evita duplicidade).
-        if Servidor.objects.filter(email__iexact=email).exists():
-            self.stdout.write(self.style.WARNING("Gestor demo ja existe."))
-            return
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT 1 FROM servidor WHERE LOWER(email) = %s",
+                [email],
+            )
+            if cursor.fetchone():
+                self.stdout.write(self.style.WARNING("Gestor demo ja existe."))
+                return
 
-        # Precisa de uma secretaria para associar o servidor.
-        sec = Secretaria.objects.first()
-        if not sec:
-            self.stdout.write(self.style.ERROR(
-                "Nenhuma secretaria cadastrada. Execute o seed primeiro."
-            ))
-            return
+            cursor.execute(
+                "SELECT id_secretaria FROM secretaria LIMIT 1"
+            )
+            sec_row = cursor.fetchone()
+            if not sec_row:
+                self.stdout.write(self.style.ERROR(
+                    "Nenhuma secretaria cadastrada. Execute o seed primeiro."
+                ))
+                return
 
-        # Cria o servidor gestor com senha hasheada.
-        Servidor.objects.create(
-            nome_completo="Gestor Demo",
-            cpf="00000000272",
-            dt_nascimento="1990-01-01",
-            telefone="65988887777",
-            email=email,
-            senha_hash=make_password("admin123"),
-            perfil="GES",
-            ativo=True,
-            dt_cadastro=timezone.now(),
-            id_secretaria=sec,
-        )
+            cursor.execute(
+                "INSERT INTO servidor "
+                "(nome_completo, cpf, dt_nascimento, telefone, email, "
+                "senha_hash, perfil, ativo, dt_cadastro, id_secretaria) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                [
+                    "Gestor Demo",
+                    "00000000272",
+                    "1990-01-01",
+                    "65988887777",
+                    email,
+                    make_password("admin123"),
+                    "GES",
+                    True,
+                    timezone.now(),
+                    sec_row[0],
+                ],
+            )
+
         self.stdout.write(self.style.SUCCESS("gestor@portal.vg / admin123"))

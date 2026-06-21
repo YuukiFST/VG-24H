@@ -89,9 +89,8 @@
         </div>
         
         {% if pode_obs_foto %}
-        <form action="{% url 'portal:cidadao_chamado' ch.pk %}" method="post" class="mt-4x">
+        <form action="{% url 'portal:cidadao_chamado_obs' ch.pk %}" method="post" class="mt-4x">
           {% csrf_token %}
-          <input type="hidden" name="acao" value="obs">
           <div style="display:flex; gap:8px;">
             <div class="br-input" style="flex:1;">
               <input type="text" name="texto" placeholder="Adicionar nova observação..." required />
@@ -119,9 +118,8 @@
         </div>
         
         {% if pode_obs_foto %}
-        <form action="{% url 'portal:cidadao_chamado' ch.pk %}" method="post" enctype="multipart/form-data" class="mt-2 text-center">
+        <form action="{% url 'portal:cidadao_chamado_foto' ch.pk %}" method="post" enctype="multipart/form-data" class="mt-2 text-center">
           {% csrf_token %}
-          <input type="hidden" name="acao" value="foto">
           <input type="file" name="foto" id="input-foto" style="display:none;" onchange="this.form.submit()" accept="image/*">
           <button class="br-button secondary small" type="button" onclick="document.getElementById('input-foto').click()">
             <i class="fas fa-camera mr-1"></i> Adicionar Foto
@@ -182,9 +180,8 @@
             <small class="text-muted">Avaliado em {{ ch.dt_avaliacao|date:"d/m/Y" }}</small>
           </div>
         {% elif pode_avaliar %}
-          <form action="{% url 'portal:cidadao_chamado' ch.pk %}" method="post">
+          <form action="{% url 'portal:cidadao_chamado_avaliar' ch.pk %}" method="post">
             {% csrf_token %}
-            <input type="hidden" name="acao" value="avaliar">
             <input type="hidden" name="nota" id="input-rating" value="5">
             
             <div class="rating-stars mb-3x">
@@ -221,9 +218,8 @@
   </div>
   <div class="br-modal-body">
     <p>Deseja realmente cancelar este chamado? Explique o motivo.</p>
-    <form action="{% url 'portal:cidadao_chamado' ch.pk %}" method="post">
+    <form action="{% url 'portal:cidadao_chamado_cancelar' ch.pk %}" method="post">
       {% csrf_token %}
-      <input type="hidden" name="acao" value="cancelar">
       <div class="br-input mt-3x">
         <label for="cancel-motivo">Motivo do cancelamento *</label>
         <textarea id="cancel-motivo" name="motivo" rows="3" required></textarea>

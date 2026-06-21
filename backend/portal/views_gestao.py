@@ -20,10 +20,7 @@ chama form.save() — os dados sao extraidos de cleaned_data e inseridos
 manualmente via SQL.
 """
 
-from types import SimpleNamespace
-
 from django.contrib import messages
-from django.contrib.auth.hashers import make_password
 from django.db import connection
 from django.db.utils import ProgrammingError
 from django.http import Http404
@@ -41,11 +38,8 @@ from portal.forms import (
 )
 from portal.models import (
     Bairro,
-    BannerPublicacao,
     CategoriaServico,
-    Secretaria,
     Servico,
-    Servidor,
 )
 from portal.utils import salvar_foto_upload
 
@@ -61,15 +55,7 @@ def gestao_servico_novo(request):
         form = ServicoForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "INSERT INTO servico (nome, descricao, ativo, id_categoria) "
-                    "VALUES (%s, %s, %s, %s)",
-                    [
-                        d["nome"], d.get("descricao"), True,
-                        d["id_categoria"].pk,
-                    ],
-                )
+            db.inserir_servico(d["nome"], d.get("descricao"), d["id_categoria"].pk)
             messages.success(request, "Serviço criado.")
             return redirect("portal:gestao_servicos")
 
@@ -94,46 +80,11 @@ def gestao_colaborador_novo(request):
         form = ColaboradorNovoForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "SELECT EXISTS("
-                    "  SELECT 1 FROM servidor WHERE LOWER(email) = %s"
-                    ") OR EXISTS("
-                    "  SELECT 1 FROM servidor WHERE cpf = %s"
-                    ")",
-                    [d["email"].lower(), d["cpf"]],
-                )
-                ja_existe = cursor.fetchone()[0]
-
+            ja_existe = db.existe_email_ou_cpf("servidor", d["email"].lower(), d["cpf"])
             if ja_existe:
                 messages.error(request, "E-mail ou CPF já existe.")
             else:
-                with connection.cursor() as cursor:
-                    cursor.execute("SELECT id_secretaria FROM secretaria LIMIT 1")
-                    sec_row = cursor.fetchone()
-                    sec_id = sec_row[0] if sec_row else None
-
-                    cursor.execute(
-                        "INSERT INTO servidor "
-                        "(nome_completo, cpf, dt_nascimento, telefone, email, "
-                        "senha_hash, senha_temporaria, perfil, ativo, dt_cadastro, "
-                        "id_secretaria) "
-                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                        [
-                            d["nome_completo"],
-                            d["cpf"],
-                            d["dt_nascimento"],
-                            d["telefone"],
-                            d["email"].lower(),
-                            make_password(d["senha_provisoria"]),
-                            "1",
-                            "COL",
-                            True,
-                            timezone.now(),
-                            sec_id,
-                        ],
-                    )
+                db.inserir_colaborador(d)
                 messages.success(request, "Colaborador criado. Deve trocar a senha no 1o acesso.")
             return redirect("portal:gestao_colaboradores")
 
@@ -196,30 +147,12 @@ def gestao_categorias(request):
         form = CategoriaForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT id_secretaria FROM secretaria LIMIT 1")
-                sec_row = cursor.fetchone()
-                sec_id = sec_row[0] if sec_row else None
-
-                cursor.execute(
-                    "INSERT INTO categoria_servico (nome, descricao, ativo, id_secretaria) "
-                    "VALUES (%s, %s, %s, %s)",
-                    [d["nome"], d.get("descricao"), True, sec_id],
-                )
+            db.inserir_categoria(d["nome"], d.get("descricao"))
             messages.success(request, "Categoria criada.")
         return redirect("portal:gestao_categorias")
 
     form = CategoriaForm()
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_categoria, nome, descricao, ativo "
-            "FROM categoria_servico "
-            "WHERE ativo = TRUE ORDER BY nome"
-        )
-        lista = [
-            SimpleNamespace(id_categoria=r[0], pk=r[0], nome=r[1], descricao=r[2], ativo=r[3])
-            for r in cursor.fetchall()
-        ]
+    lista = db.listar_categorias_todas()
     return render(
         request,
         "portal/gestao/categorias.html",
@@ -294,36 +227,12 @@ def gestao_servicos(request):
         form = ServicoForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "INSERT INTO servico (nome, descricao, ativo, id_categoria) "
-                    "VALUES (%s, %s, %s, %s)",
-                    [
-                        d["nome"], d.get("descricao"), True,
-                        d["id_categoria"].pk,
-                    ],
-                )
+            db.inserir_servico(d["nome"], d.get("descricao"), d["id_categoria"].pk)
             messages.success(request, "Serviço criado.")
         return redirect("portal:gestao_servicos")
 
     form = ServicoForm()
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT s.id_servico, s.nome, s.descricao, s.ativo, "
-            "s.id_categoria, cat.nome AS categoria_nome "
-            "FROM servico s "
-            "JOIN categoria_servico cat ON s.id_categoria = cat.id_categoria "
-            "WHERE s.ativo = TRUE "
-            "ORDER BY s.nome"
-        )
-        lista = [
-            SimpleNamespace(
-                id_servico=r[0], pk=r[0], nome=r[1], descricao=r[2],
-                ativo=r[3],
-                id_categoria=SimpleNamespace(id_categoria=r[4], pk=r[4], nome=r[5]),
-            )
-            for r in cursor.fetchall()
-        ]
+    lista = db.listar_servicos_com_categoria()
     categorias = db.listar_categorias_ativas()
     return render(
         request,
@@ -398,12 +307,7 @@ def gestao_bairros(request):
         form = BairroForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "INSERT INTO bairro (nome_bairro, cep, regiao, ativo) "
-                    "VALUES (%s, %s, %s, %s)",
-                    [d["nome_bairro"], d["cep"], d.get("regiao"), True],
-                )
+            db.inserir_bairro(d["nome_bairro"], d["cep"], d.get("regiao"))
             messages.success(request, "Bairro criado.")
             return redirect("portal:gestao_bairros")
         else:
@@ -411,18 +315,7 @@ def gestao_bairros(request):
             mostrar_form = True
 
     form = locals().get("form", BairroForm())
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
-            "FROM bairro ORDER BY nome_bairro"
-        )
-        lista = [
-            SimpleNamespace(
-                id_bairro=r[0], pk=r[0], nome_bairro=r[1],
-                cep=r[2], regiao=r[3], ativo=r[4],
-            )
-            for r in cursor.fetchall()
-        ]
+    lista = db.listar_bairros_todos()
     return render(
         request,
         "portal/gestao/bairros.html",
@@ -456,12 +349,7 @@ def gestao_bairro_edit(request, pk):
         form = BairroForm(request.POST, instance=obj)
         if form.is_valid():
             d = form.cleaned_data
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "UPDATE bairro SET nome_bairro = %s, cep = %s, regiao = %s, "
-                    "ativo = %s WHERE id_bairro = %s",
-                    [d["nome_bairro"], d["cep"], d.get("regiao"), d.get("ativo", True), pk],
-                )
+            db.atualizar_bairro(pk, d["nome_bairro"], d["cep"], d.get("regiao"), d.get("ativo", True))
             messages.success(request, "Bairro atualizado.")
             return redirect("portal:gestao_bairros")
     else:
@@ -500,65 +388,17 @@ def gestao_colaboradores(request):
             d = form.cleaned_data
 
             # Verifica duplicidade de email ou CPF.
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "SELECT EXISTS("
-                    "  SELECT 1 FROM servidor WHERE LOWER(email) = %s"
-                    ") OR EXISTS("
-                    "  SELECT 1 FROM servidor WHERE cpf = %s"
-                    ")",
-                    [d["email"].lower(), d["cpf"]],
-                )
-                ja_existe = cursor.fetchone()[0]
+            ja_existe = db.existe_email_ou_cpf("servidor", d["email"].lower(), d["cpf"])
 
             if ja_existe:
                 messages.error(request, "E-mail ou CPF já existe.")
             else:
-                with connection.cursor() as cursor:
-                    cursor.execute("SELECT id_secretaria FROM secretaria LIMIT 1")
-                    sec_row = cursor.fetchone()
-                    sec_id = sec_row[0] if sec_row else None
-
-                    cursor.execute(
-                        "INSERT INTO servidor "
-                        "(nome_completo, cpf, dt_nascimento, telefone, email, "
-                        "senha_hash, senha_temporaria, perfil, ativo, dt_cadastro, "
-                        "id_secretaria) "
-                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                        [
-                            d["nome_completo"],
-                            d["cpf"],
-                            d["dt_nascimento"],
-                            d["telefone"],
-                            d["email"].lower(),
-                            make_password(d["senha_provisoria"]),
-                            "1",       # Flag: senha temporaria
-                            "COL",     # Perfil: colaborador
-                            True,
-                            timezone.now(),
-                            sec_id,
-                        ],
-                    )
+                db.inserir_colaborador(d)
                 messages.success(request, "Colaborador criado. Deve trocar a senha no 1o acesso.")
         return redirect("portal:gestao_colaboradores")
 
     form = ColaboradorNovoForm()
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_servidor, nome_completo, cpf, email, telefone, "
-            "perfil, ativo, dt_cadastro "
-            "FROM servidor "
-            "WHERE perfil = 'COL' "
-            "ORDER BY ativo DESC, nome_completo"
-        )
-        lista = [
-            SimpleNamespace(
-                id_servidor=r[0], pk=r[0], nome_completo=r[1],
-                cpf=r[2], email=r[3], telefone=r[4],
-                perfil=r[5], ativo=r[6], dt_cadastro=r[7],
-            )
-            for r in cursor.fetchall()
-        ]
+    lista = db.listar_colaboradores()
     return render(
         request,
         "portal/gestao/colaboradores.html",
@@ -569,27 +409,10 @@ def gestao_colaboradores(request):
 @perfis("GES")
 @require_http_methods(["POST"])
 def gestao_colaborador_toggle(request, pk):
-    """Ativa ou desativa um colaborador (toggle do campo ativo)."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_servidor, nome_completo, ativo "
-            "FROM servidor WHERE id_servidor = %s",
-            [pk],
-        )
-        row = cursor.fetchone()
-    if not row:
+    result = db.alternar_colaborador_ativo(pk)
+    if result is None:
         raise Http404()
-
-    novo_ativo = not row[2]
-    nome = row[1]
-
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "UPDATE servidor SET ativo = %s WHERE id_servidor = %s",
-            [novo_ativo, pk],
-        )
-
-    status = "ativado" if novo_ativo else "inativado"
+    nome, status = result
     messages.success(request, f"Colaborador {nome} {status}.")
     return redirect("portal:gestao_colaboradores")
 
@@ -602,14 +425,8 @@ def gestao_colaborador_reset_senha(request, pk):
     if len(nova) < 6:
         messages.error(request, "Senha deve ter no mínimo 6 caracteres.")
         return redirect("portal:gestao_colaboradores")
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "UPDATE servidor SET senha_hash = %s, senha_temporaria = '1' "
-            "WHERE id_servidor = %s AND perfil = 'COL'",
-            [make_password(nova), pk],
-        )
-        if cursor.rowcount == 0:
-            raise Http404
+    if not db.resetar_senha_colaborador(pk, nova):
+        raise Http404()
     messages.success(request, "Senha redefinida com sucesso! Colaborador deve trocar no proximo acesso.")
     return redirect("portal:gestao_colaboradores")
 
@@ -621,16 +438,8 @@ def gestao_colaborador_reset_senha(request, pk):
 @perfis("GES")
 @require_http_methods(["POST"])
 def gestao_servico_desativar(request, pk):
-    """Desativa um servico (soft delete: ativo=FALSE).
-
-    Servicos desativados nao aparecem no formulario de novo chamado,
-    mas chamados antigos que usam este servico mantem a referencia.
-    """
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT id_servico FROM servico WHERE id_servico = %s", [pk])
-        if not cursor.fetchone():
-            raise Http404()
-        cursor.execute("UPDATE servico SET ativo = FALSE WHERE id_servico = %s", [pk])
+    if not db.desativar_servico(pk):
+        raise Http404()
     messages.info(request, "Serviço inativado.")
     return redirect("portal:gestao_servicos")
 
@@ -638,12 +447,8 @@ def gestao_servico_desativar(request, pk):
 @perfis("COL", "GES")
 @require_http_methods(["POST"])
 def gestao_bairro_desativar(request, pk):
-    """Desativa um bairro (soft delete: ativo=FALSE)."""
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT id_bairro FROM bairro WHERE id_bairro = %s", [pk])
-        if not cursor.fetchone():
-            raise Http404()
-        cursor.execute("UPDATE bairro SET ativo = FALSE WHERE id_bairro = %s", [pk])
+    if not db.desativar_bairro(pk):
+        raise Http404()
     messages.info(request, "Bairro inativado.")
     return redirect("portal:gestao_bairros")
 
@@ -651,12 +456,8 @@ def gestao_bairro_desativar(request, pk):
 @perfis("COL", "GES")
 @require_http_methods(["POST"])
 def gestao_bairro_ativar(request, pk):
-    """Reativa um bairro previamente desativado."""
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT id_bairro FROM bairro WHERE id_bairro = %s", [pk])
-        if not cursor.fetchone():
-            raise Http404()
-        cursor.execute("UPDATE bairro SET ativo = TRUE WHERE id_bairro = %s", [pk])
+    if not db.ativar_bairro(pk):
+        raise Http404()
     messages.info(request, "Bairro reativado.")
     return redirect("portal:gestao_bairros")
 
@@ -667,22 +468,7 @@ def gestao_bairro_ativar(request, pk):
 
 @perfis("GES")
 def gestao_banners(request):
-    """Lista todos os banners ordenados por posicao no carrossel."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_banner, titulo, descricao, url_imagem, link, "
-            "ordem, ativo, dt_criacao "
-            "FROM banner_publicacao "
-            "ORDER BY ordem, dt_criacao DESC"
-        )
-        banners = [
-            SimpleNamespace(
-                id_banner=r[0], pk=r[0], titulo=r[1], descricao=r[2],
-                url_imagem=r[3], link=r[4], ordem=r[5],
-                ativo=r[6], dt_criacao=r[7],
-            )
-            for r in cursor.fetchall()
-        ]
+    banners = db.listar_banners_todos()
     return render(request, "portal/gestao/banners.html", {"banners": banners})
 
 
@@ -713,16 +499,7 @@ def gestao_banner_novo(request):
 
         url_imagem = salvar_foto_upload(foto)
 
-        with connection.cursor() as cursor:
-            # Auto-incremento: nova ordem = MAX(ordem) + 1.
-            cursor.execute("SELECT COALESCE(MAX(ordem), -1) + 1 FROM banner_publicacao")
-            ordem = cursor.fetchone()[0]
-            cursor.execute(
-                "INSERT INTO banner_publicacao "
-                "(titulo, descricao, url_imagem, link, ordem, ativo, dt_criacao) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                [titulo, descricao, url_imagem, link, ordem, True, timezone.now()],
-            )
+        db.inserir_banner(titulo, descricao, url_imagem, link)
         messages.success(request, "Banner criado com sucesso!")
         return redirect("portal:gestao_banners")
 
@@ -732,24 +509,9 @@ def gestao_banner_novo(request):
 @perfis("GES")
 @require_http_methods(["GET", "POST"])
 def gestao_banner_editar(request, pk):
-    """Edita um banner existente. Permite alterar titulo, descricao,
-    link, ordem e substituir a imagem."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_banner, titulo, descricao, url_imagem, link, "
-            "ordem, ativo, dt_criacao "
-            "FROM banner_publicacao WHERE id_banner = %s",
-            [pk],
-        )
-        row = cursor.fetchone()
-    if not row:
+    banner = db.buscar_banner(pk)
+    if not banner:
         raise Http404()
-
-    banner = SimpleNamespace(
-        id_banner=row[0], pk=row[0], titulo=row[1], descricao=row[2],
-        url_imagem=row[3], link=row[4], ordem=row[5],
-        ativo=row[6], dt_criacao=row[7],
-    )
 
     if request.method == "POST":
         titulo = request.POST.get("titulo", "").strip() or banner.titulo
@@ -765,13 +527,7 @@ def gestao_banner_editar(request, pk):
                 return redirect("portal:gestao_banner_editar", pk=pk)
             url_imagem = salvar_foto_upload(foto)
 
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "UPDATE banner_publicacao SET titulo = %s, descricao = %s, "
-                "url_imagem = %s, link = %s, ordem = %s "
-                "WHERE id_banner = %s",
-                [titulo, descricao, url_imagem, link, ordem, pk],
-            )
+        db.atualizar_banner(pk, titulo, descricao, url_imagem, link, ordem)
         messages.success(request, "Banner atualizado!")
         return redirect("portal:gestao_banners")
 
@@ -781,12 +537,8 @@ def gestao_banner_editar(request, pk):
 @perfis("GES")
 @require_http_methods(["POST"])
 def gestao_banner_excluir(request, pk):
-    """Exclui permanentemente um banner (DELETE fisico, nao soft delete)."""
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT id_banner FROM banner_publicacao WHERE id_banner = %s", [pk])
-        if not cursor.fetchone():
-            raise Http404()
-        cursor.execute("DELETE FROM banner_publicacao WHERE id_banner = %s", [pk])
+    if not db.excluir_banner(pk):
+        raise Http404()
     messages.info(request, "Banner excluído.")
     return redirect("portal:gestao_banners")
 
@@ -794,53 +546,6 @@ def gestao_banner_excluir(request, pk):
 @perfis("GES")
 @require_http_methods(["POST"])
 def gestao_banner_reordenar(request, pk):
-    """Move um banner para cima ou para baixo no carrossel.
-
-    A direcao vem como campo oculto no formulario (-1 para cima,
-    +1 para baixo). A funcao busca o vizinho na direcao indicada
-    e troca as ordens entre os dois banners (swap).
-    """
     direcao = int(request.POST.get("direcao", 0))
-
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_banner, ordem FROM banner_publicacao WHERE id_banner = %s", [pk]
-        )
-        row = cursor.fetchone()
-    if not row:
-        raise Http404()
-
-    ordem_atual = row[1]
-
-    # Busca o vizinho na direcao indicada.
-    with connection.cursor() as cursor:
-        if direcao == -1:
-            cursor.execute(
-                "SELECT id_banner, ordem FROM banner_publicacao "
-                "WHERE ordem < %s ORDER BY ordem DESC LIMIT 1",
-                [ordem_atual],
-            )
-        elif direcao == 1:
-            cursor.execute(
-                "SELECT id_banner, ordem FROM banner_publicacao "
-                "WHERE ordem > %s ORDER BY ordem ASC LIMIT 1",
-                [ordem_atual],
-            )
-        else:
-            return redirect("portal:gestao_banners")
-
-        vizinho = cursor.fetchone()
-
-    # Swap: troca as ordens entre o banner e o vizinho.
-    if vizinho:
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "UPDATE banner_publicacao SET ordem = %s WHERE id_banner = %s",
-                [ordem_atual, vizinho[0]],
-            )
-            cursor.execute(
-                "UPDATE banner_publicacao SET ordem = %s WHERE id_banner = %s",
-                [vizinho[1], pk],
-            )
-
+    db.reordenar_banner(pk, direcao)
     return redirect("portal:gestao_banners")

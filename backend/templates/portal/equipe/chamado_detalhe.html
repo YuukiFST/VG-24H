@@ -28,39 +28,48 @@
       <h2><i class="fas fa-tasks mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Gestão de Status</h2>
 
       {% if pode_status %}
-        <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post" class="d-flex align-items-end gap-3 flex-wrap">
+        <form action="{% url 'portal:equipe_chamado_status' ch.pk %}" method="post">
           {% csrf_token %}
-          <input type="hidden" name="acao" value="status">
-
-          <div class="br-input flex-grow-1" style="min-width:180px;">
-            <label for="status-select">Alterar para:</label>
-            <select id="status-select" name="id_status" required>
-              {% for code, label in form_status.fields.id_status.choices %}
-                {% if code %}
-                  <option value="{{ code }}" {% if ch.status_atual.pk == code %}selected{% endif %}>{{ label }}</option>
-                {% endif %}
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="br-input flex-grow-1" style="min-width:160px;">
-            <label for="prioridade-select">Prioridade</label>
-            <select id="prioridade-select" name="prioridade">
-              {% for val, lbl in prioridades %}
-                <option value="{{ val }}" {% if ch.prioridade == val %}selected{% endif %}>{{ lbl }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div id="resolucao-wrapper" class="br-input flex-grow-1" style="min-width:220px;">
-            <label for="resolucao-text" id="resolucao-label">Observação</label>
-            <textarea id="resolucao-text" name="resolucao" rows="2" placeholder="Observação sobre a alteração (opcional).">{{ ch.resolucao|default:'' }}</textarea>
-          </div>
-
-          <button class="br-button primary" type="submit">
-            <i class="fas fa-save mr-1"></i> Salvar alterações
-          </button>
           <div id="sigla-map-data" data-map='{{ status_sigla_map_json|safe }}' style="display:none;"></div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="br-input">
+                <label for="status-select">Alterar para:</label>
+                <select id="status-select" name="id_status" required>
+                  {% for code, label in form_status.fields.id_status.choices %}
+                    {% if code %}
+                      <option value="{{ code }}" {% if ch.status_atual.pk == code %}selected{% endif %}>{{ label }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="br-input">
+                <label for="prioridade-select">Prioridade</label>
+                <select id="prioridade-select" name="prioridade">
+                  {% for val, lbl in prioridades %}
+                    <option value="{{ val }}" {% if ch.prioridade == val %}selected{% endif %}>{{ lbl }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div id="resolucao-wrapper" class="br-input">
+              <label for="resolucao-text" id="resolucao-label">Observação</label>
+              <textarea id="resolucao-text" name="resolucao" rows="3" placeholder="Observação sobre a alteração (opcional).">{{ ch.resolucao|default:'' }}</textarea>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end">
+            <button class="br-button primary" type="submit">
+              <i class="fas fa-save mr-1"></i> Salvar alterações
+            </button>
+          </div>
+
           <script>
             (function () {
               var sel = document.getElementById('status-select');
@@ -73,8 +82,8 @@
                 var isFinal = sigla === 'CO' || sigla === 'CA';
                 label.textContent = isFinal ? 'Resolução Final' : 'Observação';
                 textarea.placeholder = isFinal
-                  ? 'Obrigatório para concluir ou cancelar.'
-                  : 'Observação sobre a alteração (opcional).';
+                  ? 'Esta ação é obrigatória para concluir ou cancelar o chamado.'
+                  : 'Descreva o motivo da alteração (opcional).';
                 textarea.required = isFinal;
               }
               sel.addEventListener('change', toggle);
@@ -123,9 +132,8 @@
         {% endfor %}
       </div>
 
-      <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post" class="chat-form">
+      <form action="{% url 'portal:equipe_chamado_obs' ch.pk %}" method="post" class="chat-form">
         {% csrf_token %}
-        <input type="hidden" name="acao" value="obs">
         <div class="chat-input-row">
           <input type="text" name="texto" class="chat-input"
                  placeholder="Digite sua mensagem..." required autocomplete="off">
@@ -264,9 +272,8 @@
         {% endfor %}
       </div>
 
-      <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post" enctype="multipart/form-data" class="mt-2 text-center">
+      <form action="{% url 'portal:equipe_chamado_foto' ch.pk %}" method="post" enctype="multipart/form-data" class="mt-2 text-center">
         {% csrf_token %}
-        <input type="hidden" name="acao" value="foto">
         <input type="file" name="foto" id="input-foto-equipe" style="display:none;" onchange="this.form.submit()" accept="image/*">
         <button class="br-button secondary small" type="button" onclick="document.getElementById('input-foto-equipe').click()">
           <i class="fas fa-camera mr-1"></i> Anexar Nova Foto

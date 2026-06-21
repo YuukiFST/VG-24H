@@ -12,9 +12,8 @@ O parametro --dias permite configurar o periodo de corte
 from datetime import timedelta
 
 from django.core.management.base import BaseCommand
+from django.db import connection
 from django.utils import timezone
-
-from portal.models import Notificacao
 
 
 class Command(BaseCommand):
@@ -32,10 +31,13 @@ class Command(BaseCommand):
         dias = options["dias"]
         limite = timezone.now() - timedelta(days=dias)
 
-        # UPDATE em lote: marca como arquivadas todas as notificacoes
-        # nao arquivadas cuja data de envio eh anterior ao limite.
-        qs = Notificacao.objects.filter(arquivada=False, dt_envio__lt=limite)
-        total = qs.update(arquivada=True)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE notificacao SET arquivada = TRUE "
+                "WHERE arquivada = FALSE AND dt_envio < %s",
+                [limite],
+            )
+            total = cursor.rowcount
 
         self.stdout.write(
             self.style.SUCCESS(f"{total} notificacao(oes) arquivada(s).")

@@ -14,6 +14,7 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.db import connection
 from django.utils import timezone
+from django.utils.timezone import is_naive, make_aware
 
 
 def escape_like(valor):
@@ -58,6 +59,22 @@ def proximo_protocolo():
             if not cursor.fetchone():
                 return protocolo
     raise RuntimeError("Nao foi possivel gerar protocolo unico apos 100 tentativas")
+
+
+def formatar_dias_em_aberto(dt_abertura):
+    """Retorna string formatada do tempo desde a abertura do chamado.
+
+    Exemplos: "5 minuto(s)", "3 hora(s)", "12 dia(s)".
+    Usado pela view de detalhe e listagem da equipe.
+    """
+    if is_naive(dt_abertura):
+        dt_abertura = make_aware(dt_abertura, timezone=timezone.utc)
+    delta = timezone.now() - dt_abertura
+    if delta.total_seconds() < 3600:
+        return f"{int(delta.total_seconds() // 60)} minuto(s)"
+    if delta.total_seconds() < 86400:
+        return f"{int(delta.total_seconds() // 3600)} hora(s)"
+    return f"{delta.days} dia(s)"
 
 
 def salvar_foto_upload(arquivo, request=None):

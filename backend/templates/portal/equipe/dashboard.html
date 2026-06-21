@@ -68,18 +68,31 @@
             <span class="message-title">Como funciona o semáforo de prazos</span>
             <div class="message-body">
                 <p class="mb-3">A cor indica o tempo em que o chamado está aberto. Os prazos são globais para todos os serviços.</p>
-                <div class="mb-2">
-                    <span class="br-tag" style="background:#d4edda;color:#155724;font-weight:600;margin-right:4px;">Verde</span>
-                    dentro do prazo
-                    <span class="br-tag" style="background:#fff3cd;color:#856404;font-weight:600;margin:0 4px 0 12px;">Amarelo</span>
-                    próximo ao vencimento
-                    <span class="br-tag" style="background:#f8d7da;color:#721c24;font-weight:600;margin:0 4px 0 12px;">Vermelho</span>
-                    prazo vencido
-                </div>
-                <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-top:6px;">
-                    <span style="color:#155724;">verde até {{ config_semaforo.prazo_amarelo_dias }} dias</span>
-                    <span style="color:#856404;margin-left:12px;">amarelo de {{ config_semaforo.prazo_amarelo_dias }} a {{ config_semaforo.prazo_vermelho_dias }} dias</span>
-                    <span style="color:#721c24;margin-left:12px;">vermelho acima de {{ config_semaforo.prazo_vermelho_dias }} dias</span>
+                <div class="semaforo-legenda-grid">
+                    <div class="semaforo-legenda-item" style="background:#d4edda;border-left:4px solid #28a745;">
+                        <div class="legenda-cor">
+                            <span class="legenda-bolinha" style="background:#28a745;"></span>
+                            <strong style="color:#155724;">Verde</strong>
+                        </div>
+                        <span style="color:#155724;font-size:0.875rem;">dentro do prazo</span>
+                        <span style="color:#155724;font-size:0.8125rem;font-weight:600;">até {{ config_semaforo.prazo_amarelo_dias }} dias</span>
+                    </div>
+                    <div class="semaforo-legenda-item" style="background:#fff3cd;border-left:4px solid #ffc107;">
+                        <div class="legenda-cor">
+                            <span class="legenda-bolinha" style="background:#ffc107;"></span>
+                            <strong style="color:#856404;">Amarelo</strong>
+                        </div>
+                        <span style="color:#856404;font-size:0.875rem;">próximo ao vencimento</span>
+                        <span style="color:#856404;font-size:0.8125rem;font-weight:600;">de {{ config_semaforo.prazo_amarelo_dias }} a {{ config_semaforo.prazo_vermelho_dias }} dias</span>
+                    </div>
+                    <div class="semaforo-legenda-item" style="background:#f8d7da;border-left:4px solid #dc3545;">
+                        <div class="legenda-cor">
+                            <span class="legenda-bolinha" style="background:#dc3545;"></span>
+                            <strong style="color:#721c24;">Vermelho</strong>
+                        </div>
+                        <span style="color:#721c24;font-size:0.875rem;">prazo vencido</span>
+                        <span style="color:#721c24;font-size:0.8125rem;font-weight:600;">acima de {{ config_semaforo.prazo_vermelho_dias }} dias</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -133,125 +146,7 @@
         </div>
     </div>
 
-    <!-- ====== FILTER BAR ====== -->
-    <div class="br-card p-3 mb-4x">
-        <form method="get" id="form-filtros">
-            <div class="row align-items-end">
-            <div class="col-md-2 mb-2x">
-                <label for="filter-status" class="small font-weight-bold">Status</label>
-                <div class="br-select" id="br-select-status">
-                    <div class="br-input">
-                        <input id="filter-status-input" type="text" placeholder="Todos os Status"
-                            value="{% if filtro_status %}{% for s in statuses %}{% if filtro_status == s.id_status %}{{ s.descricao }}{% endif %}{% endfor %}{% endif %}" />
-                        <button class="br-button circle small" type="button" data-trigger aria-label="Exibir lista">
-                            <i class="fas fa-angle-down" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                    <div class="br-list" tabindex="0">
-                        <div class="br-item">
-                            <div class="br-radio">
-                                <input type="radio" name="status-radio" value="" id="status-todos" {% if not filtro_status %}checked{% endif %} />
-                                <label for="status-todos">Todos os Status</label>
-                            </div>
-                        </div>
-                        {% for s in statuses %}
-                        <div class="br-item">
-                            <div class="br-radio">
-                                <input type="radio" name="status-radio" value="{{ s.id_status }}" id="status-{{ s.id_status }}" {% if filtro_status == s.id_status %}checked{% endif %} />
-                                <label for="status-{{ s.id_status }}">{{ s.descricao }}</label>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                <input type="hidden" name="status" id="filter-status-hidden" value="{{ filtro_status|default:'' }}" />
-                <div class="d-flex align-items-center gap-1 mt-1">
-                    <input type="checkbox" name="mostrar_encerrados" id="filter-encerrados"
-                           value="1" {% if mostrar_encerrados %}checked{% endif %}>
-                    <label for="filter-encerrados" style="font-weight:400;font-size:0.875rem;margin:0;white-space:nowrap;">
-                        Concluídos/Cancelados
-                    </label>
-                </div>
-            </div>
-            <div class="col-md-2 mb-2x">
-                <label for="filter-bairro" class="small font-weight-bold">Bairro</label>
-                <div class="br-select" id="br-select-bairro">
-                    <div class="br-input">
-                        <input id="filter-bairro-input" type="text" placeholder="Todos os Bairros"
-                            value="{% if filtro_bairro %}{% for b in bairros %}{% if filtro_bairro == b.id_bairro %}{{ b.nome_bairro }}{% endif %}{% endfor %}{% endif %}" />
-                        <button class="br-button circle small" type="button" data-trigger aria-label="Exibir lista">
-                            <i class="fas fa-angle-down" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                    <div class="br-list" tabindex="0">
-                        <div class="br-item">
-                            <div class="br-radio">
-                                <input type="radio" name="bairro-radio" value="" id="bairro-todos" {% if not filtro_bairro %}checked{% endif %} />
-                                <label for="bairro-todos">Todos os Bairros</label>
-                            </div>
-                        </div>
-                        {% for b in bairros %}
-                        <div class="br-item">
-                            <div class="br-radio">
-                                <input type="radio" name="bairro-radio" value="{{ b.id_bairro }}" id="bairro-{{ b.id_bairro }}" {% if filtro_bairro == b.id_bairro %}checked{% endif %} />
-                                <label for="bairro-{{ b.id_bairro }}">{{ b.nome_bairro }}</label>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                <input type="hidden" name="bairro" id="filter-bairro-hidden" value="{{ filtro_bairro|default:'' }}" />
-            </div>
-            <div class="col-md-2 mb-2x">
-                <label for="filter-servico" class="small font-weight-bold">Serviço</label>
-                <div class="br-select" id="br-select-servico">
-                    <div class="br-input" style="padding-right:20px;">
-                        <input id="filter-servico-input" type="text" placeholder="Todos os Serviços"
-                            value="{% if filtro_servico %}{% for s in servicos %}{% if filtro_servico == s.id_servico %}{{ s.nome }}{% endif %}{% endfor %}{% endif %}" style="padding-right:20px;" />
-                        <button class="br-button circle small" type="button" data-trigger aria-label="Exibir lista">
-                            <i class="fas fa-angle-down" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                    <div class="br-list" tabindex="0">
-                        <div class="br-item">
-                            <div class="br-radio">
-                                <input type="radio" name="servico-radio" value="" id="servico-todos" {% if not filtro_servico %}checked{% endif %} />
-                                <label for="servico-todos">Todos os Serviços</label>
-                            </div>
-                        </div>
-                        {% for s in servicos %}
-                        <div class="br-item">
-                            <div class="br-radio">
-                                <input type="radio" name="servico-radio" value="{{ s.id_servico }}" id="servico-{{ s.id_servico }}" {% if filtro_servico == s.id_servico %}checked{% endif %} />
-                                <label for="servico-{{ s.id_servico }}">{{ s.nome }}</label>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                <input type="hidden" name="servico" id="filter-servico-hidden" value="{{ filtro_servico|default:'' }}" />
-            </div>
-            <div class="col-md-2 mb-2x">
-                <label for="filter-de" class="small font-weight-bold">De</label>
-                <div class="br-input"><input id="filter-de" name="de" type="date" value="{{ filtro_de }}" /></div>
-            </div>
-            <div class="col-md-2 mb-2x">
-                <label for="filter-ate" class="small font-weight-bold">Até</label>
-                <div class="br-input"><input id="filter-ate" name="ate" type="date" value="{{ filtro_ate }}" /></div>
-            </div>
-            <div class="col-md-1 mb-2x">
-                <button class="br-button primary w-100" type="submit">
-                    <i class="fas fa-filter mr-1"></i> Filtrar
-                </button>
-            </div>
-            <div class="col-md-2 mb-2x">
-                <a href="{% url 'portal:equipe_chamados' %}" class="br-button secondary w-100">
-                    <i class="fas fa-eraser mr-1"></i> Limpar Filtros
-                </a>
-            </div>
-        </div>
-        </form>
-    </div>
+    {% include "portal/includes/filtro_chamados.html" %}
 
     <!-- ====== TICKETS TABLE ====== -->
     <div class="br-table" id="tabela-chamados">

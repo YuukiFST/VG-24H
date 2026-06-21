@@ -10,7 +10,10 @@ As views, por sua vez, usam SQL puro para todas as operacoes de leitura
 e escrita (INSERT, UPDATE, SELECT, DELETE). O form.save() nunca eh chamado.
 """
 
+import re
+
 from django import forms
+from django.core.exceptions import ValidationError
 
 from portal.models import (
     Bairro,
@@ -18,6 +21,19 @@ from portal.models import (
     Servico,
     StatusChamado,
 )
+
+
+def _validar_senha_forte(value):
+    if len(value) < 8:
+        raise ValidationError("Senha deve ter pelo menos 8 caracteres.")
+    if not re.search(r"[A-Z]", value):
+        raise ValidationError("Senha deve conter pelo menos uma letra maiuscula.")
+    if not re.search(r"[a-z]", value):
+        raise ValidationError("Senha deve conter pelo menos uma letra minuscula.")
+    if not re.search(r"\d", value):
+        raise ValidationError("Senha deve conter pelo menos um numero.")
+    if not re.search(r"[!@#$%&*()_+\-=\[\]{};':\"\\|,.<>\/?]", value):
+        raise ValidationError("Senha deve conter pelo menos um caractere especial.")
 
 
 # ------------------------------------------------------------------
@@ -36,7 +52,7 @@ class CadastroCidadaoForm(forms.Form):
     dt_nascimento = forms.DateField(label="Data de nascimento")
     telefone = forms.CharField(max_length=20, label="Telefone")
     email = forms.EmailField(max_length=255, label="E-mail")
-    senha = forms.CharField(widget=forms.PasswordInput, min_length=6, label="Senha")
+    senha = forms.CharField(widget=forms.PasswordInput, min_length=8, label="Senha", validators=[_validar_senha_forte])
     senha2 = forms.CharField(widget=forms.PasswordInput, label="Confirmar senha")
 
     # Campos de endereco (etapa 2 do wizard).
@@ -74,7 +90,7 @@ class RecuperarSenhaForm(forms.Form):
 
 class RedefinirSenhaForm(forms.Form):
     """Formulario para definir nova senha (apos clicar no link do email)."""
-    senha = forms.CharField(widget=forms.PasswordInput, min_length=6, label="Nova senha")
+    senha = forms.CharField(widget=forms.PasswordInput, min_length=8, label="Nova senha", validators=[_validar_senha_forte])
     senha2 = forms.CharField(widget=forms.PasswordInput, label="Confirmar senha")
 
     def clean(self):
@@ -94,7 +110,7 @@ class TrocaSenhaObrigatoriaForm(RedefinirSenhaForm):
 
 class NovaSenhaForm(forms.Form):
     """Formulario para troca de senha (campo unico)."""
-    nova_senha = forms.CharField(widget=forms.PasswordInput, min_length=6, label="Nova senha")
+    nova_senha = forms.CharField(widget=forms.PasswordInput, min_length=8, label="Nova senha", validators=[_validar_senha_forte])
 
 
 class ChamadoNovoForm(forms.Form):
@@ -245,7 +261,8 @@ class ColaboradorNovoForm(forms.Form):
         return tel
 
     senha_provisoria = forms.CharField(
-        min_length=6,
+        min_length=8,
         widget=forms.PasswordInput,
         label="Senha provisória",
+        validators=[_validar_senha_forte],
     )

@@ -1,0 +1,129 @@
+<div class="br-card p-3 mb-4x">
+    <form method="get" id="form-filtros">
+        <div class="row align-items-end">
+            <div class="col-12 col-lg-2 mb-3">
+                <label for="filter-de" class="small font-weight-bold">De</label>
+                <div class="br-input"><input id="filter-de" name="de" type="date" value="{{ filtro_de }}" /></div>
+            </div>
+            <div class="col-12 col-lg-2 mb-3">
+                <label for="filter-ate" class="small font-weight-bold">Até</label>
+                <div class="br-input"><input id="filter-ate" name="ate" type="date" value="{{ filtro_ate }}" /></div>
+            </div>
+            <div class="col-12 col-lg-3 mb-3">
+                <label for="filter-servico" class="small font-weight-bold">Serviço</label>
+                <div class="br-select" id="br-select-servico">
+                    <div class="br-input">
+                        <input id="filter-servico-input" type="text" placeholder="Todos os Serviços"
+                            value="{% if filtro_servico %}{% for s in servicos %}{% if filtro_servico == s.id_servico %}{{ s.nome }}{% endif %}{% endfor %}{% endif %}" />
+                        <button class="br-button circle small" type="button" data-trigger aria-label="Exibir lista">
+                            <i class="fas fa-angle-down" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="br-list" tabindex="0">
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="servico-radio" value="" id="servico-todos" {% if not filtro_servico %}checked{% endif %} />
+                                <label for="servico-todos">Todos os Serviços</label>
+                            </div>
+                        </div>
+                        {% for s in servicos %}
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="servico-radio" value="{{ s.id_servico }}" id="servico-{{ s.id_servico }}" {% if filtro_servico == s.id_servico %}checked{% endif %} />
+                                <label for="servico-{{ s.id_servico }}">{{ s.nome }}</label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <input type="hidden" name="servico" id="filter-servico-hidden" value="{{ filtro_servico|default:'' }}" />
+            </div>
+            <div class="col-12 col-lg-3 mb-3">
+                <label for="filter-bairro" class="small font-weight-bold">Bairro</label>
+                <div class="br-select" id="br-select-bairro">
+                    <div class="br-input">
+                        <input id="filter-bairro-input" type="text" placeholder="Todos os Bairros"
+                            value="{% if filtro_bairro %}{% for b in bairros %}{% if filtro_bairro == b.id_bairro %}{{ b.nome_bairro }}{% endif %}{% endfor %}{% endif %}" />
+                        <button class="br-button circle small" type="button" data-trigger aria-label="Exibir lista">
+                            <i class="fas fa-angle-down" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="br-list" tabindex="0">
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="bairro-radio" value="" id="bairro-todos" {% if not filtro_bairro %}checked{% endif %} />
+                                <label for="bairro-todos">Todos os Bairros</label>
+                            </div>
+                        </div>
+                        {% for b in bairros %}
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="bairro-radio" value="{{ b.id_bairro }}" id="bairro-{{ b.id_bairro }}" {% if filtro_bairro == b.id_bairro %}checked{% endif %} />
+                                <label for="bairro-{{ b.id_bairro }}">{{ b.nome_bairro }}</label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <input type="hidden" name="bairro" id="filter-bairro-hidden" value="{{ filtro_bairro|default:'' }}" />
+            </div>
+            <div class="col-12 col-lg-2 mb-3">
+                <label for="filter-status" class="small font-weight-bold">Status</label>
+                <div class="br-select" id="br-select-status">
+                    <div class="br-input">
+                        <input id="filter-status-input" type="text" placeholder="Todos os Status"
+                            value="{% if filtro_status %}{% for s in statuses %}{% if filtro_status == s.id_status %}{{ s.descricao }}{% endif %}{% endfor %}{% endif %}" />
+                        <button class="br-button circle small" type="button" data-trigger aria-label="Exibir lista">
+                            <i class="fas fa-angle-down" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="br-list" tabindex="0">
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="status-radio" value="" id="status-todos" {% if not filtro_status %}checked{% endif %} />
+                                <label for="status-todos">Todos os Status</label>
+                            </div>
+                        </div>
+                        {% for s in statuses %}
+                        <div class="br-item">
+                            <div class="br-radio">
+                                <input type="radio" name="status-radio" value="{{ s.id_status }}" id="status-{{ s.id_status }}" {% if filtro_status == s.id_status %}checked{% endif %} />
+                                <label for="status-{{ s.id_status }}">{{ s.descricao }}</label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <input type="hidden" name="status" id="filter-status-hidden" value="{{ filtro_status|default:'' }}" />
+            </div>
+        </div>
+        <div class="row" style="margin-top: 9px;">
+            <div class="col-12 d-flex flex-wrap align-items-center justify-content-between">
+                
+                <div class="d-flex align-items-center mb-3 mb-md-0" style="gap: 2px;">
+                    <button class="br-button primary" type="submit">
+                        <i class="fas fa-filter mr-1"></i> Filtrar
+                    </button>
+                    <a href="{% url 'portal:equipe_chamados' %}" class="br-button secondary">
+                        <i class="fas fa-eraser mr-1"></i> Limpar Filtros
+                    </a>
+                </div>
+
+                <div class="exibicao-radio-group d-flex align-items-center">
+                    <span class="small font-weight-bold mb-0">Exibição:</span>
+                    <label class="custom-radio mb-0">
+                        <input type="radio" name="mostrar_encerrados" value="" {% if not mostrar_encerrados %}checked{% endif %} />
+                        <span class="radio-circle"></span>
+                        Apenas Ativos
+                    </label>
+                    <label class="custom-radio mb-0">
+                        <input type="radio" name="mostrar_encerrados" value="1" {% if mostrar_encerrados %}checked{% endif %} />
+                        <span class="radio-circle"></span>
+                        Incluir Encerrados
+                    </label>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>

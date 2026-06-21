@@ -32,6 +32,10 @@ urlpatterns = [
     path("cidadao/chamados/", views_cidadao.cidadao_chamados_lista, name="cidadao_chamados"),
     path("cidadao/chamados/novo/", views_cidadao.cidadao_chamado_novo, name="cidadao_chamado_novo"),
     path("cidadao/chamados/<int:pk>/", views_cidadao.cidadao_chamado_detalhe, name="cidadao_chamado"),
+    path("cidadao/chamados/<int:pk>/observar/", views_cidadao.cidadao_chamado_obs, name="cidadao_chamado_obs"),
+    path("cidadao/chamados/<int:pk>/foto/", views_cidadao.cidadao_chamado_foto, name="cidadao_chamado_foto"),
+    path("cidadao/chamados/<int:pk>/cancelar/", views_cidadao.cidadao_chamado_cancelar, name="cidadao_chamado_cancelar"),
+    path("cidadao/chamados/<int:pk>/avaliar/", views_cidadao.cidadao_chamado_avaliar, name="cidadao_chamado_avaliar"),
     path("cidadao/notificacoes/", views_cidadao.cidadao_notificacoes, name="cidadao_notificacoes"),
 
     # Equipe (perfis COL e GES): dashboard, chamados, detalhe.
@@ -39,6 +43,9 @@ urlpatterns = [
     path("equipe/chamados/", views_equipe.equipe_chamados_lista, name="equipe_chamados"),
     path("equipe/chamados/prazos/", views_equipe.gestao_prazos, name="gestao_prazos"),
     path("equipe/chamados/<int:pk>/", views_equipe.equipe_chamado_detalhe, name="equipe_chamado"),
+    path("equipe/chamados/<int:pk>/status/", views_equipe.equipe_chamado_status, name="equipe_chamado_status"),
+    path("equipe/chamados/<int:pk>/observar/", views_equipe.equipe_chamado_obs, name="equipe_chamado_obs"),
+    path("equipe/chamados/<int:pk>/foto/", views_equipe.equipe_chamado_foto, name="equipe_chamado_foto"),
     path("equipe/chamados/<int:pk>/excluir/", views_equipe.gestao_chamado_excluir, name="gestao_chamado_excluir"),
 
     # Gestao (perfil GES): estatisticas, categorias, servicos, bairros, colaboradores, banners.

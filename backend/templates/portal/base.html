@@ -1,4 +1,5 @@
 {% load static %}
+{% load vg_tags %}
 {# ========================================================================== #}
 {# [!] TEMPLATE MASTER (base.html)                                           #}
 {#     Todas as paginas herdam este layout via {% extends "portal/base.html" %}#}
@@ -28,7 +29,7 @@
     {# Fontawesome (icones) #}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" />
     {# Customizacao VG 24H (semaforo, dashboard, cards, etc.) #}
-    <link rel="stylesheet" href="{% static 'portal/css/vg24h.css' %}?v=1.4" />
+    <link rel="stylesheet" href="{% static 'portal/css/vg24h.css' %}?v=1.5" />
     {% block extra_head %}{% endblock %}
 </head>
 
@@ -49,10 +50,10 @@
                 <div class="header-top">
                     <div class="header-logo">
                         <a href="{% url 'portal:root' %}">
-                            <img src="{% static 'img/logo.png' %}" alt="Prefeitura de Varzea Grande" style="max-height:40px;" />
+                            <img src="{% static 'img/logo.png' %}" alt="Prefeitura de Várzea Grande" style="max-height:40px;" />
                             <span class="br-divider vertical"></span>
                             <div class="header-sign">
-                                <a href="https://www.varzeagrande.mt.gov.br/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">Prefeitura de Varzea Grande</a> — VG 24H
+                                <a href="https://www.varzeagrande.mt.gov.br/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">Prefeitura de Várzea Grande</a> — VG 24H
                             </div>
                         </a>
                     </div>
@@ -126,7 +127,7 @@
                 <div class="menu-panel">
                     <div class="menu-header">
                         <div class="menu-title">
-                            <img src="{% static 'img/logo.png' %}" alt="Prefeitura de Varzea Grande" style="max-height:32px;" />
+                            <img src="{% static 'img/logo.png' %}" alt="Prefeitura de Várzea Grande" style="max-height:32px;" />
                             <span>VG 24H</span>
                         </div>
                         <div class="menu-close">
@@ -262,7 +263,7 @@
         {# ====== FOOTER (GOV.br - fundo escuro) ====== #}
         <footer class="br-footer" id="footer">
             <div class="container-lg">
-                <div class="logo"><img src="{% static 'img/logo.png' %}" alt="Prefeitura de Varzea Grande" /></div>
+                <div class="logo"><img src="{% static 'img/logo.png' %}" alt="Prefeitura de Várzea Grande" /></div>
                 <div class="br-list horizontal" data-toggle="data-toggle" data-sub="data-sub">
                     <div class="col-2">
                         <a class="br-item header" href="javascript:void(0)">

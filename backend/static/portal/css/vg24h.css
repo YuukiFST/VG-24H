@@ -659,6 +659,35 @@ img {
   opacity: 0.85;
 }
 
+/* ---- SEMAFORO LEGENDA (dashboard info message) ---- */
+.semaforo-legenda-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.semaforo-legenda-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: var(--vg-radius);
+}
+
+.semaforo-legenda-item .legenda-cor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.semaforo-legenda-item .legenda-bolinha {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 /* ===================================================================
    STATUS TAGS — now using GOV native .br-tag.count + color classes
    (.info, .warning, .success, .danger). Custom status-* classes removed.
@@ -788,15 +817,17 @@ img {
    TICKET DETAIL / PROTOCOL VIEW
    =================================================================== */
 .ticket-status-bar .ticket-info-card form {
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
-  flex-wrap: wrap;
+  margin-top: 8px;
 }
 
-.ticket-status-bar .br-input {
-  width: auto;
-  flex: 1 1 0;
+.ticket-status-bar .ticket-info-card form .row .br-input {
+  width: 100%;
+}
+
+.ticket-status-bar .ticket-info-card form .br-input textarea {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
 }
 
 .ticket-details-grid {
@@ -853,6 +884,7 @@ img {
   gap: 16px;
   position: relative;
   padding-bottom: 28px;
+  align-items: flex-start;
 }
 
 .timeline-item:last-child {
@@ -885,6 +917,7 @@ img {
   font-size: 0.75rem;
   flex-shrink: 0;
   z-index: 1;
+  margin-top: 4px;
 }
 
 .timeline-dot.inactive {
@@ -896,7 +929,7 @@ img {
   font-size: 0.9375rem;
   font-weight: 700;
   color: var(--gray-80, #333);
-  margin-bottom: 2px;
+  margin: 0 0 2px 0;
 }
 
 .timeline-content p {
@@ -1339,4 +1372,60 @@ img {
   .filter-bar {
     flex-direction: column;
   }
+}
+
+/* =============================================
+   FILTRO RADIO GROUP — Custom Radio (Flexbox)
+   Substitui o br-radio do GOV.br no filtro para
+   garantir alinhamento vertical perfeito entre
+   a bolinha e o texto.
+   ============================================= */
+.exibicao-radio-group {
+  gap: 16px;
+  white-space: nowrap;
+}
+
+.custom-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.custom-radio input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+
+.custom-radio .radio-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary-default, #1351b4);
+  flex-shrink: 0;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.custom-radio input[type="radio"]:focus-visible + .radio-circle {
+  outline: 3px solid var(--focus, #2670e8);
+  outline-offset: 2px;
+}
+
+.custom-radio input[type="radio"]:checked + .radio-circle::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-primary-default, #1351b4);
+}
+
+.custom-radio:hover .radio-circle {
+  border-color: var(--color-primary-darken-01, #0c3d8a);
 }

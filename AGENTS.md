@@ -189,3 +189,25 @@ Full map: `GOV-MAP.md` (project root)
 - Never guess a component's HTML structure — always read the `-dev.md` first
 - Never instantiate JS components without documented pattern (`core.BRComponentName(...)`)
 - Never write button/input/label text without checking UX Writing rules
+
+## 7. Banco de Dados: Recursos Avancados Obrigatorios
+
+O projeto DEVE ter no banco de dados recursos avancados do PostgreSQL. Minimo obrigatorio:
+
+- **1 trigger** (ex.: auditoria, atualizacao automatica de timestamps, validacao)
+- **1 view** (ex.: relatorio, consolidacao, camada de abstracao de consultas)
+- **1 stored procedure / function** (ex.: regra de negocio no banco, calculo, insercao atomica)
+
+Nao remover ou desativar esses recursos sem substituir por equivalente em codigo com mesma garantia de consistencia.
+
+## 8. Portabilidade de Banco de Dados
+
+O projeto atualmente usa **Neon** (PostgreSQL gerenciado em nuvem) como banco de dados, mas DEVE ser compativel com migracao futura para o banco da prefeitura (ambiente on-premise ou outro fornecedor).
+
+### Regras
+
+- Nao usar recursos exclusivos do Neon (ex.: extensoes, funcoes, APIs proprietarias). Verificar antes de adotar qualquer extensao.
+- Toda query SQL deve ser PostgreSQL padrao (portavel entre versoes 13+).
+- Se for necessario usar extensao especifica (ex.: pgcrypto, pg_trgm), documentar no codigo e em `docs/learnings/dependencias-banco.md`.
+- Separar configuracao de conexao do codigo (via variaveis de ambiente). O schema de `DATABASE_URL` deve ser o padrao PostgreSQL (`postgresql://user:pass@host:port/db`).
+- Evitar functions/extension-only features no SQL de migracoes se houver alternativa padrao viavel.
