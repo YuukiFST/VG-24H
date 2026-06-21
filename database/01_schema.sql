@@ -16,6 +16,7 @@ BEGIN;
 
 DROP VIEW IF EXISTS vw_estatisticas_chamados CASCADE;
 
+DROP TABLE IF EXISTS configuracao_semaforo CASCADE;
 DROP TABLE IF EXISTS notificacao CASCADE;
 DROP TABLE IF EXISTS historico_chamado CASCADE;
 DROP TABLE IF EXISTS foto_chamado CASCADE;
@@ -82,11 +83,22 @@ CREATE TABLE servico (
     id_servico           SERIAL PRIMARY KEY,
     nome                 VARCHAR(100) NOT NULL,
     descricao            VARCHAR(200),
-    prazo_amarelo_dias   INTEGER NOT NULL DEFAULT 15 CHECK (prazo_amarelo_dias >= 0),  -- Dias ate ficar "amarelo"
-    prazo_vermelho_dias  INTEGER NOT NULL DEFAULT 30 CHECK (prazo_vermelho_dias >= 0), -- Dias ate ficar "vermelho"
     ativo                BOOLEAN NOT NULL DEFAULT TRUE,
     id_categoria         INTEGER NOT NULL REFERENCES categoria_servico (id_categoria),  -- FK → categoria_servico
     UNIQUE (id_categoria, nome)  -- Mesmo nome de servico nao pode repetir na mesma categoria
+);
+
+-- ============================================================
+-- ConfiguracaoSemaforo — prazos globais do semaforo (singleton)
+-- ============================================================
+-- Contem EXATAMENTE 1 registro, enforced via CHECK (id = 1).
+-- Usada por cor_semaforo() em models.py e db.py.
+-- Criada no seed (02_seed.sql) com defaults 15/30.
+-- ============================================================
+CREATE TABLE configuracao_semaforo (
+    id                  INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),  -- enforce singleton
+    prazo_amarelo_dias  INTEGER NOT NULL DEFAULT 15 CHECK (prazo_amarelo_dias >= 0),
+    prazo_vermelho_dias INTEGER NOT NULL DEFAULT 30 CHECK (prazo_vermelho_dias >= 0)
 );
 
 -- ============================================================

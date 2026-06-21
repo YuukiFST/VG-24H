@@ -16,6 +16,7 @@ BEGIN;
 
 DROP VIEW IF EXISTS vw_estatisticas_chamados CASCADE;
 
+DROP TABLE IF EXISTS configuracao_semaforo CASCADE;
 DROP TABLE IF EXISTS notificacao CASCADE;
 DROP TABLE IF EXISTS historico_chamado CASCADE;
 DROP TABLE IF EXISTS foto_chamado CASCADE;
@@ -68,11 +69,15 @@ CREATE TABLE servico (
     id_servico           SERIAL PRIMARY KEY,
     nome                 VARCHAR(100) NOT NULL,
     descricao            VARCHAR(200),
-    prazo_amarelo_dias   INTEGER NOT NULL DEFAULT 15 CHECK (prazo_amarelo_dias >= 0),
-    prazo_vermelho_dias  INTEGER NOT NULL DEFAULT 30 CHECK (prazo_vermelho_dias >= 0),
     ativo                BOOLEAN NOT NULL DEFAULT TRUE,
     id_categoria         INTEGER NOT NULL REFERENCES categoria_servico (id_categoria),
     UNIQUE (id_categoria, nome)
+);
+
+CREATE TABLE configuracao_semaforo (
+    id                  INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    prazo_amarelo_dias  INTEGER NOT NULL DEFAULT 15 CHECK (prazo_amarelo_dias >= 0),
+    prazo_vermelho_dias INTEGER NOT NULL DEFAULT 30 CHECK (prazo_vermelho_dias >= 0)
 );
 
 -- ============================================================
@@ -218,8 +223,8 @@ INSERT INTO categoria_servico (nome, descricao, id_secretaria) VALUES
     ('Infraestrutura e Via Pública', 'Problemas que afetam a locomoção e segurança imediata.', 1),
     ('Mobilidade e Cidadania', 'Serviços de organização, saúde e segurança.', 1);
 
-INSERT INTO servico (id_categoria, nome, descricao, prazo_amarelo_dias, prazo_vermelho_dias)
-SELECT c.id_categoria, v.nome, v.descricao, 15, 30
+INSERT INTO servico (id_categoria, nome, descricao)
+SELECT c.id_categoria, v.nome, v.descricao
 FROM categoria_servico c
 JOIN (VALUES
     ('Infraestrutura e Via Pública', 'Iluminação Pública', 'Postes, lâmpadas e pontos escuros.'),
@@ -228,6 +233,9 @@ JOIN (VALUES
     ('Mobilidade e Cidadania', 'Trânsito e Sinalização', 'Semáforos, placas e fiscalização.'),
     ('Mobilidade e Cidadania', 'Saúde e Bem-estar', 'Demandas de saúde pública e bem-estar urbano.')
 ) AS v(cat, nome, descricao) ON c.nome = v.cat;
+
+INSERT INTO configuracao_semaforo (id, prazo_amarelo_dias, prazo_vermelho_dias)
+VALUES (1, 15, 30);
 
 -- Bairros (nomes públicos; CEPs representativos na faixa de Várzea Grande/MT)
 INSERT INTO bairro (nome_bairro, cep, regiao) VALUES

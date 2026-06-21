@@ -28,10 +28,10 @@ INSERT INTO categoria_servico (nome, descricao, id_secretaria) VALUES
 
 -- ============================================================================
 -- 5 servicos (vinculados as categorias via JOIN com VALUES)
--- prazo_amarelo = 15 dias, prazo_vermelho = 30 dias para todos
+-- Prazos removidos para o semaforo global (configuracao_semaforo)
 -- ============================================================================
-INSERT INTO servico (id_categoria, nome, descricao, prazo_amarelo_dias, prazo_vermelho_dias)
-SELECT c.id_categoria, v.nome, v.descricao, 15, 30
+INSERT INTO servico (id_categoria, nome, descricao)
+SELECT c.id_categoria, v.nome, v.descricao
 FROM categoria_servico c
 JOIN (VALUES
     ('Infraestrutura e Via Publica', 'Iluminacao Publica', 'Postes, lampadas e pontos escuros.'),
@@ -40,6 +40,13 @@ JOIN (VALUES
     ('Mobilidade e Cidadania', 'Transito e Sinalizacao', 'Semaforos, placas e fiscalizacao.'),
     ('Mobilidade e Cidadania', 'Saude e Bem-estar', 'Demandas de saude publica e bem-estar urbano.')
 ) AS v(cat, nome, descricao) ON c.nome = v.cat;
+
+-- ============================================================================
+-- Configuracao do semaforo global (singleton, id=1)
+-- prazo_amarelo = 15 dias, prazo_vermelho = 30 dias
+-- ============================================================================
+INSERT INTO configuracao_semaforo (id, prazo_amarelo_dias, prazo_vermelho_dias)
+VALUES (1, 15, 30);
 
 -- ============================================================================
 -- 20 bairros de Varzea Grande/MT (CEPs representativos)
