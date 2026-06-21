@@ -204,10 +204,10 @@ class CategoriaForm(forms.ModelForm):
 
 
 class ServicoForm(forms.ModelForm):
-    """Formulario de servico."""
+    """Formulario de servico (prazos removidos para config global)."""
     class Meta:
         model = Servico
-        fields = ["id_categoria", "nome", "descricao", "prazo_amarelo_dias", "prazo_vermelho_dias"]
+        fields = ["id_categoria", "nome", "descricao"]
 
 
 class BairroForm(forms.ModelForm):

@@ -185,8 +185,7 @@ def buscar_chamado(pk):
             "c.dt_abertura, c.dt_conclusao, c.dt_avaliacao, c.atualizado_em, "
             "c.id_servico, c.id_bairro, c.id_cidadao, "
             "s.nome AS servico_nome, s.descricao AS servico_descricao, "
-            "s.prazo_amarelo_dias, s.prazo_vermelho_dias, "
-            "b.nome_bairro "
+            "b.nome_bairro "  
             "FROM chamado c "
             "JOIN servico s ON c.id_servico = s.id_servico "
             "JOIN bairro b ON c.id_bairro = b.id_bairro "
@@ -205,10 +204,9 @@ def buscar_chamado(pk):
         atualizado_em=row[11], id_cidadao_id=row[14],
         id_servico=SimpleNamespace(
             id_servico=row[12], pk=row[12], nome=row[15],
-            descricao=row[16], prazo_amarelo_dias=row[17],
-            prazo_vermelho_dias=row[18],
+            descricao=row[16],
         ),
-        id_bairro=SimpleNamespace(id_bairro=row[13], pk=row[13], nome_bairro=row[19]),
+        id_bairro=SimpleNamespace(id_bairro=row[13], pk=row[13], nome_bairro=row[17]),
     )
     popular_status(ch)
     return ch
@@ -244,10 +242,13 @@ def popular_status(ch):
         ch.status_atual = None
         ch.sigla_status = ""
 
+    from portal.models import ConfiguracaoSemaforo
+
+    config = ConfiguracaoSemaforo.get_singleton()
     ch.cor_semaforo = cor_semaforo(
         ch.dt_abertura,
-        ch.id_servico.prazo_amarelo_dias,
-        ch.id_servico.prazo_vermelho_dias,
+        config.prazo_amarelo_dias,
+        config.prazo_vermelho_dias,
     )
 
 
@@ -268,9 +269,9 @@ def cor_semaforo(dt_abertura, prazo_amarelo_dias, prazo_vermelho_dias):
 def calcular_stats_semaforo(cidadao_id=None):
     """Calcula estatisticas do semaforo para chamados em aberto.
 
+    Usa os prazos globais da configuracao_semaforo (CROSS JOIN com singleton).
     Retorna dict com tres chaves: no_prazo, atencao, critico.
     Se cidadao_id for informado, filtra apenas os chamados desse cidadao.
-    A agregacao eh feita totalmente em SQL (SUM + CASE WHEN).
     """
     where = ""
     where_params = []
@@ -283,12 +284,12 @@ def calcular_stats_semaforo(cidadao_id=None):
 
     sql = (
         "SELECT "
-        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) < make_interval(days := s.prazo_amarelo_dias) THEN 1 ELSE 0 END), 0), "
-        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := s.prazo_amarelo_dias) "
-        "    AND (%s - c.dt_abertura) < make_interval(days := s.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0), "
-        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := s.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0) "
+        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) < make_interval(days := cfg.prazo_amarelo_dias) THEN 1 ELSE 0 END), 0), "
+        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := cfg.prazo_amarelo_dias) "
+        "    AND (%s - c.dt_abertura) < make_interval(days := cfg.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0), "
+        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := cfg.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0) "
         "FROM chamado c "
-        "JOIN servico s ON c.id_servico = s.id_servico "
+        "CROSS JOIN configuracao_semaforo cfg "
         "WHERE TRUE " + where
     )
 
@@ -301,22 +302,23 @@ def calcular_stats_semaforo(cidadao_id=None):
 def calcular_stats_semaforo_por_servico():
     """Retorna estatisticas do semaforo agregadas por servico.
 
-    Cada linha contem: id_servico, nome, prazo_amarelo_dias,
-    prazo_vermelho_dias, no_prazo, atencao, critico, total.
+    Usa prazos globais da configuracao_semaforo (CROSS JOIN).
+    Cada linha contem: id_servico, nome, no_prazo, atencao, critico, total.
     Ordenado por nome do servico.
     """
     now = timezone.now()
     sql = (
         "SELECT "
-        "  s.id_servico, s.nome, s.prazo_amarelo_dias, s.prazo_vermelho_dias, "
-        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) < make_interval(days := s.prazo_amarelo_dias) THEN 1 ELSE 0 END), 0), "
-        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := s.prazo_amarelo_dias) "
-        "    AND (%s - c.dt_abertura) < make_interval(days := s.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0), "
-        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := s.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0), "
+        "  s.id_servico, s.nome, "
+        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) < make_interval(days := cfg.prazo_amarelo_dias) THEN 1 ELSE 0 END), 0), "
+        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := cfg.prazo_amarelo_dias) "
+        "    AND (%s - c.dt_abertura) < make_interval(days := cfg.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0), "
+        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := cfg.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0), "
         "  COUNT(*) "
         "FROM chamado c "
+        "CROSS JOIN configuracao_semaforo cfg "
         "JOIN servico s ON c.id_servico = s.id_servico "
-        "GROUP BY s.id_servico, s.nome, s.prazo_amarelo_dias, s.prazo_vermelho_dias "
+        "GROUP BY s.id_servico, s.nome "
         "ORDER BY s.nome"
     )
     with connection.cursor() as cursor:
@@ -326,12 +328,10 @@ def calcular_stats_semaforo_por_servico():
         {
             "id_servico": r[0],
             "nome": r[1],
-            "prazo_amarelo_dias": r[2],
-            "prazo_vermelho_dias": r[3],
-            "no_prazo": r[4],
-            "atencao": r[5],
-            "critico": r[6],
-            "total": r[7],
+            "no_prazo": r[2],
+            "atencao": r[3],
+            "critico": r[4],
+            "total": r[5],
         }
         for r in rows
     ]

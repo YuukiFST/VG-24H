@@ -20,7 +20,8 @@ from django.utils import timezone
 
 from portal import db
 from portal.decorators import perfil_codigo
-from portal.forms import CadastroCidadaoForm, RedefinirSenhaForm
+from portal.forms import CadastroCidadaoForm, RedefinirSenhaForm, ServicoForm
+from portal.models import ConfiguracaoSemaforo
 from portal.utils import proximo_protocolo
 
 
@@ -104,6 +105,75 @@ class CorSemaforoTests(TestCase):
         """Chamado aberto hoje deve ser verde."""
         ch = self._make_chamado_mock(dias_aberto=0)
         self.assertEqual(db.cor_semaforo(ch.dt_abertura, 15, 30), "verde")
+
+
+class SemaforoGlobalTests(TestCase):
+    """Testa a configuracao global do semaforo (ConfiguracaoSemaforo)."""
+
+    def test_servico_form_nao_tem_campos_prazo(self):
+        """ServicoForm nao deve conter campos de prazo (agora global)."""
+        self.assertNotIn("prazo_amarelo_dias", ServicoForm().fields)
+        self.assertNotIn("prazo_vermelho_dias", ServicoForm().fields)
+
+    def test_configuracao_semaforo_get_singleton_cria_se_vazio(self):
+        """get_singleton() cria config padrao se nao existir."""
+        ConfiguracaoSemaforo.objects.all().delete()
+        cfg = ConfiguracaoSemaforo.get_singleton()
+        self.assertEqual(cfg.prazo_amarelo_dias, 15)
+        self.assertEqual(cfg.prazo_vermelho_dias, 30)
+
+
+class GestaoPrazosViewTests(TestCase):
+    """Testa a view de configuracao global de prazos."""
+
+    def _mock_gestor(self):
+        user = MagicMock()
+        user.perfil = "GES"
+        user.pk = 1
+        return user
+
+    @patch("portal.views_equipe.connection.cursor")
+    def test_gestao_prazos_get_carrega_form(self, mock_cursor):
+        """GET carrega o form com os valores atuais da configuracao."""
+        from django.http import HttpRequest
+        from portal.views_equipe import gestao_prazos
+
+        mock_c = MagicMock()
+        mock_c.fetchone.return_value = (15, 30)
+        mock_cursor.return_value.__enter__ = MagicMock(return_value=mock_c)
+        mock_cursor.return_value.__exit__ = MagicMock(return_value=False)
+
+        req = HttpRequest()
+        req.method = "GET"
+        req.portal_user = self._mock_gestor()
+        req.META = {"SERVER_NAME": "test", "SERVER_PORT": "80"}
+        req.session = {}
+
+        resp = gestao_prazos(req)
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b"prazo_amarelo_dias", resp.content)
+
+    @patch("portal.views_equipe.messages")
+    @patch("portal.views_equipe.connection.cursor")
+    def test_gestao_prazos_post_atualiza_config(self, mock_cursor, mock_messages):
+        """POST atualiza os valores na configuracao_semaforo."""
+        from django.http import HttpRequest
+        from portal.views_equipe import gestao_prazos
+
+        posted_data = {"prazo_amarelo_dias": "10", "prazo_vermelho_dias": "25"}
+        mock_c = MagicMock()
+        mock_cursor.return_value.__enter__ = MagicMock(return_value=mock_c)
+        mock_cursor.return_value.__exit__ = MagicMock(return_value=False)
+
+        req = HttpRequest()
+        req.method = "POST"
+        req.POST = posted_data
+        req.portal_user = self._mock_gestor()
+        req.META = {"SERVER_NAME": "test", "SERVER_PORT": "80"}
+        req.session = {}
+
+        resp = gestao_prazos(req)
+        self.assertEqual(resp.status_code, 302)
 
 
 # ------------------------------------------------------------------

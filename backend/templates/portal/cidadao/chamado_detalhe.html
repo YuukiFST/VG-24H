@@ -68,14 +68,21 @@
         <h2><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Observações</h2>
         <div class="observations-list">
           {% for obs in observacoes %}
-            <div class="obs-bubble {% if obs.id_servidor.perfil == 'CID' %}cidadao{% else %}colaborador{% endif %}">
-              <p>{{ obs.observacao }}</p>
-              <div class="obs-meta">
-                {{ obs.id_servidor.nome_completo }} 
-                {% if obs.id_servidor.perfil != 'CID' %}(Equipe){% endif %}
-                — {{ obs.dt_alteracao|date:"d/m/Y H:i" }}
+            {% if obs.id_servidor %}
+              <div class="obs-bubble colaborador">
+                <p>{{ obs.observacao }}</p>
+                <div class="obs-meta">
+                  {{ obs.id_servidor.nome_completo }} (Equipe) — {{ obs.dt_alteracao|date:"d/m/Y H:i" }}
+                </div>
               </div>
-            </div>
+            {% else %}
+              <div class="obs-bubble cidadao">
+                <p>{{ obs.observacao }}</p>
+                <div class="obs-meta">
+                  Cidadão — {{ obs.dt_alteracao|date:"d/m/Y H:i" }}
+                </div>
+              </div>
+            {% endif %}
           {% empty %}
             <p class="text-muted text-center py-3">Nenhuma observação registrada.</p>
           {% endfor %}

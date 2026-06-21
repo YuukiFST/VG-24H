@@ -67,7 +67,7 @@
         <div class="content">
             <span class="message-title">Como funciona o semáforo de prazos</span>
             <div class="message-body">
-                <p class="mb-3">A cor indica o tempo em que o chamado está aberto. Cada serviço tem seus próprios prazos.</p>
+                <p class="mb-3">A cor indica o tempo em que o chamado está aberto. Os prazos são globais para todos os serviços.</p>
                 <div class="mb-2">
                     <span class="br-tag" style="background:#d4edda;color:#155724;font-weight:600;margin-right:4px;">Verde</span>
                     dentro do prazo
@@ -76,20 +76,11 @@
                     <span class="br-tag" style="background:#f8d7da;color:#721c24;font-weight:600;margin:0 4px 0 12px;">Vermelho</span>
                     prazo vencido
                 </div>
-                {% for sv in servicos_stats %}
                 <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-top:6px;">
-                    <strong style="min-width:200px;">{{ sv.nome }}:</strong>
-                    <span style="color:#155724;">verde até {{ sv.prazo_amarelo_dias }} dias</span>
-                    <span style="color:#856404;">amarelo de {{ sv.prazo_amarelo_dias }} a {{ sv.prazo_vermelho_dias }} dias</span>
-                    <span style="color:#721c24;">vermelho acima de {{ sv.prazo_vermelho_dias }} dias</span>
+                    <span style="color:#155724;">verde até {{ config_semaforo.prazo_amarelo_dias }} dias</span>
+                    <span style="color:#856404;margin-left:12px;">amarelo de {{ config_semaforo.prazo_amarelo_dias }} a {{ config_semaforo.prazo_vermelho_dias }} dias</span>
+                    <span style="color:#721c24;margin-left:12px;">vermelho acima de {{ config_semaforo.prazo_vermelho_dias }} dias</span>
                 </div>
-                {% empty %}
-                <div class="mt-2">
-                    <span style="color:#155724;font-weight:600;">Verde:</span> dentro do prazo esperado.
-                    <span style="color:#856404;font-weight:600;margin-left:12px;">Amarelo:</span> em atenção.
-                    <span style="color:#721c24;font-weight:600;margin-left:12px;">Vermelho:</span> crítico.
-                </div>
-                {% endfor %}
             </div>
         </div>
     </div>
@@ -174,6 +165,13 @@
                     </div>
                 </div>
                 <input type="hidden" name="status" id="filter-status-hidden" value="{{ filtro_status|default:'' }}" />
+                <div class="d-flex align-items-center gap-1 mt-1">
+                    <input type="checkbox" name="mostrar_encerrados" id="filter-encerrados"
+                           value="1" {% if mostrar_encerrados %}checked{% endif %}>
+                    <label for="filter-encerrados" style="font-weight:400;font-size:0.875rem;margin:0;white-space:nowrap;">
+                        Concluídos/Cancelados
+                    </label>
+                </div>
             </div>
             <div class="col-md-2 mb-2x">
                 <label for="filter-bairro" class="small font-weight-bold">Bairro</label>
@@ -207,9 +205,9 @@
             <div class="col-md-2 mb-2x">
                 <label for="filter-servico" class="small font-weight-bold">Serviço</label>
                 <div class="br-select" id="br-select-servico">
-                    <div class="br-input">
+                    <div class="br-input" style="padding-right:20px;">
                         <input id="filter-servico-input" type="text" placeholder="Todos os Serviços"
-                            value="{% if filtro_servico %}{% for s in servicos %}{% if filtro_servico == s.id_servico %}{{ s.nome }}{% endif %}{% endfor %}{% endif %}" />
+                            value="{% if filtro_servico %}{% for s in servicos %}{% if filtro_servico == s.id_servico %}{{ s.nome }}{% endif %}{% endfor %}{% endif %}" style="padding-right:20px;" />
                         <button class="br-button circle small" type="button" data-trigger aria-label="Exibir lista">
                             <i class="fas fa-angle-down" aria-hidden="true"></i>
                         </button>
@@ -241,9 +239,7 @@
                 <label for="filter-ate" class="small font-weight-bold">Até</label>
                 <div class="br-input"><input id="filter-ate" name="ate" type="date" value="{{ filtro_ate }}" /></div>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-md-2 mb-2x">
+            <div class="col-md-1 mb-2x">
                 <button class="br-button primary w-100" type="submit">
                     <i class="fas fa-filter mr-1"></i> Filtrar
                 </button>
@@ -268,7 +264,7 @@
             <thead>
                 <tr>
                     <th scope="col">
-                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_servico %}servico={{ filtro_servico }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=prioridade&direcao={% if ordenar_por == 'prioridade' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
+                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_servico %}servico={{ filtro_servico }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}{% if mostrar_encerrados %}mostrar_encerrados=1&{% endif %}ordenar_por=prioridade&direcao={% if ordenar_por == 'prioridade' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
                             Prioridade
                             {% if ordenar_por == 'prioridade' %}
                                 <i class="fas fa-sort-{% if direcao == 'desc' %}down{% else %}up{% endif %}" aria-hidden="true"></i>
@@ -277,8 +273,8 @@
                             {% endif %}
                         </a>
                     </th>
-                    <th scope="col">
-                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_servico %}servico={{ filtro_servico }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=protocolo&direcao={% if ordenar_por == 'protocolo' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
+                    <th scope="col" class="text-center">
+                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_servico %}servico={{ filtro_servico }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}{% if mostrar_encerrados %}mostrar_encerrados=1&{% endif %}ordenar_por=protocolo&direcao={% if ordenar_por == 'protocolo' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
                             Protocolo
                             {% if ordenar_por == 'protocolo' %}
                                 <i class="fas fa-sort-{% if direcao == 'desc' %}down{% else %}up{% endif %}" aria-hidden="true"></i>
@@ -287,9 +283,9 @@
                             {% endif %}
                         </a>
                     </th>
-                    <th scope="col">
-                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_servico %}servico={{ filtro_servico }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=dt_abertura&direcao={% if ordenar_por == 'dt_abertura' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
-                            Abertura
+                    <th scope="col" class="text-center">
+                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_servico %}servico={{ filtro_servico }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}{% if mostrar_encerrados %}mostrar_encerrados=1&{% endif %}ordenar_por=dt_abertura&direcao={% if ordenar_por == 'dt_abertura' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
+                            Data de abertura
                             {% if ordenar_por == 'dt_abertura' %}
                                 <i class="fas fa-sort-{% if direcao == 'desc' %}down{% else %}up{% endif %}" aria-hidden="true"></i>
                             {% else %}
@@ -297,9 +293,9 @@
                             {% endif %}
                         </a>
                     </th>
-                    <th scope="col">
-                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_servico %}servico={{ filtro_servico }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}ordenar_por=dias_aberto&direcao={% if ordenar_por == 'dias_aberto' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
-                            Dias em Aberto
+                    <th scope="col" class="text-center">
+                        <a href="?{% if filtro_status %}status={{ filtro_status }}&{% endif %}{% if filtro_bairro %}bairro={{ filtro_bairro }}&{% endif %}{% if filtro_servico %}servico={{ filtro_servico }}&{% endif %}{% if filtro_de %}de={{ filtro_de }}&{% endif %}{% if filtro_ate %}ate={{ filtro_ate }}&{% endif %}{% if mostrar_encerrados %}mostrar_encerrados=1&{% endif %}ordenar_por=dias_aberto&direcao={% if ordenar_por == 'dias_aberto' and direcao == 'desc' %}asc{% else %}desc{% endif %}#tabela-chamados" style="text-decoration:none;">
+                            Tempo em aberto
                             {% if ordenar_por == 'dias_aberto' %}
                                 <i class="fas fa-sort-{% if direcao == 'desc' %}down{% else %}up{% endif %}" aria-hidden="true"></i>
                             {% else %}
@@ -310,8 +306,8 @@
                     <th scope="col">Cidadão</th>
                     <th scope="col">Serviço</th>
                     <th scope="col">Bairro</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Ações</th>
+                    <th scope="col" class="text-center">Status</th>
+                    <th scope="col" class="text-center">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -325,13 +321,13 @@
                         {% elif linha.ch.prioridade == 1 %}<span class="br-tag vg-tag-fixed rounder-none" style="background:var(--vg-priority-1); color:var(--vg-priority-1-fg);">Muito baixa</span>
                         {% else %}<span class="br-tag vg-tag-fixed rounder-none" style="background:var(--vg-priority-0); color:var(--vg-priority-0-fg);">Sem classificação</span>{% endif %}
                     </td>
-                    <td data-th="Protocolo"><span class="text-bold">{{ linha.ch.num_protocolo }}</span></td>
-                    <td data-th="Abertura">{{ linha.ch.dt_abertura|date:"d/m/Y" }}</td>
-                    <td data-th="Dias em Aberto" class="text-center">{{ linha.dias_aberto }} dias</td>
+                    <td data-th="Protocolo" class="text-center"><span class="text-bold">{{ linha.ch.num_protocolo }}</span></td>
+                    <td data-th="Data de abertura" class="text-center">{{ linha.ch.dt_abertura|date:"d/m/Y" }}</td>
+                    <td data-th="Tempo em aberto" class="text-center">{{ linha.dias_aberto }}</td>
                     <td data-th="Cidadão">{{ linha.ch.id_cidadao.nome_completo|truncatechars:20 }}</td>
                     <td data-th="Serviço">{{ linha.ch.id_servico.nome }}</td>
                     <td data-th="Bairro">{{ linha.ch.id_bairro.nome_bairro }}</td>
-                    <td data-th="Status">
+                    <td data-th="Status" class="text-center">
                         {% with sigla=linha.ch.sigla_status %}
                         <span
                             class="br-tag vg-tag-fixed rounder-none {% if sigla == 'AB' %}info{% elif sigla == 'EA' %}warning{% elif sigla == 'EE' %}ee-status{% elif sigla == 'CO' %}success{% elif sigla == 'CA' %}danger{% endif %}">
@@ -339,7 +335,7 @@
                         </span>
                         {% endwith %}
                     </td>
-                    <td data-th="Ações">
+                    <td data-th="Ações" class="text-center">
                         <a href="{% url 'portal:equipe_chamado' linha.ch.pk %}" class="br-button circle small"
                             title="Visualizar Detalhes">
                             <i class="fas fa-eye" aria-hidden="true"></i>

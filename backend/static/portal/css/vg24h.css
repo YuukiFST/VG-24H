@@ -824,7 +824,7 @@ img {
 .info-row {
   display: flex;
   justify-content: space-between;
-  padding: 10px 0;
+  padding: 12px 0;
   border-bottom: 1px solid var(--gray-5, #f0f0f0);
   font-size: 0.9375rem;
 }
@@ -832,10 +832,15 @@ img {
 .info-row .info-label {
   font-weight: 600;
   color: var(--gray-60, #636363);
+  min-width: 160px;
+  padding-left: 4px;
 }
 
 .info-row .info-value {
   color: var(--gray-80, #333);
+  flex: 1;
+  text-align: right;
+  padding-right: 4px;
 }
 
 /* Status Timeline */
@@ -907,6 +912,18 @@ img {
   flex-direction: column;
   gap: 12px;
   margin-bottom: 20px;
+  max-height: 400px;
+  min-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.observations-list::-webkit-scrollbar {
+  width: 6px;
+}
+.observations-list::-webkit-scrollbar-thumb {
+  background: var(--gray-20, #ccc);
+  border-radius: 3px;
 }
 
 .obs-bubble {
@@ -933,6 +950,37 @@ img {
   font-size: 0.75rem;
   color: var(--gray-40, #888);
   margin-top: 6px;
+}
+
+/* Chat input row */
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.chat-input-row .chat-input {
+  flex: 1;
+  height: 40px;
+  border: 1px solid #888;
+  border-radius: 4px;
+  padding: 0 16px;
+  font-size: 16px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--vg-transition);
+}
+
+.chat-input-row .chat-input:focus {
+  border-color: var(--vg-primary);
+  box-shadow: 0 0 0 2px rgba(19, 81, 180, 0.15);
+}
+
+.chat-input-row .br-button.circle {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
 }
 
 /* ===================================================================

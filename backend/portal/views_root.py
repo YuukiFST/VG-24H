@@ -261,13 +261,14 @@ def painel_cidadao(request):
     # JOIN LATERAL: busca o ultimo historico de cada chamado (evita N+1 queries).
     # LEFT JOIN em servico e bairro: preserva chamado mesmo se servico/bairro
     # forem deletados (nao deveria acontecer, mas previne erro).
+    from portal.models import ConfiguracaoSemaforo
+
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT c.id_chamado, c.num_protocolo, c.descricao, "
             "c.prioridade, c.dt_abertura, "
             "s.nome AS servico_nome, b.nome_bairro, "
-            "ultimo.sigla AS sigla_status, "
-            "s.prazo_amarelo_dias, s.prazo_vermelho_dias "
+            "ultimo.sigla AS sigla_status "
             "FROM chamado c "
             "LEFT JOIN servico s ON c.id_servico = s.id_servico "
             "LEFT JOIN bairro b ON c.id_bairro = b.id_bairro "
@@ -283,10 +284,10 @@ def painel_cidadao(request):
             "ORDER BY c.dt_abertura DESC",
             [cidadao.pk],
         )
+        config = ConfiguracaoSemaforo.get_singleton()
         for row in cursor.fetchall():
-            # Calcula a cor do semaforo com base nos prazos do servico.
-            # cor_semaforo retorna 'verde', 'amarelo' ou 'vermelho'.
-            cor = db.cor_semaforo(row[4], row[8], row[9])
+            # Calcula a cor do semaforo com base nos prazos globais.
+            cor = db.cor_semaforo(row[4], config.prazo_amarelo_dias, config.prazo_vermelho_dias)
             dias = (timezone.now().date() - row[4].date()).days
 
             chamados.append(SimpleNamespace(

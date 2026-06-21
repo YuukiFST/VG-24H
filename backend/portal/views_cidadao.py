@@ -41,6 +41,7 @@ from django.views.decorators.http import require_http_methods
 
 from portal import db
 from portal.decorators import autenticado, perfis
+from portal.models import ConfiguracaoSemaforo
 from portal.forms import (
     AvaliacaoForm,
     CancelarChamadoForm,
@@ -114,7 +115,7 @@ def cidadao_chamados_lista(request):
         "SELECT c.id_chamado, c.num_protocolo, c.prioridade, "
         "c.descricao, c.dt_abertura, c.atualizado_em, "
         "c.id_servico, c.id_bairro, "
-        "s.nome AS servico_nome, s.prazo_amarelo_dias, s.prazo_vermelho_dias, "
+        "s.nome AS servico_nome, "
         "b.nome_bairro, "
         "ultimo.sigla AS sigla_status, "
         "ultimo.descricao AS status_descricao "
@@ -154,16 +155,17 @@ def cidadao_chamados_lista(request):
 
     # Hidratacao: cada tupla do banco vira um SimpleNamespace com atributos
     # nomeados, para que o template acesse ch.num_protocolo em vez de ch[1].
+    config = ConfiguracaoSemaforo.get_singleton()
     chamados = []
     for r in rows:
-        cor = db.cor_semaforo(r[4], r[9], r[10])
-        sigla = r[12] or ""
-        status_desc = r[13] or sigla
+        cor = db.cor_semaforo(r[4], config.prazo_amarelo_dias, config.prazo_vermelho_dias)
+        sigla = r[10] or ""
+        status_desc = r[11] or sigla
         chamados.append(SimpleNamespace(
             id_chamado=r[0], pk=r[0], num_protocolo=r[1], prioridade=r[2],
             descricao=r[3], dt_abertura=r[4], atualizado_em=r[5],
             id_servico=SimpleNamespace(id_servico=r[6], pk=r[6], nome=r[8]),
-            id_bairro=SimpleNamespace(id_bairro=r[7], pk=r[7], nome_bairro=r[11]),
+            id_bairro=SimpleNamespace(id_bairro=r[7], pk=r[7], nome_bairro=r[9]),
             sigla_status=sigla, cor_semaforo=cor,
             status_atual=SimpleNamespace(sigla=sigla, descricao=status_desc),
         ))

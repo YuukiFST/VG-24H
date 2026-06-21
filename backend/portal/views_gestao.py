@@ -63,14 +63,11 @@ def gestao_servico_novo(request):
             d = form.cleaned_data
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "INSERT INTO servico (nome, descricao, ativo, id_categoria, "
-                    "prazo_amarelo_dias, prazo_vermelho_dias) "
-                    "VALUES (%s, %s, %s, %s, %s, %s)",
+                    "INSERT INTO servico (nome, descricao, ativo, id_categoria) "
+                    "VALUES (%s, %s, %s, %s)",
                     [
                         d["nome"], d.get("descricao"), True,
                         d["id_categoria"].pk,
-                        d["prazo_amarelo_dias"],
-                        d["prazo_vermelho_dias"],
                     ],
                 )
             messages.success(request, "Servico criado.")
@@ -299,14 +296,11 @@ def gestao_servicos(request):
             d = form.cleaned_data
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "INSERT INTO servico (nome, descricao, ativo, id_categoria, "
-                    "prazo_amarelo_dias, prazo_vermelho_dias) "
-                    "VALUES (%s, %s, %s, %s, %s, %s)",
+                    "INSERT INTO servico (nome, descricao, ativo, id_categoria) "
+                    "VALUES (%s, %s, %s, %s)",
                     [
                         d["nome"], d.get("descricao"), True,
                         d["id_categoria"].pk,
-                        d["prazo_amarelo_dias"],
-                        d["prazo_vermelho_dias"],
                     ],
                 )
             messages.success(request, "Servico criado.")
@@ -341,11 +335,10 @@ def gestao_servicos(request):
 @perfis("GES")
 @require_http_methods(["GET", "POST"])
 def gestao_servico_edit(request, pk):
-    """Edita um servico existente (incluindo prazos do semaforo)."""
+    """Edita um servico existente."""
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT id_servico, nome, descricao, ativo, id_categoria, "
-            "prazo_amarelo_dias, prazo_vermelho_dias "
+            "SELECT id_servico, nome, descricao, ativo, id_categoria "
             "FROM servico WHERE id_servico = %s",
             [pk],
         )
@@ -359,8 +352,6 @@ def gestao_servico_edit(request, pk):
     obj.descricao = row[2]
     obj.ativo = row[3]
     obj.id_categoria_id = row[4]
-    obj.prazo_amarelo_dias = row[5]
-    obj.prazo_vermelho_dias = row[6]
     obj._state.adding = False
 
     if request.method == "POST":
@@ -370,13 +361,11 @@ def gestao_servico_edit(request, pk):
             with connection.cursor() as cursor:
                 cursor.execute(
                     "UPDATE servico SET nome = %s, descricao = %s, "
-                    "id_categoria = %s, "
-                    "prazo_amarelo_dias = %s, prazo_vermelho_dias = %s "
+                    "id_categoria = %s "
                     "WHERE id_servico = %s",
                     [
                         d["nome"], d.get("descricao"),
                         d["id_categoria"].pk,
-                        d["prazo_amarelo_dias"], d["prazo_vermelho_dias"],
                         pk,
                     ],
                 )

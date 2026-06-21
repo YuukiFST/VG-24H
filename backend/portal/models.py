@@ -84,19 +84,33 @@ class CategoriaServico(models.Model):
         return self.nome
 
 
-class Servico(models.Model):
-    """Tipos de servico com prazos para o semaforo de urgencia.
+class ConfiguracaoSemaforo(models.Model):
+    """Prazos globais do semaforo de urgencia (singleton).
 
-    Cada servico pertence a uma Categoria e tem dois prazos:
-    - prazo_amarelo_dias: dias ate o chamado ficar amarelo (atencao).
-    - prazo_vermelho_dias: dias ate ficar vermelho (critico).
-    Esses prazos sao usados pela funcao cor_semaforo() em db.py.
+    Contem exatamente 1 registro no banco (enforced via CHECK id = 1).
+    Usada por Chamado.cor_semaforo e demais logicas de semaforo.
     """
+    id = models.IntegerField(primary_key=True, default=1)
+    prazo_amarelo_dias = models.IntegerField(default=15)
+    prazo_vermelho_dias = models.IntegerField(default=30)
+
+    class Meta:
+        managed = False
+        db_table = "configuracao_semaforo"
+
+    @classmethod
+    def get_singleton(cls):
+        obj = cls.objects.first()
+        if obj is None:
+            obj = cls.objects.create(id=1, prazo_amarelo_dias=15, prazo_vermelho_dias=30)
+        return obj
+
+
+class Servico(models.Model):
+    """Tipos de servico."""
     id_servico = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=100)
     descricao = models.CharField(max_length=200, blank=True, null=True)
-    prazo_amarelo_dias = models.IntegerField(default=15)
-    prazo_vermelho_dias = models.IntegerField(default=30)
     ativo = models.BooleanField(default=True)
     id_categoria = models.ForeignKey(
         CategoriaServico,
@@ -263,15 +277,15 @@ class Chamado(models.Model):
 
     @property
     def cor_semaforo(self):
-        """Classifica o chamado por urgencia usando os prazos do servico.
+        """Classifica o chamado por urgencia usando os prazos globais.
 
         Retorna 'verde' (dentro do prazo), 'amarelo' (atencao) ou 'vermelho' (critico).
         """
-        s = self.id_servico
+        config = ConfiguracaoSemaforo.get_singleton()
         dias = (timezone.now() - self.dt_abertura).days
-        if dias >= s.prazo_vermelho_dias:
+        if dias >= config.prazo_vermelho_dias:
             return "vermelho"
-        if dias >= s.prazo_amarelo_dias:
+        if dias >= config.prazo_amarelo_dias:
             return "amarelo"
         return "verde"
 
@@ -281,14 +295,14 @@ class Chamado(models.Model):
 
         Retorna dict: {'no_prazo': N, 'atencao': N, 'critico': N}.
         """
+        config = ConfiguracaoSemaforo.get_singleton()
         stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
         now = timezone.now()
         for ch in queryset.select_related("id_servico"):
             dias = (now - ch.dt_abertura).days
-            s = ch.id_servico
-            if dias >= s.prazo_vermelho_dias:
+            if dias >= config.prazo_vermelho_dias:
                 stats["critico"] += 1
-            elif dias >= s.prazo_amarelo_dias:
+            elif dias >= config.prazo_amarelo_dias:
                 stats["atencao"] += 1
             else:
                 stats["no_prazo"] += 1

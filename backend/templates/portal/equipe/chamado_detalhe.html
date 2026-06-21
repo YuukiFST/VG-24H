@@ -25,7 +25,7 @@
   <!-- ============ GESTAO STATUS BAR (horizontal) ============ -->
   <div class="ticket-status-bar mb-3x">
     <div class="ticket-info-card">
-      <h2><i class="fas fa-tasks mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Gestao de Status</h2>
+      <h2><i class="fas fa-tasks mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Gestão de Status</h2>
 
       {% if pode_status %}
         <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post" class="d-flex align-items-end gap-3 flex-wrap">
@@ -52,24 +52,30 @@
             </select>
           </div>
 
-          <div id="resolucao-wrapper" class="br-input flex-grow-1" style="min-width:220px;display:none;">
-            <label for="resolucao-text">Resolucao Final / Motivo</label>
-            <textarea id="resolucao-text" name="resolucao" rows="2" placeholder="Obrigatorio para concluir ou cancelar.">{{ ch.resolucao|default:'' }}</textarea>
+          <div id="resolucao-wrapper" class="br-input flex-grow-1" style="min-width:220px;">
+            <label for="resolucao-text" id="resolucao-label">Observação</label>
+            <textarea id="resolucao-text" name="resolucao" rows="2" placeholder="Observação sobre a alteração (opcional).">{{ ch.resolucao|default:'' }}</textarea>
           </div>
 
           <button class="br-button primary" type="submit">
-            <i class="fas fa-save mr-1"></i> Atualizar Status
+            <i class="fas fa-save mr-1"></i> Salvar alterações
           </button>
           <div id="sigla-map-data" data-map='{{ status_sigla_map_json|safe }}' style="display:none;"></div>
           <script>
             (function () {
               var sel = document.getElementById('status-select');
-              var wrap = document.getElementById('resolucao-wrapper');
+              var label = document.getElementById('resolucao-label');
+              var textarea = document.getElementById('resolucao-text');
               var siglaMap = JSON.parse(document.getElementById('sigla-map-data').getAttribute('data-map'));
               function toggle() {
                 var pk = parseInt(sel.value, 10);
                 var sigla = (siglaMap[pk] || '').toUpperCase();
-                wrap.style.display = (sigla === 'CO' || sigla === 'CA') ? '' : 'none';
+                var isFinal = sigla === 'CO' || sigla === 'CA';
+                label.textContent = isFinal ? 'Resolução Final' : 'Observação';
+                textarea.placeholder = isFinal
+                  ? 'Obrigatório para concluir ou cancelar.'
+                  : 'Observação sobre a alteração (opcional).';
+                textarea.required = isFinal;
               }
               sel.addEventListener('change', toggle);
               toggle();
@@ -80,8 +86,8 @@
         <div class="br-message warning" role="alert">
           <div class="icon"><i class="fas fa-exclamation-triangle fa-lg" aria-hidden="true"></i></div>
           <div class="content" aria-label="Chamado finalizado">
-            <span class="message-title">Atencao.</span>
-            <span class="message-body"> Este chamado esta concluido ou cancelado e nao permite mais alteracoes de status.</span>
+            <span class="message-title">Atenção.</span>
+            <span class="message-body"> Este chamado está concluído ou cancelado e não permite mais alterações de status.</span>
           </div>
           <div class="close">
             <button class="br-button circle small" type="button" aria-label="Fechar a mensagem alerta"><i class="fas fa-times" aria-hidden="true"></i></button>
@@ -90,6 +96,52 @@
       {% endif %}
     </div>
   </div>
+
+  <!-- ============ CHAT (Observações) ============ -->
+  <div class="ticket-observations mb-3x">
+    <div class="ticket-info-card">
+      <h2><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Observações</h2>
+      <div class="observations-list" id="chat-messages">
+        {% for obs in observacoes %}
+          {% if obs.id_servidor %}
+            <div class="obs-bubble colaborador">
+              <p>{{ obs.observacao }}</p>
+              <div class="obs-meta">
+                {{ obs.id_servidor.nome_completo }} (Equipe) — {{ obs.dt_alteracao|date:"d/m/Y H:i" }}
+              </div>
+            </div>
+          {% else %}
+            <div class="obs-bubble cidadao">
+              <p>{{ obs.observacao }}</p>
+              <div class="obs-meta">
+                Cidadão — {{ obs.dt_alteracao|date:"d/m/Y H:i" }}
+              </div>
+            </div>
+          {% endif %}
+        {% empty %}
+          <p class="text-muted text-center py-3">Nenhuma observação registrada.</p>
+        {% endfor %}
+      </div>
+
+      <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post" class="chat-form">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="obs">
+        <div class="chat-input-row">
+          <input type="text" name="texto" class="chat-input"
+                 placeholder="Digite sua mensagem..." required autocomplete="off">
+          <button class="br-button primary circle" type="submit" title="Enviar mensagem">
+            <i class="fas fa-paper-plane" aria-hidden="true"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var chat = document.getElementById('chat-messages');
+    if (chat) chat.scrollTop = chat.scrollHeight;
+  });
+  </script>
 
   <!-- ============ GRID 2 COLUNAS: Detalhes + Historico ============ -->
   <div class="ticket-details-grid mb-3x">
@@ -122,12 +174,12 @@
           <span class="info-value"><strong>{{ ch.num_protocolo }}</strong></span>
         </div>
         <div class="info-row">
-          <span class="info-label">Abertura</span>
+          <span class="info-label">Data de abertura</span>
           <span class="info-value">{{ ch.dt_abertura|date:"d/m/Y H:i" }}</span>
         </div>
         <div class="info-row">
-          <span class="info-label">Dias em Aberto</span>
-          <span class="info-value">{{ dias_aberto }} dias</span>
+          <span class="info-label">Tempo em aberto</span>
+          <span class="info-value">{{ dias_aberto }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">Serviço</span>
@@ -171,7 +223,7 @@
 
       <!-- CARD: Historico de Status -->
       <div class="ticket-info-card">
-        <h2><i class="fas fa-route mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Historico de Status</h2>
+        <h2><i class="fas fa-route mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Status</h2>
         <div class="timeline">
           {% for h in historicos %}
             <div class="timeline-item">
@@ -187,45 +239,12 @@
             <div class="timeline-dot"><i class="fas fa-map-marker-alt" aria-hidden="true"></i></div>
             <div class="timeline-content">
               <h4>Status Atual: {{ ch.status_atual.descricao }}</h4>
-              <p>Ultima atualizacao em {{ ch.ultima_atualizacao|date:"d/m/Y H:i" }}</p>
+              <p>Última atualização em {{ ch.ultima_atualizacao|date:"d/m/Y H:i" }}</p>
             </div>
           </div>
         </div>
       </div>
 
-    </div>
-  </div>
-
-  <!-- ============ OBSERVACOES (full width) ============ -->
-  <div class="ticket-observations mb-3x">
-    <div class="ticket-info-card">
-      <h2><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Observacoes</h2>
-          <div class="observations-list">
-          {% for obs in observacoes %}
-            <div class="obs-bubble {% if obs.id_servidor.perfil == 'CID' %}cidadao{% else %}colaborador{% endif %}">
-              <p>{{ obs.observacao }}</p>
-              <div class="obs-meta">
-                {{ obs.id_servidor.nome_completo }}
-                {% if obs.id_servidor.perfil != 'CID' %}(Equipe){% endif %}
-                — {{ obs.dt_alteracao|date:"d/m/Y H:i" }}
-              </div>
-            </div>
-          {% empty %}
-            <p class="text-muted text-center py-3">Nenhuma observacao registrada.</p>
-          {% endfor %}
-        </div>
-
-        <form action="{% url 'portal:equipe_chamado' ch.pk %}" method="post" class="mt-4x">
-          {% csrf_token %}
-          <input type="hidden" name="acao" value="obs">
-          <div class="br-input mb-2x">
-            <textarea name="texto" rows="3" placeholder="Escreva uma observacao interna ou para o cidadao..." required></textarea>
-          </div>
-          <button class="br-button primary" type="submit">
-            <i class="fas fa-comment-alt mr-1"></i> Adicionar Observacao
-          </button>
-        </form>
-      </div>
     </div>
   </div>
 

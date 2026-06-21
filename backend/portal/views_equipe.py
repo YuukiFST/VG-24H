@@ -37,7 +37,7 @@ from django.views.decorators.http import require_http_methods
 from portal import db
 from portal.decorators import perfil_codigo, perfis
 from portal.forms import EquipeStatusForm, FotoForm, ObservacaoForm
-from portal.models import Servico
+from portal.models import ConfiguracaoSemaforo, Servico
 from portal.utils import salvar_foto_upload
 
 
@@ -101,7 +101,7 @@ def equipe_chamados_lista(request):
         "SELECT c.id_chamado, c.num_protocolo, c.prioridade, "
         "c.descricao, c.dt_abertura, c.atualizado_em, "
         "c.id_servico, c.id_bairro, c.id_cidadao, "
-        "s.nome AS servico_nome, s.prazo_amarelo_dias, s.prazo_vermelho_dias, "
+        "s.nome AS servico_nome, "
         "b.nome_bairro, "
         "ci.nome_completo AS cidadao_nome, "
         "ultimo.sigla AS sigla_status, "
@@ -115,6 +115,7 @@ def equipe_chamados_lista(request):
     servico_filter = _int_none(request.GET.get("servico"))
     d0 = request.GET.get("de")
     d1 = request.GET.get("ate")
+    mostrar_encerrados = request.GET.get("mostrar_encerrados") == "1"
     ordenar_por = request.GET.get("ordenar_por", "prioridade")
     direcao = request.GET.get("direcao", "desc")
 
@@ -134,6 +135,9 @@ def equipe_chamados_lista(request):
         sql_base += "AND c.dt_abertura::date <= %s "
         params.append(d1)
 
+    if not mostrar_encerrados:
+        sql_base += "AND ultimo.sigla NOT IN ('CO', 'CA') "
+
     # Conta total para a paginacao.
     count_sql = "SELECT COUNT(*) " + sql_base
     with connection.cursor() as cursor:
@@ -150,11 +154,12 @@ def equipe_chamados_lista(request):
     }.get(ordenar_por, "c.prioridade")
     ordem_direcao = "DESC" if direcao == "desc" else "ASC"
 
-    # Para prioridade, adiciona dt_abertura DESC como desempate.
+    # Encerrados sempre no final da lista.
+    order_fixo = "CASE WHEN ultimo.sigla IN ('CO','CA') THEN 1 ELSE 0 END"
     if ordenar_por == "prioridade":
-        data_sql = select_cols + sql_base + f"ORDER BY {coluna_ordem} {ordem_direcao}, c.dt_abertura DESC LIMIT %s OFFSET %s"
+        data_sql = select_cols + sql_base + f"ORDER BY {order_fixo}, {coluna_ordem} {ordem_direcao}, c.dt_abertura DESC LIMIT %s OFFSET %s"
     else:
-        data_sql = select_cols + sql_base + f"ORDER BY {coluna_ordem} {ordem_direcao} LIMIT %s OFFSET %s"
+        data_sql = select_cols + sql_base + f"ORDER BY {order_fixo}, {coluna_ordem} {ordem_direcao} LIMIT %s OFFSET %s"
     data_params = params + [por_pagina, offset]
 
     with connection.cursor() as cursor:
@@ -162,23 +167,30 @@ def equipe_chamados_lista(request):
         rows = cursor.fetchall()
 
     # Hidratacao: tuplas do banco viram objetos com atributos nomeados.
+    config = ConfiguracaoSemaforo.get_singleton()
     linhas = []
     for r in rows:
-        cor = db.cor_semaforo(r[4], r[10], r[11])
-        sigla = r[14] or ""
-        status_desc = r[15] or ""
+        cor = db.cor_semaforo(r[4], config.prazo_amarelo_dias, config.prazo_vermelho_dias)
+        sigla = r[12] or ""
+        status_desc = r[13] or ""
         ch = SimpleNamespace(
             id_chamado=r[0], pk=r[0], num_protocolo=r[1], prioridade=r[2],
             descricao=r[3], dt_abertura=r[4], atualizado_em=r[5],
             id_servico=SimpleNamespace(id_servico=r[6], pk=r[6], nome=r[9]),
-            id_bairro=SimpleNamespace(id_bairro=r[7], pk=r[7], nome_bairro=r[12]),
-            id_cidadao=SimpleNamespace(id_cidadao=r[8], pk=r[8], nome_completo=r[13]),
+            id_bairro=SimpleNamespace(id_bairro=r[7], pk=r[7], nome_bairro=r[10]),
+            id_cidadao=SimpleNamespace(id_cidadao=r[8], pk=r[8], nome_completo=r[11]),
             sigla_status=sigla, cor_semaforo=cor,
             status_atual=SimpleNamespace(sigla=sigla, descricao=status_desc),
         )
-        # Dias em aberto: (hoje - data de abertura).
-        dias = (timezone.now().date() - ch.dt_abertura.date()).days
-        linhas.append({"ch": ch, "cor": cor, "dias_aberto": dias})
+        # Dias em aberto: string com dias/horas/minutos.
+        delta = timezone.now() - ch.dt_abertura
+        if delta.total_seconds() < 3600:
+            tempo_str = f"{int(delta.total_seconds() // 60)} minuto(s)"
+        elif delta.total_seconds() < 86400:
+            tempo_str = f"{int(delta.total_seconds() // 3600)} hora(s)"
+        else:
+            tempo_str = f"{delta.days} dia(s)"
+        linhas.append({"ch": ch, "cor": cor, "dias_aberto": tempo_str})
 
     # Catalogos para os filtros do template.
     bairros_lista = db.listar_bairros_ativos()
@@ -222,6 +234,8 @@ def equipe_chamados_lista(request):
             "pct_no_prazo": pct_no_prazo,
             "pct_atencao": pct_atencao,
             "pct_critico": pct_critico,
+            "mostrar_encerrados": mostrar_encerrados,
+            "config_semaforo": config,
         },
     )
 
@@ -232,11 +246,10 @@ def equipe_chamados_lista(request):
 
 @require_http_methods(["GET", "POST"])
 def gestao_prazos(request):
-    """Lista servicos com prazos editaveis (amarelo/vermelho).
+    """Gerencia os prazos globais do semaforo (amarelo/vermelho).
 
-    Acessivel apenas por gestores (GES) via icone de engrenagem na pagina
-    de Gestao de Chamados. Ao salvar, atualiza os prazos no banco para
-    os servicos cujos valores foram alterados.
+    Agora global (ConfiguracaoSemaforo singleton), nao mais por servico.
+    Acessivel apenas por gestores (GES).
     """
     u = request.portal_user
     if not u:
@@ -244,54 +257,42 @@ def gestao_prazos(request):
     if u.perfil != "GES":
         messages.error(
             request,
-            "Voce nao tem permissao para alterar os prazos dos servicos. "
-            "Apenas o Gestor pode realizar esta configuracao."
+            "Você não tem permissão para alterar os prazos. "
+            "Apenas o Gestor pode realizar esta configuração."
         )
         return redirect("portal:equipe_chamados")
 
     if request.method == "POST":
+        try:
+            prazo_amarelo = int(request.POST.get("prazo_amarelo_dias", 15))
+            prazo_vermelho = int(request.POST.get("prazo_vermelho_dias", 30))
+        except (ValueError, TypeError):
+            messages.error(request, "Valores invalidos.")
+            return redirect("portal:gestao_prazos")
+
         with connection.cursor() as cursor:
-            for key, val in request.POST.items():
-                if key.startswith("prazo_amarelo_"):
-                    pk = key.replace("prazo_amarelo_", "")
-                    try:
-                        dias = int(val)
-                        cursor.execute(
-                            "UPDATE servico SET prazo_amarelo_dias = %s WHERE id_servico = %s",
-                            [dias, pk],
-                        )
-                    except (ValueError, TypeError):
-                        pass
-                elif key.startswith("prazo_vermelho_"):
-                    pk = key.replace("prazo_vermelho_", "")
-                    try:
-                        dias = int(val)
-                        cursor.execute(
-                            "UPDATE servico SET prazo_vermelho_dias = %s WHERE id_servico = %s",
-                            [dias, pk],
-                        )
-                    except (ValueError, TypeError):
-                        pass
+            cursor.execute(
+                "UPDATE configuracao_semaforo SET prazo_amarelo_dias = %s, prazo_vermelho_dias = %s WHERE id = 1",
+                [prazo_amarelo, prazo_vermelho],
+            )
         messages.success(request, "Prazos atualizados.")
         return redirect("portal:gestao_prazos")
 
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT id_servico, nome, prazo_amarelo_dias, prazo_vermelho_dias "
-            "FROM servico ORDER BY nome"
+            "SELECT prazo_amarelo_dias, prazo_vermelho_dias FROM configuracao_semaforo WHERE id = 1"
         )
-        servicos = [
-            SimpleNamespace(
-                id_servico=r[0], nome=r[1],
-                prazo_amarelo_dias=r[2], prazo_vermelho_dias=r[3],
-            )
-            for r in cursor.fetchall()
-        ]
+        row = cursor.fetchone()
+
+    config = SimpleNamespace(
+        prazo_amarelo_dias=row[0] if row else 15,
+        prazo_vermelho_dias=row[1] if row else 30,
+    )
 
     return render(
         request,
         "portal/equipe/servico_prazos.html",
-        {"servicos": servicos},
+        {"config": config},
     )
 
 
@@ -328,7 +329,6 @@ def equipe_chamado_detalhe(request, pk):
             "c.dt_abertura, c.dt_conclusao, c.dt_avaliacao, c.atualizado_em, "
             "c.id_servico, c.id_bairro, c.id_cidadao, "
             "s.nome AS servico_nome, s.descricao AS servico_descricao, "
-            "s.prazo_amarelo_dias, s.prazo_vermelho_dias, "
             "b.nome_bairro, "
             "ci.nome_completo AS cidadao_nome, ci.email AS cidadao_email, "
             "ci.telefone AS cidadao_telefone, "
@@ -354,22 +354,27 @@ def equipe_chamado_detalhe(request, pk):
         atualizado_em=row[11],
         id_servico=SimpleNamespace(
             id_servico=row[12], pk=row[12], nome=row[15],
-            descricao=row[16], prazo_amarelo_dias=row[17],
-            prazo_vermelho_dias=row[18],
-            id_categoria=SimpleNamespace(nome=row[23]),
+            descricao=row[16],
+            id_categoria=SimpleNamespace(nome=row[21]),
         ),
-        id_bairro=SimpleNamespace(id_bairro=row[13], pk=row[13], nome_bairro=row[19]),
+        id_bairro=SimpleNamespace(id_bairro=row[13], pk=row[13], nome_bairro=row[17]),
         id_cidadao=SimpleNamespace(
-            id_cidadao=row[14], pk=row[14], nome_completo=row[20],
-            email=row[21], telefone=row[22],
+            id_cidadao=row[14], pk=row[14], nome_completo=row[18],
+            email=row[19], telefone=row[20],
         ),
     )
 
     # Popula status atual e cor do semaforo via db.py.
     db.popular_status(ch)
 
-    # Dias em aberto para exibicao no template.
-    dias_aberto = (timezone.now().date() - ch.dt_abertura.date()).days
+    # Dias em aberto para exibicao no template (string com unidade).
+    delta = timezone.now() - ch.dt_abertura
+    if delta.total_seconds() < 3600:
+        dias_aberto = f"{int(delta.total_seconds() // 60)} minuto(s)"
+    elif delta.total_seconds() < 86400:
+        dias_aberto = f"{int(delta.total_seconds() // 3600)} hora(s)"
+    else:
+        dias_aberto = f"{delta.days} dia(s)"
 
     # Verifica o perfil do usuario e aplica a regra de bloqueio para COL.
     p = perfil_codigo(request.portal_user)
@@ -448,7 +453,7 @@ def equipe_chamado_detalhe(request, pk):
                         [pk, request.portal_user.pk, status_id,
                          form_o.cleaned_data["texto"], timezone.now()],
                     )
-                messages.success(request, "Observacao registrada.")
+                messages.success(request, "Observação registrada.")
             return redirect("portal:equipe_chamado", pk=pk)
 
         # Acao: upload de foto.
@@ -565,7 +570,7 @@ def gestao_chamado_excluir(request, pk):
     justificativa = (request.POST.get("justificativa") or "").strip()
 
     if not justificativa:
-        messages.error(request, "E obrigatorio informar uma justificativa para excluir o chamado.")
+        messages.error(request, "É obrigatório informar uma justificativa para excluir o chamado.")
         return redirect("portal:equipe_chamado", pk=pk)
 
     with transaction.atomic():
