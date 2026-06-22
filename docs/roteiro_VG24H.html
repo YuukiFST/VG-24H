@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Roteiro de Apresentação — VG 24H</title>
+<style>
+  :root{
+    --azul:#1351b4; --azul-esc:#071d41; --azul-claro:#e8eefb;
+    --verde:#168821; --amarelo:#b38b00; --vermelho:#c52929;
+    --rafael:#7b2cbf; --bruno:#1351b4; --yuuki:#0a7d3e;
+    --cinza:#475569; --cinza-claro:#f1f5f9; --borda:#d7dce5;
+    --cod-bg:#0f172a; --cod-fg:#e2e8f0;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    margin:0; background:#f6f8fc; color:#1a2233; line-height:1.55;
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:24px 18px 80px;}
+  header.topo{
+    background:linear-gradient(135deg,var(--azul-esc),var(--azul));
+    color:#fff; padding:34px 0 28px; box-shadow:0 2px 10px rgba(0,0,0,.18);
+  }
+  header.topo .wrap{padding-bottom:8px}
+  header.topo h1{margin:0 0 6px; font-size:1.9rem}
+  header.topo p{margin:4px 0; opacity:.95}
+  .equipe{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+  .equipe .membro{background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25);
+    padding:8px 13px; border-radius:8px; font-size:.92rem}
+  .equipe .membro b{display:block; font-size:1rem}
+  .bloco{background:#fff; border:1px solid var(--borda); border-radius:12px;
+    padding:20px 22px; margin:22px 0; box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .bloco h2{margin-top:0; color:var(--azul-esc); border-bottom:2px solid var(--azul-claro);
+    padding-bottom:8px}
+  .nota{background:#fff8e6; border-left:5px solid var(--amarelo); padding:12px 16px;
+    border-radius:6px; margin:14px 0; font-size:.95rem}
+  .nota.imp{background:#fdecec; border-left-color:var(--vermelho)}
+  .nota.ok{background:#eafaef; border-left-color:var(--verde)}
+  .timeline{counter-reset:passo; margin:10px 0 0; padding:0; list-style:none}
+  .timeline li{position:relative; padding:10px 0 10px 46px; border-left:2px dashed var(--borda); margin-left:16px}
+  .timeline li::before{counter-increment:passo; content:counter(passo);
+    position:absolute; left:-16px; top:8px; width:32px; height:32px; border-radius:50%;
+    background:var(--azul); color:#fff; display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:.9rem}
+  .timeline li b{color:var(--azul-esc)}
+  .timeline li small{color:var(--cinza)}
+
+  /* Cards de integrante */
+  details.integrante{border-radius:12px; margin:20px 0; border:2px solid var(--borda);
+    overflow:hidden; background:#fff}
+  details.integrante>summary{cursor:pointer; padding:18px 22px; font-size:1.25rem; font-weight:700;
+    list-style:none; display:flex; align-items:center; gap:12px; color:#fff}
+  details.integrante>summary::-webkit-details-marker{display:none}
+  details.integrante>summary::after{content:'\25BC'; margin-left:auto; font-size:.8rem; opacity:.85}
+  details.integrante[open]>summary::after{content:'\25B2'}
+  details.integrante .corpo{padding:8px 20px 22px}
+  details.rafael>summary{background:var(--rafael)}
+  details.bruno>summary{background:var(--bruno)}
+  details.yuuki>summary{background:var(--yuuki)}
+  details.integrante>summary .papel{font-size:.82rem; font-weight:500; opacity:.9; display:block}
+  details.integrante>summary .nome span{display:flex; flex-direction:column}
+
+  /* Sub-cards (CRUD / tela) */
+  details.crud{border:1px solid var(--borda); border-radius:10px; margin:14px 0; background:#fcfdff}
+  details.crud>summary{cursor:pointer; padding:13px 16px; font-weight:600; font-size:1.03rem;
+    list-style:none; display:flex; align-items:center; gap:10px; color:var(--azul-esc)}
+  details.crud>summary::-webkit-details-marker{display:none}
+  details.crud>summary::after{content:'+'; margin-left:auto; font-size:1.3rem; color:var(--cinza)}
+  details.crud[open]>summary::after{content:'\2013'}
+  details.crud[open]>summary{border-bottom:1px solid var(--borda); background:var(--cinza-claro)}
+  details.crud .crud-corpo{padding:14px 16px}
+  .tag{font-size:.72rem; font-weight:700; padding:2px 8px; border-radius:20px; color:#fff; white-space:nowrap}
+  .tag.core{background:var(--vermelho)} .tag.sql{background:var(--rafael)}
+  .tag.crud{background:var(--cinza)} .tag.auth{background:var(--azul)}
+
+  .fala{background:var(--azul-claro); border-left:5px solid var(--azul); padding:12px 16px;
+    border-radius:6px; margin:12px 0}
+  .fala::before{content:'🎤 O que falar'; display:block; font-weight:700; color:var(--azul-esc);
+    margin-bottom:5px; font-size:.85rem; letter-spacing:.03em}
+  .arquivo{display:inline-block; background:#1e293b; color:#cbd5e1; font-family:Consolas,monospace;
+    font-size:.85rem; padding:4px 10px; border-radius:6px; margin:8px 0 4px}
+  .arquivo::before{content:'📄 '}
+  pre.cod{background:var(--cod-bg); color:var(--cod-fg); padding:14px 16px; border-radius:8px;
+    overflow-x:auto; font-family:Consolas,'Courier New',monospace; font-size:.83rem; line-height:1.5;
+    margin:8px 0; border:1px solid #1e293b}
+  pre.cod .ln{color:#64748b; user-select:none}
+  .exp{margin:10px 0; padding-left:0; list-style:none}
+  .exp li{padding:6px 0 6px 26px; position:relative; border-bottom:1px dotted #e2e8f0; font-size:.93rem}
+  .exp li::before{content:'\27A4'; position:absolute; left:0; top:6px; color:var(--azul); font-size:.8rem}
+  .exp code, p code, li code, .fala code{background:#eef2f9; color:#9333ea; padding:1px 5px;
+    border-radius:4px; font-family:Consolas,monospace; font-size:.85em}
+  .sub{font-weight:700; color:var(--azul-esc); margin:16px 0 4px; font-size:1rem}
+  details.pergunta{background:#fff; border:1px solid var(--borda); border-left:5px solid var(--vermelho);
+    border-radius:6px; margin:10px 0; overflow:hidden}
+  details.pergunta>summary{cursor:pointer; padding:12px 16px; font-weight:700; color:var(--vermelho);
+    list-style:none; display:flex; align-items:flex-start; gap:10px}
+  details.pergunta>summary::-webkit-details-marker{display:none}
+  details.pergunta>summary::after{content:'+'; margin-left:auto; font-size:1.3rem; color:var(--cinza); line-height:1.1}
+  details.pergunta[open]>summary::after{content:'\2013'}
+  details.pergunta[open]>summary{border-bottom:1px solid var(--borda); background:#fff5f5}
+  details.pergunta .resp{padding:12px 16px}
+  .q-toolbar{display:flex; gap:10px; flex-wrap:wrap; margin:8px 0 16px}
+  .q-toolbar button{background:var(--azul); color:#fff; border:none; padding:7px 14px; border-radius:20px;
+    font-size:.85rem; cursor:pointer}
+  .q-toolbar button:hover{background:var(--azul-esc)}
+  table.mini{border-collapse:collapse; width:100%; margin:10px 0; font-size:.88rem}
+  table.mini th,table.mini td{border:1px solid var(--borda); padding:6px 9px; text-align:left}
+  table.mini th{background:var(--cinza-claro)}
+  .legenda{font-size:.82rem; color:var(--cinza); margin-top:8px}
+  a.top{position:fixed; right:18px; bottom:18px; background:var(--azul); color:#fff; text-decoration:none;
+    padding:10px 14px; border-radius:30px; box-shadow:0 2px 8px rgba(0,0,0,.25); font-size:.85rem}
+</style>
+</head>
+<body>
+<header class="topo">
+  <div class="wrap">
+    <h1>Roteiro de Apresentação — VG 24H</h1>
+    <p>Portal de chamados urbanos da Prefeitura de Várzea Grande/MT · Django + PostgreSQL com <b>SQL puro</b></p>
+    <div class="equipe">
+      <div class="membro"><b>Fausto Yuuki</b>Front-End (templates + Design System gov.br)</div>
+      <div class="membro"><b>Rafael Pereira</b>Banco de Dados / SQL</div>
+      <div class="membro"><b>Bruno Dias</b>Back-End / Django</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="bloco">
+    <h2>Como usar este roteiro</h2>
+    <p>Cada integrante tem <b>um card colorido</b> com o seu nome. Dentro do card há <b>um sub-card para cada
+    tela/CRUD do sistema</b>. Abra apenas o sub-card que a professora pedir. Cada sub-card traz:
+    <b>(1)</b> o que falar, <b>(2)</b> qual arquivo abrir, <b>(3)</b> o trecho de código <i>exatamente como está
+    no projeto</i> e <b>(4)</b> a explicação do que cada parte faz.</p>
+    <div class="nota imp"><b>Importante (não erre isso):</b> o projeto usa <b>SQL puro</b> (comando
+    <code>cursor.execute(...)</code>), <b>não</b> o ORM do Django, porque <b>a professora exigiu SQL puro</b>.
+    Isso é um <i>requisito da disciplina</i> — não apresente como um mérito/escolha do grupo. Os <i>models</i> existem só para
+    formulários e propriedades; todas as leituras e escritas de dados são SQL escrito à mão.</div>
+    <div class="nota"><b>Onde estão os arquivos:</b> back-end e SQL em <code>backend/portal/</code> e
+    <code>database/</code>; telas (HTML) em <code>backend/templates/portal/</code>.</div>
+  </div>
+
+  <div class="bloco">
+    <h2>Arquitetura em 1 minuto (todos devem saber)</h2>
+    <ul class="exp">
+      <li><b>SQL puro via o pacote <code>db/</code>:</b> as <i>views</i> chamam funções do pacote
+      <code>backend/portal/db/</code> — dividido por domínio (<code>cidadao</code>, <code>servidor</code>,
+      <code>chamado</code>, <code>historico</code>, <code>catalogo</code>, <code>stats</code>, <code>notificacao</code>,
+      <code>senha</code>, <code>config</code>, <code>pagination</code>, <code>_shared</code>) — usando
+      <code>with connection.cursor() as cursor: cursor.execute(sql, params)</code>. O pacote é importado como
+      <code>from portal import db</code> e as funções são chamadas por <code>db.&lt;funcao&gt;()</code>.</li>
+      <li><b>Status por "event sourcing":</b> a tabela <code>chamado</code> <b>NÃO</b> tem coluna de status.
+      O status atual é o <b>último registro</b> de <code>historico_chamado</code>
+      (<code>ORDER BY dt_alteracao DESC LIMIT 1</code>), normalmente via <code>JOIN LATERAL</code>.</li>
+      <li><b>Triggers no banco</b> fazem regras automáticas: ao abrir chamado cria o histórico "AB";
+      ao mudar status seta/limpa <code>dt_conclusao</code> e <b>gera a notificação</b>.</li>
+      <li><b>Semáforo</b> (verde/amarelo/vermelho) = dias em aberto comparados aos prazos <b>globais</b>
+      (<code>configuracao_semaforo.prazo_amarelo_dias</code> / <code>prazo_vermelho_dias</code>).</li>
+      <li><b>Perfis:</b> <code>CID</code> (cidadão), <code>COL</code> (colaborador), <code>GES</code> (gestor).</li>
+    </ul>
+  </div>
+
+  <div class="bloco">
+    <h2>Ordem da apresentação (sigam esta sequência)</h2>
+    <ol class="timeline">
+      <li><b>Página inicial</b> — mostrar o portal público (carrossel de banners, categorias, estatísticas).
+        <br><small>Cada um explica a sua camada da mesma tela.</small></li>
+      <li><b>Login e Cadastro</b> — fazer login; mostrar onde o sistema valida e a mensagem de erro/sucesso.</li>
+      <li><b>Dashboard</b> — primeira tela do gestor (gráficos) e o painel do cidadão.</li>
+      <li><b>Gestão de Chamados</b> <span class="tag core">CORE</span> — lista com semáforo, prioridade e filtros.</li>
+      <li><b>Editar um chamado</b> <span class="tag core">CORE</span> — alterar status, prioridade, observação, resolução.</li>
+      <li><b>Demais CRUDs</b> — Banners, Bairros, Serviços, Categorias, Colaboradores.</li>
+      <li><b>Notificações</b> — como o cidadão é avisado automaticamente.</li>
+      <li><b>Estatísticas</b> — a <i>view</i> SQL e os gráficos.</li>
+    </ol>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ============== RAFAEL PEREIRA — SQL ======================== -->
+  <!-- ============================================================ -->
+  <details class="integrante rafael">
+    <summary><span class="nome"><span>Rafael Pereira<span class="papel">Banco de Dados / SQL (foco da disciplina)</span></span></span></summary>
+    <div class="corpo">
+
+      <div class="nota ok"><b>Mensagem central do Rafael:</b> "Todo acesso ao banco é feito em <b>SQL puro</b>,
+      escrito à mão dentro do pacote <code>backend/portal/db/</code> (módulos por domínio) e das <i>views</i>. Não usamos o ORM
+      para ler/gravar dados — usamos <code>cursor.execute()</code>. O ponto mais importante do nosso modelo é que o
+      <b>status do chamado não é um campo</b>: ele é o último registro da tabela <code>historico_chamado</code>."</div>
+
+      <!-- 1. VISÃO GERAL SQL -->
+      <details class="crud">
+        <summary>Visão geral — como o SQL é executado <span class="tag sql">base</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Centralizamos as consultas no pacote <code>db/</code>, dividido por domínio
+          (<code>cidadao.py</code>, <code>chamado.py</code>, <code>catalogo.py</code>, <code>stats.py</code>, etc.).
+          Cada função abre um cursor, executa um comando SQL com parâmetros (<code>%s</code>, que evita SQL injection)
+          e transforma as linhas em objetos. As <i>views</i> importam <code>from portal import db</code> e chamam
+          <code>db.&lt;funcao&gt;()</code> — não precisam saber em qual módulo a função está."</div>
+          <div class="nota">O pacote <code>backend/portal/db/</code> tem um <code>__init__.py</code> (fachada) que
+          re-exporta todas as funções públicas. Por isso o nome de chamada continua <code>db.buscar_cidadao_por_email(...)</code>,
+          mesmo a função morando em <code>db/cidadao.py</code>. Leitores "planos" (listas simples) usam um pequeno helper
+          <code>fetch_all/fetch_one</code> em <code>db/_shared.py</code> que executa o SELECT e mapeia as linhas.</div>
+          <div class="arquivo">backend/portal/db/cidadao.py — buscar_cidadao_por_email</div>
+          <pre class="cod">def buscar_cidadao_por_email(email):
+    from portal.models import Cidadao
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT id_cidadao, nome_completo, senha_hash, perfil, senha_temporaria "
+            "FROM cidadao "
+            "WHERE LOWER(email) = %s AND ativo = TRUE",
+            [email],
+        )
+        row = cursor.fetchone()</pre>
+          <ul class="exp">
+            <li><code>with connection.cursor() as cursor</code> abre a conexão com o PostgreSQL.</li>
+            <li><code>cursor.execute(sql, [email])</code> roda o comando; o <code>%s</code> é substituído pelo valor
+            de forma segura (parâmetro, não concatenação de texto).</li>
+            <li><code>LOWER(email) = %s</code> faz a busca <b>sem diferenciar maiúsculas/minúsculas</b>.</li>
+            <li><code>ativo = TRUE</code>: só considera contas ativas (o sistema usa "soft delete").</li>
+            <li><code>fetchone()</code> traz 1 linha; <code>fetchall()</code> traria todas.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 2. MODELAGEM / SCHEMA -->
+      <details class="crud">
+        <summary>Modelagem do banco (tabelas, PK, FK, CHECK) <span class="tag sql">DER</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"O banco tem 11 tabelas principais. A tabela central é <code>chamado</code>.
+          Repare que ela <b>não tem coluna de status</b> — explico já o porquê. As chaves estrangeiras ligam
+          chamado a serviço, bairro e cidadão. Usamos <code>CHECK</code> para garantir valores válidos."</div>
+          <div class="arquivo">database/01_schema.sql</div>
+          <p class="sub">Tabela de domínio: os 5 status fixos</p>
+          <pre class="cod">CREATE TABLE status_chamado (
+    id_status   SERIAL PRIMARY KEY,
+    descricao   VARCHAR(200),
+    sigla       CHAR(2) NOT NULL UNIQUE,
+    CONSTRAINT ck_status_sigla CHECK (sigla IN ('AB', 'EA', 'EE', 'CO', 'CA'))
+);</pre>
+          <ul class="exp">
+            <li><code>SERIAL PRIMARY KEY</code>: id que se autoincrementa.</li>
+            <li><code>CHECK (sigla IN (...))</code>: só aceita as 5 siglas — AB (Aberto), EA (Em Atendimento),
+            EE (Em Execução), CO (Concluído), CA (Cancelado). Não dá pra inventar status novo sem mudar o schema.</li>
+          </ul>
+          <p class="sub">Serviço — ligado a uma categoria</p>
+          <pre class="cod">CREATE TABLE servico (
+    id_servico           SERIAL PRIMARY KEY,
+    nome                 VARCHAR(100) NOT NULL,
+    descricao            VARCHAR(200),
+    ativo                BOOLEAN NOT NULL DEFAULT TRUE,
+    id_categoria         INTEGER NOT NULL REFERENCES categoria_servico (id_categoria),
+    UNIQUE (id_categoria, nome)
+);</pre>
+          <ul class="exp">
+            <li><code>REFERENCES categoria_servico</code>: chave estrangeira (FK) para a categoria.</li>
+            <li><code>UNIQUE (id_categoria, nome)</code>: o mesmo nome de serviço não repete na mesma categoria.</li>
+            <li><b>Os prazos do semáforo NÃO ficam aqui.</b> São <b>globais</b>, na tabela
+            <code>configuracao_semaforo</code> (abaixo) — todos os serviços usam os mesmos prazos.</li>
+          </ul>
+          <p class="sub">ConfiguracaoSemaforo — prazos globais do semáforo (tabela de 1 linha)</p>
+          <pre class="cod">CREATE TABLE configuracao_semaforo (
+    id                  INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    prazo_amarelo_dias  INTEGER NOT NULL DEFAULT 15 CHECK (prazo_amarelo_dias &gt;= 0),
+    prazo_vermelho_dias INTEGER NOT NULL DEFAULT 30 CHECK (prazo_vermelho_dias &gt;= 0)
+);</pre>
+          <ul class="exp">
+            <li><code>CHECK (id = 1)</code>: força a tabela a ter <b>uma única linha</b> (singleton). Os prazos
+            valem para o sistema inteiro, não por serviço.</li>
+            <li><code>prazo_amarelo_dias</code> / <code>prazo_vermelho_dias</code>: definem quando o chamado
+            fica amarelo/vermelho. Editados na tela de prazos (só o gestor).</li>
+          </ul>
+          <p class="sub">Chamado — tabela central (sem coluna de status!)</p>
+          <pre class="cod">CREATE TABLE chamado (
+    id_chamado             SERIAL PRIMARY KEY,
+    num_protocolo          VARCHAR(20) NOT NULL UNIQUE,
+    prioridade             INTEGER NOT NULL DEFAULT 0 CHECK (prioridade &gt;= 0 AND prioridade &lt;= 5),
+    ponto_de_referencia    VARCHAR(100),
+    descricao              VARCHAR(500) NOT NULL CHECK (char_length(descricao) &lt;= 500),
+    resolucao              VARCHAR(600) CHECK (resolucao IS NULL OR char_length(resolucao) &lt;= 600),
+    nota_avaliacao         INTEGER CHECK (nota_avaliacao IS NULL OR (nota_avaliacao &gt;= 1 AND nota_avaliacao &lt;= 5)),
+    comentario_avaliacao   VARCHAR(500) CHECK (comentario_avaliacao IS NULL OR char_length(comentario_avaliacao) &lt;= 500),
+    dt_abertura            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    dt_conclusao           TIMESTAMPTZ,
+    dt_avaliacao           TIMESTAMPTZ,
+    atualizado_em          TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id_servico             INTEGER NOT NULL REFERENCES servico (id_servico),
+    id_bairro              INTEGER NOT NULL REFERENCES bairro (id_bairro),
+    id_cidadao             INTEGER NOT NULL REFERENCES cidadao (id_cidadao)
+);</pre>
+          <ul class="exp">
+            <li><b>Não existe <code>id_status</code> aqui.</b> Decisão de projeto: o status atual é o último
+            registro de <code>historico_chamado</code>. Isso dá rastreabilidade total (quem mudou, quando, para qual status).</li>
+            <li><code>prioridade ... CHECK (... &gt;= 0 AND ... &lt;= 5)</code>: prioridade só de 0 a 5.</li>
+            <li><code>num_protocolo ... UNIQUE</code>: protocolo nunca repete.</li>
+            <li>3 FKs: serviço, bairro e cidadão.</li>
+          </ul>
+          <p class="sub">Histórico — a "fonte da verdade" do status</p>
+          <pre class="cod">CREATE TABLE historico_chamado (
+    id_historico_chamado   SERIAL PRIMARY KEY,
+    dt_alteracao           TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    observacao             VARCHAR(500) CHECK (observacao IS NULL OR char_length(observacao) &lt;= 500),
+    id_chamado             INTEGER NOT NULL REFERENCES chamado (id_chamado),
+    id_servidor            INTEGER REFERENCES servidor (id_servidor),
+    id_status              INTEGER NOT NULL REFERENCES status_chamado (id_status)
+);
+
+CREATE INDEX ix_historico_chamado_status ON historico_chamado (id_chamado, dt_alteracao);</pre>
+          <ul class="exp">
+            <li>Cada mudança de status é um <b>novo INSERT</b> aqui (nunca um UPDATE). Por isso fica o histórico completo.</li>
+            <li><code>id_servidor</code> pode ser NULL (ex.: quando o sistema cria o status automaticamente).</li>
+            <li>O índice em <code>(id_chamado, dt_alteracao)</code> acelera a busca do "último status".</li>
+          </ul>
+          <div class="nota">Há também as tabelas <code>secretaria</code>, <code>categoria_servico</code>,
+          <code>bairro</code>, <code>cidadao</code>, <code>servidor</code>, <code>foto_chamado</code> e
+          <code>notificacao</code> — completando as <b>11 entidades do DER</b>. Fora do DER há duas tabelas de apoio:
+          <code>configuracao_semaforo</code> (prazos globais do semáforo) e <code>protocolo_seq</code> (gerador de protocolo).
+          A tabela <code>banner_publicacao</code> (banners da home) é definida pelo <i>model</i>
+          <code>BannerPublicacao</code> (<code>managed=False</code>, fora das 11 do DER).</div>
+        </div>
+      </details>
+
+      <!-- 3. PÁGINA INICIAL -->
+      <details class="crud">
+        <summary>Página inicial — consultas da home <span class="tag sql">SELECT</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"A home é pública. Ela faz três grupos de consultas: busca os banners ativos,
+          as categorias com seus serviços, e estatísticas (quantos chamados resolvidos, bairros e serviços ativos).
+          Essas consultas ficam em funções do pacote <code>db/</code> (<code>listar_banners_ativos</code> e
+          <code>listar_categorias_com_servicos</code> em <code>db/catalogo.py</code>; <code>buscar_stats_publicas</code>
+          em <code>db/stats.py</code>); a view <code>root_view</code> só as chama."</div>
+          <div class="arquivo">backend/portal/db/catalogo.py — listar_banners_ativos · db/stats.py — buscar_stats_publicas</div>
+          <pre class="cod">cursor.execute(
+    "SELECT id_banner, titulo, descricao, url_imagem, link "
+    "FROM banner_publicacao "
+    "WHERE ativo = TRUE "
+    "ORDER BY ordem ASC, dt_criacao DESC"
+)
+...
+cursor.execute(
+    "SELECT COUNT(*) FROM chamado c "
+    "WHERE ("
+    "  SELECT sc.sigla FROM historico_chamado hc "
+    "  JOIN status_chamado sc ON hc.id_status = sc.id_status "
+    "  WHERE hc.id_chamado = c.id_chamado "
+    "  ORDER BY hc.dt_alteracao DESC LIMIT 1"
+    ") = 'CO'"
+)
+total_resolvidos = cursor.fetchone()[0]</pre>
+          <ul class="exp">
+            <li>Os banners saem ordenados por <code>ordem</code> (posição no carrossel).</li>
+            <li>"Chamados resolvidos" usa uma <b>subconsulta</b>: para cada chamado, pega a sigla do último
+            histórico e conta quantos estão em <code>'CO'</code> (Concluído). De novo: o status vem do histórico.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 4. LOGIN -->
+      <details class="crud">
+        <summary>Login — validar e-mail/senha <span class="tag auth">SQL</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"O login é 'duplo': procuro o e-mail primeiro na tabela <code>cidadao</code> e, se não achar,
+          na tabela <code>servidor</code>. Estas duas consultas SQL ficam no pacote <code>db/</code>
+          (<code>db/cidadao.py</code> e <code>db/servidor.py</code>). Se achar o usuário,
+          o back-end compara a senha; a parte de mensagem 'certo/errado' eu mostro, mas quem dispara é a view (Bruno)."</div>
+          <div class="arquivo">backend/portal/db/cidadao.py — buscar_cidadao_por_email · db/servidor.py — buscar_servidor_por_email</div>
+          <pre class="cod">cursor.execute(
+    "SELECT id_cidadao, nome_completo, senha_hash, perfil, senha_temporaria "
+    "FROM cidadao "
+    "WHERE LOWER(email) = %s AND ativo = TRUE",
+    [email],
+)</pre>
+          <ul class="exp">
+            <li>Trago o <code>senha_hash</code> (a senha guardada é um <b>hash bcrypt</b>, nunca texto puro).</li>
+            <li>É esse <code>SELECT</code> que decide se o e-mail existe. Se não retornar linha, o login falha.</li>
+            <li>A comparação da senha (<code>check_password</code>) e a mensagem de erro ficam na view — ver card do Bruno.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 5. CADASTRO -->
+      <details class="crud">
+        <summary>Cadastro de cidadão — checar duplicado e inserir <span class="tag auth">SQL</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"No cadastro eu faço duas coisas em SQL, ambas em funções do pacote <code>db/</code>: primeiro
+          <code>existe_email_ou_cpf(...)</code> (em <code>db/stats.py</code>) faz um <code>SELECT EXISTS</code> para ver se o
+          e-mail ou o CPF já existem; se não existirem, <code>inserir_cidadao(...)</code> (em <code>db/cidadao.py</code>) faz o
+          <code>INSERT</code> com a senha já em hash. A view <code>cadastro_view</code> (Bruno) só chama essas funções."</div>
+          <div class="arquivo">backend/portal/db/stats.py — existe_email_ou_cpf · db/cidadao.py — inserir_cidadao</div>
+          <pre class="cod">cursor.execute(
+    "SELECT EXISTS("
+    "  SELECT 1 FROM cidadao WHERE LOWER(email) = %s"
+    ") OR EXISTS("
+    "  SELECT 1 FROM cidadao WHERE cpf = %s"
+    ")",
+    [d["email"].lower(), d["cpf"]],
+)
+ja_existe = cursor.fetchone()[0]
+...
+cursor.execute(
+    "INSERT INTO cidadao "
+    "(nome_completo, cpf, dt_nascimento, telefone, email, "
+    "senha_hash, ..., perfil, ativo, dt_cadastro) "
+    "VALUES (%s, %s, %s, %s, %s, %s, ..., %s, %s, %s)",
+    [d["nome_completo"], d["cpf"], ..., make_password(d["senha"]), ..., "CID", True, timezone.now()],
+)</pre>
+          <ul class="exp">
+            <li><code>SELECT EXISTS(...) OR EXISTS(...)</code>: retorna verdadeiro/falso se já há e-mail OU CPF iguais.</li>
+            <li>Se <code>ja_existe</code> for verdadeiro, mostra "E-mail ou CPF já cadastrado" e não insere.</li>
+            <li><code>INSERT INTO cidadao ... VALUES (...)</code>: cria o registro. A senha entra como
+            <code>make_password(...)</code> (hash), e o perfil é fixo em <code>"CID"</code>.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 6. ABRIR CHAMADO -->
+      <details class="crud">
+        <summary>Abrir chamado — protocolo + INSERT + Trigger 1 <span class="tag sql">INSERT</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Para abrir um chamado eu gero o número de protocolo de forma atômica (sem dois iguais),
+          faço o <code>INSERT</code> na tabela <code>chamado</code> e registro a foto. Eu <b>não</b> insiro o status
+          inicial — um <i>trigger</i> do banco cria sozinho o histórico 'AB' (Aberto)."</div>
+          <div class="arquivo">backend/portal/utils.py — proximo_protocolo (linhas ~30-60)</div>
+          <pre class="cod">cursor.execute(
+    "INSERT INTO protocolo_seq (ano, ultimo_numero) VALUES (%s, 1) "
+    "ON CONFLICT (ano) DO UPDATE SET ultimo_numero = protocolo_seq.ultimo_numero + 1 "
+    "RETURNING ultimo_numero",
+    [y],
+)
+n = cursor.fetchone()[0]
+protocolo = f"{y}{n:06d}"   # ex.: 2026000001</pre>
+          <ul class="exp">
+            <li><code>INSERT ... ON CONFLICT (ano) DO UPDATE ... RETURNING</code>: é um "UPSERT". Se o ano ainda não
+            existe, cria com 1; se já existe, soma +1. Tudo em <b>uma</b> operação atômica — sem risco de dois
+            chamados pegarem o mesmo número.</li>
+            <li>O protocolo é o ano + 6 dígitos: <code>f"{y}{n:06d}"</code>.</li>
+          </ul>
+          <div class="arquivo">backend/portal/services/chamado.py — criar_novo_chamado (linhas ~20-50)</div>
+          <pre class="cod">cursor.execute(
+    "INSERT INTO chamado "
+    "(num_protocolo, prioridade, ponto_de_referencia, descricao, "
+    "dt_abertura, atualizado_em, id_cidadao, id_servico, id_bairro) "
+    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
+    "RETURNING id_chamado",
+    [protocolo, 0, ponto_referencia or None, descricao,
+     now, now, cidadao.pk, servico.pk, bairro.pk],
+)
+chamado_id = cursor.fetchone()[0]
+cursor.execute(
+    "INSERT INTO foto_chamado (id_chamado, url_foto, dt_upload) "
+    "VALUES (%s, %s, %s)",
+    [chamado_id, url, now],
+)</pre>
+          <ul class="exp">
+            <li><code>RETURNING id_chamado</code>: o INSERT já devolve o id gerado — sem precisar de outra consulta.</li>
+            <li>Logo depois, insere a foto na tabela <code>foto_chamado</code> ligada a esse chamado.</li>
+            <li>O status "AB" aparece sozinho graças ao <b>Trigger 1</b> (ver card "Triggers &amp; funções").</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 7. JOIN LATERAL -->
+      <details class="crud">
+        <summary>Status atual — o truque do <code>JOIN LATERAL</code> <span class="tag sql">consulta-chave</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Como o chamado não tem status, em toda listagem eu preciso descobrir o último status de cada
+          chamado. Faço isso com <code>JOIN LATERAL</code>: para cada chamado, rodo uma subconsulta que pega só o
+          registro mais recente do histórico. É a consulta mais importante do projeto. Esse trecho fica num
+          helper reutilizável, <code>sql_lateral_ultimo_status()</code>, usado pelas listagens do cidadão e da equipe."</div>
+          <div class="arquivo">backend/portal/db/_shared.py — sql_lateral_ultimo_status (~linha 54)</div>
+          <pre class="cod">FROM chamado c
+JOIN servico s ON c.id_servico = s.id_servico
+JOIN bairro b ON c.id_bairro = b.id_bairro
+JOIN LATERAL (
+  SELECT sc.sigla, sc.descricao, sc.id_status FROM historico_chamado hc
+  JOIN status_chamado sc ON hc.id_status = sc.id_status
+  WHERE hc.id_chamado = c.id_chamado
+  ORDER BY hc.dt_alteracao DESC LIMIT 1
+) ultimo ON TRUE
+WHERE c.id_cidadao = %s</pre>
+          <ul class="exp">
+            <li><code>JOIN LATERAL (...)</code>: a subconsulta entre parênteses roda <b>para cada chamado</b>
+            (como um "para cada"), enxergando o <code>c.id_chamado</code> de fora.</li>
+            <li><code>ORDER BY hc.dt_alteracao DESC LIMIT 1</code>: pega o histórico mais recente = o status atual.</li>
+            <li><code>WHERE c.id_cidadao = %s</code>: garante que o cidadão só vê os próprios chamados.</li>
+            <li>A mesma técnica aparece em <code>db.popular_status</code> (detalhe) e na lista da equipe.</li>
+            <li>Como esse fragmento monta SQL com nomes de coluna por <i>f-string</i>, o helper só aceita colunas de uma
+            <b>lista branca</b> (<code>COLUNAS_LATERAL_VALIDAS</code>) e valida o alias — evita SQL injection.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 8. SEMÁFORO -->
+      <details class="crud">
+        <summary>Semáforo e prioridade (verde/amarelo/vermelho) <span class="tag sql">CASE / agregação</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"O semáforo compara quantos dias o chamado está aberto com os prazos <b>globais</b>
+          (tabela <code>configuracao_semaforo</code>). Tem duas formas no código: uma função simples por chamado, e uma
+          consulta SQL que conta tudo de uma vez (verde/amarelo/vermelho) usando <code>CASE WHEN</code> e intervalos de dias."</div>
+          <div class="arquivo">backend/portal/db/stats.py — cor_semaforo (~linha 11)</div>
+          <pre class="cod">def cor_semaforo(dt_abertura, prazo_amarelo_dias, prazo_vermelho_dias):
+    dias = (timezone.now() - dt_abertura).days
+    if dias &gt;= prazo_vermelho_dias:
+        return "vermelho"
+    if dias &gt;= prazo_amarelo_dias:
+        return "amarelo"
+    return "verde"</pre>
+          <ul class="exp">
+            <li><code>dias = (agora - dt_abertura).days</code>: dias desde a abertura.</li>
+            <li>Se passou do prazo vermelho → "vermelho"; senão se passou do amarelo → "amarelo"; senão "verde".</li>
+          </ul>
+          <div class="arquivo">backend/portal/db/stats.py — calcular_stats_semaforo (~linha 24)</div>
+          <pre class="cod">SELECT
+  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) &lt; make_interval(days := cfg.prazo_amarelo_dias) THEN 1 ELSE 0 END), 0),
+  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) &gt;= make_interval(days := cfg.prazo_amarelo_dias)
+    AND (%s - c.dt_abertura) &lt; make_interval(days := cfg.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0),
+  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) &gt;= make_interval(days := cfg.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0)
+FROM chamado c
+CROSS JOIN configuracao_semaforo cfg
+WHERE TRUE</pre>
+          <ul class="exp">
+            <li><code>CROSS JOIN configuracao_semaforo cfg</code>: junta a única linha de prazos globais a cada chamado.</li>
+            <li><code>make_interval(days := cfg.prazo_amarelo_dias)</code>: transforma o número de dias num
+            intervalo de tempo para comparar com <code>(agora - dt_abertura)</code>.</li>
+            <li>Cada <code>SUM(CASE WHEN ... THEN 1 ELSE 0 END)</code> conta uma faixa: no prazo (verde),
+            atenção (amarelo) e crítico (vermelho), tudo em <b>uma só consulta</b>.</li>
+            <li><code>COALESCE(..., 0)</code>: se não houver chamados, devolve 0 em vez de NULL.</li>
+            <li>Há ainda <code>calcular_stats_semaforo_por_servico()</code>, que faz a mesma contagem agrupada por serviço
+            (<code>GROUP BY s.id_servico, s.nome</code>).</li>
+            <li>A <b>prioridade</b> (0 a 5) é um campo separado em <code>chamado.prioridade</code>, definido pela
+            equipe na tela de edição (ver card "Editar chamado").</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 9. GESTÃO DE CHAMADOS (LISTA EQUIPE) -->
+      <details class="crud">
+        <summary>Gestão de Chamados — lista da equipe <span class="tag core">CORE</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Na tela de Gestão de Chamados a equipe vê TODOS os chamados. O SQL é parecido com o do
+          cidadão, mas sem filtrar por cidadão — começa com <code>WHERE TRUE</code> e vai juntando os filtros
+          (bairro, status, serviço, datas). Também junta com <code>cidadao</code> para mostrar quem abriu. Fica na
+          função <code>listar_chamados_equipe</code> de <code>db/chamado.py</code>; a view só monta o dicionário de filtros."</div>
+          <div class="arquivo">backend/portal/db/chamado.py — listar_chamados_equipe (~linha 140)</div>
+          <pre class="cod">FROM chamado c
+JOIN servico s ON c.id_servico = s.id_servico
+JOIN bairro b ON c.id_bairro = b.id_bairro
+JOIN cidadao ci ON c.id_cidadao = ci.id_cidadao
+JOIN LATERAL (
+  SELECT sc.sigla, sc.descricao, sc.id_status FROM historico_chamado hc
+  JOIN status_chamado sc ON hc.id_status = sc.id_status
+  WHERE hc.id_chamado = c.id_chamado
+  ORDER BY hc.dt_alteracao DESC LIMIT 1
+) ultimo ON TRUE
+WHERE TRUE
+-- filtros opcionais somados conforme a query string:
+AND c.id_bairro = %s
+AND ultimo.id_status = %s
+AND c.dt_abertura::date &gt;= %s
+AND ultimo.sigla NOT IN ('CO', 'CA')   -- enquanto "mostrar encerrados" estiver desligado</pre>
+          <ul class="exp">
+            <li><code>WHERE TRUE</code>: truque para ir concatenando <code>AND ...</code> sem precisar de "if" no SQL.</li>
+            <li><code>c.dt_abertura::date &gt;= %s</code>: <code>::date</code> converte o timestamp em data, para
+            comparar só o dia.</li>
+            <li>Por padrão esconde os chamados encerrados (<code>ultimo.sigla NOT IN ('CO','CA')</code>) — a equipe
+            pode mostrá-los marcando "mostrar encerrados".</li>
+            <li>A ordenação padrão é por <code>c.prioridade</code> (urgentes primeiro) com <code>dt_abertura</code> de
+            desempate, e sempre empurra os encerrados para o fim (<code>CASE WHEN ultimo.sigla IN ('CO','CA')...</code>).</li>
+            <li>Os "dias em aberto" da tabela são calculados no Python por <code>formatar_dias_em_aberto</code> (ver card do Bruno).</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 10. EDITAR CHAMADO -->
+      <details class="crud">
+        <summary>Editar chamado — status, prioridade, resolução, observação <span class="tag core">CORE</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Quando a equipe muda o status, eu NÃO faço UPDATE de status — faço um <b>INSERT</b> novo no
+          histórico (função <code>db.criar_historico</code>). Esse INSERT dispara o Trigger 2B, que cuida da data de
+          conclusão e da notificação. Depois, em <code>alterar_status</code>, faço um UPDATE montado dinamicamente só
+          com os campos que mudaram (prioridade e/ou resolução). Observação é só mais um INSERT no histórico."</div>
+          <div class="arquivo">backend/portal/db/historico.py — criar_historico (~linha 85)</div>
+          <pre class="cod">cursor.execute(
+    "INSERT INTO historico_chamado "
+    "(id_chamado, id_servidor, id_status, observacao, dt_alteracao) "
+    "VALUES (%s, %s, %s, %s, %s) "
+    "RETURNING id_historico_chamado",
+    [chamado_id, servidor_id, status_id, observacao, dt_alteracao],
+)</pre>
+          <div class="arquivo">backend/portal/services/chamado.py — alterar_status (linhas ~53-82)</div>
+          <pre class="cod">db.criar_historico(chamado_id, novo_status.pk, servidor_id=servidor_id, observacao=observacao)
+
+update_fields = []
+update_params = []
+if prioridade is not None:
+    update_fields.append("prioridade = %s")
+    update_params.append(max(0, min(5, int(prioridade))))
+if resolucao is not None:
+    update_fields.append("resolucao = %s")
+    update_params.append(resolucao)
+
+if update_fields:
+    update_params.append(chamado_id)
+    cursor.execute(
+        f"UPDATE chamado SET {', '.join(update_fields)} WHERE id_chamado = %s",
+        update_params,
+    )</pre>
+          <ul class="exp">
+            <li>O <code>INSERT</code> registra <b>quem</b> (<code>id_servidor</code>), <b>quando</b> e <b>qual status</b>.
+            Como é o registro mais novo, ele passa a ser o status atual.</li>
+            <li>O <code>UPDATE chamado</code> é <b>dinâmico</b>: a view só passa <code>resolucao</code> quando o status é
+            CO/CA, então a resolução só é gravada nesses casos; a prioridade vai sempre.</li>
+            <li>Os nomes das colunas no <code>UPDATE</code> são literais do código (não entrada do usuário), e os valores
+            vão por parâmetro <code>%s</code> — sem risco de injection.</li>
+          </ul>
+          <p class="sub">Observação = INSERT no histórico (mesmo status, só com texto)</p>
+          <pre class="cod"># services/chamado.py — adicionar_observacao: pega o status atual e repete num novo INSERT
+cursor.execute(
+    "SELECT id_status FROM historico_chamado "
+    "WHERE id_chamado = %s ORDER BY dt_alteracao DESC LIMIT 1",
+    [chamado_id],
+)
+row = cursor.fetchone()
+db.criar_historico(chamado_id, row[0], servidor_id=servidor_id, observacao=texto)</pre>
+          <ul class="exp">
+            <li>A observação não muda o status — busca o status atual e repete-o num novo histórico, preenchendo
+            o campo <code>observacao</code>.</li>
+            <li>No detalhe, as observações são os históricos que têm texto em <code>observacao</code>.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 11. NOTIFICAÇÕES -->
+      <details class="crud">
+        <summary>Notificações — geradas por trigger <span class="tag sql">trigger + SELECT</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"O cidadão recebe uma notificação automaticamente toda vez que o status do chamado muda.
+          Eu não crio a notificação no código Python: quem cria é o <b>Trigger 2B</b> no banco. As telas só leem e
+          apagam notificações."</div>
+          <div class="arquivo">database/03_functions_triggers.sql — trecho do Trigger 2B (linhas ~109-116)</div>
+          <pre class="cod">msg := left(
+    'Chamado ' || v_protocolo || ': status alterado para ' || COALESCE(desc_nova, nova_sigla),
+    200
+);
+INSERT INTO notificacao (id_chamado, mensagem)
+VALUES (NEW.id_chamado, msg);</pre>
+          <div class="arquivo">backend/portal/db/notificacao.py — listar_notificacoes_cidadao / excluir_notificacao (~linhas 12-58)</div>
+          <pre class="cod">SELECT n.id_notificacao, n.mensagem, n.lida, n.arquivada, n.dt_envio, n.id_chamado
+FROM notificacao n
+WHERE n.arquivada = FALSE
+AND n.id_chamado IN (
+    SELECT c.id_chamado FROM chamado c WHERE c.id_cidadao = %s
+)
+ORDER BY n.dt_envio DESC
+-- e para apagar:
+DELETE FROM notificacao
+WHERE id_notificacao = %s
+AND id_chamado IN (SELECT c.id_chamado FROM chamado c WHERE c.id_cidadao = %s)</pre>
+          <ul class="exp">
+            <li>O trigger monta a mensagem (protocolo + novo status) e faz <code>INSERT INTO notificacao</code>.</li>
+            <li>A <b>subconsulta</b> <code>id_chamado IN (SELECT ... WHERE c.id_cidadao = %s)</code> garante que o
+            cidadão só lê/apaga notificações dos próprios chamados (segurança).</li>
+            <li>Ao abrir a tela, <code>marcar_notificacoes_lidas</code> faz um
+            <code>UPDATE notificacao SET lida = TRUE WHERE id_notificacao = ANY(%s)</code>.</li>
+            <li>O <b>contador</b> do sininho usa um <code>SELECT COUNT(*)</code> parecido em
+            <code>context_processors.py</code> (só notificações não lidas e não arquivadas).</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 12. TRIGGERS & FUNÇÕES -->
+      <details class="crud">
+        <summary>Triggers e funções (regra de negócio no banco) <span class="tag sql">PL/pgSQL</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Tem três gatilhos principais. O Trigger 1 cria o histórico 'AB' ao abrir o chamado.
+          O 2A atualiza o campo <code>atualizado_em</code>. O 2B é o mais importante: ao inserir um novo status, ele
+          ajusta a data de conclusão e cria a notificação."</div>
+          <div class="arquivo">database/03_functions_triggers.sql</div>
+          <p class="sub">Trigger 1 — cria o status "AB" ao abrir o chamado (linhas ~17-41)</p>
+          <pre class="cod">CREATE OR REPLACE FUNCTION fn_chamado_after_insert_historico_ab()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE v_id_status INTEGER;
+BEGIN
+    SELECT id_status INTO v_id_status FROM status_chamado WHERE sigla = 'AB';
+    INSERT INTO historico_chamado (id_chamado, id_servidor, id_status, observacao)
+    VALUES (NEW.id_chamado, NULL, v_id_status, NULL);
+    RETURN NEW;
+END; $$;
+
+CREATE TRIGGER trg_chamado_after_insert_historico_ab
+    AFTER INSERT ON chamado FOR EACH ROW
+    EXECUTE PROCEDURE fn_chamado_after_insert_historico_ab();</pre>
+          <ul class="exp">
+            <li><code>AFTER INSERT ON chamado</code>: dispara depois que um chamado é criado.</li>
+            <li>Busca o id do status 'AB' e insere o primeiro histórico (por isso a view não insere status).</li>
+            <li><code>NEW.id_chamado</code> é o chamado recém-criado.</li>
+          </ul>
+          <p class="sub">Trigger 2B — conclusão + notificação (linhas ~79-126)</p>
+          <pre class="cod">CREATE OR REPLACE FUNCTION fn_historico_after_insert_status()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE nova_sigla CHAR(2); desc_nova VARCHAR(200); v_protocolo VARCHAR(20); msg VARCHAR(200);
+BEGIN
+    SELECT sigla, descricao INTO nova_sigla, desc_nova
+    FROM status_chamado WHERE id_status = NEW.id_status;
+    SELECT num_protocolo INTO v_protocolo FROM chamado WHERE id_chamado = NEW.id_chamado;
+
+    IF nova_sigla IN ('CO', 'CA') THEN
+        UPDATE chamado SET dt_conclusao = COALESCE(dt_conclusao, CURRENT_TIMESTAMP)
+        WHERE id_chamado = NEW.id_chamado;
+    ELSIF nova_sigla IN ('AB', 'EA', 'EE') THEN
+        UPDATE chamado SET dt_conclusao = NULL WHERE id_chamado = NEW.id_chamado;
+    END IF;
+
+    msg := left('Chamado ' || v_protocolo || ': status alterado para ' || COALESCE(desc_nova, nova_sigla), 200);
+    INSERT INTO notificacao (id_chamado, mensagem) VALUES (NEW.id_chamado, msg);
+    RETURN NEW;
+END; $$;
+
+CREATE TRIGGER trg_historico_after_insert_status
+    AFTER INSERT ON historico_chamado FOR EACH ROW
+    EXECUTE PROCEDURE fn_historico_after_insert_status();</pre>
+          <ul class="exp">
+            <li>Dispara <code>AFTER INSERT ON historico_chamado</code> — ou seja, sempre que muda o status.</li>
+            <li>Se o novo status é CO/CA, grava a data de conclusão; se for AB/EA/EE (reaberto), limpa a data.</li>
+            <li>Monta a mensagem e cria a notificação. Centraliza a regra no banco — a aplicação só insere o status.</li>
+            <li>O <b>Trigger 2A</b> (<code>BEFORE UPDATE ON chamado</code>) só faz <code>NEW.atualizado_em := CURRENT_TIMESTAMP</code>.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 13. REGRAS DE INTEGRIDADE -->
+      <details class="crud">
+        <summary>Regras de integridade (triggers que protegem os dados) <span class="tag sql">CHECK / RAISE</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Algumas regras de negócio viraram triggers de proteção: não dá pra adicionar foto/observação
+          em chamado encerrado, a avaliação não pode ser alterada depois de feita, e o histórico é imutável
+          (não dá UPDATE; DELETE só no fluxo controlado de exclusão)."</div>
+          <div class="arquivo">database/04_rules.sql</div>
+          <p class="sub">Avaliação imutável (linhas ~91-106)</p>
+          <pre class="cod">CREATE OR REPLACE FUNCTION fn_rule_avaliacao_imutavel()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    IF OLD.nota_avaliacao IS NOT NULL
+       AND (NEW.nota_avaliacao IS DISTINCT FROM OLD.nota_avaliacao
+            OR NEW.comentario_avaliacao IS DISTINCT FROM OLD.comentario_avaliacao)
+    THEN
+        RAISE EXCEPTION 'A avaliacao ja foi registrada e nao pode ser alterada.';
+    END IF;
+    RETURN NEW;
+END; $$;</pre>
+          <ul class="exp">
+            <li><code>OLD</code> é como estava antes; <code>NEW</code> é o que se quer gravar.</li>
+            <li><code>IS DISTINCT FROM</code> compara tratando NULL como valor (evita problema do <code>= NULL</code>).</li>
+            <li>Se já havia nota e alguém tenta mudar, <code>RAISE EXCEPTION</code> bloqueia.</li>
+          </ul>
+          <p class="sub">Histórico imutável (linhas ~133-141 e ~161-174)</p>
+          <pre class="cod">CREATE OR REPLACE FUNCTION fn_historico_sem_update()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE EXCEPTION 'Histórico de chamado é imutável: UPDATE não permitido.';
+END; $$;
+-- DELETE só passa se a aplicação setou portal.excluindo = 'true':
+CREATE OR REPLACE FUNCTION fn_historico_sem_delete()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    IF current_setting('portal.excluindo', true) IS DISTINCT FROM 'true' THEN
+        RAISE EXCEPTION 'Historico de chamado e imutavel: DELETE nao permitido diretamente.';
+    END IF;
+    RETURN OLD;
+END; $$;</pre>
+          <ul class="exp">
+            <li>Qualquer UPDATE em histórico é bloqueado — preserva a auditoria.</li>
+            <li>DELETE só é liberado dentro do fluxo oficial de exclusão (a view seta a variável de sessão
+            <code>portal.excluindo</code>). Há triggers iguais para fotos/observações em chamado encerrado.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 14. VIEW -->
+      <details class="crud">
+        <summary>View de estatísticas (<code>vw_estatisticas_chamados</code>) <span class="tag sql">VIEW</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Para o painel de estatísticas criei uma VIEW que agrupa os chamados por categoria, bairro e
+          status. Ela também usa <code>JOIN LATERAL</code> para pegar o status atual de cada chamado."</div>
+          <div class="arquivo">database/05_views.sql (linhas ~22-50)</div>
+          <pre class="cod">CREATE VIEW vw_estatisticas_chamados AS
+SELECT
+    cat.nome        AS categoria,
+    b.nome_bairro   AS bairro,
+    s.sigla         AS sigla_status,
+    s.descricao     AS status_descricao,
+    COUNT(*)::BIGINT AS total_chamados
+FROM chamado ch
+JOIN servico srv ON srv.id_servico = ch.id_servico
+JOIN categoria_servico cat ON cat.id_categoria = srv.id_categoria
+JOIN bairro b ON b.id_bairro = ch.id_bairro
+JOIN LATERAL (
+    SELECT id_status FROM historico_chamado
+    WHERE id_chamado = ch.id_chamado
+    ORDER BY dt_alteracao DESC LIMIT 1
+) ultimo_h ON TRUE
+JOIN status_chamado s ON s.id_status = ultimo_h.id_status
+WHERE cat.ativo AND srv.ativo AND b.ativo
+GROUP BY cat.nome, b.nome_bairro, s.sigla, s.descricao;</pre>
+          <ul class="exp">
+            <li>Uma <b>VIEW</b> é uma consulta salva com nome; a aplicação só faz <code>SELECT * FROM vw_estatisticas_chamados</code>.</li>
+            <li><code>COUNT(*) ... GROUP BY categoria, bairro, status</code>: total de chamados por combinação.</li>
+            <li>De novo o <code>JOIN LATERAL</code> traz o status atual de cada chamado.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 15. DASHBOARD EQUIPE (queries) -->
+      <details class="crud">
+        <summary>Dashboard da equipe — consultas dos gráficos <span class="tag sql">COUNT / GROUP BY</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"O dashboard de gráficos tem várias consultas: concluídos hoje, concluídos na semana,
+          distribuição por status e top 10 bairros. Todas usam a subconsulta do último status."</div>
+          <div class="arquivo">backend/portal/db/stats.py — buscar_stats_dashboard (~linha 125)</div>
+          <pre class="cod">-- concluídos hoje
+SELECT COUNT(*) FROM chamado c
+WHERE (
+    SELECT sc.sigla FROM historico_chamado hc
+    JOIN status_chamado sc ON hc.id_status = sc.id_status
+    WHERE hc.id_chamado = c.id_chamado
+    ORDER BY hc.dt_alteracao DESC LIMIT 1
+) = 'CO'
+AND c.dt_conclusao::date = %s;
+
+-- top 10 bairros
+SELECT b.nome_bairro, COUNT(c.id_chamado) AS qtd
+FROM chamado c
+JOIN bairro b ON c.id_bairro = b.id_bairro
+GROUP BY b.nome_bairro
+ORDER BY qtd DESC
+LIMIT 10;</pre>
+          <ul class="exp">
+            <li>"Concluídos hoje" = último status 'CO' e <code>dt_conclusao::date = hoje</code>.</li>
+            <li>"Top 10 bairros" = <code>GROUP BY</code> bairro, <code>COUNT</code>, <code>ORDER BY qtd DESC LIMIT 10</code>.</li>
+            <li>Esses números viram os gráficos (Chart.js) que o Yuuki mostra.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 16-20 CRUDs SQL -->
+      <details class="crud">
+        <summary>CRUD Banners (SQL) <span class="tag crud">CRUD</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Banners têm CRUD completo em SQL (funções de <code>db/catalogo.py</code>, chamadas pelas views
+          <code>gestao_banner_*</code>): listar, criar (com ordem automática), editar, excluir (DELETE físico) e
+          reordenar (troca a ordem com o vizinho)."</div>
+          <div class="arquivo">backend/portal/db/catalogo.py — listar_banners_todos / inserir_banner / atualizar_banner / excluir_banner / reordenar_banner (~linhas 202-278)</div>
+          <pre class="cod">-- listar
+SELECT id_banner, titulo, descricao, url_imagem, link, ordem, ativo, dt_criacao
+FROM banner_publicacao ORDER BY ordem, dt_criacao DESC;
+
+-- criar (ordem = maior + 1)
+SELECT COALESCE(MAX(ordem), -1) + 1 FROM banner_publicacao;
+INSERT INTO banner_publicacao (titulo, descricao, url_imagem, link, ordem, ativo, dt_criacao)
+VALUES (%s, %s, %s, %s, %s, %s, %s);
+
+-- editar / excluir
+UPDATE banner_publicacao SET titulo=%s, descricao=%s, url_imagem=%s, link=%s, ordem=%s WHERE id_banner=%s;
+DELETE FROM banner_publicacao WHERE id_banner = %s;</pre>
+          <ul class="exp">
+            <li><code>COALESCE(MAX(ordem), -1) + 1</code>: novo banner entra no fim do carrossel.</li>
+            <li>Reordenar = achar o vizinho (<code>ordem &lt; %s</code> ou <code>&gt; %s</code>, com LIMIT 1) e trocar as ordens (swap).</li>
+            <li>Banner é o único CRUD com <b>DELETE físico</b>; os demais usam "soft delete" (<code>ativo = FALSE</code>).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="crud">
+        <summary>CRUD Bairros (SQL) <span class="tag crud">CRUD</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Bairros: listar todos, criar, editar e ativar/desativar (soft delete). SQL em
+          <code>db/catalogo.py</code>, chamado pelas views <code>gestao_bairro_*</code>."</div>
+          <div class="arquivo">backend/portal/db/catalogo.py — listar_bairros_todos / inserir_bairro / atualizar_bairro / desativar_bairro / ativar_bairro (~linhas 153-194)</div>
+          <pre class="cod">SELECT id_bairro, nome_bairro, cep, regiao, ativo FROM bairro ORDER BY nome_bairro;
+INSERT INTO bairro (nome_bairro, cep, regiao, ativo) VALUES (%s, %s, %s, %s);
+UPDATE bairro SET nome_bairro=%s, cep=%s, regiao=%s, ativo=%s WHERE id_bairro=%s;
+UPDATE bairro SET ativo = FALSE WHERE id_bairro = %s;   -- desativar
+UPDATE bairro SET ativo = TRUE  WHERE id_bairro = %s;   -- reativar</pre>
+          <ul class="exp">
+            <li>A listagem traz ativos e inativos (sem filtro de <code>ativo</code>).</li>
+            <li>"Desativar/Reativar" é apenas um UPDATE no campo <code>ativo</code> (não apaga o registro).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="crud">
+        <summary>CRUD Serviços + Prazos (SQL) <span class="tag crud">CRUD</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Serviços: listar (só ativos, com JOIN na categoria), criar, editar, desativar. E há uma tela
+          separada que edita os prazos <b>globais</b> do semáforo (não por serviço). SQL em <code>db/catalogo.py</code>."</div>
+          <div class="arquivo">backend/portal/db/catalogo.py — listar_servicos_com_categoria / inserir_servico / desativar_servico (~linhas 112-150)</div>
+          <pre class="cod">SELECT s.id_servico, s.nome, s.descricao, s.ativo, s.id_categoria, cat.nome AS categoria_nome
+FROM servico s JOIN categoria_servico cat ON s.id_categoria = cat.id_categoria
+WHERE s.ativo = TRUE ORDER BY s.nome;
+
+INSERT INTO servico (nome, descricao, ativo, id_categoria)
+VALUES (%s, %s, %s, %s);
+UPDATE servico SET ativo = FALSE WHERE id_servico = %s;   -- soft delete</pre>
+          <div class="arquivo">backend/portal/db/config.py — atualizar_configuracao_prazos (~linha 23)</div>
+          <pre class="cod">UPDATE configuracao_semaforo SET prazo_amarelo_dias = %s, prazo_vermelho_dias = %s
+WHERE id = 1;   -- prazos GLOBAIS (singleton), não por serviço</pre>
+          <ul class="exp">
+            <li>O <code>JOIN</code> com <code>categoria_servico</code> traz o nome da categoria de cada serviço.</li>
+            <li>O serviço <b>não</b> guarda prazos. Os prazos são globais em <code>configuracao_semaforo</code> e a
+            tela de prazos (<code>gestao_prazos</code>, só GES) altera a única linha (<code>WHERE id = 1</code>).</li>
+            <li>Alterar os prazos muda diretamente o comportamento do semáforo (card "Semáforo").</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="crud">
+        <summary>CRUD Categorias (SQL) <span class="tag crud">CRUD</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Categorias: listar ativas, criar (ligada à secretaria) e editar. SQL em <code>db/catalogo.py</code>,
+          chamado pelas views <code>gestao_categorias</code> / <code>gestao_categoria_edit</code>."</div>
+          <div class="arquivo">backend/portal/db/catalogo.py — listar_categorias_todas / inserir_categoria / atualizar_categoria (~linhas 86-110)</div>
+          <pre class="cod">SELECT id_categoria, nome, descricao, ativo
+FROM categoria_servico WHERE ativo = TRUE ORDER BY nome;
+
+INSERT INTO categoria_servico (nome, descricao, ativo, id_secretaria) VALUES (%s, %s, %s, %s);
+UPDATE categoria_servico SET nome = %s, descricao = %s WHERE id_categoria = %s;</pre>
+          <ul class="exp">
+            <li>Antes do INSERT, busca a secretaria com <code>SELECT id_secretaria FROM secretaria LIMIT 1</code>
+            (o sistema tem uma só).</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="crud">
+        <summary>CRUD Colaboradores (SQL) <span class="tag crud">CRUD</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Colaboradores são servidores com perfil 'COL'. Listo, crio (com senha provisória em hash),
+          ativo/inativo e reset de senha. Verifico e-mail/CPF duplicado antes de inserir. SQL em <code>db/servidor.py</code>,
+          chamado pelas views <code>gestao_colaborador_*</code>."</div>
+          <div class="arquivo">backend/portal/db/servidor.py — listar_colaboradores / inserir_colaborador / alternar_colaborador_ativo / resetar_senha_colaborador (~linhas 71-127)</div>
+          <pre class="cod">SELECT id_servidor, nome_completo, cpf, email, telefone, perfil, ativo, dt_cadastro
+FROM servidor WHERE perfil = 'COL' ORDER BY ativo DESC, nome_completo;
+
+INSERT INTO servidor (nome_completo, cpf, ..., senha_hash, senha_temporaria, perfil, ativo, dt_cadastro, id_secretaria)
+VALUES (%s, %s, ..., %s, %s, %s, %s, %s, %s);   -- senha_temporaria='1', perfil='COL'
+
+UPDATE servidor SET ativo = %s WHERE id_servidor = %s;                              -- toggle
+UPDATE servidor SET senha_hash = %s, senha_temporaria = '1'
+WHERE id_servidor = %s AND perfil = 'COL';                                          -- reset senha</pre>
+          <ul class="exp">
+            <li><code>senha_temporaria = '1'</code>: marca que é o primeiro acesso (obriga trocar a senha).</li>
+            <li>A senha sempre entra como <code>make_password(...)</code> (hash), nunca texto puro.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 20b. FOTO DE PERFIL (SQL) -->
+      <details class="crud">
+        <summary>CRUD Foto de perfil (SQL) <span class="tag crud">CRUD</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"A foto de perfil do usuário (cidadão ou servidor) é só uma URL guardada na coluna
+          <code>foto_perfil</code> da tabela certa. São duas operações em SQL: gravar a URL (UPDATE) e remover
+          (UPDATE para <code>NULL</code>). O nome da tabela é validado por uma lista branca antes de entrar na query."</div>
+          <div class="arquivo">backend/portal/db/senha.py — atualizar_foto_perfil / remover_foto_perfil (~linhas 36-52)</div>
+          <pre class="cod">-- gravar/atualizar a foto (cidadao OU servidor):
+UPDATE cidadao  SET foto_perfil = %s   WHERE id_cidadao  = %s;
+-- remover a foto:
+UPDATE servidor SET foto_perfil = NULL WHERE id_servidor = %s;</pre>
+          <ul class="exp">
+            <li>O nome da tabela entra por <i>f-string</i>, mas só depois de passar por <code>_validar_tabela(tabela)</code>
+            (lista branca <code>{cidadao, servidor}</code>) — sem risco de injection. O valor (URL) e o id vão por <code>%s</code>.</li>
+            <li>A coluna de id (<code>id_cidadao</code> ou <code>id_servidor</code>) é escolhida conforme a tabela.</li>
+            <li>Remover não apaga o registro: só zera (<code>NULL</code>) a coluna <code>foto_perfil</code>.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- 21. EXCLUIR CHAMADO -->
+      <details class="crud">
+        <summary>Excluir chamado (só gestor) — DELETE em cascata <span class="tag sql">transação</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Só o gestor exclui chamado. É a única operação que apaga histórico. A view
+          <code>gestao_chamado_excluir</code> grava o log de auditoria e chama <code>db.excluir_chamado_com_cascata</code>,
+          que liga a variável de sessão <code>portal.excluindo</code> (destrava os triggers de proteção) e apaga os filhos
+          na ordem certa por causa das FKs. Tudo dentro de uma transação."</div>
+          <div class="arquivo">backend/portal/db/chamado.py — excluir_chamado_com_cascata (~linha 64) · view: views_equipe.py — gestao_chamado_excluir (~linhas 325-378)</div>
+          <pre class="cod">cursor.execute("SELECT set_config('portal.excluindo', 'true', true)")
+-- log de auditoria antes de apagar:
+INSERT INTO historico_chamado (id_chamado, id_servidor, id_status, observacao, dt_alteracao)
+VALUES (%s, %s, %s, %s, %s);   -- observacao = "[EXCL] ... Justificativa: ..."
+-- DELETE em cascata manual (ordem respeita as FKs):
+DELETE FROM foto_chamado      WHERE id_chamado = %s;
+DELETE FROM historico_chamado WHERE id_chamado = %s;
+DELETE FROM notificacao       WHERE id_chamado = %s;
+DELETE FROM chamado           WHERE id_chamado = %s;</pre>
+          <ul class="exp">
+            <li><code>set_config('portal.excluindo','true', true)</code>: libera os triggers que normalmente
+            bloqueiam DELETE no histórico/chamado.</li>
+            <li>Apaga primeiro os "filhos" (fotos, históricos, notificações) e por último o chamado, por causa das FKs.</li>
+            <li><code>transaction.atomic()</code> garante: ou apaga tudo, ou nada (se der erro, desfaz).</li>
+          </ul>
+        </div>
+      </details>
+
+    </div>
+  </details>
+
+  <!-- ============================================================ -->
+  <!-- ============== BRUNO DIAS — DJANGO / BACKEND ================ -->
+  <!-- ============================================================ -->
+  <details class="integrante bruno">
+    <summary><span class="nome"><span>Bruno Dias<span class="papel">Back-End / Django (as views que orquestram o SQL)</span></span></span></summary>
+    <div class="corpo">
+
+      <div class="nota ok"><b>Mensagem central do Bruno:</b> "As <i>views</i> em Django recebem a requisição,
+      validam os dados (forms e decorators), chamam o SQL (no pacote <code>db/</code> ou inline) e devolvem a página com
+      <code>render</code>. Eu cuido da segurança da senha (hash), das mensagens de sucesso/erro, do controle de acesso
+      por perfil e de cálculos como 'dias em aberto'."</div>
+
+      <!-- VISÃO GERAL -->
+      <details class="crud">
+        <summary>Visão geral — como uma view funciona <span class="tag auth">base</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Cada rota em <code>urls.py</code> aponta para uma função (view). A view decide o que fazer no
+          GET e no POST, chama o SQL e renderiza um template. Os <i>decorators</i> em cima da função controlam quem pode entrar."</div>
+          <div class="arquivo">backend/portal/urls.py · backend/portal/views_*.py</div>
+          <pre class="cod">@perfis("COL", "GES")          # só colaborador e gestor entram
+def equipe_chamados_lista(request):
+    ...
+    return render(request, "portal/equipe/dashboard.html", {...})</pre>
+          <ul class="exp">
+            <li><code>@perfis("COL","GES")</code>: decorator de acesso (explico no card "Controle de acesso").</li>
+            <li><code>request</code>: tudo da requisição (dados do POST, usuário logado em <code>request.portal_user</code>).</li>
+            <li><code>render(request, template, contexto)</code>: monta o HTML com os dados.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- PÁGINA INICIAL -->
+      <details class="crud">
+        <summary>Página inicial — view pública <span class="tag auth">view</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"A home é a view <code>root_view</code>. Ela não exige login. Eu apenas chamo três funções do
+          pacote <code>db/</code> (banners, categorias com serviços e estatísticas — o Rafael mostra o SQL) e mando tudo
+          para o template <code>root.html</code>. A própria view não tem SQL: ela delega para o <code>db</code>."</div>
+          <div class="arquivo">backend/portal/views_root.py — root_view (~linhas 29-35)</div>
+          <pre class="cod">def root_view(request):
+    banners = db.listar_banners_ativos()
+    categorias = db.listar_categorias_com_servicos()
+    stats = db.buscar_stats_publicas()
+    return render(request, "portal/root.html", {
+        "banners": banners, "categorias": categorias, "stats": stats,
+    })</pre>
+          <ul class="exp">
+            <li>Sem decorator de login: rota pública (definida com <code>path("", root_view, name="root")</code>).</li>
+            <li>A view <b>não escreve SQL</b>: chama <code>db.listar_banners_ativos()</code>,
+            <code>db.listar_categorias_com_servicos()</code> e <code>db.buscar_stats_publicas()</code> (todas no pacote
+            <code>db/</code>). É um bom exemplo da separação view ↔ camada de dados.</li>
+            <li>As três listas/dicionários vão no contexto e o template desenha o carrossel, os cards e os números.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- LOGIN -->
+      <details class="crud">
+        <summary>Login — onde valida e onde aparece a mensagem <span class="tag core">muito perguntado</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Aqui está o coração do login. Eu busco o usuário (cidadão, senão servidor). Se não achar,
+          mostro erro. Se achar, comparo a senha digitada com o hash usando <code>check_password</code>. Se bater, crio a
+          sessão e mostro 'Olá, ...'. Se não bater, mostro 'E-mail ou senha incorretos.' É <b>essa</b> mensagem que aparece
+          na tela quando o login está errado."</div>
+          <div class="arquivo">backend/portal/views_auth.py — login_view (linhas ~66-127)</div>
+          <pre class="cod">if request.method == "POST":
+    if _check_login_rate_limit(request):
+        messages.error(request, "Muitas tentativas. Aguarde 5 minutos.")
+        return render(request, "portal/auth/login.html")
+
+    email = (request.POST.get("email") or "").strip().lower()
+    senha = request.POST.get("password") or ""
+
+    user, tipo = db.buscar_cidadao_por_email(email)
+    if not user:
+        user, tipo = db.buscar_servidor_por_email(email)
+
+    if user is None:
+        _record_login_attempt(request)
+        messages.error(request, "E-mail ou senha incorretos.")
+
+    elif check_password(senha, user.senha_hash):
+        request.session.pop("login_attempts", None)
+        request.session.cycle_key()  # novo sessionid (previne Session Fixation)
+        request.session["usuario_id"] = user.pk
+        request.session["usuario_tipo"] = tipo
+        if (user.senha_temporaria or "").strip():
+            request.session["forcar_troca_senha"] = True
+            return redirect("portal:troca_senha_obrigatoria")
+        messages.success(request, f"Olá, {user.nome_completo}.")
+        if tipo == "servidor":
+            return redirect("portal:equipe_dashboard")
+        return redirect("portal:root")
+    else:
+        _record_login_attempt(request)
+        messages.error(request, "E-mail ou senha incorretos.")</pre>
+          <ul class="exp">
+            <li><b>Onde valida se o login está certo:</b> <code>check_password(senha, user.senha_hash)</code> —
+            compara a senha digitada com o hash bcrypt do banco. Retorna verdadeiro/falso.</li>
+            <li><b>Onde aparece a mensagem de erro:</b> <code>messages.error(request, "E-mail ou senha incorretos.")</code>
+            — usada em 2 casos (e-mail não existe OU senha errada; a mensagem é a mesma de propósito, por segurança).</li>
+            <li><b>Mensagem de sucesso:</b> <code>messages.success(request, f"Olá, {user.nome_completo}.")</code>.</li>
+            <li><b>Proteção contra força bruta:</b> <code>_check_login_rate_limit</code> bloqueia após 5 tentativas
+            erradas em 5 minutos (<code>MAX_LOGIN_ATTEMPTS=5</code>, <code>LOGIN_TIMEOUT=300</code>).</li>
+            <li>Se o usuário tem <code>senha_temporaria</code>, é redirecionado para trocar a senha (1º acesso).</li>
+            <li>Servidor vai para o dashboard da equipe; cidadão vai para a home.</li>
+            <li>A mensagem é <b>exibida</b> pelo template <code>base.html</code> (bloco <code>messages</code>) — ver card do Yuuki.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- CADASTRO -->
+      <details class="crud">
+        <summary>Cadastro — validação do formulário e hash <span class="tag auth">view</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"No cadastro eu valido o formulário (<code>CadastroCidadaoForm</code>), checo duplicidade com
+          <code>db.existe_email_ou_cpf</code> e, se estiver tudo certo, gravo com <code>db.inserir_cidadao</code> (a senha
+          já vira hash). Em vez de pedir login de novo, eu já <b>logo o cidadão</b> e mando para a home."</div>
+          <div class="arquivo">backend/portal/views_auth.py — cadastro_view (linhas ~152-193)</div>
+          <pre class="cod">if request.method == "POST":
+    form = CadastroCidadaoForm(request.POST)
+    if form.is_valid():
+        d = form.cleaned_data
+        ja_existe = db.existe_email_ou_cpf("cidadao", d["email"].lower(), d["cpf"])
+        if ja_existe:
+            messages.error(request, "E-mail ou CPF já cadastrado.")
+        else:
+            cidadao_id = db.inserir_cidadao(d)      # INSERT com make_password (hash)
+            request.session.cycle_key()             # já cria a sessão (auto-login)
+            request.session["usuario_id"] = cidadao_id
+            request.session["usuario_tipo"] = "cidadao"
+            messages.success(request, f"Olá, {d['nome_completo']}. Cadastro concluído com sucesso!")
+            return redirect("portal:root")</pre>
+          <ul class="exp">
+            <li><code>form.is_valid()</code>: o Django valida campos obrigatórios, formato de e-mail, etc.</li>
+            <li>O hash é gerado dentro de <code>db.inserir_cidadao</code> com <code>make_password(...)</code> (a senha
+            original nunca é gravada).</li>
+            <li>Sucesso → o cidadão é <b>logado automaticamente</b> e redirecionado para a home (<code>portal:root</code>),
+            não para a tela de login.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- DASHBOARD EQUIPE -->
+      <details class="crud">
+        <summary>Dashboard da equipe — dados para os gráficos <span class="tag auth">view</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"O dashboard de gráficos é a primeira tela do gestor depois do login. A view roda as consultas
+          (concluídos hoje/semana, status, bairros) e converte os resultados para JSON, que o Chart.js usa no template."</div>
+          <div class="arquivo">backend/portal/views_equipe.py — equipe_dashboard (~linhas 385-398)</div>
+          <pre class="cod">stats = db.buscar_stats_dashboard()
+context = {
+    'atendidas_hoje': stats['atendidas_hoje'],
+    'atendidas_semana': stats['atendidas_semana'],
+    'status_labels_json': json.dumps(stats['status_labels']),
+    'status_data_json': json.dumps(stats['status_data']),
+    'bairros_labels_json': json.dumps(stats['bairros_labels']),
+    'bairros_data_json': json.dumps(stats['bairros_data']),
+}
+return render(request, "portal/equipe/estatisticas_graficos.html", context)</pre>
+          <ul class="exp">
+            <li><code>json.dumps(...)</code>: transforma listas Python em texto JSON para o JavaScript ler.</li>
+            <li>O login do servidor redireciona para cá (<code>portal:equipe_dashboard</code> → rota <code>/equipe/</code>).</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- GESTÃO DE CHAMADOS LISTA -->
+      <details class="crud">
+        <summary>Gestão de Chamados — filtros, paginação e "dias em aberto" <span class="tag core">CORE</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Esta view monta um dicionário de filtros a partir da query string e delega a consulta para
+          <code>db.listar_chamados_equipe</code>, que já devolve as linhas com cor do semáforo e 'dias em aberto'. A view
+          ainda busca os contadores do topo e pagina (15 por página)."</div>
+          <div class="arquivo">backend/portal/views_equipe.py — equipe_chamados_lista (linhas ~62-119)</div>
+          <pre class="cod">filtros = {
+    "bairro": _int_none(request.GET.get("bairro")),
+    "status": _int_none(request.GET.get("status")),
+    "servico": _int_none(request.GET.get("servico")),
+    "de": request.GET.get("de"), "ate": request.GET.get("ate"),
+    "mostrar_encerrados": request.GET.get("mostrar_encerrados") == "1",
+    "ordenar_por": request.GET.get("ordenar_por", "prioridade"),
+    "direcao": request.GET.get("direcao", "desc"),
+}
+linhas, total_count = db.listar_chamados_equipe(filtros, pagina=pagina, por_pagina=15)
+stats = db.calcular_stats_semaforo()              # contadores do topo (no prazo/atenção/crítico)
+page_obj, _ = db.paginar(linhas, pagina, por_pagina=15, total_count=total_count)</pre>
+          <p class="sub">Dentro de <code>db.listar_chamados_equipe</code>, ao montar cada linha:</p>
+          <pre class="cod">cor = cor_semaforo(r[4], config.prazo_amarelo_dias, config.prazo_vermelho_dias)
+linhas.append({"ch": ch, "cor": cor, "dias_aberto": formatar_dias_em_aberto(ch.dt_abertura)})</pre>
+          <ul class="exp">
+            <li><b>Onde calcula os dias em aberto:</b> <code>formatar_dias_em_aberto(ch.dt_abertura)</code>
+            (<code>utils.py</code>) — devolve um texto como <code>"12 dia(s)"</code> (ou minutos/horas se for recente).</li>
+            <li><code>cor_semaforo(...)</code>: define a cor de cada linha usando os prazos globais.</li>
+            <li><code>db.calcular_stats_semaforo()</code>: os números dos cards (no prazo / atenção / crítico).</li>
+            <li><code>db.paginar(...)</code>: paginação (15 por página).</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- EDITAR CHAMADO -->
+      <details class="crud">
+        <summary>Editar chamado — ações status/observação/foto + regra do COL <span class="tag core">CORE</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"A tela de detalhe (GET) só mostra os dados e calcula as permissões. Cada ação tem sua
+          <b>própria rota POST</b>: alterar status, observação e foto são views separadas (não há um campo
+          <code>acao</code>). Eu aplico a regra: colaborador (COL) não pode mexer em chamado já encerrado (CO/CA) —
+          só o gestor (GES)."</div>
+          <div class="arquivo">backend/portal/views_equipe.py — equipe_chamado_detalhe (GET) + equipe_chamado_status (POST) (linhas ~169-282)</div>
+          <pre class="cod"># GET — equipe_chamado_detalhe: calcula a permissão e renderiza o template
+p = perfil_codigo(request.portal_user)
+ts = ch.sigla_status
+bloqueia_status_col = p == "COL" and ts in ("CO", "CA")
+pode_status = not bloqueia_status_col
+
+# POST — equipe_chamado_status (ROTA PRÓPRIA): altera o status
+@perfis("COL", "GES")
+@require_http_methods(["POST"])
+def equipe_chamado_status(request, pk):
+    if not db.chamado_existe(pk):
+        raise Http404()
+    sigla_atual = db.buscar_sigla_status_atual(pk)
+    if perfil_codigo(request.portal_user) == "COL" and sigla_atual in ("CO", "CA"):
+        raise Http404()                              # reforça o bloqueio do colaborador
+    form_s = EquipeStatusForm(request.POST)
+    if form_s.is_valid():
+        chamado_service.alterar_status(pk, novo, servidor_id=request.portal_user.pk,
+                                       prioridade=prioridade_val, resolucao=resolucao, observacao=obs_texto)
+        messages.success(request, "Status atualizado.")
+    return redirect("portal:equipe_chamado", pk=pk)</pre>
+          <ul class="exp">
+            <li><b>Não existe um campo <code>acao</code>.</b> São rotas distintas: <code>equipe_chamado_status</code>,
+            <code>equipe_chamado_obs</code> e <code>equipe_chamado_foto</code> (cada uma só aceita POST).</li>
+            <li><code>bloqueia_status_col</code>: no GET esconde o formulário de status; no POST a view
+            <code>equipe_chamado_status</code> reforça a regra com <code>raise Http404()</code> para COL em CO/CA.</li>
+            <li>Cada ação termina em <code>redirect</code> (padrão "POST-redirect-GET"); as mensagens são
+            <code>"Status atualizado."</code>, <code>"Observação registrada."</code> e <code>"Foto registrada."</code>.</li>
+            <li>O <b>Trigger 2B</b> (banco) cuida da notificação automaticamente — a view não precisa criar.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- ABRIR CHAMADO -->
+      <details class="crud">
+        <summary>Abrir chamado (cidadão) — foto, protocolo e retry <span class="tag auth">view</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"No abrir chamado a view valida o form e <b>delega</b> para o serviço
+          <code>criar_novo_chamado</code>, que salva a foto, gera o protocolo e insere o chamado dentro de uma transação,
+          com um laço de retry caso dois pedidos peguem o mesmo protocolo ao mesmo tempo."</div>
+          <div class="arquivo">backend/portal/views_cidadao.py — cidadao_chamado_novo (linhas ~113-164)</div>
+          <pre class="cod">form = ChamadoNovoForm(request.POST, request.FILES)
+if form.is_valid():
+    d = form.cleaned_data
+    try:
+        chamado_id, protocolo = chamado_service.criar_novo_chamado(
+            cidadao=request.portal_user,
+            servico=d["id_servico"], bairro=d["id_bairro"],
+            descricao=d["descricao"], ponto_referencia=d.get("ponto_de_referencia"),
+            foto_file=request.FILES.get("foto"), request=request,
+        )
+    except ValueError as e:
+        messages.error(request, str(e))
+        return render(request, "portal/cidadao/novo_chamado.html", {...})
+    messages.success(request, f"Chamado aberto. Protocolo: {protocolo}")
+    return redirect("portal:cidadao_chamado", pk=chamado_id)</pre>
+          <p class="sub">O retry de protocolo fica no serviço (services/chamado.py — criar_novo_chamado):</p>
+          <pre class="cod">url = salvar_foto_upload(foto_file, request=request)
+protocolo = proximo_protocolo()
+for _ in range(100):
+    try:
+        with transaction.atomic(), connection.cursor() as cursor:
+            ...  # INSERT chamado RETURNING id + INSERT foto
+        break
+    except IntegrityError:
+        if chamado_id is not None:
+            raise
+        protocolo = proximo_protocolo()</pre>
+          <ul class="exp">
+            <li>A view valida o form e <b>delega</b> a criação para <code>chamado_service.criar_novo_chamado</code>.</li>
+            <li><code>salvar_foto_upload(...)</code>: salva a imagem (Cloudinary ou disco local) e devolve a URL.</li>
+            <li><code>transaction.atomic()</code>: o INSERT do chamado e da foto acontecem juntos (ou nada).</li>
+            <li>O <code>except IntegrityError</code> + novo protocolo é a proteção contra colisão de protocolo.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- DETALHE CIDADÃO -->
+      <details class="crud">
+        <summary>Detalhe do chamado (cidadão) — observar, cancelar, avaliar <span class="tag auth">view</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"O cidadão pode adicionar observação/foto enquanto o chamado está aberto, cancelar (se AB ou EA)
+          e avaliar (se concluído e ainda sem nota). Eu calculo essas permissões com base no status atual."</div>
+          <div class="arquivo">backend/portal/views_cidadao.py — cidadao_chamado_detalhe (linhas ~174-181)</div>
+          <pre class="cod">ch = _chamado_do_cidadao(request, pk)   # 404 se não for do cidadão (segurança)
+ts = ch.sigla_status
+pode_obs_foto = ts not in ("CO", "CA")
+pode_cancelar = ts in ("AB", "EA")
+pode_avaliar  = ts == "CO" and ch.nota_avaliacao is None</pre>
+          <ul class="exp">
+            <li><code>_chamado_do_cidadao</code>: se o chamado não for do usuário logado, devolve 404 (não revela que existe).</li>
+            <li>As três flags controlam quais ações/forms aparecem na tela.</li>
+            <li>Como na equipe, cada ação tem sua <b>rota POST própria</b>: <code>cidadao_chamado_obs</code>,
+            <code>_foto</code>, <code>_cancelar</code> e <code>_avaliar</code> (todas revalidam o status e a posse do chamado).</li>
+            <li>Cancelar = INSERT histórico com status 'CA' + UPDATE da resolução; avaliar = UPDATE da nota (SQL do Rafael).</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- NOTIFICAÇÕES -->
+      <details class="crud">
+        <summary>Notificações — listar e excluir <span class="tag auth">view</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"A view só lista e exclui notificações — quem cria é o trigger do banco. A consulta filtra pelos
+          chamados do próprio cidadão, então ninguém vê notificação de outro."</div>
+          <div class="arquivo">backend/portal/views_cidadao.py — cidadao_notificacoes (linhas ~298-329)</div>
+          <pre class="cod">lista = db.listar_notificacoes_cidadao(uid)
+
+nids = [n.pk for n in lista if not n.lida]
+if nids:
+    db.marcar_notificacoes_lidas(nids)          # marca como lidas ao abrir a tela
+
+if request.method == "POST":
+    nid = request.POST.get("excluir")
+    if nid:
+        db.excluir_notificacao(nid, uid_cidadao=uid)   # DELETE só dos próprios chamados
+        messages.info(request, "Notificação removida.")
+    return redirect("portal:cidadao_notificacoes")
+return render(request, "portal/cidadao/notificacoes.html", {"lista": lista})</pre>
+          <ul class="exp">
+            <li>Ao abrir a tela, as notificações não lidas viram lidas (<code>db.marcar_notificacoes_lidas</code>).</li>
+            <li>O número no sininho do topo vem do <code>context_processors</code>
+            (um <code>SELECT COUNT(*)</code> de notificações não lidas e não arquivadas).</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- CONTROLE DE ACESSO -->
+      <details class="crud">
+        <summary>Controle de acesso — decorators e middleware <span class="tag auth">segurança</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"O controle de quem acessa o quê é feito no Django (não no banco): decorators em cima das views e
+          um middleware que carrega o usuário a cada requisição e injeta variáveis de sessão no PostgreSQL para os triggers."</div>
+          <div class="arquivo">backend/portal/decorators.py — perfis (linhas ~58-80)</div>
+          <pre class="cod">def perfis(*codigos):
+    def dec(view):
+        @wraps(view)
+        def w(request, *args, **kwargs):
+            u = request.portal_user
+            if not u:
+                return redirect("portal:login")
+            if perfil_codigo(u) not in codigos:
+                messages.error(request, "Sem permissão para acessar esta área.")
+                return redirect("portal:root")
+            return view(request, *args, **kwargs)
+        return w
+    return dec</pre>
+          <div class="arquivo">backend/portal/middleware.py — PortalUserMiddleware (linhas ~80-89)</div>
+          <pre class="cod">def __call__(self, request):
+    user = _usuario_da_sessao(request)      # SELECT do usuário pelo cookie
+    request.portal_user = user
+    if user:
+        _postgres_sessao((user.perfil or "").strip(), user.pk)  # set_config no Postgres
+    else:
+        _postgres_sessao(None, None)
+    return self.get_response(request)</pre>
+          <ul class="exp">
+            <li><code>@perfis("GES")</code> só deixa gestor entrar; <code>@perfis("CID")</code> só cidadão; etc.</li>
+            <li>O middleware roda em <b>toda</b> requisição: descobre quem está logado (<code>request.portal_user</code>)
+            e avisa o banco quem é, via <code>set_config('portal.perfil', ...)</code> — usado pelos triggers/auditoria.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- CRUDs (Django) -->
+      <details class="crud">
+        <summary>CRUDs administrativos (Banners, Bairros, Serviços, Categorias, Colaboradores) <span class="tag crud">CRUD</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Todos os CRUDs do painel ficam em <code>views_gestao.py</code>. O padrão é sempre o mesmo: valido
+          (form ou campos do POST), chamo o SQL e mostro a mensagem. Importante: eu uso <i>ModelForm</i> só para validar,
+          mas <b>nunca</b> chamo <code>form.save()</code> — gravo via SQL puro."</div>
+          <div class="arquivo">backend/portal/views_gestao.py — ex.: gestao_servico_novo (linhas ~52-68)</div>
+          <pre class="cod">@perfis("GES")
+@require_http_methods(["GET", "POST"])
+def gestao_servico_novo(request):
+    if request.method == "POST":
+        form = ServicoForm(request.POST)
+        if form.is_valid():
+            d = form.cleaned_data
+            db.inserir_servico(d["nome"], d.get("descricao"), d["id_categoria"].pk)
+            messages.success(request, "Serviço criado.")
+            return redirect("portal:gestao_servicos")</pre>
+          <ul class="exp">
+            <li>Mesma estrutura para Bairros, Categorias, Colaboradores e Banners (cada um com seu SQL — card do Rafael).</li>
+            <li><code>@perfis("GES")</code> protege os CRUDs administrativos; Bairros aceita também <code>"COL"</code>.</li>
+            <li>O Banner não usa ModelForm: lê os campos direto do <code>request.POST</code>/<code>request.FILES</code>.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- FOTO DE PERFIL (VIEW) -->
+      <details class="crud">
+        <summary>Foto de perfil — enviar e remover <span class="tag crud">CRUD</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Qualquer usuário logado pode trocar ou remover a própria foto de perfil. A view detecta se o
+          usuário é cidadão ou servidor (<code>isinstance</code>) e chama o SQL na tabela certa. O upload vai para o
+          Cloudinary (ou disco local) e devolve a URL que será gravada."</div>
+          <div class="arquivo">backend/portal/views_root.py — upload_foto_perfil / excluir_foto_perfil (~linhas 131-179)</div>
+          <pre class="cod">def upload_foto_perfil(request):
+    foto = request.FILES.get("foto")
+    if not foto:
+        messages.error(request, "Nenhuma foto selecionada.")
+        return redirect("/")
+    url = salvar_foto_upload(foto, request=request)   # Cloudinary ou disco local
+    user = request.portal_user
+    if isinstance(user, Cidadao):
+        db.atualizar_foto_perfil("cidadao", user.pk, url)
+    else:
+        db.atualizar_foto_perfil("servidor", user.pk, url)
+# excluir_foto_perfil: db.remover_foto_perfil("cidadao"/"servidor", user.pk)</pre>
+          <ul class="exp">
+            <li><code>salvar_foto_upload(...)</code> (em <code>utils.py</code>) devolve a URL — Cloudinary se configurado,
+            senão salva no disco local; erros viram <code>messages.error</code>.</li>
+            <li><code>isinstance(user, Cidadao)</code> decide a tabela (cidadao ou servidor); o SQL é o do Rafael
+            (<code>db.atualizar_foto_perfil</code> / <code>db.remover_foto_perfil</code>).</li>
+            <li>Rotas (só POST): <code>/perfil/foto/</code> (enviar) e <code>/perfil/foto/excluir/</code> (remover).</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- EXCLUIR CHAMADO -->
+      <details class="crud">
+        <summary>Excluir chamado — fluxo controlado (só GES) <span class="tag auth">view</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"A exclusão exige justificativa e perfil de gestor. A view liga a variável de sessão que destrava
+          os triggers, grava o log e apaga tudo numa transação (o SQL detalhado está no card do Rafael)."</div>
+          <div class="arquivo">backend/portal/views_equipe.py — gestao_chamado_excluir (~linhas 325-378)</div>
+          <pre class="cod">@perfis("GES")
+@require_http_methods(["POST"])
+def gestao_chamado_excluir(request, pk):
+    justificativa = (request.POST.get("justificativa") or "").strip()
+    if not justificativa:
+        messages.error(request, "É obrigatório informar uma justificativa para excluir o chamado.")
+        return redirect("portal:equipe_chamado", pk=pk)
+    with transaction.atomic():
+        db.criar_historico(pk, status_id, servidor_id=request.portal_user.pk,
+                           observacao=f"[EXCL] Chamado excluído. Justificativa: {justificativa}")
+        db.excluir_chamado_com_cascata(pk)   # set_config('portal.excluindo') + DELETEs em cascata
+    messages.success(request, f"Chamado {protocolo} excluído com sucesso.")</pre>
+          <ul class="exp">
+            <li><code>@perfis("GES")</code> + <code>@require_http_methods(["POST"])</code>: só gestor, só via POST.</li>
+            <li>Sem justificativa, não exclui.</li>
+          </ul>
+        </div>
+      </details>
+
+    </div>
+  </details>
+
+  <!-- ============================================================ -->
+  <!-- ============== FAUSTO YUUKI — FRONT-END ==================== -->
+  <!-- ============================================================ -->
+  <details class="integrante yuuki">
+    <summary><span class="nome"><span>Fausto Yuuki<span class="papel">Front-End — templates Django + Design System gov.br</span></span></span></summary>
+    <div class="corpo">
+
+      <div class="nota ok"><b>Mensagem central do Yuuki:</b> "Todas as telas usam o <b>Design System gov.br</b>
+      (classes <code>br-*</code>: <code>br-card</code>, <code>br-table</code>, <code>br-tag</code>,
+      <code>br-message</code>, <code>br-button</code>, <code>br-input</code>, etc.). Tudo herda um template-base
+      (<code>base.html</code>) com cabeçalho, menu e rodapé. Cada página preenche só o miolo."</div>
+
+      <!-- VISÃO GERAL -->
+      <details class="crud">
+        <summary>Visão geral — template-base e gov.br <span class="tag auth">base</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Cada página começa com <code>{% extends "portal/base.html" %}</code> e preenche o
+          <code>{% block content %}</code>. O CSS do gov.br vem por CDN, mais o nosso <code>vg24h.css</code> para o
+          semáforo e cards."</div>
+          <div class="arquivo">backend/templates/portal/base.html (linhas ~26-31)</div>
+          <pre class="cod">&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core.min.css" /&gt;
+&lt;link rel="stylesheet" href="{% static 'portal/css/vg24h.css' %}?v=1.5" /&gt;</pre>
+          <ul class="exp">
+            <li><code>core.min.css</code>: o Design System gov.br oficial (botões, tabelas, formulários).</li>
+            <li><code>vg24h.css</code>: nosso CSS por cima (cores do semáforo, cards do dashboard).</li>
+            <li>As páginas filhas usam <code>{% extends %}</code> + <code>{% block content %}</code> para reaproveitar o layout.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- MENSAGENS -->
+      <details class="crud">
+        <summary>Mensagens de erro/sucesso (onde a mensagem aparece) <span class="tag core">muito perguntado</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Quando o Bruno chama <code>messages.error()</code> ou <code>messages.success()</code> na view,
+          é <b>aqui</b> no <code>base.html</code> que a mensagem aparece na tela. Eu mapeio o tipo de mensagem para a cor
+          do gov.br: erro vira <code>br-message danger</code> (vermelho), sucesso vira <code>br-message success</code> (verde)."</div>
+          <div class="arquivo">backend/templates/portal/base.html (linhas ~207-258)</div>
+          <pre class="cod">{% if messages %}
+&lt;div class="container-lg mt-3x"&gt;
+  {% for message in messages %}
+  {# mapeia 'error' do Django para 'danger' do GOV.br #}
+  {% if message.tags == 'error' %}
+  &lt;div class="br-message danger" role="alert"&gt;
+    &lt;div class="icon"&gt;&lt;i class="fas fa-times-circle fa-lg"&gt;&lt;/i&gt;&lt;/div&gt;
+    &lt;div class="content" aria-label="{{ message }}"&gt;
+      &lt;span class="message-title"&gt;Erro.&lt;/span&gt;
+      &lt;span class="message-body"&gt; {{ message }}&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class="close"&gt;&lt;button class="br-button circle small" type="button"&gt;&lt;i class="fas fa-times"&gt;&lt;/i&gt;&lt;/button&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  {% elif message.tags == 'success' %}
+  &lt;div class="br-message success" role="alert"&gt;
+    &lt;div class="icon"&gt;&lt;i class="fas fa-check-circle fa-lg"&gt;&lt;/i&gt;&lt;/div&gt;
+    &lt;div class="content" aria-label="{{ message }}"&gt;
+      &lt;span class="message-title"&gt;Sucesso.&lt;/span&gt;
+      &lt;span class="message-body"&gt; {{ message }}&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class="close"&gt;&lt;button class="br-button circle small" type="button"&gt;&lt;i class="fas fa-times"&gt;&lt;/i&gt;&lt;/button&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  {% elif message.tags == 'warning' %} ... {% else %} {# info #} ... {% endif %}
+  {% endfor %}
+&lt;/div&gt;
+{% endif %}</pre>
+          <ul class="exp">
+            <li><code>{% for message in messages %}</code>: percorre as mensagens que a view enviou.</li>
+            <li><code>message.tags == 'error'</code> → caixa vermelha (<code>danger</code>); <code>'success'</code> → verde.
+            Há também os ramos <code>warning</code> (amarelo) e <code>info</code> (azul, no <code>{% else %}</code>).</li>
+            <li>Cada caixa tem ícone, título, corpo (<code>{{ message }}</code>) e um botão de fechar.</li>
+            <li>Resumo do login: o Bruno decide a mensagem na view; <b>eu mostro aqui</b>.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- PÁGINA INICIAL -->
+      <details class="crud">
+        <summary>Página inicial — carrossel de banners <span class="tag auth">tela</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"A home tem o carrossel de banners, os cards de categoria e os números de estatística.
+          O carrossel percorre os banners que vieram da view e mostra cada imagem como um slide."</div>
+          <div class="arquivo">backend/templates/portal/root.html (linhas ~124-143)</div>
+          <pre class="cod">&lt;div class="banner-carousel"&gt;
+  &lt;div class="carousel-track" id="carousel-track"&gt;
+    {% for banner in banners %}
+    &lt;div class="carousel-slide"&gt;
+      {% if banner.link %}&lt;a href="{{ banner.link }}" target="_blank"&gt;{% endif %}
+      &lt;img src="{{ banner.url_imagem }}" alt="{{ banner.titulo }}" /&gt;
+      {% if banner.link %}&lt;/a&gt;{% endif %}
+    &lt;/div&gt;
+    {% endfor %}
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          <ul class="exp">
+            <li><code>{% for banner in banners %}</code>: cria um slide por banner ativo (dados da view <code>root_view</code>).</li>
+            <li>Se o banner tem <code>link</code>, a imagem vira um link clicável.</li>
+            <li>A troca de slides é feita por um pequeno JavaScript no fim do arquivo (botões e auto-avanço).</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- LOGIN -->
+      <details class="crud">
+        <summary>Login — o formulário <span class="tag auth">tela</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"O formulário de login envia POST para <code>/accounts/login/</code>. Usa os campos
+          <code>br-input</code> do gov.br. O olhinho mostra/esconde a senha."</div>
+          <div class="arquivo">backend/templates/portal/auth/login.html (linhas ~27-49)</div>
+          <pre class="cod">&lt;form id="login-form" action="{% url 'portal:login' %}" method="post"&gt;
+  {% csrf_token %}
+  &lt;div class="br-input"&gt;
+    &lt;label for="login-email"&gt;E-mail&lt;/label&gt;
+    &lt;input id="login-email" name="email" type="email" required /&gt;
+  &lt;/div&gt;
+  &lt;div class="br-input input-button"&gt;
+    &lt;label for="input-password"&gt;Senha&lt;/label&gt;
+    &lt;input id="input-password" name="password" type="password" required /&gt;
+    &lt;button class="br-button" type="button" aria-label="Exibir senha"&gt;
+      &lt;i class="fas fa-eye"&gt;&lt;/i&gt;
+    &lt;/button&gt;
+  &lt;/div&gt;</pre>
+          <ul class="exp">
+            <li><code>{% csrf_token %}</code>: proteção contra falsificação de requisição (obrigatório em POST no Django).</li>
+            <li><code>name="email"</code> e <code>name="password"</code>: nomes que a view lê em <code>request.POST</code>.</li>
+            <li><code>br-input</code> / <code>br-button</code>: componentes do Design System gov.br.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- GESTÃO DE CHAMADOS (FRONT) -->
+      <details class="crud">
+        <summary>Gestão de Chamados — semáforo, prioridade e dias <span class="tag core">CORE</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Esta é a tela principal da equipe. No topo, quatro cards de semáforo (total, verde, amarelo,
+          vermelho). Na tabela, cada chamado mostra a prioridade (tag colorida), os dias em aberto e o status (tag colorida
+          conforme a sigla)."</div>
+          <div class="arquivo">backend/templates/portal/equipe/dashboard.html (linhas ~38-61) — cards do semáforo</div>
+          <pre class="cod">&lt;div class="semaforo-grid mb-4x"&gt;
+  &lt;div class="semaforo-card total"&gt;
+    &lt;div class="card-value"&gt;{{ total_count|default:0 }}&lt;/div&gt;
+    &lt;div class="card-label"&gt;Total de chamados&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="semaforo-card verde"&gt;
+    &lt;div class="card-value"&gt;{{ stats.no_prazo|default:0 }}&lt;/div&gt;
+    &lt;div class="card-label"&gt;No prazo (Verde)&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="semaforo-card amarelo"&gt;
+    &lt;div class="card-value"&gt;{{ stats.atencao|default:0 }}&lt;/div&gt;
+    &lt;div class="card-label"&gt;Atenção (Amarelo)&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="semaforo-card vermelho"&gt;
+    &lt;div class="card-value"&gt;{{ stats.critico|default:0 }}&lt;/div&gt;
+    &lt;div class="card-label"&gt;Crítico (Vermelho)&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+          <p class="sub">Prioridade, "tempo em aberto" e status na tabela (linhas ~211-231)</p>
+          <pre class="cod">&lt;td data-th="Prioridade"&gt;
+  {% if linha.ch.prioridade == 5 %}&lt;span class="br-tag vg-tag-fixed rounder-none"
+       style="background:var(--vg-priority-5); color:var(--vg-priority-5-fg);"&gt;Urgente&lt;/span&gt;
+  {% elif linha.ch.prioridade == 4 %}&lt;span ...&gt;Alta&lt;/span&gt;
+  ... {% else %}&lt;span ...&gt;Sem classificação&lt;/span&gt;{% endif %}
+&lt;/td&gt;
+&lt;td data-th="Tempo em aberto" class="text-center"&gt;
+  &lt;span class="br-tag vg-tag-fixed rounder-none {% if linha.cor == 'verde' %}success{% elif linha.cor == 'amarelo' %}warning{% elif linha.cor == 'vermelho' %}danger{% endif %}"&gt;
+    {{ linha.dias_aberto }}
+  &lt;/span&gt;
+&lt;/td&gt;
+&lt;td data-th="Status" class="text-center"&gt;
+  {{ linha.ch.status_atual.descricao|default:"—" }}
+&lt;/td&gt;</pre>
+          <ul class="exp">
+            <li>Os cards do topo mostram os números calculados pela view (<code>stats.no_prazo</code>, etc.).</li>
+            <li>A prioridade vira uma tag colorida conforme o número (5 = Urgente vermelho ... 0 = Sem classificação).</li>
+            <li><b>Tempo em aberto:</b> a coluna mostra <code>{{ linha.dias_aberto }}</code> (ex.: "12 dia(s)") dentro de uma
+            <code>br-tag</code> colorida pela <b>cor do semáforo</b> (<code>linha.cor</code>: verde/amarelo/vermelho).</li>
+            <li>Aqui na lista da equipe o status sai como <b>texto simples</b> (a descrição). A tag colorida por sigla
+            (AB=info, EA=warning, EE=ee-status, CO=success, CA=danger) aparece no painel do cidadão (próximo card).</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- EDITAR CHAMADO (FRONT) -->
+      <details class="crud">
+        <summary>Editar chamado — formulário de status/prioridade/resolução <span class="tag core">CORE</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Na tela de detalhe, o gestor escolhe o novo status, a prioridade e (se for concluir/cancelar)
+          escreve a resolução. O formulário envia POST direto para a rota própria
+          <code>portal:equipe_chamado_status</code> (não há campo <code>acao</code>). Um JavaScript renomeia o campo para
+          'Resolução Final' e o torna obrigatório quando o status escolhido é Concluído ou Cancelado."</div>
+          <div class="arquivo">backend/templates/portal/equipe/chamado_detalhe.html (linhas ~31-92)</div>
+          <pre class="cod">&lt;form action="{% url 'portal:equipe_chamado_status' ch.pk %}" method="post"&gt;
+  {% csrf_token %}
+  &lt;div id="sigla-map-data" data-map='{{ status_sigla_map_json|safe }}' style="display:none;"&gt;&lt;/div&gt;
+  &lt;div class="br-input"&gt;
+    &lt;label for="status-select"&gt;Alterar para:&lt;/label&gt;
+    &lt;select id="status-select" name="id_status" required&gt;
+      {% for code, label in form_status.fields.id_status.choices %}
+        {% if code %}&lt;option value="{{ code }}" {% if ch.status_atual.pk == code %}selected{% endif %}&gt;{{ label }}&lt;/option&gt;{% endif %}
+      {% endfor %}
+    &lt;/select&gt;
+  &lt;/div&gt;
+  &lt;div class="br-input"&gt;
+    &lt;label for="prioridade-select"&gt;Prioridade&lt;/label&gt;
+    &lt;select id="prioridade-select" name="prioridade"&gt;
+      {% for val, lbl in prioridades %}&lt;option value="{{ val }}" ...&gt;{{ lbl }}&lt;/option&gt;{% endfor %}
+    &lt;/select&gt;
+  &lt;/div&gt;
+  &lt;div id="resolucao-wrapper" class="br-input"&gt;
+    &lt;label for="resolucao-text" id="resolucao-label"&gt;Observação&lt;/label&gt;
+    &lt;textarea id="resolucao-text" name="resolucao" rows="3"&gt;{{ ch.resolucao|default:'' }}&lt;/textarea&gt;
+  &lt;/div&gt;
+  &lt;button class="br-button primary" type="submit"&gt;Salvar alterações&lt;/button&gt;
+&lt;/form&gt;
+&lt;script&gt;
+  // quando o status escolhido é CO/CA, o campo vira "Resolução Final" e fica obrigatório
+  var isFinal = sigla === 'CO' || sigla === 'CA';
+  label.textContent = isFinal ? 'Resolução Final' : 'Observação';
+  textarea.required = isFinal;
+&lt;/script&gt;</pre>
+          <ul class="exp">
+            <li>O <code>action</code> aponta para a rota própria <code>portal:equipe_chamado_status</code> —
+            <b>não existe</b> um campo <code>acao</code> escondido.</li>
+            <li><code>name="id_status"</code> e <code>name="prioridade"</code>: o que a view lê para fazer o INSERT/UPDATE.</li>
+            <li><code>resolucao-wrapper</code> está <b>sempre visível</b>. O JS não o esconde — ele só <b>renomeia</b> o
+            campo para "Resolução Final" e o torna <b>obrigatório</b> quando o status escolhido é CO/CA.</li>
+            <li>Logo abaixo, na mesma tela, há os formulários de <b>observação</b> e de <b>foto</b>, cada um com sua
+            própria rota POST.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- DASHBOARD CIDADÃO (FRONT) -->
+      <details class="crud">
+        <summary>Painel do cidadão — lista com status colorido <span class="tag auth">tela</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"O cidadão vê seus chamados numa tabela <code>br-table</code> com filtro de status, data e busca por
+          protocolo. O status vira uma tag colorida igual à da equipe."</div>
+          <div class="arquivo">backend/templates/portal/cidadao/dashboard.html (linhas ~79-83)</div>
+          <pre class="cod">&lt;td data-th="Status"&gt;
+  {% with st_lower=ch.status_atual.sigla|lower %}
+    &lt;span class="br-tag vg-tag-fixed rounder-none {% if st_lower == 'ab' %}info{% elif st_lower == 'ea' %}warning{% elif st_lower == 'ee' %}ee-status{% elif st_lower == 'co' %}success{% elif st_lower == 'ca' %}danger{% endif %}"&gt;{{ ch.status_atual.descricao }}&lt;/span&gt;
+  {% endwith %}
+&lt;/td&gt;</pre>
+          <ul class="exp">
+            <li><code>ch.status_atual.sigla|lower</code>: pega a sigla do status (vinda do JOIN LATERAL) em minúsculas.</li>
+            <li>O <code>{% if %}</code> escolhe a cor da tag conforme a sigla.</li>
+            <li>A tela de abrir chamado (<code>novo_chamado.html</code>) é um assistente em 5 passos com
+            <code>br-step</code> (serviço → detalhes → endereço → foto → confirmar).</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- NOTIFICAÇÕES (FRONT) -->
+      <details class="crud">
+        <summary>Notificações — lista e botão excluir <span class="tag auth">tela</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"As notificações aparecem numa <code>br-list</code>. Cada item mostra a mensagem (que o trigger
+          gerou) e a data, com um botão de excluir. Se não houver nenhuma, mostro um estado vazio."</div>
+          <div class="arquivo">backend/templates/portal/cidadao/notificacoes.html (linhas ~7-24)</div>
+          <pre class="cod">&lt;div class="br-list"&gt;
+  {% for n in lista %}
+  &lt;div class="br-item"&gt;
+    &lt;p class="mb-base"&gt;{{ n.mensagem }}&lt;/p&gt;
+    &lt;span class="text-down-01"&gt;{{ n.dt_envio|date:"d/m/Y H:i" }}&lt;/span&gt;
+    &lt;form method="post" class="d-inline"&gt;
+      {% csrf_token %}
+      &lt;input type="hidden" name="excluir" value="{{ n.pk }}" /&gt;
+      &lt;button type="submit" class="br-button small"&gt;Excluir&lt;/button&gt;
+    &lt;/form&gt;
+  &lt;/div&gt;
+  {% endfor %}
+&lt;/div&gt;</pre>
+          <ul class="exp">
+            <li><code>{{ n.mensagem }}</code>: o texto que o Trigger 2B montou (ex.: "Chamado ...: status alterado para Concluído").</li>
+            <li>O botão excluir envia <code>name="excluir" value="{{ n.pk }}"</code>, que a view usa no DELETE.</li>
+            <li>O sininho no topo (em <code>base.html</code>) mostra o número de não lidas (<code>notif_count</code>).</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- CRUD BANNERS (FRONT) -->
+      <details class="crud">
+        <summary>CRUD Banners — tabela com ações <span class="tag crud">CRUD</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"A gestão de banners é uma <code>br-table</code> com miniatura, status (tag Ativo/Inativo) e botões
+          de subir, descer, editar e excluir. Cada botão é um pequeno formulário POST."</div>
+          <div class="arquivo">backend/templates/portal/gestao/banners.html (linhas ~50-84)</div>
+          <pre class="cod">&lt;td&gt;
+  {% if b.ativo %}&lt;span class="br-tag success small"&gt;Ativo&lt;/span&gt;
+  {% else %}&lt;span class="br-tag danger small"&gt;Inativo&lt;/span&gt;{% endif %}
+&lt;/td&gt;
+&lt;td&gt;
+  &lt;form action="{% url 'portal:gestao_banner_reordenar' b.pk %}" method="post"&gt;
+    {% csrf_token %}&lt;input type="hidden" name="direcao" value="-1" /&gt;
+    &lt;button type="submit" class="br-button circle small"&gt;&lt;i class="fas fa-arrow-up"&gt;&lt;/i&gt;&lt;/button&gt;
+  &lt;/form&gt;
+  &lt;a href="{% url 'portal:gestao_banner_editar' b.pk %}" class="br-button small secondary"&gt;
+    &lt;i class="fas fa-edit"&gt;&lt;/i&gt;&lt;/a&gt;
+  &lt;form action="{% url 'portal:gestao_banner_excluir' b.pk %}" method="post"
+        onsubmit="return confirm('Tem certeza?')"&gt;
+    {% csrf_token %}
+    &lt;button type="submit" class="br-button small danger"&gt;&lt;i class="fas fa-trash"&gt;&lt;/i&gt;&lt;/button&gt;
+  &lt;/form&gt;
+&lt;/td&gt;</pre>
+          <ul class="exp">
+            <li>Status do banner = tag verde (Ativo) ou vermelha (Inativo).</li>
+            <li>Cada ação (reordenar/editar/excluir) tem sua própria rota; excluir pede confirmação com <code>confirm()</code>.</li>
+            <li>As outras telas administrativas (Bairros, Serviços, Categorias, Colaboradores) seguem o mesmo padrão de
+            <code>br-table</code> + formulários/modais.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- MENU DINÂMICO -->
+      <details class="crud">
+        <summary>Menu lateral dinâmico por perfil <span class="tag auth">layout</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"O menu muda conforme quem está logado: cidadão vê 'Novo Chamado/Meus Chamados'; equipe vê
+          'Gestão de Chamados'; só o gestor vê 'Serviços, Colaboradores, Banners'."</div>
+          <div class="arquivo">backend/templates/portal/base.html (linhas ~144-197)</div>
+          <pre class="cod">{% if request.portal_user.perfil == 'CID' %}
+  &lt;a class="menu-item" href="{% url 'portal:cidadao_chamado_novo' %}"&gt;Novo Chamado&lt;/a&gt;
+  &lt;a class="menu-item" href="{% url 'portal:cidadao_chamados' %}"&gt;Meus Chamados&lt;/a&gt;
+{% endif %}
+{% if request.portal_user.perfil == 'COL' or request.portal_user.perfil == 'GES' %}
+  &lt;a class="menu-item" href="{% url 'portal:equipe_dashboard' %}"&gt;Dashboard&lt;/a&gt;
+  &lt;a class="menu-item" href="{% url 'portal:equipe_chamados' %}"&gt;Gestão de Chamados&lt;/a&gt;
+  &lt;a class="menu-item" href="{% url 'portal:gestao_bairros' %}"&gt;Gestão de Bairros&lt;/a&gt;
+{% endif %}
+{% if request.portal_user.perfil == 'GES' %}
+  &lt;a class="menu-item" href="{% url 'portal:gestao_servicos' %}"&gt;Serviços&lt;/a&gt;
+  &lt;a class="menu-item" href="{% url 'portal:gestao_colaboradores' %}"&gt;Colaboradores&lt;/a&gt;
+  &lt;a class="menu-item" href="{% url 'portal:gestao_banners' %}"&gt;Banners&lt;/a&gt;
+{% endif %}</pre>
+          <ul class="exp">
+            <li><code>request.portal_user.perfil</code>: o perfil do usuário logado (vem do middleware do Bruno).</li>
+            <li>Os <code>{% if %}</code> mostram cada link só para o perfil certo: <b>CID</b> vê Novo/Meus Chamados;
+            <b>COL e GES</b> veem Dashboard, Gestão de Chamados e Gestão de Bairros; só o <b>GES</b> vê
+            Serviços, Colaboradores e Banners.</li>
+          </ul>
+        </div>
+      </details>
+
+    </div>
+  </details>
+
+  <!-- ============================================================ -->
+  <!-- ============== PERGUNTAS PROVÁVEIS ========================= -->
+  <!-- ============================================================ -->
+  <div class="bloco">
+    <h2>Respostas rápidas (perguntas que a professora costuma fazer)</h2>
+    <p class="legenda">Use isto como "cola" final. Cada pergunta é um card — clique para abrir a resposta.
+    Cada resposta diz o arquivo e quem responde.</p>
+    <div class="q-toolbar">
+      <button type="button" onclick="document.querySelectorAll('details.pergunta').forEach(d=&gt;d.open=true)">Abrir todas</button>
+      <button type="button" onclick="document.querySelectorAll('details.pergunta').forEach(d=&gt;d.open=false)">Fechar todas</button>
+    </div>
+
+    <details class="pergunta">
+      <summary>"Onde o código verifica se o login está certo ou errado?"</summary>
+      <div class="resp"><b>Bruno:</b> em <code>backend/portal/views_auth.py</code>, função <code>login_view</code>
+      (~linha 104): <code>check_password(senha, user.senha_hash)</code> compara a senha digitada com o hash do banco.
+      Antes disso, o <code>SELECT</code> em <code>db.buscar_cidadao_por_email</code> / <code>buscar_servidor_por_email</code>
+      (Rafael) decide se o e-mail existe.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Onde aparece a mensagem dizendo que o login está certo/errado?"</summary>
+      <div class="resp"><b>Bruno:</b> a mensagem é definida na view com
+      <code>messages.error(request, "E-mail ou senha incorretos.")</code> (erro) e
+      <code>messages.success(request, f"Olá, ...")</code> (sucesso), em <code>views_auth.py</code>.
+      <b>Yuuki:</b> ela é <i>exibida</i> no template <code>base.html</code> (bloco <code>{% if messages %}</code>,
+      ~linha 207), virando uma caixa <code>br-message danger</code> (vermelha) ou <code>success</code> (verde).</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Onde está a prioridade do chamado?"</summary>
+      <div class="resp"><b>Rafael:</b> coluna <code>chamado.prioridade INTEGER CHECK (&gt;=0 AND &lt;=5)</code>
+      (<code>database/01_schema.sql</code>). <b>Bruno:</b> é gravada no <code>UPDATE chamado SET prioridade=%s</code>
+      dentro de <code>alterar_status</code> (<code>services/chamado.py</code>), chamado pela view
+      <code>equipe_chamado_status</code>. <b>Yuuki:</b> aparece como tag colorida na tabela
+      (<code>equipe/dashboard.html</code>, ~linha 212).</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Onde está o semáforo (verde/amarelo/vermelho)?"</summary>
+      <div class="resp"><b>Rafael:</b> em <code>db/stats.py</code>: função <code>cor_semaforo</code> (~linha 11) e a consulta
+      <code>calcular_stats_semaforo</code> (~linha 24) com <code>CASE WHEN ... make_interval(days := cfg....)</code>.
+      Os prazos são <b>globais</b>, na tabela <code>configuracao_semaforo</code> (<code>prazo_amarelo_dias</code> /
+      <code>prazo_vermelho_dias</code>), trazida por <code>CROSS JOIN</code>.
+      <b>Yuuki:</b> os 4 cards e a legenda em <code>equipe/dashboard.html</code> (~linha 38).</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Onde o código mostra o dashboard?"</summary>
+      <div class="resp"><b>Bruno:</b> dois pontos — <code>equipe_dashboard</code> (gráficos, rota <code>/equipe/</code>)
+      e <code>equipe_chamados_lista</code> (lista + semáforo, rota <code>/equipe/chamados/</code>), em
+      <code>views_equipe.py</code>. <b>Yuuki:</b> templates <code>equipe/estatisticas_graficos.html</code> e
+      <code>equipe/dashboard.html</code>. <b>Rafael:</b> as consultas de contagem (<code>db.buscar_stats_dashboard</code>)
+      e a view <code>vw_estatisticas_chamados</code>.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Em quantos dias o chamado está aberto — onde isso é calculado?"</summary>
+      <div class="resp"><b>Bruno/Rafael:</b> na função <code>formatar_dias_em_aberto(dt_abertura)</code>
+      (<code>utils.py</code>, ~linha 64), que devolve um texto como <code>"12 dia(s)"</code> (ou minutos/horas se for
+      recente). É usada ao montar a lista da equipe (<code>db.listar_chamados_equipe</code>) e no detalhe.
+      <b>Yuuki:</b> exibido com <code>{{ linha.dias_aberto }}</code> numa tag colorida pela cor do semáforo.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Onde a notificação é criada quando o usuário recebe uma?"</summary>
+      <div class="resp"><b>Rafael:</b> no <b>Trigger 2B</b> <code>fn_historico_after_insert_status</code>
+      (<code>database/03_functions_triggers.sql</code>, ~linha 79): a cada novo status inserido,
+      ele faz <code>INSERT INTO notificacao (...)</code>. O código Python não cria notificação — só lê/apaga
+      (<code>cidadao_notificacoes</code>).</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Como vocês sabem o status atual se o chamado não tem coluna de status?"</summary>
+      <div class="resp"><b>Rafael:</b> o status é o último registro de <code>historico_chamado</code>
+      (<code>ORDER BY dt_alteracao DESC LIMIT 1</code>), buscado com <code>JOIN LATERAL</code> nas listagens e por
+      <code>db.popular_status</code> no detalhe. Toda mudança é um <b>INSERT</b> novo — nunca UPDATE — então fica o histórico completo.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Como o número de protocolo é gerado sem repetir?"</summary>
+      <div class="resp"><b>Rafael:</b> função <code>proximo_protocolo</code> (<code>utils.py</code>) com
+      <code>INSERT INTO protocolo_seq ... ON CONFLICT (ano) DO UPDATE SET ultimo_numero = ... + 1 RETURNING</code>
+      — operação atômica. Formato: ano + 6 dígitos (ex.: <code>2026000001</code>).</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Quais CRUDs o sistema tem?"</summary>
+      <div class="resp">Chamados (abrir/editar/excluir), <b>Banners</b>, <b>Bairros</b>, <b>Serviços</b>,
+      <b>Categorias</b>, <b>Colaboradores</b>, <b>Foto de perfil</b> e os <b>prazos globais</b> do semáforo, além de
+      Cadastro/Login, troca/recuperação de senha e Notificações. Todos têm card próprio em cada integrante.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Por que SQL puro e não o ORM do Django?"</summary>
+      <div class="resp">Porque foi <b>requisito da disciplina</b> de Banco de Dados (SQL puro, sem ORM para dados).
+      Os <i>models</i> existem só para formulários e propriedades; toda leitura/escrita é <code>cursor.execute()</code>
+      no pacote <code>db/</code>, nas <i>services</i> e em algumas views.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Por que guardar o status no histórico em vez de uma coluna? Qual a vantagem?"</summary>
+      <div class="resp"><b>Rafael:</b> é o padrão <i>event sourcing</i>. Cada mudança vira um INSERT em
+      <code>historico_chamado</code>, então fica registrado <b>quem</b> mudou, <b>quando</b> e <b>para qual status</b> —
+      rastreabilidade/auditoria total, e o histórico é imutável. O custo é precisar do <code>JOIN LATERAL</code> para
+      descobrir o status atual em cada consulta.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"O que é o JOIN LATERAL e por que usar em vez de uma subconsulta comum?"</summary>
+      <div class="resp"><b>Rafael:</b> o <code>JOIN LATERAL</code> roda uma subconsulta <b>para cada</b> chamado,
+      enxergando o <code>c.id_chamado</code> da linha de fora. Assim pego o último histórico (<code>ORDER BY
+      dt_alteracao DESC LIMIT 1</code>) de todos os chamados numa única passada, trazendo várias colunas do status
+      ao mesmo tempo e evitando o problema N+1. Fica no helper <code>sql_lateral_ultimo_status()</code>.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Como o sistema evita SQL injection?"</summary>
+      <div class="resp"><b>Rafael:</b> todo valor entra por <b>parâmetro</b> <code>%s</code> (nunca concatenando texto da
+      entrada do usuário). Onde é preciso interpolar nome de tabela/coluna (ex.: o helper do <code>JOIN LATERAL</code>),
+      o código só aceita itens de uma <b>lista branca</b> (<code>COLUNAS_LATERAL_VALIDAS</code>, <code>_validar_tabela</code>)
+      e valida o alias.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Como as senhas são guardadas e verificadas?"</summary>
+      <div class="resp"><b>Bruno:</b> nunca em texto puro. Ao gravar, <code>make_password</code> gera um <b>hash bcrypt</b>
+      (coluna <code>senha_hash</code>); ao logar, <code>check_password(senha, user.senha_hash)</code> compara sem
+      desfazer o hash. Vale para cidadãos e servidores.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"O que impede um cidadão de ver ou mexer no chamado de outro?"</summary>
+      <div class="resp"><b>Bruno:</b> a função <code>_chamado_do_cidadao</code> levanta <code>Http404</code> se o chamado
+      não for do usuário logado; as listagens e notificações filtram por <code>WHERE c.id_cidadao = %s</code>. Devolve
+      <b>404</b> (não 403) de propósito, para não revelar que o recurso existe.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"O histórico pode ser alterado? Como vocês garantem a auditoria?"</summary>
+      <div class="resp"><b>Rafael:</b> triggers em <code>database/04_rules.sql</code> <b>bloqueiam</b> qualquer
+      <code>UPDATE</code> em <code>historico_chamado</code> e só liberam <code>DELETE</code> no fluxo oficial de exclusão
+      (a aplicação seta <code>set_config('portal.excluindo','true')</code>). A avaliação também fica imutável depois de
+      registrada (<code>RAISE EXCEPTION</code>).</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"O que acontece no banco quando o status muda?"</summary>
+      <div class="resp"><b>Rafael:</b> o INSERT em <code>historico_chamado</code> dispara dois gatilhos: o <b>Trigger 2A</b>
+      atualiza <code>chamado.atualizado_em</code>, e o <b>Trigger 2B</b> seta/limpa <code>dt_conclusao</code> (CO/CA preenche;
+      AB/EA/EE limpa) e cria a <b>notificação</b> para o cidadão. A aplicação só insere o status — o resto é automático.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Qual a diferença entre Colaborador (COL) e Gestor (GES)?"</summary>
+      <div class="resp"><b>Bruno:</b> os dois veem e atendem chamados, mas só o <b>GES</b> pode <b>excluir</b> chamado e
+      mexer em chamado já encerrado (CO/CA); o <b>COL</b> é bloqueado nesses casos (no Python). E só o GES vê os menus
+      de <b>Serviços, Colaboradores e Banners</b>. O perfil vem da coluna <code>servidor.perfil</code>.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Como funciona o primeiro acesso de um colaborador?"</summary>
+      <div class="resp"><b>Bruno:</b> o gestor cria o colaborador com uma senha provisória e
+      <code>senha_temporaria = '1'</code>. No login, isso redireciona para
+      <code>troca_senha_obrigatoria</code> e ele só usa o sistema depois de trocar a senha.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Tem recuperação de senha por e-mail?"</summary>
+      <div class="resp"><b>Bruno:</b> sim. <code>recuperar_senha_view</code> envia um e-mail com um <b>token assinado</b>
+      (<code>signing.dumps</code>, salt <code>vg.pwreset</code>, validade de 3 dias). <code>redefinir_senha_view</code>
+      valida o token e grava a nova senha (em hash). Por segurança, a mensagem é sempre "se o e-mail existir...".</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Como vocês limitam tentativas de login (força bruta)?"</summary>
+      <div class="resp"><b>Bruno:</b> <code>_check_login_rate_limit</code> guarda as tentativas na sessão e bloqueia
+      após <b>5 tentativas em 5 minutos</b> (<code>MAX_LOGIN_ATTEMPTS = 5</code>, <code>LOGIN_TIMEOUT = 300</code>),
+      mostrando "Muitas tentativas. Aguarde 5 minutos.".</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"O que é \"soft delete\" e onde é usado?"</summary>
+      <div class="resp"><b>Rafael:</b> em vez de apagar, marca <code>ativo = FALSE</code> (bairro, serviço, categoria,
+      colaborador, secretaria, cidadão). Assim o registro some das listas mas o histórico continua válido. O único CRUD
+      com <b>DELETE físico</b> é o de <b>Banners</b>.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Por que usar ModelForm do Django se vocês gravam com SQL puro?"</summary>
+      <div class="resp"><b>Bruno:</b> o <i>ModelForm</i> é usado <b>só para validar</b> (campos obrigatórios, formato de
+      e-mail, etc.). Nunca chamamos <code>form.save()</code> — depois de validar, a gravação é feita por
+      <code>cursor.execute()</code> (SQL puro), atendendo ao requisito da disciplina.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Como o middleware participa da segurança no banco?"</summary>
+      <div class="resp"><b>Bruno:</b> o <code>PortalUserMiddleware</code> roda a cada requisição: carrega o usuário em
+      <code>request.portal_user</code> e injeta <code>set_config('portal.perfil', ...)</code> na sessão do PostgreSQL.
+      Esses valores são usados pelos triggers de regra/auditoria no banco.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Por que os prazos do semáforo ficam numa tabela separada?"</summary>
+      <div class="resp"><b>Rafael:</b> <code>configuracao_semaforo</code> é um <i>singleton</i> (<code>CHECK (id = 1)</code>):
+      uma única linha com os prazos <b>globais</b>. Assim o gestor ajusta os prazos numa só tela e eles valem para todos
+      os serviços — não é preciso repetir prazo em cada serviço.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Por que o acesso a dados é um pacote <code>db/</code> e não um único arquivo <code>db.py</code>?"</summary>
+      <div class="resp"><b>Rafael/Bruno:</b> a camada de SQL puro foi organizada num <b>pacote</b>
+      <code>backend/portal/db/</code> dividido por domínio (<code>cidadao</code>, <code>servidor</code>, <code>chamado</code>,
+      <code>historico</code>, <code>catalogo</code>, <code>stats</code>, <code>notificacao</code>, <code>senha</code>,
+      <code>config</code>, <code>pagination</code> e <code>_shared</code>). Um <code>__init__.py</code> (fachada) re-exporta
+      todas as funções públicas, então quem chama continua usando <code>from portal import db</code> e
+      <code>db.&lt;funcao&gt;()</code> sem precisar saber o módulo. Vantagem: cada arquivo fica pequeno e coeso, em vez de
+      um arquivo gigante com tudo misturado.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Se eu digitar um e-mail que não existe no login, o que acontece e onde?"</summary>
+      <div class="resp"><b>Bruno:</b> os <code>SELECT</code> <code>db.buscar_cidadao_por_email</code> e
+      <code>buscar_servidor_por_email</code> não retornam linha, então <code>user is None</code> e a view chama
+      <code>_record_login_attempt</code> + <code>messages.error("E-mail ou senha incorretos.")</code>
+      (<code>views_auth.login_view</code>). De propósito, a mensagem é a mesma de "senha errada".</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Por que a mensagem de erro de login é a mesma para e-mail inexistente e senha errada?"</summary>
+      <div class="resp"><b>Bruno:</b> por <b>segurança</b> (não revelar se um e-mail está cadastrado). Os dois ramos da view
+      usam exatamente <code>messages.error(request, "E-mail ou senha incorretos.")</code>. O mesmo princípio aparece na
+      recuperação de senha ("se o e-mail existir...") e nos 404 (em vez de 403) do cidadão.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Como funciona a foto de perfil e onde ela é guardada?"</summary>
+      <div class="resp"><b>Bruno:</b> <code>upload_foto_perfil</code> (<code>views_root.py</code>) faz o upload com
+      <code>salvar_foto_upload</code> (Cloudinary ou disco) e, conforme o tipo do usuário, chama
+      <code>db.atualizar_foto_perfil("cidadao"/"servidor", pk, url)</code>. <b>Rafael:</b> isso é um
+      <code>UPDATE ... SET foto_perfil = %s</code> na tabela certa (<code>db/senha.py</code>); remover é
+      <code>SET foto_perfil = NULL</code>. A foto é só uma <b>URL</b> na coluna <code>foto_perfil</code>.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"O que é o catálogo público de serviços (<code>/servicos/</code>)?"</summary>
+      <div class="resp"><b>Bruno:</b> a view <code>catalogo_servicos</code> (<code>views_root.py</code>) é pública e mostra as
+      categorias com seus serviços ativos. Usa a mesma função <code>db.listar_categorias_com_servicos()</code> da home,
+      renderizando <code>public/catalogo_servicos.html</code>.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Como funciona a paginação das listas de chamados?"</summary>
+      <div class="resp"><b>Rafael/Bruno:</b> o SQL já traz só a "fatia" da página (<code>LIMIT %s OFFSET %s</code>) e o total;
+      a função <code>db.paginar(linhas, pagina, por_pagina=15, total_count=...)</code> (<code>db/pagination.py</code>) devolve
+      um objeto de página compatível com o template (15 por página).</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"O que faz o helper <code>fetch_all</code> / <code>fetch_one</code> do <code>db/_shared.py</code>?"</summary>
+      <div class="resp"><b>Rafael:</b> é um atalho para as listas simples: executa o <code>SELECT</code> e converte cada linha
+      num objeto (<code>SimpleNamespace</code>) a partir de uma lista de nomes de campo, já criando o atributo <code>pk</code>.
+      Evita repetir o <code>with connection.cursor()</code> + laço em cada função de listagem (catálogo, colaboradores,
+      notificações). O SQL continua sendo escrito à mão.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Qual a diferença entre 'adicionar observação' e 'mudar status'?"</summary>
+      <div class="resp"><b>Rafael:</b> os dois são <code>INSERT</code> em <code>historico_chamado</code>. Mudar status insere
+      com um <b>novo</b> <code>id_status</code> (vira o status atual). Observação <b>repete o status atual</b> e preenche o
+      campo <code>observacao</code> — não muda o status, só adiciona uma anotação ao histórico.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Como garantir que dois chamados abertos ao mesmo tempo não peguem o mesmo protocolo?"</summary>
+      <div class="resp"><b>Rafael:</b> o protocolo vem de <code>INSERT INTO protocolo_seq ... ON CONFLICT (ano) DO UPDATE
+      SET ultimo_numero = ... + 1 RETURNING</code> — atômico no banco. <b>Bruno:</b> ainda há um <code>for</code> de retry
+      em <code>criar_novo_chamado</code> que, se um <code>IntegrityError</code> de protocolo acontecer, gera outro número e
+      tenta de novo, tudo em <code>transaction.atomic()</code>.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Onde está a regra de que o colaborador (COL) não mexe em chamado encerrado?"</summary>
+      <div class="resp"><b>Bruno:</b> no Python, em <code>views_equipe</code>: no GET, <code>bloqueia_status_col = (perfil ==
+      'COL' and sigla in ('CO','CA'))</code> esconde o form; no POST, <code>equipe_chamado_status</code> reforça com
+      <code>raise Http404()</code> se um COL tentar mexer em CO/CA. Só o GES passa.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"O que acontece se alguém tentar dar <code>UPDATE</code> direto no histórico pelo banco?"</summary>
+      <div class="resp"><b>Rafael:</b> o trigger <code>fn_historico_sem_update</code> (<code>04_rules.sql</code>) dá
+      <code>RAISE EXCEPTION</code> — histórico é imutável. <code>DELETE</code> em histórico/chamado também é bloqueado, a não
+      ser dentro do fluxo oficial de exclusão (a aplicação seta <code>set_config('portal.excluindo','true')</code>).</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Por que usar <code>transaction.atomic()</code> ao excluir um chamado?"</summary>
+      <div class="resp"><b>Rafael:</b> a exclusão apaga vários "filhos" (fotos, históricos, notificações) e o chamado. Com a
+      transação, ou <b>tudo</b> é apagado, ou <b>nada</b> (se der erro no meio, desfaz) — o banco nunca fica num estado
+      parcial. A mesma flag <code>portal.excluindo</code> destrava os triggers de proteção só durante essa transação.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Como os formulários são protegidos contra CSRF?"</summary>
+      <div class="resp"><b>Yuuki/Bruno:</b> todo <code>&lt;form method="post"&gt;</code> tem <code>{% csrf_token %}</code>, e o
+      <code>CsrfViewMiddleware</code> do Django valida o token em cada POST. Sem o token válido, o Django recusa a
+      requisição — protege contra envio forjado de outro site.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Onde o número do sininho de notificações é calculado?"</summary>
+      <div class="resp"><b>Bruno:</b> num <i>context processor</i> (<code>context_processors.py</code>, registrado no
+      <code>settings</code>) que roda em toda página e injeta <code>notif_count</code> — um <code>SELECT COUNT(*)</code> das
+      notificações <b>não lidas e não arquivadas</b> do usuário. <b>Yuuki:</b> o <code>base.html</code> mostra esse número
+      no sininho do topo.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Como é feito o controle de acesso por perfil (CID/COL/GES)?"</summary>
+      <div class="resp"><b>Bruno:</b> por <i>decorators</i> em cima das views: <code>@perfis("GES")</code>,
+      <code>@perfis("COL","GES")</code>, <code>@perfis("CID")</code>, <code>@autenticado</code>, <code>@anonimo</code>
+      (<code>decorators.py</code>). Quem não tem o perfil é redirecionado com mensagem de "Sem permissão". O middleware
+      carrega o usuário em <code>request.portal_user</code> a cada requisição.</div>
+    </details>
+
+    <details class="pergunta">
+      <summary>"Quantas tabelas, triggers e views o banco tem?"</summary>
+      <div class="resp"><b>Rafael:</b> <b>13 tabelas</b> no <code>01_schema.sql</code> (11 entidades do DER +
+      <code>configuracao_semaforo</code> + <code>protocolo_seq</code>), mais <code>banner_publicacao</code> (definida pelo
+      <i>model</i>, <code>managed=False</code>). <b>1 view</b> (<code>vw_estatisticas_chamados</code>) e os <b>triggers</b>:
+      3 de negócio (1, 2A, 2B) em <code>03_functions_triggers.sql</code> e os de integridade em <code>04_rules.sql</code>
+      (foto/observação em encerrado, avaliação imutável, histórico/chamado sem UPDATE/DELETE).</div>
+    </details>
+  </div>
+
+  <div class="bloco">
+    <h2>Mapa de telas → arquivos (referência geral)</h2>
+    <table class="mini">
+      <tr><th>Tela / CRUD</th><th>SQL (Rafael)</th><th>Django (Bruno)</th><th>Front (Yuuki)</th></tr>
+      <tr><td>Página inicial</td><td>views_root.py (SELECTs)</td><td>root_view</td><td>root.html</td></tr>
+      <tr><td>Login</td><td>db/cidadao.py · db/servidor.py (buscar_*_por_email)</td><td>views_auth.login_view</td><td>auth/login.html + base.html (mensagens)</td></tr>
+      <tr><td>Cadastro</td><td>SELECT EXISTS + INSERT cidadao</td><td>views_auth.cadastro_view</td><td>auth/cadastro.html</td></tr>
+      <tr><td>Dashboard cidadão</td><td>JOIN LATERAL + stats</td><td>cidadao_chamados_lista</td><td>cidadao/dashboard.html</td></tr>
+      <tr><td>Dashboard equipe</td><td>COUNT/GROUP BY</td><td>equipe_dashboard</td><td>equipe/estatisticas_graficos.html</td></tr>
+      <tr><td>Gestão de Chamados</td><td>JOIN LATERAL + filtros</td><td>equipe_chamados_lista</td><td>equipe/dashboard.html</td></tr>
+      <tr><td>Editar chamado</td><td>criar_historico + UPDATE + Trigger 2B</td><td>equipe_chamado_detalhe (GET) / equipe_chamado_status (POST)</td><td>equipe/chamado_detalhe.html</td></tr>
+      <tr><td>Abrir chamado</td><td>proximo_protocolo + INSERT + Trigger 1</td><td>cidadao_chamado_novo</td><td>cidadao/novo_chamado.html</td></tr>
+      <tr><td>Notificações</td><td>Trigger 2B + SELECT/DELETE</td><td>cidadao_notificacoes</td><td>cidadao/notificacoes.html</td></tr>
+      <tr><td>Banners</td><td>banner_publicacao CRUD</td><td>gestao_banner_*</td><td>gestao/banners.html</td></tr>
+      <tr><td>Bairros</td><td>bairro CRUD + ativo</td><td>gestao_bairro_*</td><td>gestao/bairros.html</td></tr>
+      <tr><td>Serviços</td><td>servico CRUD; prazos em configuracao_semaforo (global)</td><td>gestao_servico_* / gestao_prazos</td><td>gestao/servicos.html · equipe/servico_prazos.html</td></tr>
+      <tr><td>Categorias</td><td>categoria_servico CRUD</td><td>gestao_categoria*</td><td>gestao/categorias.html</td></tr>
+      <tr><td>Colaboradores</td><td>servidor CRUD</td><td>gestao_colaborador_*</td><td>gestao/colaboradores.html</td></tr>
+      <tr><td>Estatísticas</td><td>vw_estatisticas_chamados</td><td>gestao_estatisticas</td><td>gestao/estatisticas.html</td></tr>
+      <tr><td>Excluir chamado</td><td>set_config + DELETE cascata</td><td>gestao_chamado_excluir</td><td>botão na tabela</td></tr>
+      <tr><td>Foto de perfil</td><td>db/senha.py atualizar_foto_perfil / remover_foto_perfil</td><td>views_root.upload_foto_perfil / excluir_foto_perfil</td><td>perfil (header)</td></tr>
+      <tr><td>Catálogo público</td><td>db/catalogo.py listar_categorias_com_servicos</td><td>views_root.catalogo_servicos</td><td>public/catalogo_servicos.html</td></tr>
+      <tr><td>Trocar senha (1º acesso)</td><td>db/senha.py atualizar_senha_usuario</td><td>views_auth.troca_senha_obrigatoria_view</td><td>auth/troca_senha_obrigatoria.html</td></tr>
+      <tr><td>Recuperar / Redefinir senha</td><td>db/senha.py buscar_cidadao_para_reset / atualizar_senha_usuario</td><td>views_auth.recuperar_senha_view · redefinir_senha_view</td><td>auth/recuperar_senha.html · auth/redefinir_senha.html</td></tr>
+    </table>
+  </div>
+
+</div>
+<a class="top" href="#">↑ topo</a>
+</body>
+</html>
