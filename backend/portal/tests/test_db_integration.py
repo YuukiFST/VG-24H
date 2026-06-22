@@ -7,19 +7,10 @@ Para executar:
 Ou pule com:
     pytest backend/portal/tests/test_db_integration.py -m "not integration"
 """
+import os
+
 import pytest
 from django.test import TestCase
-
-"""
-Testes de integracao para db.py — requer banco PostgreSQL configurado.
-
-Para executar:
-    pytest backend/portal/tests/test_db_integration.py --reuse-db
-
-Ou pule com:
-    pytest backend/portal/tests/test_db_integration.py -m "not integration"
-"""
-import os
 
 from portal import db
 
@@ -51,6 +42,19 @@ class TestListarCategoriasAtivas(TestCase):
     def test_retorna_lista(self):
         result = db.listar_categorias_ativas()
         self.assertIsInstance(result, list)
+
+
+@pytest.mark.skipif(not INTEGRATION_ENABLED, reason="banco necessario")
+class TestConfiguracaoSemaforo(TestCase):
+    """Testa o singleton de configuracao do semaforo (tabela managed=False)."""
+
+    def test_get_singleton_cria_se_vazio(self):
+        from portal.models import ConfiguracaoSemaforo
+
+        ConfiguracaoSemaforo.objects.all().delete()
+        cfg = ConfiguracaoSemaforo.get_singleton()
+        self.assertEqual(cfg.prazo_amarelo_dias, 15)
+        self.assertEqual(cfg.prazo_vermelho_dias, 30)
 
 
 class TestCorSemaforo(TestCase):
