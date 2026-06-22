@@ -2,41 +2,39 @@
 Veja portal/db/__init__.py para a fachada publica."""
 
 
-from types import SimpleNamespace
-
 from django.db import connection
+
+from portal.db._shared import fetch_all
+
+_NOTIF_FIELDS = ("id_notificacao", "mensagem", "lida", "arquivada", "dt_envio", "id_chamado_id")
 
 
 def listar_notificacoes_cidadao(uid):
     """Lista notificacoes nao arquivadas de um cidadao."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT n.id_notificacao, n.mensagem, n.lida, n.arquivada, "
-            "n.dt_envio, n.id_chamado "
-            "FROM notificacao n "
-            "WHERE n.arquivada = FALSE "
-            "AND n.id_chamado IN (SELECT c.id_chamado FROM chamado c WHERE c.id_cidadao = %s) "
-            "ORDER BY n.dt_envio DESC", [uid]
-        )
-        return [SimpleNamespace(id_notificacao=r[0], pk=r[0], mensagem=r[1],
-                lida=r[2], arquivada=r[3], dt_envio=r[4], id_chamado_id=r[5])
-                for r in cursor.fetchall()]
+    return fetch_all(
+        "SELECT n.id_notificacao, n.mensagem, n.lida, n.arquivada, "
+        "n.dt_envio, n.id_chamado "
+        "FROM notificacao n "
+        "WHERE n.arquivada = FALSE "
+        "AND n.id_chamado IN (SELECT c.id_chamado FROM chamado c WHERE c.id_cidadao = %s) "
+        "ORDER BY n.dt_envio DESC",
+        [uid],
+        fields=_NOTIF_FIELDS,
+    )
 
 def listar_notificacoes_servidor(uid):
     """Lista notificacoes nao arquivadas de um servidor."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT n.id_notificacao, n.mensagem, n.lida, n.arquivada, "
-            "n.dt_envio, n.id_chamado "
-            "FROM notificacao n "
-            "WHERE n.arquivada = FALSE "
-            "AND n.id_chamado IN ("
-            "  SELECT DISTINCT hc.id_chamado FROM historico_chamado hc WHERE hc.id_servidor = %s"
-            ") ORDER BY n.dt_envio DESC", [uid]
-        )
-        return [SimpleNamespace(id_notificacao=r[0], pk=r[0], mensagem=r[1],
-                lida=r[2], arquivada=r[3], dt_envio=r[4], id_chamado_id=r[5])
-                for r in cursor.fetchall()]
+    return fetch_all(
+        "SELECT n.id_notificacao, n.mensagem, n.lida, n.arquivada, "
+        "n.dt_envio, n.id_chamado "
+        "FROM notificacao n "
+        "WHERE n.arquivada = FALSE "
+        "AND n.id_chamado IN ("
+        "  SELECT DISTINCT hc.id_chamado FROM historico_chamado hc WHERE hc.id_servidor = %s"
+        ") ORDER BY n.dt_envio DESC",
+        [uid],
+        fields=_NOTIF_FIELDS,
+    )
 
 def marcar_notificacoes_lidas(nids):
     """Marca notificacoes como lidas."""

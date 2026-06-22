@@ -7,81 +7,50 @@ from types import SimpleNamespace
 from django.db import connection
 from django.utils import timezone
 
-from portal.db._shared import _buscar_secretaria_id
+from portal.db._shared import _buscar_secretaria_id, fetch_all, fetch_one
 
 
 def listar_categorias_ativas():
     """Lista categorias ativas ordenadas por nome."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_categoria, nome, descricao "
-            "FROM categoria_servico "
-            "WHERE ativo = TRUE ORDER BY nome"
-        )
-        return [
-            SimpleNamespace(
-                id_categoria=r[0], pk=r[0], nome=r[1], descricao=r[2],
-            )
-            for r in cursor.fetchall()
-        ]
+    return fetch_all(
+        "SELECT id_categoria, nome, descricao "
+        "FROM categoria_servico WHERE ativo = TRUE ORDER BY nome",
+        fields=("id_categoria", "nome", "descricao"),
+    )
 
 def listar_bairros_ativos():
     """Lista bairros ativos ordenados por nome. Usado em formularios e filtros."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
-            "FROM bairro "
-            "WHERE ativo = TRUE "
-            "ORDER BY nome_bairro"
-        )
-        return [
-            SimpleNamespace(
-                id_bairro=r[0], pk=r[0], nome_bairro=r[1],
-                cep=r[2], regiao=r[3], ativo=r[4],
-            )
-            for r in cursor.fetchall()
-        ]
+    return fetch_all(
+        "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
+        "FROM bairro WHERE ativo = TRUE ORDER BY nome_bairro",
+        fields=("id_bairro", "nome_bairro", "cep", "regiao", "ativo"),
+    )
 
 def listar_statuses():
     """Lista todos os status de chamado. Retorna os 5 status fixos: AB, EA, EE, CO, CA."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_status, sigla, descricao "
-            "FROM status_chamado ORDER BY id_status"
-        )
-        return [
-            SimpleNamespace(id_status=r[0], pk=r[0], sigla=r[1], descricao=r[2])
-            for r in cursor.fetchall()
-        ]
+    return fetch_all(
+        "SELECT id_status, sigla, descricao FROM status_chamado ORDER BY id_status",
+        fields=("id_status", "sigla", "descricao"),
+    )
 
 def listar_servicos_ativos():
     """Lista servicos ativos com id e nome para uso em filtros."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_servico, nome FROM servico WHERE ativo = TRUE ORDER BY nome"
-        )
-        return [
-            SimpleNamespace(id_servico=r[0], pk=r[0], nome=r[1])
-            for r in cursor.fetchall()
-        ]
+    return fetch_all(
+        "SELECT id_servico, nome FROM servico WHERE ativo = TRUE ORDER BY nome",
+        fields=("id_servico", "nome"),
+    )
 
 def listar_banners_ativos():
     """Retorna banners ativos ordenados por ordem."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_banner, titulo, descricao, url_imagem, link "
-            "FROM banner_publicacao "
-            "WHERE ativo = TRUE ORDER BY ordem ASC, dt_criacao DESC"
-        )
-        return [
-            SimpleNamespace(id_banner=r[0], pk=r[0], titulo=r[1], descricao=r[2],
-                            url_imagem=r[3], link=r[4])
-            for r in cursor.fetchall()
-        ]
+    return fetch_all(
+        "SELECT id_banner, titulo, descricao, url_imagem, link "
+        "FROM banner_publicacao "
+        "WHERE ativo = TRUE ORDER BY ordem ASC, dt_criacao DESC",
+        fields=("id_banner", "titulo", "descricao", "url_imagem", "link"),
+    )
 
 def listar_categorias_com_servicos():
     """Retorna categorias ativas com seus servicos aninhados."""
-    from types import SimpleNamespace
     categorias = []
     with connection.cursor() as cursor:
         cursor.execute(
@@ -108,14 +77,11 @@ def listar_categorias_com_servicos():
 
 def listar_categorias_todas():
     """Lista todas as categorias ativas."""
-    from types import SimpleNamespace
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_categoria, nome, descricao, ativo "
-            "FROM categoria_servico WHERE ativo = TRUE ORDER BY nome"
-        )
-        return [SimpleNamespace(id_categoria=r[0], pk=r[0], nome=r[1], descricao=r[2], ativo=r[3])
-                for r in cursor.fetchall()]
+    return fetch_all(
+        "SELECT id_categoria, nome, descricao, ativo "
+        "FROM categoria_servico WHERE ativo = TRUE ORDER BY nome",
+        fields=("id_categoria", "nome", "descricao", "ativo"),
+    )
 
 def inserir_categoria(nome, descricao):
     """Cria nova categoria."""
@@ -137,7 +103,6 @@ def atualizar_categoria(pk, nome, descricao):
 
 def listar_servicos_com_categoria():
     """Lista servicos ativos com nome da categoria."""
-    from types import SimpleNamespace
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT s.id_servico, s.nome, s.descricao, s.ativo, "
@@ -179,15 +144,11 @@ def desativar_servico(pk):
 
 def listar_bairros_todos():
     """Lista todos os bairros (sem filtro de ativo)."""
-    from types import SimpleNamespace
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
-            "FROM bairro ORDER BY nome_bairro"
-        )
-        return [SimpleNamespace(id_bairro=r[0], pk=r[0], nome_bairro=r[1],
-                cep=r[2], regiao=r[3], ativo=r[4])
-                for r in cursor.fetchall()]
+    return fetch_all(
+        "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
+        "FROM bairro ORDER BY nome_bairro",
+        fields=("id_bairro", "nome_bairro", "cep", "regiao", "ativo"),
+    )
 
 def inserir_bairro(nome_bairro, cep, regiao):
     """Cria novo bairro."""
@@ -225,33 +186,29 @@ def ativar_bairro(pk):
         cursor.execute("UPDATE bairro SET ativo = TRUE WHERE id_bairro = %s", [pk])
         return True
 
+_BANNER_FIELDS = (
+    "id_banner", "titulo", "descricao", "url_imagem", "link",
+    "ordem", "ativo", "dt_criacao",
+)
+
 def listar_banners_todos():
     """Lista todos os banners ordenados."""
-    from types import SimpleNamespace
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_banner, titulo, descricao, url_imagem, link, "
-            "ordem, ativo, dt_criacao "
-            "FROM banner_publicacao ORDER BY ordem, dt_criacao DESC"
-        )
-        return [SimpleNamespace(id_banner=r[0], pk=r[0], titulo=r[1], descricao=r[2],
-                url_imagem=r[3], link=r[4], ordem=r[5], ativo=r[6], dt_criacao=r[7])
-                for r in cursor.fetchall()]
+    return fetch_all(
+        "SELECT id_banner, titulo, descricao, url_imagem, link, "
+        "ordem, ativo, dt_criacao "
+        "FROM banner_publicacao ORDER BY ordem, dt_criacao DESC",
+        fields=_BANNER_FIELDS,
+    )
 
 def buscar_banner(pk):
     """Busca banner por ID."""
-    from types import SimpleNamespace
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_banner, titulo, descricao, url_imagem, link, "
-            "ordem, ativo, dt_criacao "
-            "FROM banner_publicacao WHERE id_banner = %s", [pk]
-        )
-        row = cursor.fetchone()
-    if not row:
-        return None
-    return SimpleNamespace(id_banner=row[0], pk=row[0], titulo=row[1], descricao=row[2],
-                           url_imagem=row[3], link=row[4], ordem=row[5], ativo=row[6], dt_criacao=row[7])
+    return fetch_one(
+        "SELECT id_banner, titulo, descricao, url_imagem, link, "
+        "ordem, ativo, dt_criacao "
+        "FROM banner_publicacao WHERE id_banner = %s",
+        [pk],
+        fields=_BANNER_FIELDS,
+    )
 
 def inserir_banner(titulo, descricao, url_imagem, link):
     """Cria novo banner com ordem auto-incrementada."""

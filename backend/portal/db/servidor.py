@@ -2,12 +2,10 @@
 Veja portal/db/__init__.py para a fachada publica."""
 
 
-from types import SimpleNamespace
-
 from django.db import connection
 from django.utils import timezone
 
-from portal.db._shared import _buscar_secretaria_id
+from portal.db._shared import _buscar_secretaria_id, fetch_all
 
 
 def buscar_servidor_por_id(uid):
@@ -72,16 +70,14 @@ def buscar_servidor_por_email(email):
 
 def listar_colaboradores():
     """Lista servidores com perfil COL."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_servidor, nome_completo, cpf, email, telefone, "
-            "perfil, ativo, dt_cadastro "
-            "FROM servidor WHERE perfil = 'COL' "
-            "ORDER BY ativo DESC, nome_completo"
-        )
-        return [SimpleNamespace(id_servidor=r[0], pk=r[0], nome_completo=r[1],
-                cpf=r[2], email=r[3], telefone=r[4], perfil=r[5], ativo=r[6], dt_cadastro=r[7])
-                for r in cursor.fetchall()]
+    return fetch_all(
+        "SELECT id_servidor, nome_completo, cpf, email, telefone, "
+        "perfil, ativo, dt_cadastro "
+        "FROM servidor WHERE perfil = 'COL' "
+        "ORDER BY ativo DESC, nome_completo",
+        fields=("id_servidor", "nome_completo", "cpf", "email", "telefone",
+                "perfil", "ativo", "dt_cadastro"),
+    )
 
 def inserir_colaborador(dados):
     """Cria novo colaborador com senha provisoria."""

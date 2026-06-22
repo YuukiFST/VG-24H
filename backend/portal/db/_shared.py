@@ -2,7 +2,43 @@
 Veja portal/db/__init__.py para a fachada publica."""
 
 
+from types import SimpleNamespace
+
 from django.db import connection
+
+
+def fetch_all(sql, params=None, *, fields, pk_alias=True):
+    """Executa um SELECT e mapeia cada linha para um SimpleNamespace.
+
+    `fields` nomeia as colunas na mesma ordem do SELECT. Com `pk_alias`,
+    cada objeto ganha `.pk` espelhando a primeira coluna (o id da tabela),
+    convencao usada pelos templates. Substitui o boilerplate repetido de
+    `with connection.cursor()` + comprehension de SimpleNamespace.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(sql, params or [])
+        rows = cursor.fetchall()
+    resultado = []
+    for r in rows:
+        ns = SimpleNamespace(**dict(zip(fields, r, strict=True)))
+        if pk_alias:
+            ns.pk = r[0]
+        resultado.append(ns)
+    return resultado
+
+
+def fetch_one(sql, params=None, *, fields, pk_alias=True):
+    """Versao de uma linha de fetch_all. Retorna None se nada for encontrado."""
+    with connection.cursor() as cursor:
+        cursor.execute(sql, params or [])
+        row = cursor.fetchone()
+    if row is None:
+        return None
+    ns = SimpleNamespace(**dict(zip(fields, row, strict=True)))
+    if pk_alias:
+        ns.pk = row[0]
+    return ns
+
 
 TABELAS_VALIDAS = frozenset({"cidadao", "servidor"})
 
