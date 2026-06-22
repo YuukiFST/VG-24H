@@ -1,21 +1,21 @@
 """
-views_root.py — Views publicas e de raiz do projeto (Portal VG 24H)
+views_root.py — aqui ficam minhas views publicas e de raiz (Portal VG 24H)
 
-Este modulo contem as views que nao exigem autenticacao e as rotas
-de raiz do sistema: pagina inicial, troca forcada de senha, painel
-do cidadao (acesso rapido) e gestao de notificacoes.
+Joguei aqui as views que NAO precisam de login mais as rotas de raiz:
+pagina inicial, troca forcada de senha, painel do cidadao (acesso rapido)
+e as notificacoes.
 
-As views de troca de senha sao obrigatorias para servidores com
-senha_temporaria='1' (colaboradores recem-criados). O decorator
-@exige_troca_senha intercepta QUALQUER requisicao e redireciona
-o servidor para a tela de troca ate que ele defina uma nova senha.
+A troca de senha aqui eh obrigatoria pra servidor que ta com
+senha_temporaria='1' (colaborador que o gestor acabou de criar). O
+decorator @exige_troca_senha segura QUALQUER requisicao e manda o cara
+pra tela de troca ate ele botar uma senha nova.
 
-As notificacoes sao criadas automaticamente pelo banco de dados
-(Trigger 2B: fn_notificar_status_update) toda vez que o status
-de um chamado muda. Estas views apenas listam e deletam — nunca
-criam notificacoes diretamente.
+Lembrete pra mim: as notificacoes quem cria eh o banco sozinho
+(Trigger 2B: fn_notificar_status_update) toda vez que o status de um
+chamado muda. Aqui eu so listo e deleto, nunca crio notificacao na mao.
 """
 
+# imports do django + meus modulos (db = minhas funcoes de SQL puro, decorators, forms, utils)
 from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
@@ -27,9 +27,12 @@ from portal.utils import salvar_foto_upload
 
 
 def root_view(request):
+    # home publica: pego os banners ativos, as categorias com seus servicos
     banners = db.listar_banners_ativos()
     categorias = db.listar_categorias_com_servicos()
+    # stats publicas (numeros que aparecem na home, tipo total de chamados)
     stats = db.buscar_stats_publicas()
+    # mando tudo pro template da raiz
     return render(request, "portal/root.html", {
         "banners": banners, "categorias": categorias, "stats": stats,
     })
@@ -41,35 +44,36 @@ def root_view(request):
 @autenticado
 @require_http_methods(["GET", "POST"])
 def trocar_senha(request):
-    """Tela de troca de senha obrigatoria.
+    """Minha tela de troca de senha obrigatoria.
 
-    Disponivel para qualquer tipo de usuario logado (COL, GES, CID).
-    Apos trocar a senha com sucesso, limpa a flag senha_temporaria
-    no banco e atualiza o cookie de sessao.
+    Serve pra qualquer um logado (COL, GES, CID). Quando troca certo eu
+    limpo a flag senha_temporaria no banco e atualizo o cookie da sessao.
 
-    O campo senha_temporaria='1' eh setado quando um gestor cria um
-    novo colaborador. O middleware injetado no cookie detecta isso e
-    redireciona todas as requisicoes para esta tela.
+    Esse senha_temporaria='1' fica ligado quando o gestor cria um
+    colaborador novo. O middleware enxerga isso pelo cookie e joga todas
+    as requisicoes pra ca ate o cara trocar.
     """
     if request.method == "POST":
+        # so processa a troca no POST; valido pelo meu form de senha nova
         form = NovaSenhaForm(request.POST)
         if form.is_valid():
             nova = form.cleaned_data["nova_senha"]
 
-            # Atualiza a senha do servidor logado (hash bcrypt via make_password).
-            # Usa SQL puro: UPDATE tabela correta conforme o tipo de usuario.
+            # aqui decido em qual tabela mexer: se o user tem id_servidor eh
+            # servidor, senao eh cidadao. A funcao do db ja faz o hash bcrypt.
             if hasattr(request.portal_user, "id_servidor"):
                 db.atualizar_senha_usuario("servidor", request.portal_user.pk, nova)
             else:
                 db.atualizar_senha_usuario("cidadao", request.portal_user.pk, nova)
 
-            # atualizar_senha_usuario ja limpou senha_temporaria no banco;
-            # renova o cookie para que o middleware releia o usuario.
+            # o db ja zerou senha_temporaria; marco a sessao como modificada
+            # pra renovar o cookie e o middleware reler o user atualizado
             request.session.modified = True
 
             messages.success(request, "Senha alterada com sucesso!")
-            return redirect("/")
+            return redirect("/")  # deu certo, mando pra home
     else:
+        # GET: so mostro o form vazio
         form = NovaSenhaForm()
 
     return render(request, "portal/senha/trocar_senha.html", {"form": form})
@@ -81,30 +85,31 @@ def trocar_senha(request):
 
 @autenticado
 def notificacoes(request):
-    """Lista notificacoes do servidor logado.
+    """Lista as notificacoes do servidor que ta logado.
 
-    As notificacoes sao criadas automaticamente pelo trigger do banco
-    (fn_notificar_status_update) quando o status de um chamado muda.
-    Esta view so permite visualizar e deletar.
+    Quem cria as notificacao eh o trigger do banco
+    (fn_notificar_status_update) quando o status do chamado muda. Aqui
+    eu so vejo e deleto.
 
-    Seguranca: a subquery garante que o servidor so ve notificacoes
-    dos chamados que ele mesmo atendeu (via historico_chamado).
+    Seguranca (lembrete): a subquery la no db garante que o servidor so
+    enxerga notificacao dos chamados que ELE atendeu (via historico_chamado).
     """
-    uid = request.portal_user.pk
+    uid = request.portal_user.pk  # id do servidor logado
     notifs = db.listar_notificacoes_servidor(uid)
 
+    # pego as nao lidas e ja marco como lidas (abriu, leu)
     nids = [n.pk for n in notifs if not n.lida]
     db.marcar_notificacoes_lidas(nids)
 
-    # POST: exclusao de uma notificacao especifica.
-    # Seguranca: subquery garante que so pode deletar notificacoes
-    # dos proprios chamados atendidos (nao de outros servidores).
+    # se veio POST eh pra excluir uma notificacao especifica.
+    # passo uid_servidor pra subquery so deixar deletar o que eh meu mesmo,
+    # assim ninguem apaga notificacao de outro servidor mexendo no POST
     if request.method == "POST":
         nid = request.POST.get("excluir")
         if nid:
             db.excluir_notificacao(nid, uid_servidor=uid)
             messages.info(request, "Notificação removida.")
-        return redirect("portal:notificacoes")
+        return redirect("portal:notificacoes")  # PRG: redireciona depois do POST
 
     return render(request, "portal/notificacoes.html", {"lista": notifs})
 
@@ -115,7 +120,9 @@ def notificacoes(request):
 
 @autenticado
 def painel_cidadao(request):
+    # painel rapido do cidadao: o user logado eh o proprio cidadao
     cidadao = request.portal_user
+    # busco os chamados dele pra mostrar resumido no painel
     chamados = db.listar_chamados_painel(cidadao.pk)
     return render(request, "portal/cidadao/painel.html", {
         "cidadao": cidadao, "chamados": chamados,
@@ -129,26 +136,29 @@ def painel_cidadao(request):
 @autenticado
 @require_http_methods(["POST"])
 def upload_foto_perfil(request):
-    """Salva ou substitui a foto de perfil do usuario logado.
+    """Salva ou troca a foto de perfil de quem ta logado.
 
-    Detecta automaticamente se o usuario eh cidadao ou servidor
-    e atualiza a tabela correta. O upload pode ir para Cloudinary
-    (se configurado) ou para o filesystem local.
+    Sozinho eu descubro se eh cidadao ou servidor e atualizo a tabela
+    certa. O upload vai pro Cloudinary (se tiver configurado) ou pro
+    filesystem local.
     """
     foto = request.FILES.get("foto")
     if not foto:
+        # nao mandaram arquivo nenhum, aviso e volto pra home
         messages.error(request, "Nenhuma foto selecionada.")
         return redirect("/")
 
     try:
+        # essa funcao do utils salva a foto e me devolve a url
         url = salvar_foto_upload(foto, request=request)
     except ValueError as e:
+        # se a foto for invalida (tipo/tamanho) ela estoura ValueError
         messages.error(request, str(e))
         return redirect("/")
 
     user = request.portal_user
 
-    # Atualiza o campo foto_perfil na tabela correta conforme o tipo de usuario.
+    # uso isinstance pra saber se eh Cidadao e gravar a url na tabela certa
     from portal.models import Cidadao
     if isinstance(user, Cidadao):
         db.atualizar_foto_perfil("cidadao", user.pk, url)
@@ -166,9 +176,10 @@ def upload_foto_perfil(request):
 @autenticado
 @require_http_methods(["POST"])
 def excluir_foto_perfil(request):
-    """Remove a foto de perfil do usuario (define como NULL no banco)."""
+    """Tira a foto de perfil (deixa NULL no banco)."""
     user = request.portal_user
 
+    # mesma logica do upload: descubro o tipo e removo na tabela certa
     from portal.models import Cidadao
     if isinstance(user, Cidadao):
         db.remover_foto_perfil("cidadao", user.pk)
@@ -180,5 +191,7 @@ def excluir_foto_perfil(request):
 
 def catalogo_servicos(request):
     """Catalogo publico de servicos."""
+    # monto uma lista de tuplas (categoria, servicos) pra ficar facil de
+    # iterar no template, em vez de mandar os dicts crus
     blocos = [(item["categoria"], item["servicos"]) for item in db.listar_categorias_com_servicos()]
     return render(request, "portal/public/catalogo_servicos.html", {"blocos": blocos})

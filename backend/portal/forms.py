@@ -1,15 +1,18 @@
 """
 forms.py — Formularios do Portal VG 24H
 
-Os formularios usam ModelChoiceField e ModelForm do Django para validacao
-de Foreign Keys (ex: id_servico, id_status, id_categoria). Isso eh
-intencional: o Django valida automaticamente que o valor selecionado
-existe na tabela referenciada, evitando erro de FK no banco.
+Aqui ficam todos os meus forms. Detalhe importante que eu mesmo decidi:
+uso ModelChoiceField e ModelForm so pra deixar o Django validar as Foreign
+Keys (id_servico, id_status, id_categoria). Assim o proprio Django ja
+confere se o valor escolhido existe na tabela, e eu nao tomo erro de FK
+la no banco na hora do INSERT.
 
-As views, por sua vez, usam SQL puro para todas as operacoes de leitura
-e escrita (INSERT, UPDATE, SELECT, DELETE). O form.save() nunca eh chamado.
+Lembrete pra mim: as views fazem TUDO em SQL puro (INSERT, UPDATE, SELECT,
+DELETE). Ou seja, eu NUNCA chamo form.save() aqui. O form eh so pra validar.
 """
 
+# re pra checar a senha com regex, forms/ValidationError do Django, e os
+# models que eu uso nos ModelChoiceField/ModelForm
 import re
 
 from django import forms
@@ -23,15 +26,23 @@ from portal.models import (
 )
 
 
+# meu validator de senha forte: uso ele em todo campo de senha la embaixo.
+# se quebrar alguma regra eu solto ValidationError com a msg certinha
 def _validar_senha_forte(value):
+    # pelo menos 8 caracteres
     if len(value) < 8:
         raise ValidationError("Senha deve ter pelo menos 8 caracteres.")
+    # tem que ter pelo menos uma MAIUSCULA
     if not re.search(r"[A-Z]", value):
         raise ValidationError("Senha deve conter pelo menos uma letra maiuscula.")
+    # pelo menos uma minuscula
     if not re.search(r"[a-z]", value):
         raise ValidationError("Senha deve conter pelo menos uma letra minuscula.")
+    # pelo menos um numero (\d)
     if not re.search(r"\d", value):
         raise ValidationError("Senha deve conter pelo menos um numero.")
+    # e pelo menos um caractere especial. essa lista grande eh o conjunto
+    # de simbolos que eu aceito como "especial"
     if not re.search(r"[!@#$%&*()_+\-=\[\]{};':\"\\|,.<>\/?]", value):
         raise ValidationError("Senha deve conter pelo menos um caractere especial.")
 
@@ -41,21 +52,24 @@ def _validar_senha_forte(value):
 # ------------------------------------------------------------------
 
 class CadastroCidadaoForm(forms.Form):
-    """Formulario de cadastro de cidadao com validacao de CPF e senhas.
+    """Form de cadastro do cidadao, com validacao de CPF e das senhas.
 
-    O wizard de cadastro tem 3 etapas (dados pessoais, endereco, foto),
-    mas o formulario Python unifica todos os campos. A etapa de foto
-    eh tratada separadamente na view.
+    Detalhe: meu wizard no front tem 3 etapas (dados pessoais, endereco,
+    foto), mas aqui no Python eu junto tudo num form so. A foto eu trato
+    separado la na view, por isso ela nem aparece nesse form.
     """
+    # dados pessoais (etapa 1 do wizard)
     nome_completo = forms.CharField(max_length=200, label="Nome completo")
-    cpf = forms.CharField(max_length=14, label="CPF")
+    cpf = forms.CharField(max_length=14, label="CPF")  # 14 pra caber a mascara 000.000.000-00
     dt_nascimento = forms.DateField(label="Data de nascimento")
     telefone = forms.CharField(max_length=20, label="Telefone")
     email = forms.EmailField(max_length=255, label="E-mail")
+    # senha passa pelo meu validator de senha forte; senha2 eh so confirmacao
     senha = forms.CharField(widget=forms.PasswordInput, min_length=8, label="Senha", validators=[_validar_senha_forte])
     senha2 = forms.CharField(widget=forms.PasswordInput, label="Confirmar senha")
 
-    # Campos de endereco (etapa 2 do wizard).
+    # campos de endereco (etapa 2 do wizard). required=False porque o cidadao
+    # pode terminar o cadastro sem preencher endereco agora
     rua = forms.CharField(max_length=100, required=False)
     num_endereco = forms.CharField(max_length=10, required=False)
     complemento_endereco = forms.CharField(max_length=200, required=False)
@@ -63,20 +77,23 @@ class CadastroCidadaoForm(forms.Form):
     cep_endereco = forms.CharField(max_length=10, required=False)
 
     def clean_cpf(self):
-        """Remove caracteres nao numericos do CPF antes de validar."""
+        # tiro tudo que nao eh numero do CPF (a mascara manda ponto e traco)
+        # e guardo so os digitos, que eh o que vai pro banco
         cpf = self.cleaned_data.get("cpf", "")
         return "".join(filter(str.isdigit, cpf))
 
     def clean_telefone(self):
-        """Remove caracteres nao numericos do telefone."""
+        # mesma ideia do CPF: limpo o telefone deixando so digito
         tel = self.cleaned_data.get("telefone", "")
         tel = "".join(filter(str.isdigit, tel))
+        # e exijo no minimo 8 digitos pra nao aceitar telefone capenga
         if len(tel) < 8:
             raise forms.ValidationError("Telefone deve ter pelo menos 8 digitos.")
         return tel
 
     def clean(self):
-        """Valida que as duas senhas digitadas sao iguais."""
+        # clean geral do form: aqui eu confiro se senha e senha2 batem.
+        # so comparo se as duas vieram preenchidas
         d = super().clean()
         if d.get("senha") and d.get("senha2") and d.get("senha") != d.get("senha2"):
             raise forms.ValidationError("As senhas nao coincidem.")
@@ -84,16 +101,18 @@ class CadastroCidadaoForm(forms.Form):
 
 
 class RecuperarSenhaForm(forms.Form):
-    """Formulario para solicitacao de recuperacao de senha via email."""
+    """Form do "esqueci minha senha": o cara so digita o email cadastrado."""
     email = forms.EmailField(label="E-mail cadastrado")
 
 
 class RedefinirSenhaForm(forms.Form):
-    """Formulario para definir nova senha (apos clicar no link do email)."""
+    """Form pra definir a nova senha depois que clicou no link do email."""
+    # de novo o validator de senha forte + a confirmacao
     senha = forms.CharField(widget=forms.PasswordInput, min_length=8, label="Nova senha", validators=[_validar_senha_forte])
     senha2 = forms.CharField(widget=forms.PasswordInput, label="Confirmar senha")
 
     def clean(self):
+        # confiro se as duas senhas batem (aqui comparo direto)
         d = super().clean()
         if d.get("senha") != d.get("senha2"):
             raise forms.ValidationError("As senhas nao coincidem.")
@@ -101,48 +120,55 @@ class RedefinirSenhaForm(forms.Form):
 
 
 class TrocaSenhaObrigatoriaForm(RedefinirSenhaForm):
-    """Troca obrigatoria de senha no primeiro acesso de servidores.
+    """Troca de senha obrigatoria no primeiro acesso do servidor.
 
-    Herda RedefinirSenhaForm com a mesma validacao (senha + confirmacao).
+    Eu so herdo o RedefinirSenhaForm porque a validacao eh identica
+    (senha + confirmacao). Por isso o pass, nao preciso adicionar nada.
     """
     pass
 
 
 class NovaSenhaForm(forms.Form):
-    """Formulario para troca de senha (campo unico)."""
+    """Form de troca de senha mais simples, com um campo unico de nova senha."""
     nova_senha = forms.CharField(widget=forms.PasswordInput, min_length=8, label="Nova senha", validators=[_validar_senha_forte])
 
 
 class ChamadoNovoForm(forms.Form):
-    """Formulario de abertura de chamado pelo cidadao.
+    """Form de abertura de chamado pelo cidadao.
 
-    O campo id_servico usa ModelChoiceField para validar que o servico
-    selecionado existe e esta ativo. O select cascata (categoria -> servico)
-    eh implementado no template com JavaScript.
+    O id_servico eh ModelChoiceField com queryset so de servico ativo: assim
+    o Django ja valida que o servico existe e ta ativo. O select cascata
+    (escolhe categoria -> filtra servico) eu faco no template com JavaScript,
+    aqui eu so passo o queryset completo.
     """
+    # so servico ativo entra na lista; select_related ja traz a categoria junto
     id_servico = forms.ModelChoiceField(
         queryset=Servico.objects.filter(ativo=True).select_related("id_categoria"),
         label="Serviço",
     )
+    # mesma ideia: so bairro ativo
     id_bairro = forms.ModelChoiceField(
         queryset=Bairro.objects.filter(ativo=True),
         label="Bairro",
     )
+    # textarea de 4 linhas pro cidadao descrever o problema
     descricao = forms.CharField(
         max_length=500,
         widget=forms.Textarea(attrs={"rows": 4}),
         label="Descrição do problema",
     )
+    # ponto de referencia eh opcional (required=False)
     ponto_de_referencia = forms.CharField(
         max_length=100,
         required=False,
         label="Ponto de referência",
     )
+    # foto obrigatoria pra abrir chamado
     foto = forms.ImageField(label="Foto (obrigatória)")
 
 
 class ObservacaoForm(forms.Form):
-    """Formulario para adicionar observacao (mensagem) a um chamado."""
+    """Form pra mandar uma observacao/mensagem num chamado ja existente."""
     texto = forms.CharField(
         max_length=500,
         widget=forms.Textarea(attrs={"rows": 3}),
@@ -151,12 +177,15 @@ class ObservacaoForm(forms.Form):
 
 
 class AvaliacaoForm(forms.Form):
-    """Avaliacao de chamado concluido: nota de 1 a 5 + comentario opcional."""
+    """Form de avaliacao de chamado concluido: nota de 1 a 5 + comentario."""
+    # TypedChoiceField com choices 1..6 (range para no 6, entao vai de 1 a 5)
+    # e coerce=int pra ja receber a nota como inteiro, nao string
     nota = forms.TypedChoiceField(
         choices=[(i, str(i)) for i in range(1, 6)],
         coerce=int,
         label="Nota de 1 a 5",
     )
+    # comentario eh opcional
     comentario = forms.CharField(
         max_length=500,
         required=False,
@@ -166,7 +195,7 @@ class AvaliacaoForm(forms.Form):
 
 
 class CancelarChamadoForm(forms.Form):
-    """Formulario de cancelamento de chamado pelo cidadao (motivo obrigatorio)."""
+    """Form de cancelamento de chamado pelo cidadao. Aqui o motivo eh obrigatorio."""
     motivo = forms.CharField(
         max_length=500,
         widget=forms.Textarea(attrs={"rows": 3}),
@@ -179,16 +208,18 @@ class CancelarChamadoForm(forms.Form):
 # ------------------------------------------------------------------
 
 class EquipeStatusForm(forms.Form):
-    """Formulario de alteracao de status do chamado pela equipe.
+    """Form que a equipe usa pra mudar o status do chamado.
 
-    O campo resolucao eh obrigatorio apenas quando o novo status
-    eh CO (Concluido) ou CA (Cancelado). A validacao no clean()
-    verifica essa regra.
+    Regra que eu mesmo botei: a resolucao so eh obrigatoria quando o novo
+    status eh CO (Concluido) ou CA (Cancelado). Quem cobra isso eh o meu
+    clean() la embaixo.
     """
+    # lista todos os status do catalogo (AB, EA, EE, CO, CA)
     id_status = forms.ModelChoiceField(
         queryset=StatusChamado.objects.all(),
         label="Novo status",
     )
+    # resolucao required=False aqui, mas o clean() torna obrigatoria pra CO/CA
     resolucao = forms.CharField(
         max_length=500,
         required=False,
@@ -199,7 +230,9 @@ class EquipeStatusForm(forms.Form):
     def clean(self):
         d = super().clean()
         st = d.get("id_status")
+        # pego a resolucao ja sem espacos nas pontas
         r = (d.get("resolucao") or "").strip()
+        # se o status escolhido eh CO ou CA e nao veio resolucao -> erro
         if st and st.sigla.strip() in ("CO", "CA") and not r:
             raise forms.ValidationError(
                 "Informe a resolução ou motivo ao concluir ou cancelar."
@@ -208,29 +241,33 @@ class EquipeStatusForm(forms.Form):
 
 
 class FotoForm(forms.Form):
-    """Formulario simples para upload de foto (chamado ou perfil)."""
+    """Form simples so pra subir uma foto (serve pro chamado ou pro perfil)."""
     foto = forms.ImageField(label="Foto")
 
 
 class CategoriaForm(forms.ModelForm):
-    """Formulario de categoria de servico (nome + descricao)."""
+    """Form de categoria de servico. Aqui sim eh ModelForm, mas a view ainda
+    salva via SQL; eu so aproveito o ModelForm pra montar os campos."""
     class Meta:
+        # ligo no model CategoriaServico e exponho so nome e descricao
         model = CategoriaServico
         fields = ["nome", "descricao"]
 
 
 class ServicoForm(forms.ModelForm):
-    """Formulario de servico (prazos removidos para config global)."""
+    """Form de servico. Tirei os prazos daqui porque agora prazo eh config
+    global (semaforo), nao fica mais por servico."""
     class Meta:
         model = Servico
+        # categoria + nome + descricao
         fields = ["id_categoria", "nome", "descricao"]
 
 
 class BairroForm(forms.ModelForm):
-    """Formulario de bairro (nome, CEP, regiao, ativo).
+    """Form de bairro (nome, CEP, regiao, ativo).
 
-    O campo regiao eh um combobox com valores predefinidos
-    (Central, Norte, Sul, etc.) conforme configurado no model.
+    O regiao vira um combobox com valores fixos (Central, Norte, Sul, etc.),
+    isso ja vem configurado la no model, nao preciso repetir aqui.
     """
     class Meta:
         model = Bairro
@@ -238,28 +275,33 @@ class BairroForm(forms.ModelForm):
 
 
 class ColaboradorNovoForm(forms.Form):
-    """Criacao de colaborador pelo gestor.
+    """Form que o gestor usa pra cadastrar um colaborador novo.
 
-    O gestor define uma senha provisoria que o colaborador deve
-    trocar no primeiro acesso (senha_temporaria="1").
+    O gestor define uma senha provisoria, e o colaborador eh obrigado a
+    trocar no primeiro acesso (la no banco isso fica marcado com
+    senha_temporaria="1").
     """
     nome_completo = forms.CharField(max_length=200)
-    cpf = forms.CharField(max_length=11)
+    cpf = forms.CharField(max_length=11)  # aqui ja espero so os 11 digitos
     dt_nascimento = forms.DateField()
     telefone = forms.CharField(max_length=20)
     email = forms.EmailField(max_length=255)
 
     def clean_cpf(self):
+        # limpo o CPF deixando so digito (mesma logica do form do cidadao)
         cpf = self.cleaned_data.get("cpf", "")
         return "".join(filter(str.isdigit, cpf))
 
     def clean_telefone(self):
+        # limpo o telefone e exijo no minimo 8 digitos
         tel = self.cleaned_data.get("telefone", "")
         tel = "".join(filter(str.isdigit, tel))
         if len(tel) < 8:
             raise forms.ValidationError("Telefone deve ter pelo menos 8 digitos.")
         return tel
 
+    # senha provisoria tambem passa pelo validator de senha forte. ta
+    # declarada depois dos clean_* de proposito, mas o Django monta na boa
     senha_provisoria = forms.CharField(
         min_length=8,
         widget=forms.PasswordInput,

@@ -2,16 +2,20 @@
 Veja portal/db/__init__.py para a fachada publica."""
 
 
+# SimpleNamespace eu uso pra criar objetinhos com atributos sem precisar de classe nem ORM
 from types import SimpleNamespace
 
 from django.db import connection
 from django.utils import timezone
 
+# fetch_all/fetch_one sao meus helpers que rodam o SELECT e ja mapeiam pra
+# objeto; _buscar_secretaria_id acha a secretaria padrao
 from portal.db._shared import _buscar_secretaria_id, fetch_all, fetch_one
 
 
 def listar_categorias_ativas():
     """Lista categorias ativas ordenadas por nome."""
+    # SELECT simples de categorias ativas, fetch_all ja transforma cada row num objeto com os fields
     return fetch_all(
         "SELECT id_categoria, nome, descricao "
         "FROM categoria_servico WHERE ativo = TRUE ORDER BY nome",
@@ -20,6 +24,7 @@ def listar_categorias_ativas():
 
 def listar_bairros_ativos():
     """Lista bairros ativos ordenados por nome. Usado em formularios e filtros."""
+    # bairros ativos ordenados por nome
     return fetch_all(
         "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
         "FROM bairro WHERE ativo = TRUE ORDER BY nome_bairro",
@@ -28,6 +33,7 @@ def listar_bairros_ativos():
 
 def listar_statuses():
     """Lista todos os status de chamado. Retorna os 5 status fixos: AB, EA, EE, CO, CA."""
+    # pego todos os status ordenados por id (sao fixos: AB, EA, EE, CO, CA)
     return fetch_all(
         "SELECT id_status, sigla, descricao FROM status_chamado ORDER BY id_status",
         fields=("id_status", "sigla", "descricao"),
@@ -35,6 +41,7 @@ def listar_statuses():
 
 def listar_servicos_ativos():
     """Lista servicos ativos com id e nome para uso em filtros."""
+    # so id e nome dos servicos ativos, pra preencher select de filtro
     return fetch_all(
         "SELECT id_servico, nome FROM servico WHERE ativo = TRUE ORDER BY nome",
         fields=("id_servico", "nome"),
@@ -45,6 +52,7 @@ def listar_banners_ativos():
     return fetch_all(
         "SELECT id_banner, titulo, descricao, url_imagem, link "
         "FROM banner_publicacao "
+        # ordeno pela coluna ordem crescente e, em empate, pelo mais recente
         "WHERE ativo = TRUE ORDER BY ordem ASC, dt_criacao DESC",
         fields=("id_banner", "titulo", "descricao", "url_imagem", "link"),
     )
@@ -57,27 +65,33 @@ def listar_categorias_com_servicos():
     ordem por nome dentro de cada categoria.
     """
     with connection.cursor() as cursor:
+        # query 1: pego todas as categorias ativas
         cursor.execute(
             "SELECT id_categoria, nome, descricao "
             "FROM categoria_servico WHERE ativo = TRUE ORDER BY nome"
         )
         cat_rows = cursor.fetchall()
+        # query 2: pego todos os servicos ativos (so 2 queries no total, evitando o N+1)
         cursor.execute(
             "SELECT id_categoria, id_servico, nome, descricao FROM servico "
             "WHERE ativo = TRUE ORDER BY nome"
         )
         srv_rows = cursor.fetchall()
 
+    # aqui agrupo os servicos por categoria num dict {id_categoria: [servicos]}
     servicos_por_cat = {}
     for s in srv_rows:
+        # setdefault cria a lista se ainda nao existe, dai eu adiciono o servico como objeto
         servicos_por_cat.setdefault(s[0], []).append(
             SimpleNamespace(id_servico=s[1], pk=s[1], nome=s[2], descricao=s[3])
         )
 
+    # agora monto a lista final juntando cada categoria com seus servicos
     categorias = []
     for cat_row in cat_rows:
         cat = SimpleNamespace(id_categoria=cat_row[0], pk=cat_row[0],
                               nome=cat_row[1], descricao=cat_row[2])
+        # busco os servicos dessa categoria no dict (lista vazia se nao tiver nenhum)
         servicos = servicos_por_cat.get(cat.pk, [])
         cat.servicos_list = servicos
         categorias.append({"categoria": cat, "servicos": servicos})
@@ -85,6 +99,7 @@ def listar_categorias_com_servicos():
 
 def listar_categorias_todas():
     """Lista todas as categorias ativas."""
+    # parecido com listar_categorias_ativas mas tambem trago a coluna ativo
     return fetch_all(
         "SELECT id_categoria, nome, descricao, ativo "
         "FROM categoria_servico WHERE ativo = TRUE ORDER BY nome",
@@ -93,17 +108,20 @@ def listar_categorias_todas():
 
 def inserir_categoria(nome, descricao):
     """Cria nova categoria."""
+    # toda categoria tem que pertencer a uma secretaria, entao busco a padrao
     sec_id = _buscar_secretaria_id()
     with connection.cursor() as cursor:
         cursor.execute(
             "INSERT INTO categoria_servico (nome, descricao, ativo, id_secretaria) "
             "VALUES (%s, %s, %s, %s)",
+            # descricao or None: se vier string vazia eu salvo NULL no banco
             [nome, descricao or None, True, sec_id],
         )
 
 def atualizar_categoria(pk, nome, descricao):
     """Atualiza categoria."""
     with connection.cursor() as cursor:
+        # UPDATE so do nome e descricao, filtrando pelo id
         cursor.execute(
             "UPDATE categoria_servico SET nome = %s, descricao = %s "
             "WHERE id_categoria = %s", [nome, descricao or None, pk]
@@ -112,6 +130,7 @@ def atualizar_categoria(pk, nome, descricao):
 def listar_servicos_com_categoria():
     """Lista servicos ativos com nome da categoria."""
     with connection.cursor() as cursor:
+        # JOIN do servico com a categoria pra eu trazer o nome da categoria junto
         cursor.execute(
             "SELECT s.id_servico, s.nome, s.descricao, s.ativo, "
             "s.id_categoria, cat.nome AS categoria_nome "
@@ -119,6 +138,7 @@ def listar_servicos_com_categoria():
             "JOIN categoria_servico cat ON s.id_categoria = cat.id_categoria "
             "WHERE s.ativo = TRUE ORDER BY s.nome"
         )
+        # monto cada servico como objeto e aninho a categoria dentro como outro SimpleNamespace
         return [SimpleNamespace(id_servico=r[0], pk=r[0], nome=r[1], descricao=r[2],
                 ativo=r[3], id_categoria=SimpleNamespace(id_categoria=r[4], pk=r[4], nome=r[5]))
                 for r in cursor.fetchall()]
@@ -126,6 +146,7 @@ def listar_servicos_com_categoria():
 def inserir_servico(nome, descricao, categoria_id):
     """Cria novo servico."""
     with connection.cursor() as cursor:
+        # INSERT do servico ja ligando na categoria escolhida
         cursor.execute(
             "INSERT INTO servico (nome, descricao, ativo, id_categoria) "
             "VALUES (%s, %s, %s, %s)",
@@ -135,6 +156,7 @@ def inserir_servico(nome, descricao, categoria_id):
 def atualizar_servico(pk, nome, descricao, categoria_id):
     """Atualiza servico."""
     with connection.cursor() as cursor:
+        # atualizo nome, descricao e a categoria do servico
         cursor.execute(
             "UPDATE servico SET nome = %s, descricao = %s, id_categoria = %s "
             "WHERE id_servico = %s",
@@ -144,14 +166,17 @@ def atualizar_servico(pk, nome, descricao, categoria_id):
 def desativar_servico(pk):
     """Desativa servico (soft delete)."""
     with connection.cursor() as cursor:
+        # primeiro confiro se o servico existe
         cursor.execute("SELECT id_servico FROM servico WHERE id_servico = %s", [pk])
         if not cursor.fetchone():
             return False
+        # soft delete: nao deleto de verdade, so marco ativo = FALSE
         cursor.execute("UPDATE servico SET ativo = FALSE WHERE id_servico = %s", [pk])
         return True
 
 def listar_bairros_todos():
     """Lista todos os bairros (sem filtro de ativo)."""
+    # aqui NAO filtro por ativo, trago todos (inclusive os desativados) pro admin ver
     return fetch_all(
         "SELECT id_bairro, nome_bairro, cep, regiao, ativo "
         "FROM bairro ORDER BY nome_bairro",
@@ -161,6 +186,7 @@ def listar_bairros_todos():
 def inserir_bairro(nome_bairro, cep, regiao):
     """Cria novo bairro."""
     with connection.cursor() as cursor:
+        # bairro novo ja entra ativo; cep e regiao viram NULL se vierem vazios
         cursor.execute(
             "INSERT INTO bairro (nome_bairro, cep, regiao, ativo) "
             "VALUES (%s, %s, %s, %s)",
@@ -170,6 +196,7 @@ def inserir_bairro(nome_bairro, cep, regiao):
 def atualizar_bairro(pk, nome_bairro, cep, regiao, ativo=True):
     """Atualiza bairro."""
     with connection.cursor() as cursor:
+        # atualizo tudo do bairro de uma vez, inclusive o ativo
         cursor.execute(
             "UPDATE bairro SET nome_bairro = %s, cep = %s, regiao = %s, ativo = %s "
             "WHERE id_bairro = %s",
@@ -179,21 +206,26 @@ def atualizar_bairro(pk, nome_bairro, cep, regiao, ativo=True):
 def desativar_bairro(pk):
     """Desativa bairro."""
     with connection.cursor() as cursor:
+        # confiro se existe antes de mexer
         cursor.execute("SELECT id_bairro FROM bairro WHERE id_bairro = %s", [pk])
         if not cursor.fetchone():
             return False
+        # soft delete de novo: so marco ativo = FALSE
         cursor.execute("UPDATE bairro SET ativo = FALSE WHERE id_bairro = %s", [pk])
         return True
 
 def ativar_bairro(pk):
     """Reativa bairro."""
     with connection.cursor() as cursor:
+        # confiro existencia
         cursor.execute("SELECT id_bairro FROM bairro WHERE id_bairro = %s", [pk])
         if not cursor.fetchone():
             return False
+        # o oposto do desativar: volto pra ativo = TRUE
         cursor.execute("UPDATE bairro SET ativo = TRUE WHERE id_bairro = %s", [pk])
         return True
 
+# deixo os campos do banner numa constante pra reaproveitar nas duas funcoes (listar e buscar) e nao repetir
 _BANNER_FIELDS = (
     "id_banner", "titulo", "descricao", "url_imagem", "link",
     "ordem", "ativo", "dt_criacao",
@@ -201,6 +233,7 @@ _BANNER_FIELDS = (
 
 def listar_banners_todos():
     """Lista todos os banners ordenados."""
+    # todos os banners (sem filtro de ativo), ordenados pela ordem e depois pelo mais recente
     return fetch_all(
         "SELECT id_banner, titulo, descricao, url_imagem, link, "
         "ordem, ativo, dt_criacao "
@@ -210,6 +243,7 @@ def listar_banners_todos():
 
 def buscar_banner(pk):
     """Busca banner por ID."""
+    # fetch_one pega um unico banner pelo id (ou None se nao achar)
     return fetch_one(
         "SELECT id_banner, titulo, descricao, url_imagem, link, "
         "ordem, ativo, dt_criacao "
@@ -221,8 +255,10 @@ def buscar_banner(pk):
 def inserir_banner(titulo, descricao, url_imagem, link):
     """Cria novo banner com ordem auto-incrementada."""
     with connection.cursor() as cursor:
+        # descubro a proxima ordem: pego o MAX atual (ou -1 se nao tem nenhum) e somo 1
         cursor.execute("SELECT COALESCE(MAX(ordem), -1) + 1 FROM banner_publicacao")
         ordem = cursor.fetchone()[0]
+        # insiro o banner ja com essa ordem calculada, ativo e data de agora
         cursor.execute(
             "INSERT INTO banner_publicacao (titulo, descricao, url_imagem, link, "
             "ordem, ativo, dt_criacao) VALUES (%s, %s, %s, %s, %s, %s, %s)",
@@ -233,6 +269,7 @@ def inserir_banner(titulo, descricao, url_imagem, link):
 def atualizar_banner(pk, titulo, descricao, url_imagem, link, ordem):
     """Atualiza banner."""
     with connection.cursor() as cursor:
+        # atualizo os campos editaveis do banner de uma vez
         cursor.execute(
             "UPDATE banner_publicacao SET titulo = %s, descricao = %s, "
             "url_imagem = %s, link = %s, ordem = %s WHERE id_banner = %s",
@@ -242,35 +279,43 @@ def atualizar_banner(pk, titulo, descricao, url_imagem, link, ordem):
 def excluir_banner(pk):
     """Exclui banner."""
     with connection.cursor() as cursor:
+        # banner eu deleto de verdade (nao eh soft delete), entao confiro se existe antes
         cursor.execute("SELECT id_banner FROM banner_publicacao WHERE id_banner = %s", [pk])
         if not cursor.fetchone():
             return False
+        # DELETE de verdade
         cursor.execute("DELETE FROM banner_publicacao WHERE id_banner = %s", [pk])
         return True
 
 def reordenar_banner(pk, direcao):
     """Move banner para cima (-1) ou baixo (+1) por swap de ordens."""
     with connection.cursor() as cursor:
+        # pego o banner que quero mover junto com a ordem atual dele
         cursor.execute(
             "SELECT id_banner, ordem FROM banner_publicacao WHERE id_banner = %s", [pk]
         )
         row = cursor.fetchone()
+        # se nao existe nao faco nada
         if not row:
             return
         ordem_atual = row[1]
+        # subir (-1): acho o vizinho imediatamente acima (maior ordem que ainda eh menor que a minha)
         if direcao == -1:
             cursor.execute(
                 "SELECT id_banner, ordem FROM banner_publicacao "
                 "WHERE ordem < %s ORDER BY ordem DESC LIMIT 1", [ordem_atual]
             )
+        # descer (+1): acho o vizinho imediatamente abaixo (menor ordem que ainda eh maior que a minha)
         elif direcao == 1:
             cursor.execute(
                 "SELECT id_banner, ordem FROM banner_publicacao "
                 "WHERE ordem > %s ORDER BY ordem ASC LIMIT 1", [ordem_atual]
             )
         else:
+            # direcao invalida -> saio
             return
         vizinho = cursor.fetchone()
+        # se existe vizinho, eu troco as ordens dos dois (swap): o vizinho fica com a minha e eu com a dele
         if vizinho:
             cursor.execute("UPDATE banner_publicacao SET ordem = %s WHERE id_banner = %s",
                            [ordem_atual, vizinho[0]])

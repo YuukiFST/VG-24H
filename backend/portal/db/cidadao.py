@@ -2,6 +2,7 @@
 Veja portal/db/__init__.py para a fachada publica."""
 
 
+# aqui eu pego o cursor pra rodar SQL puro e o timezone pra data de cadastro
 from django.db import connection
 from django.utils import timezone
 
@@ -13,24 +14,30 @@ def buscar_cidadao_por_id(uid):
     se nao encontrado ou inativo. O import local de Cidadao evita
     import circular com models.py.
     """
+    # importo o model aqui dentro de proposito pra nao dar import circular com models.py
     from portal.models import Cidadao
 
     with connection.cursor() as cursor:
+        # monto o SELECT na unha pegando todas as colunas que eu preciso do cidadao
         cursor.execute(
             "SELECT id_cidadao, nome_completo, cpf, dt_nascimento, "
             "telefone, email, senha_hash, senha_temporaria, perfil, "
             "rua, num_endereco, complemento_endereco, bairro_endereco, "
             "cep_endereco, dt_cadastro, ativo "
             "FROM cidadao "
+            # filtro pelo id que veio E so quem ta ativo (uso %s pra escapar e nao tomar SQL injection)
             "WHERE id_cidadao = %s AND ativo = TRUE",
             [uid],
         )
+        # pego uma linha so, ja que id eh unico
         row = cursor.fetchone()
+    # se nao achou nada (ou ta inativo) eu devolvo None
     if not row:
         return None
 
-    # Monta o objeto Cidadao campo a campo (sem ORM).
+    # aqui eu monto o objeto Cidadao na mao, campo por campo, sem usar o ORM
     user = Cidadao()
+    # vou mapeando cada posicao da tupla row pra um atributo, na mesma ordem do SELECT
     user.id_cidadao = row[0]
     user.nome_completo = row[1]
     user.cpf = row[2]
@@ -47,7 +54,8 @@ def buscar_cidadao_por_id(uid):
     user.cep_endereco = row[13]
     user.dt_cadastro = row[14]
     user.ativo = row[15]
-    user._state.adding = False  # Indica ao Django que o objeto ja existe no banco.
+    # esse truque diz pro Django que o objeto ja existe no banco (nao eh INSERT novo)
+    user._state.adding = False
     return user
 
 def buscar_cidadao_por_email(email):
@@ -58,16 +66,20 @@ def buscar_cidadao_por_email(email):
     from portal.models import Cidadao
 
     with connection.cursor() as cursor:
+        # aqui so pego o que preciso pro login (hash da senha, perfil etc), nao o cidadao inteiro
         cursor.execute(
             "SELECT id_cidadao, nome_completo, senha_hash, perfil, senha_temporaria "
             "FROM cidadao "
+            # uso LOWER(email) pra comparar sem ligar pra maiuscula/minuscula, e so quem ta ativo
             "WHERE LOWER(email) = %s AND ativo = TRUE",
             [email],
         )
         row = cursor.fetchone()
+    # se nao achou devolvo a tupla (None, None) pra view saber que nao eh cidadao
     if not row:
         return None, None
 
+    # mesmo esquema: monto o objeto na mao so com os campos do login
     user = Cidadao()
     user.id_cidadao = row[0]
     user.nome_completo = row[1]
@@ -75,23 +87,30 @@ def buscar_cidadao_por_email(email):
     user.perfil = row[3]
     user.senha_temporaria = row[4]
     user._state.adding = False
+    # retorno o user e a string "cidadao" pra identificar o tipo (login dual com servidor)
     return user, "cidadao"
 
 def inserir_cidadao(dados):
     """Cria novo cidadao."""
+    # importo o make_password aqui pra nunca salvar senha em texto puro, sempre hash
     from django.contrib.auth.hashers import make_password
     with connection.cursor() as cursor:
         cursor.execute(
+            # INSERT listando todas as colunas e seus %s na mesma ordem dos valores la embaixo
             "INSERT INTO cidadao (nome_completo, cpf, dt_nascimento, telefone, email, "
             "senha_hash, rua, num_endereco, complemento_endereco, "
             "bairro_endereco, cep_endereco, perfil, ativo, dt_cadastro) "
             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+            # uso RETURNING pra ja pegar o id gerado pelo banco e devolver
             "RETURNING id_cidadao",
+            # aqui ligo cada %s ao valor: email vai minusculo, senha vira hash, endereco eh opcional (.get)
             [dados["nome_completo"], dados["cpf"], dados["dt_nascimento"],
              dados["telefone"], dados["email"].lower(),
              make_password(dados["senha"]),
              dados.get("rua"), dados.get("num_endereco"), dados.get("complemento_endereco"),
              dados.get("bairro_endereco"), dados.get("cep_endereco"),
+             # forco perfil "CID" (cidadao), ativo True e a data de cadastro como agora
               "CID", True, timezone.now()],
         )
+        # pego o id_cidadao novo que o RETURNING me deu
         return cursor.fetchone()[0]

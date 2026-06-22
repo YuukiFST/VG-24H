@@ -23,6 +23,7 @@ class TrocarSenhaViewTests(TestCase):
         from portal.views_root import trocar_senha
 
         resp = trocar_senha(self._req("GET"))
+        # 200 = template existe e renderizou; e o campo nova_senha tem que estar no html
         self.assertEqual(resp.status_code, 200)
         self.assertIn(b"nova_senha", resp.content)
 
@@ -39,5 +40,7 @@ class TrocarSenhaViewTests(TestCase):
         req.portal_user = MagicMock(spec=["pk"], pk=7)
 
         resp = trocar_senha(req)
+        # 302 = deu certo e redirecionou; e confiro que chamou o updater de senha
+        # exatamente 1 vez, com tabela cidadao, pk 7 e a senha que mandei
         self.assertEqual(resp.status_code, 302)
         mock_db.atualizar_senha_usuario.assert_called_once_with("cidadao", 7, "Minhasenha123!")

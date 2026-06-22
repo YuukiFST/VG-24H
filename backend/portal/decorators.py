@@ -1,80 +1,92 @@
 """
-decorators.py — Controle de acesso do Portal VG 24H
+decorators.py — meu controle de acesso do Portal VG 24H
 
-Decorators usados nas views para bloquear acesso de usuarios nao autorizados.
-Sao colocados acima da funcao da view (ex: @perfis("GES")).
+Aqui ficam os decorators que eu boto em cima das views pra barrar quem nao
+pode entrar. Eu coloco logo acima da funcao da view (tipo @perfis("GES")).
 
-Substituem as antigas Rules R4 e R6 que foram removidas do banco de dados.
-O controle de perfil agora eh feito na camada de aplicacao (Django),
-nao no PostgreSQL.
+Esses decorators sao o que sobrou das antigas Rules R4 e R6 que eu tirei do
+banco. Agora eu faco esse controle de perfil aqui no Django mesmo, nao mais
+no PostgreSQL.
 
-Decorators disponiveis:
-- anonimo: so acessa se NAO estiver logado (login, cadastro)
-- autenticado: so acessa se ESTIVER logado (qualquer tipo)
-- perfis(...): so acessa se o perfil do usuario for um dos listados
+O que eu tenho aqui:
+- anonimo: so deixa entrar quem NAO ta logado (login, cadastro)
+- autenticado: so deixa entrar quem TA logado (qualquer tipo)
+- perfis(...): so deixa entrar se o perfil do cara for um dos que eu listei
 """
 
+# wraps eu uso pra nao perder o nome/docstring da view quando eu embrulho ela
 from functools import wraps
 
+# messages pra avisar "sem permissao", redirect pra mandar o cara pra outra pagina
 from django.contrib import messages
 from django.shortcuts import redirect
 
 
 def perfil_codigo(u):
-    """Retorna o perfil do usuario como string: 'CID', 'GES' ou 'COL'.
+    """Me devolve o perfil do cara como string: 'CID', 'GES' ou 'COL'.
 
-    Retorna string vazia se o usuario for None ou nao tiver perfil.
+    Se o usuario for None ou nao tiver perfil eu retorno string vazia.
     """
+    # se nao tem usuario ja volto "", senao pego o perfil e tiro os espacos
     return (u.perfil or "").strip() if u else ""
 
 
 def anonimo(view):
-    """Bloqueia acesso de usuarios ja logados.
+    """Barra quem ja ta logado.
 
-    Usado em login, cadastro e recuperacao de senha. Se o usuario
-    ja estiver logado, redireciona para a home.
+    Eu uso isso no login, cadastro e recuperar senha. Se o cara ja ta
+    logado nao faz sentido ver essas paginas, entao mando pra home.
     """
     @wraps(view)
     def w(request, *args, **kwargs):
+        # o middleware ja botou o usuario aqui; se tem alguem logado eu chuto pra home
         if request.portal_user:
             return redirect("portal:root")
+        # nao ta logado, beleza, deixo a view rodar normal
         return view(request, *args, **kwargs)
     return w
 
 
 def autenticado(view):
-    """Exige que o usuario esteja logado (qualquer tipo de perfil).
+    """So deixa entrar quem ta logado, tanto faz o perfil.
 
-    Se portal_user for None (nao logado), redireciona para /accounts/login/.
+    Se portal_user for None (ninguem logado) eu mando pro /accounts/login/.
     """
     @wraps(view)
     def w(request, *args, **kwargs):
+        # se nao tem ninguem logado eu barro e mando pro login
         if not request.portal_user:
             return redirect("portal:login")
+        # ta logado, pode passar
         return view(request, *args, **kwargs)
     return w
 
 
 def perfis(*codigos):
-    """Exige que o usuario tenha um dos perfis listados.
+    """So deixa entrar se o perfil do cara for um dos que eu passei.
 
-    Exemplos de uso:
-    - @perfis("GES")          → apenas gestores
-    - @perfis("COL", "GES")   → colaboradores e gestores
-    - @perfis("CID")          → apenas cidadaos
+    Como eu uso:
+    - @perfis("GES")          → so gestor
+    - @perfis("COL", "GES")   → colaborador e gestor
+    - @perfis("CID")          → so cidadao
 
-    Se o usuario nao estiver logado, redireciona para login.
-    Se estiver logado mas com perfil diferente, mostra "Sem permissao".
+    Se nao ta logado eu mando pro login.
+    Se ta logado mas com perfil errado eu mostro "Sem permissao".
     """
+    # esse e um decorator com argumento, entao tenho que ter uma funcao a mais por fora
     def dec(view):
         @wraps(view)
         def w(request, *args, **kwargs):
+            # pego o usuario que o middleware deixou no request
             u = request.portal_user
+            # nao ta logado? vai pro login
             if not u:
                 return redirect("portal:login")
+            # ta logado mas o perfil dele nao ta na lista que eu permiti
             if perfil_codigo(u) not in codigos:
                 messages.error(request, "Sem permissão para acessar esta área.")
                 return redirect("portal:root")
+            # passou nas duas checagens, libero a view
             return view(request, *args, **kwargs)
         return w
     return dec
