@@ -111,11 +111,6 @@ def cancelar_chamado_cidadao(chamado_id, motivo):
             )
 
 
-def avaliar_chamado(chamado_id, nota, comentario):
-    """Registra avaliação de chamado concluído."""
-    db.avaliar_chamado(chamado_id, nota, comentario)
-
-
 def adicionar_foto(chamado_id, arquivo_foto, request=None):
     """Adiciona foto a um chamado com upload."""
     url = salvar_foto_upload(arquivo_foto, request=request)

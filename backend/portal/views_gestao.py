@@ -191,12 +191,7 @@ def gestao_categoria_edit(request, pk):
         form = CategoriaForm(request.POST, instance=obj)
         if form.is_valid():
             d = form.cleaned_data
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "UPDATE categoria_servico SET nome = %s, descricao = %s "
-                    "WHERE id_categoria = %s",
-                    [d["nome"], d.get("descricao"), pk],
-                )
+            db.atualizar_categoria(pk, d["nome"], d.get("descricao"))
             messages.success(request, "Categoria atualizada.")
             return redirect("portal:gestao_categorias")
     else:
@@ -266,17 +261,7 @@ def gestao_servico_edit(request, pk):
         form = ServicoForm(request.POST, instance=obj)
         if form.is_valid():
             d = form.cleaned_data
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "UPDATE servico SET nome = %s, descricao = %s, "
-                    "id_categoria = %s "
-                    "WHERE id_servico = %s",
-                    [
-                        d["nome"], d.get("descricao"),
-                        d["id_categoria"].pk,
-                        pk,
-                    ],
-                )
+            db.atualizar_servico(pk, d["nome"], d.get("descricao"), d["id_categoria"].pk)
             messages.success(request, "Serviço atualizado.")
             return redirect("portal:gestao_servicos")
     else:

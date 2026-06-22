@@ -282,7 +282,7 @@ def cidadao_chamado_avaliar(request, pk):
         raise Http404()
     form_a = AvaliacaoForm(request.POST)
     if form_a.is_valid():
-        chamado_service.avaliar_chamado(pk, form_a.cleaned_data["nota"], form_a.cleaned_data.get("comentario") or None)
+        db.avaliar_chamado(pk, form_a.cleaned_data["nota"], form_a.cleaned_data.get("comentario") or None)
         messages.success(request, "Avaliação registrada.")
     return redirect("portal:cidadao_chamado", pk=pk)
 

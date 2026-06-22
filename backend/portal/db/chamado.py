@@ -8,7 +8,7 @@ from django.db import connection
 from django.utils import timezone
 
 from portal.db._shared import sql_lateral_ultimo_status
-from portal.db.historico import criar_historico, popular_status
+from portal.db.historico import popular_status
 from portal.db.stats import cor_semaforo
 from portal.models import ConfiguracaoSemaforo
 from portal.types import (
@@ -314,15 +314,3 @@ def buscar_status_ca():
         row = cursor.fetchone()
     return row[0] if row else None
 
-def cancelar_chamado(chamado_id, motivo):
-    """Cancela chamado: insere historico CA + atualiza resolucao."""
-    from django.db import transaction
-    ca_id = buscar_status_ca()
-    if not ca_id:
-        raise ValueError("Status CA nao encontrado")
-    with transaction.atomic(), connection.cursor() as cursor:
-        criar_historico(chamado_id, ca_id, observacao=motivo)
-        cursor.execute(
-            "UPDATE chamado SET resolucao = %s WHERE id_chamado = %s",
-            [motivo, chamado_id],
-        )

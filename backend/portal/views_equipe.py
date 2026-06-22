@@ -174,8 +174,6 @@ def equipe_chamado_detalhe(request, pk):
     if not ch:
         raise Http404()
 
-    db.popular_status(ch)
-
     dias_aberto = formatar_dias_em_aberto(ch.dt_abertura)
 
     p = perfil_codigo(request.portal_user)

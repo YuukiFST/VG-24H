@@ -25,23 +25,6 @@ def listar_categorias_ativas():
             for r in cursor.fetchall()
         ]
 
-def listar_servicos_por_categoria(categoria_pk):
-    """Lista servicos ativos de uma categoria especifica."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT id_servico, nome, descricao, ativo "
-            "FROM servico "
-            "WHERE id_categoria = %s AND ativo = TRUE "
-            "ORDER BY nome",
-            [categoria_pk],
-        )
-        return [
-            SimpleNamespace(
-                id_servico=r[0], pk=r[0], nome=r[1], descricao=r[2], ativo=r[3],
-            )
-            for r in cursor.fetchall()
-        ]
-
 def listar_bairros_ativos():
     """Lista bairros ativos ordenados por nome. Usado em formularios e filtros."""
     with connection.cursor() as cursor:

@@ -11,20 +11,6 @@ class ServicoRef:
 
 
 @dataclass
-class CategoriaRef:
-    nome: str
-
-
-@dataclass
-class ServicoCategoriaRef:
-    id_servico: int
-    pk: int
-    nome: str
-    descricao: str
-    id_categoria: CategoriaRef | None = None
-
-
-@dataclass
 class BairroRef:
     id_bairro: int
     pk: int
@@ -37,15 +23,6 @@ class StatusRef:
     pk: int
     sigla: str
     descricao: str
-
-
-@dataclass
-class CidadaoRef:
-    id_cidadao: int
-    pk: int
-    nome_completo: str
-    email: str
-    telefone: str
 
 
 @dataclass
