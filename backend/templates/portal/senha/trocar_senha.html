@@ -1,0 +1,18 @@
+{% extends "portal/base.html" %}
+{% block title %}Trocar senha{% endblock %}
+{% block content %}
+  <h1 class="mb-4x">Trocar senha</h1>
+  <p class="text-down-01 mb-3x">Defina uma nova senha para a sua conta.</p>
+  <form method="post" class="col-md-6">
+    {% csrf_token %}
+    <div class="br-input input-button mb-3x">
+      <label for="{{ form.nova_senha.id_for_label }}">{{ form.nova_senha.label }}</label>
+      {{ form.nova_senha.errors }}
+      {{ form.nova_senha }}
+      <button class="br-button circle small" type="button" aria-label="Mostrar senha">
+        <i class="fas fa-eye" aria-hidden="true"></i>
+      </button>
+    </div>
+    <button type="submit" class="br-button primary">Confirmar</button>
+  </form>
+{% endblock %}
