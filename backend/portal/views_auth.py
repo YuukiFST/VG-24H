@@ -286,8 +286,8 @@ def redefinir_senha_view(request, token):
     if request.method == "POST":
         form = RedefinirSenhaForm(request.POST)
         if form.is_valid():
-            # Atualiza o hash da senha no banco.
-            db.atualizar_senha_cidadao(uid, form.cleaned_data["senha"])
+            # Atualiza o hash da senha no banco (e encerra senha_temporaria).
+            db.atualizar_senha_usuario("cidadao", uid, form.cleaned_data["senha"])
             messages.success(request, "Senha atualizada. Entre com a nova senha.")
             return redirect("portal:login")
     else:
@@ -319,7 +319,7 @@ def troca_senha_obrigatoria_view(request):
         form = TrocaSenhaObrigatoriaForm(request.POST)
         if form.is_valid():
             u = request.portal_user
-            db.atualizar_senha_servidor(u.pk, form.cleaned_data["senha"])
+            db.atualizar_senha_usuario("servidor", u.pk, form.cleaned_data["senha"])
             del request.session["forcar_troca_senha"]
             messages.success(request, "Senha alterada.")
             return redirect("portal:root")

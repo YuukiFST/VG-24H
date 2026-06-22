@@ -24,15 +24,6 @@ def atualizar_senha_usuario(tabela, pk, nova_senha):
             [make_password(nova_senha), pk],
         )
 
-def atualizar_senha_servidor(pk, senha_hash):
-    """Atualiza senha de servidor e limpa flag temporaria."""
-    from django.contrib.auth.hashers import make_password
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "UPDATE servidor SET senha_hash = %s, senha_temporaria = NULL "
-            "WHERE id_servidor = %s", [make_password(senha_hash), pk]
-        )
-
 def buscar_cidadao_para_reset(email):
     """Busca cidadao ativo por email para reset de senha."""
     with connection.cursor() as cursor:
@@ -41,15 +32,6 @@ def buscar_cidadao_para_reset(email):
             "WHERE LOWER(email) = %s AND ativo = TRUE", [email]
         )
         return cursor.fetchone()
-
-def atualizar_senha_cidadao(uid, senha_hash):
-    """Atualiza senha do cidadao."""
-    from django.contrib.auth.hashers import make_password
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "UPDATE cidadao SET senha_hash = %s WHERE id_cidadao = %s",
-            [make_password(senha_hash), uid]
-        )
 
 def atualizar_foto_perfil(tabela, pk, url):
     """Atualiza foto de perfil (cidadao ou servidor)."""
