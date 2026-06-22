@@ -218,17 +218,16 @@
                     </td>
                     <td data-th="Protocolo" class="text-center"><span class="text-bold">{{ linha.ch.num_protocolo }}</span></td>
                     <td data-th="Data de abertura" class="text-center">{{ linha.ch.dt_abertura|date:"d/m/Y" }}</td>
-                    <td data-th="Tempo em aberto" class="text-center">{{ linha.dias_aberto }}</td>
+                    <td data-th="Tempo em aberto" class="text-center">
+                        <span class="br-tag vg-tag-fixed rounder-none {% if linha.cor == 'verde' %}success{% elif linha.cor == 'amarelo' %}warning{% elif linha.cor == 'vermelho' %}danger{% endif %}">
+                            {{ linha.dias_aberto }}
+                        </span>
+                    </td>
                     <td data-th="Cidadão">{{ linha.ch.id_cidadao.nome_completo|truncatechars:20 }}</td>
                     <td data-th="Serviço">{{ linha.ch.id_servico.nome }}</td>
                     <td data-th="Bairro">{{ linha.ch.id_bairro.nome_bairro }}</td>
                     <td data-th="Status" class="text-center">
-                        {% with sigla=linha.ch.sigla_status %}
-                        <span
-                            class="br-tag vg-tag-fixed rounder-none {% if sigla == 'AB' %}info{% elif sigla == 'EA' %}warning{% elif sigla == 'EE' %}ee-status{% elif sigla == 'CO' %}success{% elif sigla == 'CA' %}danger{% endif %}">
-                            {{ linha.ch.status_atual.descricao|default:"—" }}
-                        </span>
-                        {% endwith %}
+                        {{ linha.ch.status_atual.descricao|default:"—" }}
                     </td>
                     <td data-th="Ações" class="text-center">
                         <a href="{% url 'portal:equipe_chamado' linha.ch.pk %}" class="br-button circle small"

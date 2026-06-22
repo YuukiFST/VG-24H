@@ -260,12 +260,19 @@ def equipe_chamado_status(request, pk):
                 pass
 
         nova_sigla = novo.sigla.strip().upper()
-        resolucao = form_s.cleaned_data.get("resolucao") if nova_sigla in ("CO", "CA") else None
+        obs_texto = form_s.cleaned_data.get("resolucao")
+        if obs_texto:
+            obs_texto = obs_texto.strip()
+        if not obs_texto:
+            obs_texto = None
+
+        resolucao = obs_texto if nova_sigla in ("CO", "CA") else None
 
         chamado_service.alterar_status(
             pk, novo, servidor_id=request.portal_user.pk,
             prioridade=prioridade_val,
             resolucao=resolucao,
+            observacao=obs_texto,
         )
 
         messages.success(request, "Status atualizado.")

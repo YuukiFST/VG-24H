@@ -50,7 +50,7 @@ def criar_novo_chamado(cidadao, servico, bairro, descricao, ponto_referencia, fo
     return chamado_id, protocolo
 
 
-def alterar_status(chamado_id, novo_status, servidor_id, prioridade=None, resolucao=None):
+def alterar_status(chamado_id, novo_status, servidor_id, prioridade=None, resolucao=None, observacao=None):
     """Altera o status de um chamado com event sourcing.
 
     INSERT em historico_chamado (novo status) + UPDATE chamado
@@ -61,6 +61,7 @@ def alterar_status(chamado_id, novo_status, servidor_id, prioridade=None, resolu
         db.criar_historico(
             chamado_id, novo_status.pk if hasattr(novo_status, "pk") else novo_status,
             servidor_id=servidor_id,
+            observacao=observacao,
         )
 
         update_fields = []
