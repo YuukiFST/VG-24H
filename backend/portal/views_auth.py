@@ -39,18 +39,23 @@ MAX_LOGIN_ATTEMPTS = 5
 LOGIN_TIMEOUT = 300  # 5 minutes
 
 
-def _check_login_rate_limit(request):
-    attempts = request.session.get("login_attempts", [])
+def _tentativas_na_janela(request):
+    """Tentativas de login ainda dentro da janela, podando as expiradas.
+
+    Persiste a lista podada na sessao, para que check e record concordem
+    sobre o estado (sem isso, timestamps antigos nunca expiravam)."""
     now = time.time()
-    attempts = [t for t in attempts if now - t < LOGIN_TIMEOUT]
-    if len(attempts) >= MAX_LOGIN_ATTEMPTS:
-        return True
+    attempts = [t for t in request.session.get("login_attempts", []) if now - t < LOGIN_TIMEOUT]
     request.session["login_attempts"] = attempts
-    return False
+    return attempts
+
+
+def _check_login_rate_limit(request):
+    return len(_tentativas_na_janela(request)) >= MAX_LOGIN_ATTEMPTS
 
 
 def _record_login_attempt(request):
-    attempts = request.session.get("login_attempts", [])
+    attempts = _tentativas_na_janela(request)
     attempts.append(time.time())
     request.session["login_attempts"] = attempts
 
