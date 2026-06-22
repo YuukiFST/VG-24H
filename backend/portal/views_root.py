@@ -63,8 +63,8 @@ def trocar_senha(request):
             else:
                 db.atualizar_senha_usuario("cidadao", request.portal_user.pk, nova)
 
-            # Atualiza o cookie de sessao para refletir que a senha
-            # nao eh mais temporaria (evita redirect infinito).
+            # atualizar_senha_usuario ja limpou senha_temporaria no banco;
+            # renova o cookie para que o middleware releia o usuario.
             request.session.modified = True
 
             messages.success(request, "Senha alterada com sucesso!")

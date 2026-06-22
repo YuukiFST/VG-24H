@@ -7,16 +7,21 @@ from django.db import connection
 from portal.db._shared import _validar_tabela
 
 
-def atualizar_senha_usuario(tabela, pk, senha_hash):
-    """Atualiza senha de cidadao ou servidor."""
+def atualizar_senha_usuario(tabela, pk, nova_senha):
+    """Atualiza a senha de cidadao ou servidor e limpa a flag temporaria.
+
+    `nova_senha` eh o texto plano; o hash bcrypt e gerado aqui. Definir uma
+    senha propria sempre encerra o estado "senha_temporaria" — caso contrario
+    o usuario seria forcado a trocar de novo no proximo login.
+    """
     _validar_tabela(tabela)
     from django.contrib.auth.hashers import make_password
-    hashed = make_password(senha_hash)
+    id_col = "id_cidadao" if tabela == "cidadao" else "id_servidor"
     with connection.cursor() as cursor:
         cursor.execute(
-            f"UPDATE {tabela} SET senha_hash = %s WHERE "
-            f"{'id_cidadao' if tabela == 'cidadao' else 'id_servidor'} = %s",
-            [hashed, pk],
+            f"UPDATE {tabela} SET senha_hash = %s, senha_temporaria = NULL "
+            f"WHERE {id_col} = %s",
+            [make_password(nova_senha), pk],
         )
 
 def atualizar_senha_servidor(pk, senha_hash):
