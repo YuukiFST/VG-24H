@@ -17,11 +17,9 @@ from unittest.mock import MagicMock, patch
 from django.test import TestCase
 from django.utils import timezone
 
-from portal import db
 from portal.forms import CadastroCidadaoForm, RedefinirSenhaForm, ServicoForm
 from portal.models import ConfiguracaoSemaforo
 from portal.utils import proximo_protocolo
-
 
 # ------------------------------------------------------------------
 # Slice 1: Protocolo
@@ -89,6 +87,7 @@ class GestaoPrazosViewTests(TestCase):
     def test_gestao_prazos_get_carrega_form(self, mock_cursor):
         """GET carrega o form com os valores atuais da configuracao."""
         from django.http import HttpRequest
+
         from portal.views_equipe import gestao_prazos
 
         mock_c = MagicMock()
@@ -111,6 +110,7 @@ class GestaoPrazosViewTests(TestCase):
     def test_gestao_prazos_post_atualiza_config(self, mock_cursor, mock_messages):
         """POST atualiza os valores na configuracao_semaforo."""
         from django.http import HttpRequest
+
         from portal.views_equipe import gestao_prazos
 
         posted_data = {"prazo_amarelo_dias": "10", "prazo_vermelho_dias": "25"}

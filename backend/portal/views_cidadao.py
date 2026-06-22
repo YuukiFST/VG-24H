@@ -47,7 +47,6 @@ from portal.forms import (
 from portal.services import chamado as chamado_service
 
 
-
 def _chamado_do_cidadao(request, pk):
     """Busca um chamado e valida que pertence ao cidadao logado.
 

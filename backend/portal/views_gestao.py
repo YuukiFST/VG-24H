@@ -25,7 +25,6 @@ from django.db import connection
 from django.db.utils import ProgrammingError
 from django.http import Http404
 from django.shortcuts import redirect, render
-from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from portal import db

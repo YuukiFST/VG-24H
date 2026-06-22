@@ -10,7 +10,6 @@ Ou pule com:
 import pytest
 from django.test import TestCase
 
-
 """
 Testes de integracao para db.py — requer banco PostgreSQL configurado.
 
@@ -22,11 +21,7 @@ Ou pule com:
 """
 import os
 
-import pytest
-from django.test import TestCase
-
 from portal import db
-
 
 INTEGRATION_ENABLED = os.getenv("VG_TEST_DB", "").lower() in ("true", "1", "yes")
 
@@ -63,6 +58,7 @@ class TestCorSemaforo(TestCase):
 
     def test_verde_quando_dentro_do_prazo(self):
         from datetime import timedelta
+
         from django.utils import timezone
         agora = timezone.now()
         dt = agora - timedelta(days=5)

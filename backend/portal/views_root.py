@@ -17,7 +17,6 @@ criam notificacoes diretamente.
 """
 
 from django.contrib import messages
-from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
@@ -59,7 +58,6 @@ def trocar_senha(request):
 
             # Atualiza a senha do servidor logado (hash bcrypt via make_password).
             # Usa SQL puro: UPDATE tabela correta conforme o tipo de usuario.
-            from django.contrib.auth.hashers import make_password
             if hasattr(request.portal_user, "id_servidor"):
                 db.atualizar_senha_usuario("servidor", request.portal_user.pk, nova)
             else:

@@ -20,7 +20,7 @@ from django.utils.timezone import is_naive, make_aware
 def escape_like(valor):
     """Escapa caracteres especiais de LIKE/ILIKE no PostgreSQL.
 
-    Os caracteres %, _ e \ sao especiais em patterns LIKE. Esta funcao
+    Os caracteres %, _ e \\ sao especiais em patterns LIKE. Esta funcao
     os escapa com barra invertida para que sejam tratados como literais.
     Deve ser chamada ANTES de envolver o valor com %...% para busca parcial.
     Exemplo: escape_like("100%") retorna "100\\%".

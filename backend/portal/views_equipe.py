@@ -358,26 +358,25 @@ def gestao_chamado_excluir(request, pk):
         messages.error(request, "É obrigatório informar uma justificativa para excluir o chamado.")
         return redirect("portal:equipe_chamado", pk=pk)
 
-    with transaction.atomic():
-        with connection.cursor() as cursor:
-            # Busca o status atual para incluir no log de auditoria.
-            cursor.execute(
-                "SELECT hc.id_status FROM historico_chamado hc "
-                "WHERE hc.id_chamado = %s "
-                "ORDER BY hc.dt_alteracao DESC LIMIT 1",
-                [pk],
-            )
-            st_row = cursor.fetchone()
-            status_id = st_row[0] if st_row else None
+    with transaction.atomic(), connection.cursor() as cursor:
+        # Busca o status atual para incluir no log de auditoria.
+        cursor.execute(
+            "SELECT hc.id_status FROM historico_chamado hc "
+            "WHERE hc.id_chamado = %s "
+            "ORDER BY hc.dt_alteracao DESC LIMIT 1",
+            [pk],
+        )
+        st_row = cursor.fetchone()
+        status_id = st_row[0] if st_row else None
 
-            # Registra a exclusao no historico antes de deletar.
-            db.criar_historico(
-                pk, status_id, servidor_id=request.portal_user.pk,
-                observacao=f"[EXCL] Chamado excluído. Justificativa: {justificativa}",
-            )
+        # Registra a exclusao no historico antes de deletar.
+        db.criar_historico(
+            pk, status_id, servidor_id=request.portal_user.pk,
+            observacao=f"[EXCL] Chamado excluído. Justificativa: {justificativa}",
+        )
 
-            # Delete em cascata com bypass de triggers encapsulado em db.py.
-            db.excluir_chamado_com_cascata(pk)
+        # Delete em cascata com bypass de triggers encapsulado em db.py.
+        db.excluir_chamado_com_cascata(pk)
 
     messages.success(request, f"Chamado {protocolo} excluído com sucesso.")
     return redirect("portal:equipe_chamados")

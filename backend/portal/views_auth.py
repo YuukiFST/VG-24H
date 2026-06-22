@@ -24,18 +24,16 @@ from django.core.mail import send_mail
 from django.db import connection
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from portal import db
-from portal.decorators import anonimo, autenticado, perfil_codigo
+from portal.decorators import anonimo, autenticado
 from portal.forms import (
     CadastroCidadaoForm,
     RecuperarSenhaForm,
     RedefinirSenhaForm,
     TrocaSenhaObrigatoriaForm,
 )
-
 
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_TIMEOUT = 300  # 5 minutes

@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass
@@ -22,7 +21,7 @@ class ServicoCategoriaRef:
     pk: int
     nome: str
     descricao: str
-    id_categoria: Optional[CategoriaRef] = None
+    id_categoria: CategoriaRef | None = None
 
 
 @dataclass
@@ -60,19 +59,19 @@ class ChamadoDTO:
     pk: int
     num_protocolo: str
     prioridade: int
-    ponto_de_referencia: Optional[str]
+    ponto_de_referencia: str | None
     descricao: str
-    resolucao: Optional[str]
-    nota_avaliacao: Optional[int]
-    comentario_avaliacao: Optional[str]
+    resolucao: str | None
+    nota_avaliacao: int | None
+    comentario_avaliacao: str | None
     dt_abertura: datetime
-    dt_conclusao: Optional[datetime]
-    dt_avaliacao: Optional[datetime]
+    dt_conclusao: datetime | None
+    dt_avaliacao: datetime | None
     atualizado_em: datetime
     id_cidadao_id: int
     id_servico: ServicoRef
     id_bairro: BairroRef
-    status_atual: Optional[StatusRef] = None
+    status_atual: StatusRef | None = None
     sigla_status: str = ""
     cor_semaforo: str = "verde"
 
@@ -82,9 +81,9 @@ class HistoricoDTO:
     id_historico_chamado: int
     pk: int
     dt_alteracao: datetime
-    observacao: Optional[str]
-    id_servidor_id: Optional[int]
-    id_servidor: Optional[ServidorRef]
+    observacao: str | None
+    id_servidor_id: int | None
+    id_servidor: ServidorRef | None
     id_status: StatusRef
 
 

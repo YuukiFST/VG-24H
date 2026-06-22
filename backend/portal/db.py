@@ -24,14 +24,12 @@ from portal.models import ConfiguracaoSemaforo
 from portal.types import (
     BairroRef,
     ChamadoDTO,
-    CidadaoRef,
     FotoDTO,
     HistoricoDTO,
     ServicoRef,
     ServidorRef,
     StatusRef,
 )
-
 
 TABELAS_VALIDAS = frozenset({"cidadao", "servidor"})
 
@@ -211,7 +209,7 @@ def buscar_chamado(pk):
             "c.dt_abertura, c.dt_conclusao, c.dt_avaliacao, c.atualizado_em, "
             "c.id_servico, c.id_bairro, c.id_cidadao, "
             "s.nome AS servico_nome, s.descricao AS servico_descricao, "
-            "b.nome_bairro "  
+            "b.nome_bairro "
             "FROM chamado c "
             "JOIN servico s ON c.id_servico = s.id_servico "
             "JOIN bairro b ON c.id_bairro = b.id_bairro "
@@ -268,7 +266,6 @@ def popular_status(ch):
         ch.status_atual = None
         ch.sigla_status = ""
 
-    from portal.models import ConfiguracaoSemaforo
 
     config = ConfiguracaoSemaforo.get_singleton()
     ch.cor_semaforo = cor_semaforo(
@@ -693,7 +690,6 @@ def listar_chamados_cidadao(uid, status=None, data=None, q=None, pagina=1, por_p
     Retorna (lista_de_chamados, total_count) — ambos ja paginados.
     Cada chamado inclui cor_semaforo e sigla_status.
     """
-    from portal.models import ConfiguracaoSemaforo
     offset = (pagina - 1) * por_pagina
     sql_base = (
         "FROM chamado c "
@@ -759,7 +755,6 @@ def listar_chamados_equipe(filtros, pagina=1, por_pagina=15):
               mostrar_encerrados, ordenar_por, direcao
     Retorna (lista_de_chamados, total_count).
     """
-    from portal.models import ConfiguracaoSemaforo
     from portal.utils import formatar_dias_em_aberto
     offset = (pagina - 1) * por_pagina
 
@@ -1074,7 +1069,6 @@ def excluir_notificacao(nid, uid_cidadao=None, uid_servidor=None):
 
 def listar_chamados_painel(cidadao_pk):
     """Lista chamados do cidadao para o painel (versao resumida)."""
-    from portal.models import ConfiguracaoSemaforo
     from types import SimpleNamespace
     with connection.cursor() as cursor:
         cursor.execute(
