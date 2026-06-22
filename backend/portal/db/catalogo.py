@@ -50,27 +50,35 @@ def listar_banners_ativos():
     )
 
 def listar_categorias_com_servicos():
-    """Retorna categorias ativas com seus servicos aninhados."""
-    categorias = []
+    """Retorna categorias ativas com seus servicos aninhados.
+
+    Usa duas queries (categorias + servicos) agrupadas em Python, em vez de
+    uma query por categoria (N+1). A ordenacao global por nome preserva a
+    ordem por nome dentro de cada categoria.
+    """
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT id_categoria, nome, descricao "
             "FROM categoria_servico WHERE ativo = TRUE ORDER BY nome"
         )
         cat_rows = cursor.fetchall()
+        cursor.execute(
+            "SELECT id_categoria, id_servico, nome, descricao FROM servico "
+            "WHERE ativo = TRUE ORDER BY nome"
+        )
+        srv_rows = cursor.fetchall()
+
+    servicos_por_cat = {}
+    for s in srv_rows:
+        servicos_por_cat.setdefault(s[0], []).append(
+            SimpleNamespace(id_servico=s[1], pk=s[1], nome=s[2], descricao=s[3])
+        )
+
+    categorias = []
     for cat_row in cat_rows:
         cat = SimpleNamespace(id_categoria=cat_row[0], pk=cat_row[0],
                               nome=cat_row[1], descricao=cat_row[2])
-        with connection.cursor() as cur:
-            cur.execute(
-                "SELECT id_servico, nome, descricao FROM servico "
-                "WHERE id_categoria = %s AND ativo = TRUE ORDER BY nome",
-                [cat.pk],
-            )
-            servicos = [
-                SimpleNamespace(id_servico=r[0], pk=r[0], nome=r[1], descricao=r[2])
-                for r in cur.fetchall()
-            ]
+        servicos = servicos_por_cat.get(cat.pk, [])
         cat.servicos_list = servicos
         categorias.append({"categoria": cat, "servicos": servicos})
     return categorias

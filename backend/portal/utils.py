@@ -96,10 +96,10 @@ def salvar_foto_upload(arquivo, request=None):
         try:
             import cloudinary
             import cloudinary.uploader
-        except ImportError:
+        except ImportError as exc:
             raise ImportError(
                 "Cloudinary nao instalado. Execute: pip install cloudinary"
-            )
+            ) from exc
         cloudinary.config(cloudinary_url=cu)
         try:
             r = cloudinary.uploader.upload(
@@ -108,7 +108,7 @@ def salvar_foto_upload(arquivo, request=None):
             return r["secure_url"]
         except Exception as e:
             msg = str(e) or "Erro ao fazer upload da foto."
-            raise ValueError(msg)
+            raise ValueError(msg) from e
 
     # Fallback: salva localmente com nome unico (UUID).
     ext_raw = os.path.splitext(arquivo.name)[1].lower()

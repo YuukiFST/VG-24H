@@ -248,7 +248,7 @@ def cidadao_chamado_foto(request, pk):
         if not request.FILES.get("foto"):
             messages.error(request, "Selecione uma imagem.")
         else:
-            for field, errors in form_f.errors.items():
+            for errors in form_f.errors.values():
                 for error in errors:
                     messages.error(request, error)
     return redirect("portal:cidadao_chamado", pk=pk)

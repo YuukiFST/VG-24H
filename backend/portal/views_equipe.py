@@ -23,6 +23,7 @@ Colaboradores (COL) nao podem alterar status de chamados ja encerrados
 Essa regra eh aplicada no Python e nao no banco de dados.
 """
 
+import contextlib
 import json
 
 from django.contrib import messages
@@ -193,7 +194,7 @@ def equipe_chamado_detalhe(request, pk):
     )
 
     # Prioridades para o select no template.
-    PRIORIDADES = [
+    prioridades = [
         (0, "0 — Sem classificacao"),
         (1, "1 — Muito baixa"),
         (2, "2 — Baixa"),
@@ -221,7 +222,7 @@ def equipe_chamado_detalhe(request, pk):
             "form_status": form_status,
             "form_obs": ObservacaoForm(),
             "form_foto": FotoForm(),
-            "prioridades": PRIORIDADES,
+            "prioridades": prioridades,
             "status_sigla_map_json": json.dumps(status_sigla_map),
         },
     )
@@ -238,7 +239,6 @@ def equipe_chamado_status(request, pk):
     """Altera o status de um chamado."""
     if not db.chamado_existe(pk):
         raise Http404()
-    ch_prioridade = 0
     p = perfil_codigo(request.portal_user)
 
     # Verifica bloqueio de COL para chamados encerrados.
@@ -250,12 +250,10 @@ def equipe_chamado_status(request, pk):
     if form_s.is_valid():
         novo = form_s.cleaned_data["id_status"]
         pri = request.POST.get("prioridade")
-        prioridade_val = ch_prioridade
+        prioridade_val = 0
         if pri is not None:
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 prioridade_val = max(0, min(5, int(pri)))
-            except (ValueError, TypeError):
-                pass
 
         nova_sigla = novo.sigla.strip().upper()
         obs_texto = form_s.cleaned_data.get("resolucao")
@@ -312,7 +310,7 @@ def equipe_chamado_foto(request, pk):
             else:
                 messages.success(request, "Foto registrada.")
         else:
-            for field, errors in form_f.errors.items():
+            for errors in form_f.errors.values():
                 for error in errors:
                     messages.error(request, error)
     else:

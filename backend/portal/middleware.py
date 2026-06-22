@@ -34,10 +34,11 @@ def _usuario_da_sessao(request):
         return None
 
     try:
-        if tipo == "servidor":
-            user = db.buscar_servidor_por_id(uid)
-        else:
-            user = db.buscar_cidadao_por_id(uid)
+        user = (
+            db.buscar_servidor_por_id(uid)
+            if tipo == "servidor"
+            else db.buscar_cidadao_por_id(uid)
+        )
 
         if not user:
             request.session.flush()

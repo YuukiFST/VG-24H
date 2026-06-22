@@ -115,7 +115,7 @@ def gestao_estatisticas(request):
         with connection.cursor() as c:
             c.execute("SELECT * FROM vw_estatisticas_chamados ORDER BY categoria, bairro")
             cols = [d[0] for d in c.description]
-            rows = [dict(zip(cols, r)) for r in c.fetchall()]
+            rows = [dict(zip(cols, r, strict=True)) for r in c.fetchall()]
     except ProgrammingError:
         pass
     return render(
@@ -287,6 +287,8 @@ def gestao_bairros(request):
     O campo regiao eh um combobox com valores predefinidos
     (Central, Norte, Sul, etc.) para evitar inconsistencias.
     """
+    form = BairroForm()
+    mostrar_form = False
     if request.method == "POST":
         form = BairroForm(request.POST)
         if form.is_valid():
@@ -294,16 +296,14 @@ def gestao_bairros(request):
             db.inserir_bairro(d["nome_bairro"], d["cep"], d.get("regiao"))
             messages.success(request, "Bairro criado.")
             return redirect("portal:gestao_bairros")
-        else:
-            messages.error(request, "Corrija os erros no formulário.")
-            mostrar_form = True
+        messages.error(request, "Corrija os erros no formulário.")
+        mostrar_form = True
 
-    form = locals().get("form", BairroForm())
     lista = db.listar_bairros_todos()
     return render(
         request,
         "portal/gestao/bairros.html",
-        {"form": form, "lista": lista, "mostrar_form": locals().get("mostrar_form", False)},
+        {"form": form, "lista": lista, "mostrar_form": mostrar_form},
     )
 
 

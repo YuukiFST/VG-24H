@@ -176,15 +176,20 @@ def listar_chamados_equipe(filtros, pagina=1, por_pagina=15):
     direcao = filtros.get("direcao", "desc")
 
     if bairro:
-        sql_base += "AND c.id_bairro = %s "; params.append(bairro)
+        sql_base += "AND c.id_bairro = %s "
+        params.append(bairro)
     if st:
-        sql_base += "AND ultimo.id_status = %s "; params.append(st)
+        sql_base += "AND ultimo.id_status = %s "
+        params.append(st)
     if servico_filter:
-        sql_base += "AND c.id_servico = %s "; params.append(servico_filter)
+        sql_base += "AND c.id_servico = %s "
+        params.append(servico_filter)
     if d0:
-        sql_base += "AND c.dt_abertura::date >= %s "; params.append(d0)
+        sql_base += "AND c.dt_abertura::date >= %s "
+        params.append(d0)
     if d1:
-        sql_base += "AND c.dt_abertura::date <= %s "; params.append(d1)
+        sql_base += "AND c.dt_abertura::date <= %s "
+        params.append(d1)
     if not mostrar_encerrados:
         sql_base += "AND ultimo.sigla NOT IN ('CO', 'CA') "
 

@@ -40,7 +40,6 @@ LOGIN_TIMEOUT = 300  # 5 minutes
 
 
 def _check_login_rate_limit(request):
-    ip = request.META.get("REMOTE_ADDR", "")
     attempts = request.session.get("login_attempts", [])
     now = time.time()
     attempts = [t for t in attempts if now - t < LOGIN_TIMEOUT]
