@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initRatingStars();
   initAnimateOnScroll();
+});
+
+window.addEventListener('load', () => {
   initPasswordToggles();
 });
 

@@ -176,9 +176,13 @@ def cadastro_view(request):
             if ja_existe:
                 messages.error(request, "E-mail ou CPF já cadastrado.")
             else:
-                db.inserir_cidadao(d)
-                messages.success(request, "Cadastro concluído. Faça login.")
-                return redirect("portal:login")
+                cidadao_id = db.inserir_cidadao(d)
+                request.session.pop("login_attempts", None)
+                request.session.cycle_key()
+                request.session["usuario_id"] = cidadao_id
+                request.session["usuario_tipo"] = "cidadao"
+                messages.success(request, f"Olá, {d['nome_completo']}. Cadastro concluído com sucesso!")
+                return redirect("portal:root")
     else:
         form = CadastroCidadaoForm()
 

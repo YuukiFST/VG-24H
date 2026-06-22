@@ -1524,7 +1524,8 @@ def inserir_cidadao(dados):
             "INSERT INTO cidadao (nome_completo, cpf, dt_nascimento, telefone, email, "
             "senha_hash, rua, num_endereco, complemento_endereco, "
             "bairro_endereco, cep_endereco, perfil, ativo, dt_cadastro) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+            "RETURNING id_cidadao",
             [dados["nome_completo"], dados["cpf"], dados["dt_nascimento"],
              dados["telefone"], dados["email"].lower(),
              make_password(dados["senha"]),
@@ -1532,6 +1533,7 @@ def inserir_cidadao(dados):
              dados.get("bairro_endereco"), dados.get("cep_endereco"),
               "CID", True, timezone.now()],
         )
+        return cursor.fetchone()[0]
 
 
 # ------------------------------------------------------------------
