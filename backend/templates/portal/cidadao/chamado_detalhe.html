@@ -2,10 +2,15 @@
 {% load static %}
 {# ========================================================================== #}
 {# DETALHE DO CHAMADO (Cidadao) — 4 acoes possiveis                        #}
+{# Vem de views_cidadao.cidadao_chamado_detalhe(); cada acao tem POST proprio.#}
+{# Contexto: ch, historicos, fotos, observacoes, sigla_status e as flags    #}
+{# pode_obs_foto / pode_cancelar / pode_avaliar que a view calcula pelo status.#}
 {# [!] obs: INSERT em historico_chamado                                     #}
 {#     foto: INSERT em foto_chamado                                         #}
 {#     cancelar: INSERT historico CA + Trigger 2B gera notificacao          #}
-{#     avaliar: UPDATE chamado (nota + comentario)                          #}
+{#     avaliar: grava nota + comentario no chamado (db.avaliar_chamado)     #}
+{# [!] as acoes so aparecem se a flag correspondente vier True; mesmo assim #}
+{#     a view revalida o status no POST (a tela so esconde, nao protege).   #}
 {# ========================================================================== #}
 {% block title %}Detalhes do Chamado #{{ ch.num_protocolo }} — VG 24H{% endblock %}
 
@@ -26,6 +31,9 @@
     <!-- ============ LEFT COLUMN ============ -->
     <div>
 
+      {# ====== CARD 1 — DADOS DO CHAMADO ====== #}
+      {# campos do ch (protocolo, servico, status atual, abertura, bairro, descricao) #}
+      {# [!] a Resolucao Final so aparece se ch.resolucao tiver sido preenchida (chamado concluido) #}
       <!-- CARD 1: Detalhes do Chamado -->
       <div class="ticket-info-card mb-3x">
         <h2><i class="fas fa-clipboard-check mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Detalhes do Chamado</h2>
@@ -40,6 +48,7 @@
         <div class="info-row">
           <span class="info-label">Status</span>
           <span class="info-value">
+            {# mesmo mapa sigla->cor do dashboard; uso sigla_status (que a view ja calculou) pra escolher a classe do br-tag #}
             <span class="br-tag count {% with s=sigla_status|lower %}{% if s == 'ab' %}info{% elif s == 'ea' %}warning{% elif s == 'ee' %}ee-status{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ ch.status_atual.descricao }}</span>
           </span>
         </div>
@@ -63,10 +72,13 @@
         {% endif %}
       </div>
 
+      {# ====== CARD 2 — OBSERVACOES ====== #}
+      {# observacoes = registros do historico que tem texto (a view ja filtrou) #}
       <!-- CARD 2: Observações -->
       <div class="ticket-info-card mb-3x">
         <h2><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Observações</h2>
         <div class="observations-list">
+          {# [!] se tem id_servidor, a obs eh da equipe (bolha "colaborador"); senao eh do proprio cidadao #}
           {% for obs in observacoes %}
             {% if obs.id_servidor %}
               <div class="obs-bubble colaborador">
@@ -88,6 +100,7 @@
           {% endfor %}
         </div>
         
+        {# form de nova observacao so aparece se pode_obs_foto (status nao concluido/cancelado) #}
         {% if pode_obs_foto %}
         <form action="{% url 'portal:cidadao_chamado_obs' ch.pk %}" method="post" class="mt-4x">
           {% csrf_token %}
@@ -103,6 +116,8 @@
         {% endif %}
       </div>
 
+      {# ====== CARD 3 — FOTOS ====== #}
+      {# galeria das fotos do chamado; cada foto abre a url_foto em nova aba #}
       <!-- CARD 3: Fotos do Chamado -->
       <div class="ticket-info-card mb-3x">
         <h2><i class="fas fa-images mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Fotos do Chamado</h2>
@@ -117,6 +132,7 @@
           {% endfor %}
         </div>
         
+        {# botao de adicionar foto so se pode_obs_foto; o input escondido faz submit sozinho ao escolher arquivo #}
         {% if pode_obs_foto %}
         <form action="{% url 'portal:cidadao_chamado_foto' ch.pk %}" method="post" enctype="multipart/form-data" class="mt-2 text-center">
           {% csrf_token %}
@@ -130,8 +146,11 @@
 
     </div>
 
+    {# ====== COLUNA DIREITA — TIMELINE + ACOES ====== #}
     <!-- ============ RIGHT COLUMN ============ -->
     <div>
+      {# linha do tempo do chamado; [!] uso 'historicos' (todos os registros), nao o 'historico_status' filtrado #}
+      {# se nao tiver servidor no registro, mostro "Sistema" (ex: o status AB inicial criado pelo Trigger 1) #}
       <!-- Status Timeline -->
       <div class="ticket-info-card mb-3x">
         <h2><i class="fas fa-route mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Status</h2>
@@ -155,6 +174,8 @@
         </div>
       </div>
 
+      {# ====== ACAO: CANCELAR ====== #}
+      {# botao so se pode_cancelar (status AB ou EA); ele abre o modal de cancelamento la embaixo #}
       <!-- Actions -->
       {% if pode_cancelar %}
       <div class="mb-3x">
@@ -164,14 +185,18 @@
       </div>
       {% endif %}
 
+      {# ====== ACAO: AVALIAR ====== #}
+      {# card de avaliacao so quando o chamado ta concluido (CO) #}
       <!-- Rating (CO Only) -->
       {% if sigla_status == 'CO' %}
       <div class="ticket-info-card">
         <h2><i class="fas fa-star mr-2" style="color:var(--vg-warning);" aria-hidden="true"></i> Sua Avaliação</h2>
-        
+
+        {# se ja tem nota, mostro a avaliacao feita; senao, se pode_avaliar, mostro o form pra avaliar #}
         {% if ch.nota_avaliacao %}
           <div class="rating-display mb-3x">
             <div class="text-warning mb-2x">
+              {# desenho 5 estrelas e pinto de amarelo ate o valor de ch.nota_avaliacao #}
               {% for i in "12345"|make_list %}
                 <i class="fas fa-star {% if forloop.counter <= ch.nota_avaliacao %}text-warning{% else %}text-muted{% endif %}"></i>
               {% endfor %}
@@ -182,6 +207,7 @@
         {% elif pode_avaliar %}
           <form action="{% url 'portal:cidadao_chamado_avaliar' ch.pk %}" method="post">
             {% csrf_token %}
+            {# nota vai nesse hidden (default 5); o JS atualiza ele quando o cidadao clica nas estrelas #}
             <input type="hidden" name="nota" id="input-rating" value="5">
             
             <div class="rating-stars mb-3x">
@@ -209,6 +235,8 @@
   </div>
 </div>
 
+{# ====== MODAL DE CANCELAMENTO ====== #}
+{# fica fora das colunas; so renderiza se pode_cancelar. O motivo eh obrigatorio (textarea required) #}
 {% if pode_cancelar %}
 <!-- Modal Cancelamento -->
 <div class="br-scrim foco"><div class="br-modal" id="modal-cancel">
@@ -235,6 +263,8 @@
 {% endif %}
 {% endblock %}
 
+{# ====== JS DA PAGINA ====== #}
+{# so cuida das estrelas de avaliacao: clicou numa estrela, atualizo o hidden 'nota' e pinto ate ela #}
 {% block extra_js %}
 <script>
   document.addEventListener('DOMContentLoaded', () => {

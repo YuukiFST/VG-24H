@@ -12,7 +12,10 @@
    =================================================================== */
 
 /* ---- CSS Variables (project-level tokens, mapped to GOV.BR DS) ---- */
+/* aqui eu crio meus apelidos --vg-* em cima das vars do GOV.br. Faco assim
+   pra usar um nome unico no resto do arquivo e, se o DS mudar, troco so aqui. */
 :root {
+  /* cores de marca: aponto pras vars do GOV.br pra manter o padrao do orgao */
   --vg-primary: var(--interactive);
   --vg-primary-dark: var(--blue-warm-vivid-90);
   --vg-primary-light: var(--selected);
@@ -20,6 +23,8 @@
   --vg-danger: var(--danger);
   --vg-warning: var(--warning);
   --vg-orange: var(--orange-vivid-30);
+  /* escala de prioridade 0..5 em tons de roxo (cor de fundo + cor do texto).
+     uso pra colorir a tag de prioridade do chamado; quanto mais escuro, mais urgente */
   --vg-priority-0: #ddd6fe;
   --vg-priority-0-fg: #1a1a1a;
   --vg-priority-1: #c4b5fd;
@@ -32,6 +37,8 @@
   --vg-priority-4-fg: #ffffff;
   --vg-priority-5: #4c1d95;
   --vg-priority-5-fg: #ffffff;
+  /* superficie: fundo alternativo, raio de borda, sombras e timing de transicao.
+     centralizo aqui pra todos os cards/modais ficarem com o mesmo arredondamento e sombra */
   --vg-bg-alt: var(--background-alternative);
   --vg-radius: var(--surface-rounder-md);
   --vg-shadow: var(--surface-shadow-sm);
@@ -40,6 +47,8 @@
 }
 
 /* ---- Global Resets ---- */
+/* basico que aplico no documento todo: box-sizing pra calculo de largura nao
+   estourar com padding, scroll suave e a fonte/cor padrao do corpo */
 *,
 *::before,
 *::after {
@@ -71,6 +80,8 @@ img {
 }
 
 /* ---- Utility Classes (custom, non-DS) ---- */
+/* dois utilitarios meus que o GOV.br nao tem: texto branco forcado e um
+   container centralizado com largura maxima pro conteudo nao espalhar demais */
 .text-white {
   color: var(--pure-0) !important;
 }
@@ -84,6 +95,8 @@ img {
 /* ===================================================================
    HERO SECTION
    =================================================================== */
+/* faixa azul do topo da home: fundo escuro com dois circulos translucidos
+   decorativos (::before/::after) e os botoes de chamada de acao centralizados */
 .hero {
   background: var(--vg-primary-dark);
   color: #fff;
@@ -197,6 +210,9 @@ img {
 /* ===================================================================
    SERVICE CARDS SECTION
    =================================================================== */
+/* grid dos cards de servico na home. Deixo cada card com sombra leve e no hover
+   ele sobe um pouco, ganha sombra forte e aparece a barrinha colorida no topo
+   (::before com scaleX) pra dar a sensacao de selecao */
 .services-section {
   padding: 64px 16px;
   background: var(--vg-bg-alt);
@@ -300,6 +316,8 @@ img {
 /* ===================================================================
    STEPS SECTION (Como Funciona)
    =================================================================== */
+/* passo a passo "como funciona" em 3 colunas. A linha que liga os passos e o
+   ::before do grid; em tela pequena escondo essa linha e empilho os passos */
 .steps-section {
   padding: 64px 16px;
   background: #fff;
@@ -369,6 +387,8 @@ img {
 /* ===================================================================
    STATS COUNTERS SECTION
    =================================================================== */
+/* faixa de numeros/contadores da home (ex: chamados atendidos). So estiliza o
+   valor grande e o rotulo embaixo; o numero em si vem do template */
 .stats-section {
   padding: 56px 16px;
   background: #fff;
@@ -410,6 +430,7 @@ img {
 /* ===================================================================
    CTA SECTION
    =================================================================== */
+/* bloco final de chamada pra acao (titulo + texto + botao), tudo centralizado */
 .cta-section {
   padding: 64px 16px;
   background: #fff;
@@ -435,6 +456,8 @@ img {
 /* ===================================================================
    AUTH PAGES (Login / Cadastro)
    =================================================================== */
+/* telas de login/cadastro/recuperar senha: centralizo um card branco no meio
+   da tela e aqui tambem ficam os estilos de form-group/form-row que reuso nesses forms */
 .auth-page {
   min-height: 100vh;
   display: flex;
@@ -543,6 +566,8 @@ img {
 /* ===================================================================
    DASHBOARD LAYOUT
    =================================================================== */
+/* moldura das paginas internas (dashboard do colaborador/gestor): largura maxima,
+   cabecalho com titulo + mensagem de boas vindas e o sininho de notificacao com badge */
 .dashboard-content {
   max-width: 1200px;
   margin: 0 auto;
@@ -692,6 +717,10 @@ img {
    STATUS TAGS — now using GOV native .br-tag.count + color classes
    (.info, .warning, .success, .danger). Custom status-* classes removed.
    =================================================================== */
+/* aqui eu so ajusto a tag nativa do GOV.br pro meu caso: amarelo precisa de
+   texto preto pra ler, crio uma cor laranja so pro status "Em Execucao" (EE) que
+   nao existe no DS, fixo a largura das tags de prioridade/status pra coluna nao
+   dancar, e estilizo o <select> na mao porque o .br-input do GOV nao mexe nele */
 
 /* Warning (yellow) status tags — black text for readability */
 .br-tag.warning {
@@ -747,6 +776,8 @@ img {
 /* ===================================================================
    HEADER AVATAR DROPDOWN FIX
    =================================================================== */
+/* menu do avatar no header: deixo a .br-list escondida e mostro so no hover,
+   posicionada absoluta logo abaixo do avatar. z-index alto pra ficar na frente */
 .header-avatar {
   position: relative;
 }
@@ -772,6 +803,8 @@ img {
 /* ===================================================================
    FILTER BAR
    =================================================================== */
+/* barra branca de filtros acima das listas de chamado: itens em linha que
+   quebram quando falta espaco; em mobile (la embaixo) viram coluna */
 .filter-bar {
   display: flex;
   align-items: flex-end;
@@ -802,6 +835,8 @@ img {
 /* ===================================================================
    DATA TABLE
    =================================================================== */
+/* embrulho das tabelas (.br-table do GOV): so dou cantos arredondados, sombra e
+   overflow hidden pra borda da tabela respeitar o arredondamento do card */
 .vg-table-wrapper {
   background: #fff;
   border-radius: var(--vg-radius);
@@ -816,6 +851,9 @@ img {
 /* ===================================================================
    TICKET DETAIL / PROTOCOL VIEW
    =================================================================== */
+/* pagina de detalhe do chamado: dois cards lado a lado (info + acoes), as linhas
+   label/valor do card e a timeline de status com a bolinha e a linha vertical
+   (::before) ligando os pontos. timeline-dot.inactive e o passo ainda nao atingido */
 .ticket-status-bar .ticket-info-card form {
   margin-top: 8px;
 }
@@ -940,6 +978,9 @@ img {
 /* ===================================================================
    OBSERVATIONS / CHAT
    =================================================================== */
+/* conversa entre cidadao e colaborador no chamado, estilo chat: balao do cidadao
+   cai pra esquerda (azul) e o do colaborador pra direita (verde). A lista rola
+   sozinha quando passa da altura e embaixo fica a linha de input pra mandar obs */
 .observations-list {
   display: flex;
   flex-direction: column;
@@ -1019,6 +1060,8 @@ img {
 /* ===================================================================
    RATING STARS
    =================================================================== */
+/* estrelinhas de avaliacao do atendimento: cinza por padrao e ficam amarelas
+   quando ativas/selecionadas ou no hover */
 .rating-stars {
   display: flex;
   gap: 4px;
@@ -1040,6 +1083,9 @@ img {
 /* ===================================================================
    STEP WIZARD (New Ticket / Registration)
    =================================================================== */
+/* assistente em passos (abrir chamado / cadastro). So o passo .active aparece e
+   troca com um fadeIn; tem os cards de selecao de servico (.selection-card, que
+   ganham borda azul quando selecionados) e o contador de caracteres do textarea */
 .wizard-container {
   max-width: 720px;
   margin: 0 auto;
@@ -1130,6 +1176,8 @@ img {
 /* ===================================================================
    ADMIN TABS
    =================================================================== */
+/* abas das telas de gestao: escondo todo .tab-content e mostro so o .active,
+   com o mesmo fadeIn do wizard */
 .admin-tabs {
   margin-bottom: 24px;
 }
@@ -1146,6 +1194,8 @@ img {
 /* ===================================================================
    MODAL OVERRIDES
    =================================================================== */
+/* modal proprio meu (nao o do GOV): overlay escuro fixo cobrindo a tela, so
+   aparece com .active e o cartao branco centralizado entra com fadeIn */
 .vg-modal-overlay {
   position: fixed;
   inset: 0;
@@ -1183,6 +1233,8 @@ img {
 /* ===================================================================
    BREADCRUMB SPACING
    =================================================================== */
+/* so um respiro embaixo do breadcrumb do GOV.br e deixo as migalhas quebrarem
+   linha em tela estreita pra nao estourar */
 .page-breadcrumb {
   margin-bottom: 24px;
 }
@@ -1199,6 +1251,8 @@ img {
 /* ===================================================================
    FOTO LIGHTBOX (Chamado Detalhe)
    =================================================================== */
+/* visualizador de foto em tela cheia: clico no thumb e abre a imagem grande
+   sobre um fundo preto. So aparece com .active */
 .lightbox-overlay {
   display: none;
   position: fixed;
@@ -1224,6 +1278,8 @@ img {
 /* ===================================================================
    FOTO THUMBNAILS (Chamado Detalhe)
    =================================================================== */
+/* miniaturas quadradas das fotos do chamado; no hover dao um leve zoom pra
+   sinalizar que da pra clicar e abrir no lightbox acima */
 .foto-thumb {
   width: 100px;
   height: 100px;
@@ -1243,6 +1299,8 @@ img {
 /* ===================================================================
    UPLOAD AREA
    =================================================================== */
+/* area pontilhada de soltar/escolher arquivo (foto do chamado); muda de cor no
+   hover pra deixar claro que e clicavel */
 .upload-area {
   border: 2px dashed var(--gray-20, #ccc);
   border-radius: var(--vg-radius);
@@ -1278,6 +1336,8 @@ img {
 /* ===================================================================
    CONFIRMATION SUMMARY (br-card style)
    =================================================================== */
+/* cartao de revisao no ultimo passo do wizard: lista os dados em linhas
+   label/valor pro usuario conferir antes de confirmar o chamado */
 .summary-card {
   background: var(--gray-2, #f8f8f8);
   border: 1px solid var(--gray-10, #e6e6e6);
@@ -1305,6 +1365,8 @@ img {
 /* ===================================================================
    RESPONSIVE
    =================================================================== */
+/* ajustes por largura de tela. No breakpoint de tablet (991px) empilho steps,
+   grids e forms; no de celular (575px) aperto ainda mais os grids e o hero */
 @media (max-width: 991px) {
   .hero h1 {
     font-size: 2rem;

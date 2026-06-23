@@ -1,3 +1,5 @@
+{# Tela de gestao dos banners do carrossel da home. Vem da view gestao_banners (perfil GES). #}
+{# So lista os banners ('banners' = listar_banners_todos); criar/editar/excluir/reordenar sao outras URLs. #}
 {% extends "portal/base.html" %}
 {% block title %}Banners — Gestão{% endblock %}
 {% block content %}
@@ -16,6 +18,7 @@
     </a>
   </div>
 
+  {# ====== Tabela de banners (so aparece se tiver algum) ====== #}
   {% if banners %}
   <div class="br-table" data-search="off" data-selection="off">
     <div class="table-header">
@@ -36,6 +39,7 @@
       <tbody>
         {% for b in banners %}
         <tr>
+          {# ordem eh o que define a posicao no carrossel (menor primeiro) #}
           <td>{{ b.ordem }}</td>
           <td>
             <img src="{{ b.url_imagem }}" alt="Miniatura do banner: {{ b.titulo }}"
@@ -48,13 +52,16 @@
             {% endif %}
           </td>
           <td>
+            {# status ativo/inativo do banner #}
             {% if b.ativo %}
               <span class="br-tag success small">Ativo</span>
             {% else %}
               <span class="br-tag danger small">Inativo</span>
             {% endif %}
           </td>
+          {# ====== Acoes: subir, descer, editar, excluir ====== #}
           <td style="text-align:right;">
+            {# reordenar com direcao=-1 (sobe). a view troca a ordem com o vizinho #}
             <form action="{% url 'portal:gestao_banner_reordenar' b.pk %}" method="post" style="display:inline;">
               {% csrf_token %}
               <input type="hidden" name="direcao" value="-1" />
@@ -62,6 +69,7 @@
                 <i class="fas fa-arrow-up" aria-hidden="true"></i>
               </button>
             </form>
+            {# reordenar com direcao=1 (desce) #}
             <form action="{% url 'portal:gestao_banner_reordenar' b.pk %}" method="post" style="display:inline;">
               {% csrf_token %}
               <input type="hidden" name="direcao" value="1" />
@@ -69,10 +77,12 @@
                 <i class="fas fa-arrow-down" aria-hidden="true"></i>
               </button>
             </form>
+            {# editar leva pro banner_form #}
             <a href="{% url 'portal:gestao_banner_editar' b.pk %}" class="br-button small secondary"
                aria-label="Editar banner {{ b.titulo }}">
               <i class="fas fa-edit" aria-hidden="true"></i>
             </a>
+            {# [!] excluir aqui eh DELETE de verdade na view (nao soft delete), por isso o confirm() #}
             <form action="{% url 'portal:gestao_banner_excluir' b.pk %}" method="post"
                   style="display:inline;"
                   onsubmit="return confirm('Tem certeza que deseja excluir o banner &quot;{{ b.titulo }}&quot;?')">

@@ -2,10 +2,12 @@
 {% load static %}
 {# ========================================================================== #}
 {# DETALHE DO CHAMADO (Equipe) — COL e GES                                  #}
-{# [!] Mudanca de status = INSERT em historico_chamado                      #}
-{#     COL bloqueado em CO/CA (pode_status = False)                         #}
+{# Vem da view equipe_chamado_detalhe (views_equipe.py), rota equipe_chamado #}
+{# [!] Mudanca de status NAO eh UPDATE, eh INSERT em historico_chamado       #}
+{#     (event sourcing). Os triggers do banco fazem o resto depois.          #}
+{#     COL bloqueado em CO/CA (a view manda pode_status = False)             #}
 {#     GES pode sempre                                                       #}
-{#     3 acoes: alterar status, adicionar obs, adicionar foto               #}
+{#     3 acoes, cada uma com seu form/POST: status, observacao, foto         #}
 {# ========================================================================== #}
 {% block title %}Gerenciar Chamado #{{ ch.num_protocolo }} — VG 24H{% endblock %}
 
@@ -22,6 +24,9 @@
     </div>
   </nav>
 
+  {# ====== ACAO 1: GESTAO DE STATUS ====== #}
+  {# form que muda o status -> POST equipe_chamado_status. so aparece se pode_status. #}
+  {# se for COL num chamado ja encerrado (CO/CA), pode_status=False e mostra o aviso de baixo #}
   <!-- ============ GESTAO STATUS BAR (horizontal) ============ -->
   <div class="ticket-status-bar mb-3x">
     <div class="ticket-info-card">
@@ -30,12 +35,15 @@
       {% if pode_status %}
         <form action="{% url 'portal:equipe_chamado_status' ch.pk %}" method="post">
           {% csrf_token %}
+          {# [!] status_sigla_map_json (id->sigla) fica escondido aqui pro JS la embaixo ler #}
+          {#     e saber quais status sao finais (CO/CA) pra exigir a resolucao #}
           <div id="sigla-map-data" data-map='{{ status_sigla_map_json|safe }}' style="display:none;"></div>
 
           <div class="row mb-3">
             <div class="col-md-6">
               <div class="br-input">
                 <label for="status-select">Alterar para:</label>
+                {# choices vem do EquipeStatusForm; pulo o code vazio (placeholder "----") #}
                 <select id="status-select" name="id_status" required>
                   {% for code, label in form_status.fields.id_status.choices %}
                     {% if code %}
@@ -48,6 +56,7 @@
             <div class="col-md-6">
               <div class="br-input">
                 <label for="prioridade-select">Prioridade</label>
+                {# prioridades eh a lista fixa 0..5 que a view monta na mao #}
                 <select id="prioridade-select" name="prioridade">
                   {% for val, lbl in prioridades %}
                     <option value="{{ val }}" {% if ch.prioridade == val %}selected{% endif %}>{{ lbl }}</option>
@@ -57,6 +66,8 @@
             </div>
           </div>
 
+          {# campo que serve de "Observacao" OU "Resolucao Final" — o JS troca o label/required #}
+          {# conforme o status escolhido. ja vem preenchido com a resolucao atual, se tiver #}
           <div class="mb-3">
             <div id="resolucao-wrapper" class="br-input">
               <label for="resolucao-text" id="resolucao-label">Observação</label>
@@ -71,14 +82,18 @@
           </div>
 
           <script>
+            // controla o campo de baixo conforme o status escolhido:
+            // se o status for final (CO=Concluido ou CA=Cancelado), vira "Resolucao Final" e fica obrigatorio
             (function () {
               var sel = document.getElementById('status-select');
               var label = document.getElementById('resolucao-label');
               var textarea = document.getElementById('resolucao-text');
+              // leio o mapa id->sigla que veio escondido do Django
               var siglaMap = JSON.parse(document.getElementById('sigla-map-data').getAttribute('data-map'));
               function toggle() {
                 var pk = parseInt(sel.value, 10);
                 var sigla = (siglaMap[pk] || '').toUpperCase();
+                // CO/CA = status que encerram o chamado
                 var isFinal = sigla === 'CO' || sigla === 'CA';
                 label.textContent = isFinal ? 'Resolução Final' : 'Observação';
                 textarea.placeholder = isFinal
@@ -87,7 +102,7 @@
                 textarea.required = isFinal;
               }
               sel.addEventListener('change', toggle);
-              toggle();
+              toggle(); // roda uma vez no load pra deixar o campo certo ja de cara
             })();
           </script>
         </form>
@@ -106,12 +121,16 @@
     </div>
   </div>
 
+  {# ====== ACAO 2: OBSERVACOES (estilo chat) ====== #}
+  {# observacoes = historicos que tem texto. id_servidor preenchido = bolha da equipe, #}
+  {# vazio = bolha do cidadao. enviar -> POST equipe_chamado_obs #}
   <!-- ============ CHAT (Observações) ============ -->
   <div class="ticket-observations mb-3x">
     <div class="ticket-info-card">
       <h2><i class="fas fa-comments mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Observações</h2>
       <div class="observations-list" id="chat-messages">
         {% for obs in observacoes %}
+          {# se tem servidor foi a equipe que escreveu; senao foi o cidadao #}
           {% if obs.id_servidor %}
             <div class="obs-bubble colaborador">
               <p>{{ obs.observacao }}</p>
@@ -145,16 +164,20 @@
     </div>
   </div>
   <script>
+  // joga o scroll do chat la pro fim (mensagem mais recente) quando a pagina carrega
   document.addEventListener('DOMContentLoaded', function () {
     var chat = document.getElementById('chat-messages');
     if (chat) chat.scrollTop = chat.scrollHeight;
   });
   </script>
 
+  {# ====== GRID 2 COLUNAS: Detalhes (esq) + Historico (dir) ====== #}
+  {# tudo vem de ch (db.buscar_chamado_detalhe_equipe) e historico_status #}
   <!-- ============ GRID 2 COLUNAS: Detalhes + Historico ============ -->
   <div class="ticket-details-grid mb-3x">
     <div class="ticket-detail-left">
 
+      {# bloco read-only com os dados do chamado (cidadao, servico, bairro, descricao...) #}
       <!-- CARD: Informacoes do Chamado -->
       <div class="ticket-info-card">
         <h2><i class="fas fa-clipboard-check mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Detalhes do Chamado</h2>
@@ -207,16 +230,19 @@
           <span class="info-label">Descrição</span>
           <span class="info-value">{{ ch.descricao }}</span>
         </div>
+        {# resolucao final so aparece se o chamado ja foi encerrado com texto #}
         {% if ch.resolucao %}
         <div class="info-row mt-3x p-2" style="background:#f0f6ff; border-left: 3px solid var(--vg-primary); border-radius:4px;">
           <span class="info-label">Resolução Final</span>
           <span class="info-value"><strong>{{ ch.resolucao }}</strong></span>
         </div>
         {% endif %}
+        {# avaliacao (estrelas) so aparece se o cidadao avaliou depois de concluido #}
         {% if ch.nota_avaliacao %}
         <div class="info-row mt-2 p-2" style="background:#fffbeb; border-left: 3px solid var(--vg-warning); border-radius:4px;">
           <span class="info-label">Avaliação do Cidadão</span>
           <span class="info-value">
+            {# pinto 5 estrelas e acendo as que sao <= nota_avaliacao #}
             {% for i in "12345"|make_list %}
               <i class="fas fa-star {% if forloop.counter <= ch.nota_avaliacao %}text-warning{% else %}text-muted{% endif %}" style="font-size:0.9rem;"></i>
             {% endfor %}
@@ -229,10 +255,12 @@
     </div>
     <div class="ticket-detail-right">
 
+      {# timeline com so as MUDANCAS reais de status (a view ja filtrou em historico_status) #}
       <!-- CARD: Historico de Status -->
       <div class="ticket-info-card">
         <h2><i class="fas fa-route mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Status</h2>
         <div class="timeline">
+          {# cada item eh um ponto da linha do tempo; servidor vazio vira "Sistema" #}
           {% for h in historico_status %}
             <div class="timeline-item">
               <div class="timeline-dot"><i class="fas fa-check" aria-hidden="true"></i></div>
@@ -243,6 +271,7 @@
               </div>
             </div>
           {% endfor %}
+          {# ultimo ponto fixo: o status atual (sempre destacado no fim da timeline) #}
           <div class="timeline-item active">
             <div class="timeline-dot"><i class="fas fa-map-marker-alt" aria-hidden="true"></i></div>
             <div class="timeline-content">
@@ -256,6 +285,9 @@
     </div>
   </div>
 
+  {# ====== ACAO 3: FOTOS ====== #}
+  {# galeria das fotos (fotos = db.buscar_fotos). clicar abre no lightbox la embaixo. #}
+  {# o input de arquivo da submit sozinho no onchange -> POST equipe_chamado_foto #}
   <!-- ============ FOTOS (full width) ============ -->
   <div class="ticket-photos mb-3x">
     <div class="ticket-info-card">
@@ -283,17 +315,20 @@
   </div>
 </div>
 
+{# overlay que mostra a foto ampliada na tela toda quando clica numa miniatura #}
 <!-- Lightbox overlay (imagem centralizada) -->
 <div id="foto-lightbox" class="lightbox-overlay">
   <img id="foto-lightbox-img" src="" alt="Foto expandida">
 </div>
 
 <script>
+// abre o lightbox: poe a foto clicada no overlay e trava o scroll da pagina
 function abrirFoto(src) {
   document.getElementById('foto-lightbox-img').src = src;
   document.getElementById('foto-lightbox').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
+// clicar em qualquer lugar do overlay fecha o lightbox e devolve o scroll
 document.addEventListener('DOMContentLoaded', function () {
   var lb = document.getElementById('foto-lightbox');
   lb.addEventListener('click', function () {

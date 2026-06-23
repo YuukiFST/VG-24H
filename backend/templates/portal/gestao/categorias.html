@@ -1,3 +1,5 @@
+{# Tela de gestao de categorias: lista as categorias e tem o modal de criar nova. #}
+{# Vem da view gestao_categorias (perfil GES). O POST de criar cai na propria URL. #}
 {% extends "portal/base.html" %}
 {% load static %}
 
@@ -5,6 +7,7 @@
 
 {% block content %}
 <div class="dashboard-content">
+  {# ====== Breadcrumb ====== #}
   <!-- Breadcrumb -->
   <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
     <div class="crumb-list">
@@ -16,6 +19,8 @@
     </div>
   </nav>
 
+  {# ====== Cabecalho + botao de nova ====== #}
+  {# o botao abre o modal-add-cat (data-toggle/data-target do GOV.br), nao navega #}
   <div class="dashboard-header d-flex justify-content-between align-items-center mb-4x">
     <div>
       <h1>Categorias de Serviço</h1>
@@ -26,6 +31,8 @@
     </button>
   </div>
 
+  {# ====== Tabela de categorias ====== #}
+  {# percorro 'lista' (todas as categorias) que veio da view #}
   <div class="br-card p-4">
     <div class="vg-table-wrapper">
       <div class="br-table">
@@ -47,6 +54,7 @@
               <tr>
                 <td><strong>{{ cat.nome }}</strong></td>
                 <td>
+                  {# tag de status conforme cat.ativo #}
                   {% if cat.ativo %}
                     <span class="br-tag success">Ativo</span>
                   {% else %}
@@ -54,9 +62,12 @@
                   {% endif %}
                 </td>
                 <td>
+                  {# editar leva pro categoria_form #}
                   <a href="{% url 'portal:gestao_categoria_editar' cat.pk %}" class="br-button circle small" title="Editar">
                     <i class="fas fa-edit"></i>
                   </a>
+                  {# [!] esse form posta 'desativar' pra gestao_categorias, mas a view no POST so #}
+                  {# valida o CategoriaForm e insere -- nao le esse campo. desativar de fato fica no form de editar. #}
                   {% if cat.ativo %}
                   <form action="{% url 'portal:gestao_categorias' %}" method="post" style="display:inline;">
                     {% csrf_token %}
@@ -69,6 +80,7 @@
                 </td>
               </tr>
             {% empty %}
+              {# lista vazia: linha unica ocupando as 3 colunas #}
               <tr><td colspan="3" class="text-center">Nenhuma categoria cadastrada.</td></tr>
             {% endfor %}
           </tbody>
@@ -78,6 +90,8 @@
   </div>
 </div>
 
+{# ====== Modal de criar categoria ====== #}
+{# o form posta pra gestao_categorias so com o campo 'nome' (descricao a view trata como opcional) #}
 <!-- Modal Adicionar Categoria -->
 <div class="br-scrim foco"><div class="br-modal" id="modal-add-cat">
   <div class="br-modal-header">

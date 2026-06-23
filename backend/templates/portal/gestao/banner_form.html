@@ -1,3 +1,6 @@
+{# Form unico que serve pra criar E editar banner. Vem de gestao_banner_novo / gestao_banner_editar (perfil GES). #}
+{# [!] o 'banner' do contexto eh None quando eh criacao -- todos os {% if banner %} alternam o modo (novo x editar). #}
+{# [!] o action fica vazio de proposito: posta na propria URL (a mesma rota que renderizou). #}
 {% extends "portal/base.html" %}
 {% load static %}
 {% block title %}{% if banner %}Editar Banner{% else %}Novo Banner{% endif %} — Gestão{% endblock %}
@@ -22,6 +25,8 @@
     {% if banner %}Atualize as informações do banner exibido na página inicial.{% else %}Preencha os campos abaixo para criar um novo banner na página inicial.{% endif %}
   </p>
 
+  {# ====== Formulario do banner ====== #}
+  {# enctype multipart por causa do upload de imagem; sem action -> posta na URL atual #}
   <form method="post" enctype="multipart/form-data" class="col-lg-8 col-md-10">
     {% csrf_token %}
 
@@ -58,6 +63,7 @@
     </div>
 
     {# ── Campo: Ordem (br-input — numérico) ── #}
+    {# [!] so no editar: na criacao a view calcula a ordem (MAX+1) e nem le esse campo #}
     {% if banner %}
     <div class="br-input mb-4x" id="field-ordem">
       <label for="ordem">Ordem de exibição</label>
@@ -83,6 +89,7 @@
     {% endif %}
 
     {# ── Campo: Upload de imagem (br-upload — GOV.BR DS) ── #}
+    {# [!] required so na criacao; no editar, sem arquivo novo a view mantem a imagem atual #}
     <div class="br-upload mb-5x" id="field-imagem">
       <label class="upload-label" for="imagem">
         <span>Envio de imagem{% if not banner %} (obrigatório){% endif %}</span>

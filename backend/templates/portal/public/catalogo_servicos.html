@@ -1,3 +1,6 @@
+{# ====== CATALOGO PUBLICO DE SERVICOS ====== #}
+{# Pagina publica (sem login) da view catalogo_servicos. Lista as categorias e os servicos #}
+{# ativos de cada uma. blocos vem como lista de tuplas (categoria, servicos) que montei na view. #}
 {% extends "portal/base.html" %}
 {% block title %}Categorias e serviços{% endblock %}
 {% block breadcrumb_trail %}
@@ -5,17 +8,23 @@
 {% endblock %}
 {% block content %}
   <h1 class="mb-3x">Categorias e serviços oferecidos</h1>
+  {# se veio uma busca (q), mostro pra qual termo sao os resultados + link pra limpar #}
   {% if q %}
   <p class="text-down-01 mb-3x" role="status">Resultados para “{{ q }}”. <a href="{% url 'portal:catalogo_servicos' %}">Limpar busca</a></p>
   {% endif %}
   <p class="text-down-01 mb-4x">
     Consulte os tipos de solicitação disponíveis. Para registrar um problema, use
+    {# nav_user/nav_perfil vem do context_processor navegacao: se ja for cidadao logado mando #}
+    {# direto pro Abrir chamado, senao ofereco cadastro + login antes #}
     {% if nav_user and nav_perfil == "CID" %}
     <a href="{% url 'portal:cidadao_chamado_novo' %}">Abrir chamado</a>.
     {% else %}
     <a href="{% url 'portal:cadastro' %}">cadastro</a> e <a href="{% url 'portal:login' %}">login</a>, depois “Abrir chamado”.
     {% endif %}
   </p>
+  {# ====== UM BLOCO POR CATEGORIA ====== #}
+  {# desempacoto cada tupla em cat + servicos; lista os servicos e, se a categoria estiver vazia, #}
+  {# o {% empty %} de dentro avisa. O {% empty %} de fora cobre quando nao ha categoria nenhuma. #}
   {% for cat, servicos in blocos %}
   <section class="mb-4x" aria-labelledby="cat-{{ cat.pk }}">
     <h2 class="h5 mb-2x" id="cat-{{ cat.pk }}">{{ cat.nome }}</h2>

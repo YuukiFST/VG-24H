@@ -1,3 +1,4 @@
+{# herdo o base.html (header/footer/menu GOV.br) e carrego a lib static #}
 {% extends "portal/base.html" %}
 {% load static %}
 {# ========================================================================== #}
@@ -8,6 +9,8 @@
 {# ========================================================================== #}
 {% block title %}Página Inicial — VG 24H{% endblock %}
 
+{# ====== EXTRA HEAD: CSS do carousel + quick actions + cards de categoria ====== #}
+{# aqui jogo o CSS so desta pagina (carousel proprio meu) e puxo dois css extras do static #}
 {% block extra_head %}
 <style>
   /* ====== Banner Carousel ====== */
@@ -118,11 +121,14 @@
 {% endblock %}
 
 {% block content %}
+      {# ====== BANNER CAROUSEL ====== #}
+      {# se tem banners ativos (db.listar_banners_ativos), monto meu carousel; senao caio no carousel de exemplo do GOV.br #}
       <!-- ====== BANNER CAROUSEL ====== -->
       <section class="banner-wrapper" aria-label="Banners e Notícias">
         {% if banners %}
         <div class="banner-carousel">
           <div class="carousel-track" id="carousel-track">
+            {# um slide por banner; so embrulho a img num <a> quando o banner tem link (abre em nova aba) #}
             {% for banner in banners %}
             <div class="carousel-slide">
               {% if banner.link %}<a href="{{ banner.link }}" target="_blank" rel="noopener">{% endif %}
@@ -131,8 +137,10 @@
             </div>
             {% endfor %}
           </div>
+          {# [!] dots e setas so aparecem com mais de 1 banner; senao nem mostro controle #}
           {% if banners|length > 1 %}
           <div class="carousel-dots" id="carousel-dots">
+            {# uma bolinha por banner; marco a primeira como active e guardo o indice (0-based) no data-idx pro JS #}
             {% for banner in banners %}
             <span class="dot {% if forloop.first %}active{% endif %}" data-idx="{{ forloop.counter0 }}"></span>
             {% endfor %}
@@ -144,6 +152,7 @@
           {% endif %}
         </div>
         {% else %}
+        {# fallback sem banner cadastrado: uso o componente br-carousel do GOV.br com 3 imagens placehold #}
         <div class="row">
           <div class="col-sm-12 col-md-12">
             <div class="br-carousel" aria-label="Carrossel de Exemplo" aria-roledescription="carousel">
@@ -189,6 +198,8 @@
         {% endif %}
       </section>
 
+      {# ====== QUICK ACTIONS ====== #}
+      {# barra azul com atalhos de abrir e consultar chamado #}
       <!-- ====== QUICK ACTIONS ====== -->
       {# [!] Botoes visiveis apenas para anonimos e CID — GES/COL usam o menu lateral #}
       {% if not request.portal_user or request.portal_user.perfil == 'CID' %}
@@ -204,6 +215,8 @@
       </section>
       {% endif %}
 
+      {# ====== CATEGORY CARDS ====== #}
+      {# grid de cards de categoria; cada card leva pro catalogo filtrado pela categoria. CSS do overlay de hover vem inline aqui #}
       <!-- ====== CATEGORY CARDS (GOV.br br-card oficial com hover overlay) ====== -->
       <style>
         /* Wrapper para posicionar o overlay sobre o br-card */
@@ -257,12 +270,17 @@
             Encontre o serviço ou a informação desejada pelas opções abaixo:
           </p>
           <div class="grid-cards">
+            {# itero a lista vinda de db.listar_categorias_com_servicos: cada bloco eh {categoria, servicos} #}
             {% for bloco in categorias %}
+              {# desempacoto pra cat (categoria) e svcs (lista de servicos) pra encurtar o resto #}
               {% with cat=bloco.categoria svcs=bloco.servicos %}
+              {# link pro catalogo ja filtrando por essa categoria via ?cat=<pk> #}
               <a href="{% url 'portal:catalogo_servicos' %}?cat={{ cat.pk }}" class="card list-item" aria-label="{{ cat.nome }} Serviços relacionados">
+                {# escolho o icone pelo nome da categoria: estrada pra infra/pavimentacao, onibus pra mobilidade, cidade pro resto #}
                 <span class="fas {% if 'Infraestrutura' in cat.nome or 'Pavimenta' in cat.nome %}fa-road{% elif 'Mobilidade' in cat.nome %}fa-bus{% else %}fa-city{% endif %}"></span>
                 <span class="titulo">{{ cat.nome|upper }}</span>
                 <div class="card-overlay">
+                  {# texto do overlay: uso a descricao se tiver; senao listo os servicos; e se nem isso, uso o nome da categoria #}
                   {% if cat.descricao %}
                     {{ cat.descricao }}
                   {% elif svcs %}
@@ -273,6 +291,7 @@
                 </div>
               </a>
               {% endwith %}
+            {# se nao tem nenhuma categoria ativa, mostro card de "em breve" #}
             {% empty %}
               <div class="card">
                 <i class="fas fa-info-circle"></i>
@@ -283,6 +302,8 @@
         </div>
       </section>
 
+      {# ====== COMO FUNCIONA (Steps) ====== #}
+      {# bloco estatico de 3 passos (registre/acompanhe/avalie); nao depende de dado nenhum do contexto #}
       <!-- ====== COMO FUNCIONA (Steps) ====== -->
       <section class="steps-section" aria-labelledby="steps-titulo">
         <div class="container-custom">
@@ -310,11 +331,14 @@
         </div>
       </section>
 
+      {# ====== STATS ====== #}
+      {# numeros da home; vem do dict stats (db.buscar_stats_publicas). o valor real fica no data-counter e o JS de base anima de 0 ate ele #}
       <!-- ====== STATS ====== -->
       <section class="stats-section" aria-label="Estatísticas do portal">
         <div class="container-custom">
           <div class="stats-grid">
             <div class="stat-item">
+              {# [!] total_resolvidos = COUNT de chamados cujo ultimo historico de status eh 'CO' (concluido), via subquery #}
               <div class="stat-value" data-counter="{{ stats.total_resolvidos|default:0 }}">0</div>
               <div class="stat-label">Chamados resolvidos</div>
             </div>
@@ -330,6 +354,8 @@
         </div>
       </section>
 
+      {# ====== CTA ====== #}
+      {# [!] chamada pra criar conta so aparece pra visitante anonimo (sem request.portal_user); quem ja ta logado nao ve #}
       <!-- ====== CTA ====== -->
       {% if not request.portal_user %}
       <section class="cta-section" aria-label="Chamada para ação">
@@ -346,6 +372,8 @@
       {% endif %}
 {% endblock %}
 
+{# ====== EXTRA JS: logica do meu carousel de banners ====== #}
+{# vanilla JS, sem lib: navega slides por setas/dots e ainda avanca sozinho de 6 em 6s #}
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {

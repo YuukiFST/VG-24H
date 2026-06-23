@@ -2,14 +2,20 @@
 {% load static %}
 {# ========================================================================== #}
 {# DASHBOARD EQUIPE — Semaforo + lista de TODOS os chamados #}
-{# [!] @perfis("COL", "GES") — APENAS servidores #}
-{# Cada chamado mostra cor_semaforo (verde/amarelo/vermelho) #}
-{# Filtros: bairro, status (Subquery no ultimo historico), data #}
+{# Vem da view equipe_chamados_lista (views_equipe.py), rota equipe_chamados #}
+{# [!] @perfis("COL", "GES") — APENAS servidores (cidadao nao entra aqui) #}
+{# [!] Apesar do nome "dashboard.html", os graficos sao outra pagina #}
+{#     (estatisticas_graficos.html / equipe_dashboard). Aqui eh a LISTA #}
+{# Cada linha tem linha.cor (verde/amarelo/vermelho) = faixa do semaforo #}
+{# Filtros (bairro/status/servico/data) ficam no include filtro_chamados #}
 {# ========================================================================== #}
 {% block title %}Painel do Colaborador — VG 24H{% endblock %}
 
 {% block content %}
 <div class="container-lg py-4">
+    {# ====== CABECALHO ====== #}
+    {# nome_completo vem de request.portal_user (usuario logado, setado por middleware) #}
+    {# botao de engrenagem (gerenciar prazos) so aparece pro GES #}
     <!-- Breadcrumb -->
     <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
         <div class="crumb-list">
@@ -34,6 +40,9 @@
         {% endif %}
     </div>
 
+    {# ====== SUMMARY CARDS (Semaforo) ====== #}
+    {# os 4 cards do topo: total + as 3 faixas. stats vem de db.calcular_stats_semaforo #}
+    {# pct_* (porcentagem de cada faixa) eu ja calculo na view; so mostro se tem chamado #}
     <!-- ====== SUMMARY CARDS (Semáforo) ====== -->
     <div class="semaforo-grid mb-4x">
         <div class="semaforo-card total">
@@ -61,6 +70,10 @@
         </div>
     </div>
 
+    {# ====== LEGENDA SEMAFORO ====== #}
+    {# explica o que cada cor quer dizer. os limites de dias (amarelo/vermelho) #}
+    {# vem de config_semaforo (ConfiguracaoSemaforo singleton, prazo global) #}
+    {# br-message info = componente de aviso do Design System GOV.br #}
     <!-- ====== LEGENDA SEMAFORO ====== -->
     <div class="br-message info mb-4x" role="alert">
         <div class="icon"><i class="fas fa-info-circle fa-lg" aria-hidden="true"></i></div>
@@ -98,6 +111,10 @@
         </div>
     </div>
 
+    {# ====== BREAKDOWN POR SERVICO ====== #}
+    {# tabela que quebra o semaforo por servico. servicos_stats vem de #}
+    {# db.calcular_stats_semaforo_por_servico. cada linha eh um servico #}
+    {# [!] clicar no nome do servico recarrega a pagina com ?servico=ID (filtra a lista de baixo) #}
     <!-- ====== BREAKDOWN POR SERVICO ====== -->
     <div class="br-card p-3 mb-4x">
         <div class="d-flex align-items-center mb-3">
@@ -115,6 +132,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {# percorro cada servico; widthratio calcula a % na mao (no_prazo/total*100) #}
                     {% for sv in servicos_stats %}
                     <tr>
                         <td style="padding:8px;border-bottom:1px solid #eee;font-weight:500;">
@@ -146,8 +164,13 @@
         </div>
     </div>
 
+    {# include do form de filtros (bairro/status/servico/datas/encerrados) — compartilhado #}
     {% include "portal/includes/filtro_chamados.html" %}
 
+    {# ====== TICKETS TABLE ====== #}
+    {# a lista paginada de verdade. linhas vem de db.listar_chamados_equipe (ja paginada) #}
+    {# [!] os <th> sao links de ordenacao: clicar inverte direcao e re-carrega com ?ordenar_por=...&direcao=... #}
+    {#     a ancora #tabela-chamados eh pra cair de volta na tabela depois do reload #}
     <!-- ====== TICKETS TABLE ====== -->
     <div class="br-table" id="tabela-chamados">
         <div class="table-header">
@@ -206,8 +229,10 @@
                 </tr>
             </thead>
             <tbody>
+                {# cada linha tem .ch (o chamado), .cor (faixa do semaforo) e .dias_aberto #}
                 {% for linha in linhas %}
                 <tr>
+                    {# prioridade 0..5 vira tag colorida (cores em variaveis CSS --vg-priority-*) #}
                     <td data-th="Prioridade">
                         {% if linha.ch.prioridade == 5 %}<span class="br-tag vg-tag-fixed rounder-none" style="background:var(--vg-priority-5); color:var(--vg-priority-5-fg);">Urgente</span>
                         {% elif linha.ch.prioridade == 4 %}<span class="br-tag vg-tag-fixed rounder-none" style="background:var(--vg-priority-4); color:var(--vg-priority-4-fg);">Alta</span>
@@ -218,6 +243,7 @@
                     </td>
                     <td data-th="Protocolo" class="text-center"><span class="text-bold">{{ linha.ch.num_protocolo }}</span></td>
                     <td data-th="Data de abertura" class="text-center">{{ linha.ch.dt_abertura|date:"d/m/Y" }}</td>
+                    {# tempo em aberto pintado pela cor do semaforo (verde/amarelo/vermelho) #}
                     <td data-th="Tempo em aberto" class="text-center">
                         <span class="br-tag vg-tag-fixed rounder-none {% if linha.cor == 'verde' %}success{% elif linha.cor == 'amarelo' %}warning{% elif linha.cor == 'vermelho' %}danger{% endif %}">
                             {{ linha.dias_aberto }}
@@ -229,6 +255,7 @@
                     <td data-th="Status" class="text-center">
                         {{ linha.ch.status_atual.descricao|default:"—" }}
                     </td>
+                    {# olho = vai pro detalhe do chamado (equipe_chamado_detalhe) #}
                     <td data-th="Ações" class="text-center">
                         <a href="{% url 'portal:equipe_chamado' linha.ch.pk %}" class="br-button circle small"
                             title="Visualizar Detalhes">
@@ -243,28 +270,49 @@
                 {% endfor %}
             </tbody>
         </table>
-        <!-- Paginação -->
+        {# ====== PAGINACAO ====== #}
+        {# uso o page_obj que a view manda (db.paginar). cada link recarrega TODOS os filtros atuais #}
+        {# (bairro/status/servico/de/ate/encerrados/ordenacao) na URL pra nao perde-los ao trocar de pagina. #}
+        {# o param da pagina eh "pagina" (a view le request.GET.get("pagina")). #}
+        <!-- Paginação (só aparece se tiver mais de 1 página) -->
+        {% if page_obj.paginator.num_pages > 1 %}
         <div class="table-footer d-flex justify-content-center pt-3x pb-2 border-top">
             <nav class="br-pagination" aria-label="Paginação de resultados">
                 <ul class="pagination d-flex align-items-center mb-0" style="list-style: none; padding: 0; gap: 4px;">
-                    <li><button class="br-button circle small" type="button" aria-label="Voltar página" disabled><i
-                                class="fas fa-angle-left" aria-hidden="true"></i></button></li>
-                    <li><button class="br-button circle small primary" type="button">1</button></li>
-                    <li><button class="br-button circle small" type="button" aria-label="Avançar página"><i
-                                class="fas fa-angle-right" aria-hidden="true"></i></button></li>
+                    {% if page_obj.has_previous %}
+                    <li><a href="?pagina={{ page_obj.previous_page_number }}{% if request.GET.bairro %}&bairro={{ request.GET.bairro }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.servico %}&servico={{ request.GET.servico }}{% endif %}{% if request.GET.de %}&de={{ request.GET.de }}{% endif %}{% if request.GET.ate %}&ate={{ request.GET.ate }}{% endif %}{% if request.GET.mostrar_encerrados %}&mostrar_encerrados={{ request.GET.mostrar_encerrados }}{% endif %}{% if request.GET.ordenar_por %}&ordenar_por={{ request.GET.ordenar_por }}{% endif %}{% if request.GET.direcao %}&direcao={{ request.GET.direcao }}{% endif %}" class="br-button circle small" aria-label="Voltar página"><i class="fas fa-angle-left" aria-hidden="true"></i></a></li>
+                    {% else %}
+                    <li><button class="br-button circle small" type="button" aria-label="Voltar página" disabled><i class="fas fa-angle-left" aria-hidden="true"></i></button></li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                      {% if page_obj.number == num %}
+                        <li><button class="br-button circle small primary" type="button">{{ num }}</button></li>
+                      {% else %}
+                        <li><a href="?pagina={{ num }}{% if request.GET.bairro %}&bairro={{ request.GET.bairro }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.servico %}&servico={{ request.GET.servico }}{% endif %}{% if request.GET.de %}&de={{ request.GET.de }}{% endif %}{% if request.GET.ate %}&ate={{ request.GET.ate }}{% endif %}{% if request.GET.mostrar_encerrados %}&mostrar_encerrados={{ request.GET.mostrar_encerrados }}{% endif %}{% if request.GET.ordenar_por %}&ordenar_por={{ request.GET.ordenar_por }}{% endif %}{% if request.GET.direcao %}&direcao={{ request.GET.direcao }}{% endif %}" class="br-button circle small">{{ num }}</a></li>
+                      {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li><a href="?pagina={{ page_obj.next_page_number }}{% if request.GET.bairro %}&bairro={{ request.GET.bairro }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.servico %}&servico={{ request.GET.servico }}{% endif %}{% if request.GET.de %}&de={{ request.GET.de }}{% endif %}{% if request.GET.ate %}&ate={{ request.GET.ate }}{% endif %}{% if request.GET.mostrar_encerrados %}&mostrar_encerrados={{ request.GET.mostrar_encerrados }}{% endif %}{% if request.GET.ordenar_por %}&ordenar_por={{ request.GET.ordenar_por }}{% endif %}{% if request.GET.direcao %}&direcao={{ request.GET.direcao }}{% endif %}" class="br-button circle small" aria-label="Avançar página"><i class="fas fa-angle-right" aria-hidden="true"></i></a></li>
+                    {% else %}
+                    <li><button class="br-button circle small" type="button" aria-label="Avançar página" disabled><i class="fas fa-angle-right" aria-hidden="true"></i></button></li>
+                    {% endif %}
                 </ul>
             </nav>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 {% block extra_js %}
 <script>
+    // JS dos filtros: inicializa os selects do GOV.br e copia a opcao marcada
+    // pro input hidden antes de enviar o form (o componente BRSelect nao manda valor sozinho)
     document.addEventListener('DOMContentLoaded', function () {
         var form = document.getElementById('form-filtros');
 
         var notFoundMsg = '<div class="br-item not-found"><div class="container"><div class="row"><div class="col"><p><strong>Ops!</strong> Nenhum item encontrado.</p></div></div></div></div>';
 
+        // monto o componente BRSelect (combobox do Design System) em cada select
         ['br-select-status', 'br-select-bairro', 'br-select-servico'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && typeof core !== 'undefined' && core.BRSelect) {
@@ -273,6 +321,7 @@
         });
 
         // Sincroniza radio -> hidden input no submit
+        // (no submit eu pego o radio marcado de cada select e jogo o value no hidden que vai pro GET)
         var statusHidden = document.getElementById('filter-status-hidden');
         var bairroHidden = document.getElementById('filter-bairro-hidden');
         var servicoHidden = document.getElementById('filter-servico-hidden');

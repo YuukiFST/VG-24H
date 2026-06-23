@@ -1,3 +1,5 @@
+{# Form de editar bairro. Vem da view gestao_bairro_edit (perfil COL e GES). #}
+{# O contexto traz 'bairro' (objeto montado na mao na view com nome/cep/regiao/ativo). #}
 {% extends "portal/base.html" %}
 {% load static %}
 
@@ -5,6 +7,7 @@
 
 {% block content %}
 <div class="dashboard-content">
+  {# ====== Breadcrumb ====== #}
   <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
     <div class="crumb-list">
       <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
@@ -17,6 +20,8 @@
 
   <h1 class="h3 mb-4x">Editar Bairro: {{ bairro.nome_bairro }}</h1>
 
+  {# ====== Form de edicao ====== #}
+  {# posta pra propria URL de editar; os value=bairro.x ja vem preenchidos da view #}
   <div class="br-card p-4 mx-auto" style="max-width: 600px;">
     <form action="{% url 'portal:gestao_bairro_editar' bairro.pk %}" method="post">
       {% csrf_token %}
@@ -28,6 +33,9 @@
         <label for="id_cep">CEP</label>
         <input id="id_cep" name="cep" type="text" value="{{ bairro.cep|default:'' }}" />
       </div>
+      {# ====== Regiao: br-select do GOV.br ====== #}
+      {# [!] o que vai pro POST eh o input hidden name="regiao" la embaixo, nao os radios. #}
+      {# o JS do final copia o radio marcado pra esse hidden no submit. #}
       <div class="mb-3x">
         <label for="id_regiao" class="small font-weight-bold">Região</label>
         <div class="br-select" id="br-select-regiao">
@@ -83,8 +91,10 @@
             </div>
           </div>
         </div>
+        {# este hidden eh o que a view le; o JS preenche ele a partir do radio marcado #}
         <input type="hidden" name="regiao" id="id_regiao" value="{{ bairro.regiao|default:'' }}" />
       </div>
+      {# checkbox do ativo: a view pega d.get("ativo", True) no UPDATE #}
       <div class="br-checkbox mb-4x">
         <input id="id_ativo" name="ativo" type="checkbox" {% if bairro.ativo %}checked{% endif %} />
         <label for="id_ativo">Bairro Ativo</label>
@@ -97,6 +107,7 @@
   </div>
 </div>
 {% endblock %}
+{# ====== JS: sincronizar o radio da regiao com o input hidden ====== #}
 {% block extra_js %}
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -104,11 +115,13 @@
     var hiddenInput = document.getElementById('id_regiao');
     var form = selectEl && selectEl.closest('form');
     if (selectEl && hiddenInput && form) {
+      // no submit eu copio o radio marcado pro hidden 'regiao', que eh o que a view recebe
       form.addEventListener('submit', function () {
         var checked = selectEl.querySelector('.br-list .br-radio input[type="radio"]:checked');
         hiddenInput.value = checked ? checked.value : '';
       });
     }
+    // inicializa o componente br-select do Design System GOV.br, se o core estiver carregado
     if (typeof core !== 'undefined' && core.BRSelect && selectEl) {
       new core.BRSelect('br-select', selectEl);
     }

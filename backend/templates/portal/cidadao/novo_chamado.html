@@ -2,9 +2,13 @@
 {% load static %}
 {# ========================================================================== #}
 {# NOVO CHAMADO — Formulario de abertura de chamado pelo cidadao            #}
-{# [!] Ao salvar, a view faz INSERT em chamado + foto_chamado               #}
-{#     O Trigger 1 (banco) cria automaticamente o historico com status AB    #}
-{#     Nao insere status manualmente!                                        #}
+{# Vem de views_cidadao.cidadao_chamado_novo() (GET mostra, POST cria).     #}
+{# Contexto: form (ChamadoNovoForm), categorias (cada bloco tem .categoria  #}
+{# e .servicos) e bairros (bairros ativos).                                 #}
+{# [!] o wizard de 5 passos eh so visual/JS; o POST manda TUDO de uma vez   #}
+{#     num form so. O service gera protocolo de forma atomica e faz o INSERT.#}
+{# [!] o Trigger 1 (banco) cria sozinho o historico inicial com status AB;  #}
+{#     aqui no template nao tem nada de status.                             #}
 {# ========================================================================== #}
 {% block title %}Novo Chamado — VG 24H{% endblock %}
 
@@ -24,6 +28,8 @@
   <h1 class="section-title mb-2x" style="text-align:left;">Abrir Novo Chamado</h1>
   <p class="mb-4x" style="color:var(--gray-60);">Siga os passos abaixo para reportar um problema urbano.</p>
 
+  {# ====== INDICADOR DE PASSOS ====== #}
+  {# componente br-step do GOV.br; so mostra em que etapa o cidadao ta, quem troca de passo eh o JS #}
   <!-- Step Indicator -->
   <div class="br-step mb-4x" data-type="simple">
     <div class="step-progress">
@@ -35,8 +41,11 @@
     </div>
   </div>
 
+  {# ====== FORM PRINCIPAL ====== #}
+  {# enctype multipart porque tem upload de foto; novalidate pq a validacao real eh no servidor #}
   <form id="novo-chamado-form" action="{% url 'portal:cidadao_chamado_novo' %}" method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
+    {# se o POST falhou na validacao, a view re-renderiza com form.errors e eu listo tudo aqui em cima #}
     {% if form.errors %}
     <div class="br-message danger mb-4x" role="alert">
       <div class="icon"><i class="fas fa-exclamation-triangle fa-lg" aria-hidden="true"></i></div>
@@ -52,10 +61,13 @@
       </div>
     </div>
     {% endif %}
+    {# [!] o servico nao tem select normal: o cidadao clica num card e o JS joga o id_servico aqui nesse hidden #}
     <input type="hidden" name="id_servico" id="input-servico" value="{{ form.id_servico.value|default:'' }}" required />
-    
+
     <div class="wizard-container">
 
+      {# ====== PASSO 1 — ESCOLHER SERVICO ====== #}
+      {# monto os cards agrupados por categoria; cada bloco vem de 'categorias' (.categoria + .servicos) #}
       <!-- STEP 1 — Categoria/Serviço -->
       <div class="wizard-step active" id="step-categoria">
         <h2 class="mb-3x" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
@@ -68,7 +80,9 @@
             <h3 class="h6 mb-2x text-uppercase text-muted" style="font-size:0.75rem; letter-spacing:1px; font-weight:700;">{{ cat.nome }}</h3>
             <div class="selection-grid">
               {% for svc in svcs %}
+                {# se o POST falhou, re-marco como selected o card que o cidadao tinha escolhido (|add:0 converte o value pra int pra comparar) #}
                 <div class="selection-card {% if form.id_servico.value|add:0 == svc.id_servico %}selected{% endif %}" data-value="{{ svc.id_servico }}">
+                  {# escolho o icone pelo nome da categoria; se nao bater nenhum, cai no fa-heartbeat de fallback #}
                   <i class="fas {% if 'Iluminação' in cat.nome %}fa-lightbulb{% elif 'Pavimentação' in cat.nome %}fa-road{% elif 'Saneamento' in cat.nome %}fa-water{% elif 'Trânsito' in cat.nome %}fa-traffic-light{% else %}fa-heartbeat{% endif %}" aria-hidden="true"></i>
                   <span>{{ svc.nome }}</span>
                 </div>
@@ -86,6 +100,8 @@
         </div>
       </div>
 
+      {# ====== PASSO 2 — DESCRICAO ====== #}
+      {# textarea name=descricao (obrigatorio, max 500); o contador embaixo eh atualizado pelo JS #}
       <!-- STEP 2 — Detalhes -->
       <div class="wizard-step" id="step-detalhes">
         <h2 class="mb-3x" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
@@ -116,6 +132,8 @@
         </div>
       </div>
 
+      {# ====== PASSO 3 — LOCALIZACAO ====== #}
+      {# select de bairro (vem de 'bairros' ativos) + ponto de referencia opcional #}
       <!-- STEP 3 — Bairro -->
       <div class="wizard-step" id="step-endereco">
         <h2 class="mb-3x" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
@@ -126,6 +144,7 @@
             <label for="chamado-bairro">Bairro *</label>
             <select id="chamado-bairro" name="id_bairro" required>
               <option value="">Selecione o bairro</option>
+              {# re-seleciona o bairro escolhido se o POST tiver voltado com erro (|add:0 pra comparar como int) #}
               {% for bairro in bairros %}
                 <option value="{{ bairro.id_bairro }}" {% if form.id_bairro.value|add:0 == bairro.id_bairro %}selected{% endif %}>{{ bairro.nome_bairro }}</option>
               {% endfor %}
@@ -156,6 +175,8 @@
         </div>
       </div>
 
+      {# ====== PASSO 4 — FOTO ====== #}
+      {# input file name=foto; a area de upload eh so visual, ela clica no input escondido por baixo #}
       <!-- STEP 4 — Foto -->
       <div class="wizard-step" id="step-foto">
         <h2 class="mb-3x" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
@@ -190,6 +211,8 @@
         </div>
       </div>
 
+      {# ====== PASSO 5 — CONFIRMACAO ====== #}
+      {# resumo so pra revisao visual; o JS preenche os campos sum-* com o que o cidadao digitou/escolheu #}
       <!-- STEP 5 — Confirmação -->
       <div class="wizard-step" id="step-confirmar">
         <h2 class="mb-3x" style="font-size:1.125rem; font-weight:700; color:var(--vg-primary-dark);">
@@ -241,9 +264,12 @@
 </div>
 {% endblock %}
 
+{# ====== JS DA PAGINA ====== #}
+{# injeto no block extra_js do base; cuida do upload (preview), selecao de card, contador e o resumo final #}
 {% block extra_js %}
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    // preview da foto: mostra o nome do arquivo e libera o "Proximo" do passo 4
     const fileInput = document.getElementById('chamado-foto');
     const preview = document.getElementById('upload-preview');
     const filename = document.getElementById('upload-filename');
@@ -287,6 +313,7 @@
       counter.textContent = `${textarea.value.length}/500 caracteres`;
     });
 
+    // trava o botao no submit pra evitar envio duplo (abriria 2 chamados)
     // Form submit loading state
     const form = document.getElementById('novo-chamado-form');
     const btnSubmit = document.getElementById('btn-enviar-chamado');

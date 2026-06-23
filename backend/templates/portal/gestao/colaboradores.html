@@ -1,3 +1,7 @@
+{# ====== GESTAO: LISTA DE COLABORADORES ====== #}
+{# Lista os colaboradores (servidores com perfil COL) e deixa inativar/reativar e resetar senha. #}
+{# Vem da view gestao_colaboradores (so GES). Contexto: lista (colaboradores) e form (nao uso aqui, #}
+{# o cadastro fica na pagina propria gestao_colaborador_novo). #}
 {% extends "portal/base.html" %}
 {% load static %}
 
@@ -15,6 +19,7 @@
     </div>
   </nav>
 
+  {# cabecalho + botao pra pagina de cadastro de colaborador (gestao_colaborador_novo) #}
   <div class="dashboard-header d-flex justify-content-between align-items-center mb-4x">
     <div>
       <h1>Equipe Técnica e Colaboradores</h1>
@@ -25,6 +30,7 @@
     </a>
   </div>
 
+  {# ====== TABELA DE COLABORADORES ====== #}
   <div class="br-card">
     <div class="card-content">
       <div class="vg-table-wrapper">
@@ -45,6 +51,7 @@
               </tr>
             </thead>
             <tbody>
+              {# percorro os colaboradores; se inativo eu deixo a linha meio apagada (opacity) #}
               {% for colab in lista %}
                 <tr{% if not colab.ativo %} style="opacity: 0.6;"{% endif %}>
                   <td><strong>{{ colab.nome_completo }}</strong></td>
@@ -59,6 +66,7 @@
                   </td>
                   <td class="text-center">
                     <div class="d-flex justify-content-center gap-1">
+                      {# botao toggle: mesma view liga/desliga o ativo; muda so o rotulo/cor conforme o estado #}
                       <form action="{% url 'portal:gestao_colaborador_toggle' colab.pk %}" method="post" style="display:inline;">
                         {% csrf_token %}
                         {% if colab.ativo %}
@@ -71,6 +79,7 @@
                           </button>
                         {% endif %}
                       </form>
+                      {# redefinir senha so faz sentido pra quem ta ativo; abre o modal la embaixo #}
                       {% if colab.ativo %}
                       <button class="br-button small" type="button" data-toggle="modal" data-target="#modal-reset-{{ colab.pk }}" title="Redefinir senha">
                         <i class="fas fa-key mr-1" aria-hidden="true"></i> Redefinir Senha
@@ -80,6 +89,7 @@
                   </td>
                 </tr>
               {% empty %}
+                {# lista vazia: avisa que nao tem colaborador #}
                 <tr><td colspan="5" class="text-center">Nenhum colaborador cadastrado.</td></tr>
               {% endfor %}
             </tbody>
@@ -90,6 +100,10 @@
   </div>
 </div>
 
+{# ====== MODAIS DE REDEFINIR SENHA ====== #}
+{# gero um modal por colaborador ativo (id casa com o data-target do botao da tabela). #}
+{# [!] cada modal tem seu proprio form (id form-reset-<pk>); o botao Confirmar no rodape #}
+{# usa o atributo form= pra submeter o form certo mesmo estando fora dele. #}
 {% for colab in lista %}
 {% if colab.ativo %}
 <div class="br-scrim foco"><div class="br-modal" id="modal-reset-{{ colab.pk }}">
@@ -102,11 +116,13 @@
   <div class="br-modal-body">
     <p class="mb-3x">Defina uma nova senha provisória para
        <strong>{{ colab.nome_completo }}</strong>.</p>
+    {# posta pra view de reset; o name "nova_senha_provisoria" eh o que a view le do POST #}
     <form action="{% url 'portal:gestao_colaborador_reset_senha' colab.pk %}"
           method="post" id="form-reset-{{ colab.pk }}">
       {% csrf_token %}
       <div class="br-input input-button mb-3x large">
         <label for="id_nova_senha_{{ colab.pk }}">Nova senha provisória</label>
+        {# minlength 6 pra bater com a regra de minimo 6 caracteres que a view confere #}
         <input id="id_nova_senha_{{ colab.pk }}"
                name="nova_senha_provisoria" type="password"
                minlength="6" required />

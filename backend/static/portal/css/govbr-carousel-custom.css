@@ -2,7 +2,17 @@
 /* ===================================================================
    govbr-carousel-custom.css — Customizacao do carousel GOV.BR
    Usado na pagina inicial (root.html) para exibir banners.
+
+   [!] Este arquivo traz as regras do componente carousel do Design
+   System GOV.br pra dentro do projeto pra eu poder ajustar tamanho,
+   altura minima e botoes do carrossel da home. Nao reescrevi regra por
+   regra: e a cascata do componente que eu trouxe e customizei. Por isso
+   so deixo banners marcando os blocos, sem fingir que escrevi cada linha.
    =================================================================== */
+
+/* ===== BASE: tamanho do carousel + variaveis dele ===== */
+/* defino as var--carousel-* (altura minima 400px, largura 100%, etc.)
+   que o resto das regras usa */
 .br-carousel {
   --carousel-button-margin: var(--spacing-scale-default);
   --carousel-button-icon-size: var(--icon-size-base);
@@ -20,6 +30,9 @@
   position: relative;
   width: var(--carousel-full-size);
 }
+/* ===== STAGE + PAGES: as telas (slides) e a transicao entre elas ===== */
+/* page fica opacity:0/hidden e o [active] aparece com fade controlado
+   pelas var de transition */
 .br-carousel .carousel-stage {
   display: block;
   flex-wrap: nowrap;
@@ -69,6 +82,7 @@
 .br-carousel .carousel-stage .carousel-page .carousel-content .carousel-title {
   position: absolute;
 }
+/* ===== STEP/INDICADORES: as bolinhas/progresso embaixo ===== */
 .br-carousel .carousel-step {
   bottom: 8px;
   height: var(--carousel-step-height);
@@ -92,6 +106,7 @@
   cursor: default;
   margin: 0;
 }
+/* ===== BOTOES PREV/NEXT: setas laterais de navegacao ===== */
 .br-carousel .carousel-button {
   align-items: center;
   display: flex;
@@ -161,6 +176,7 @@
   left: 0;
   width: var(--carousel-full-size);
 }
+/* ===== RESPONSIVO: ate 991px escondo as setas (so mostra com data-mobile-nav) ===== */
 @media (max-width: 991px) {
   .br-carousel {
     max-width: var(--carousel-full-size);
@@ -191,6 +207,9 @@
     padding-top: 0 !important;
   }
 }
+/* ===== TEMA INVERTIDO / DARK-MODE: troca as cores pro fundo escuro ===== */
+/* nao uso dark-mode na home hoje, mas mantenho as regras do componente
+   pra nao quebrar o padrao do GOV.br */
 .br-carousel.inverted, .br-carousel.dark-mode {
   --color: var(--color-dark);
   --color-rgb: var(--color-dark-rgb);

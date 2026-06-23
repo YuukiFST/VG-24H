@@ -1,10 +1,15 @@
+{# ====== TROCA DE SENHA ====== #}
+{# Tela da view trocar_senha. Serve pra qualquer logado (CID/COL/GES); a troca forcada cai aqui #}
+{# quando o servidor ta com senha_temporaria='1'. form vem do NovaSenhaForm. #}
 {% extends "portal/base.html" %}
 {% block title %}Trocar senha{% endblock %}
 {% block content %}
   <h1 class="mb-4x">Trocar senha</h1>
   <p class="text-down-01 mb-3x">Defina uma nova senha para a sua conta.</p>
+  {# form POST: a view so processa a troca no POST e valida pelo NovaSenhaForm #}
   <form method="post" class="col-md-6">
     {% csrf_token %}
+    {# br-input do GOV.br: renderizo label, erros e o campo nova_senha do form; o botao do olho mostra/oculta #}
     <div class="br-input input-button mb-3x">
       <label for="{{ form.nova_senha.id_for_label }}">{{ form.nova_senha.label }}</label>
       {{ form.nova_senha.errors }}

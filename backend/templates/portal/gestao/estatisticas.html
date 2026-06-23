@@ -1,3 +1,7 @@
+{# ====== GESTAO: PAINEL DE ESTATISTICAS ====== #}
+{# Painel admin com cards de resumo, placeholders de grafico e tabela de relatorio. #}
+{# Vem da view gestao_estatisticas (so GES). A view manda "rows" (linhas da vw_estatisticas_chamados) #}
+{# e "stats" (os 4 numeros dos cards, que eu calculo na view a partir das rows + uma contagem de criticos). #}
 {% extends "portal/base.html" %}
 {% load static %}
 
@@ -21,6 +25,10 @@
     <p class="text-muted">Visão geral do desempenho do sistema e gestão de recursos.</p>
   </div>
 
+  {# ====== CARDS DE RESUMO ====== #}
+  {# 4 cards no estilo semaforo: total, concluidos (verde), em andamento (amarelo) e criticos (vermelho). #}
+  {# leem de "stats" (calculado na view): total/concluidos/em_andamento saem das rows; criticos = abertos > 10 dias. #}
+  {# o |default:0 segura se a vw nao existir no banco (ai stats vem tudo 0). #}
   <!-- ====== SUMMARY CARDS ====== -->
   <div class="semaforo-grid mb-6x">
     <div class="semaforo-card total">
@@ -45,6 +53,9 @@
     </div>
   </div>
 
+  {# ====== GRAFICOS (PLACEHOLDER) ====== #}
+  {# [!] ainda nao tem grafico de verdade aqui (sem JS de chart): sao so duas caixas cinza #}
+  {# com icone e texto dizendo que os dados vem da view SQL. Espaco reservado pra colocar depois. #}
   <!-- ====== CHARTS PLACEHOLDER ====== -->
   <div class="row mb-6x">
     <div class="col-md-6 mb-4x">
@@ -71,6 +82,8 @@
     </div>
   </div>
 
+  {# ====== TABELA DETALHADA (DA VIEW SQL) ====== #}
+  {# Relatorio por categoria x bairro x status. Itero "rows" (as linhas da vw_estatisticas_chamados). #}
   <!-- ====== DETAILED STATS TABLE (from VIEW) ====== -->
   <div class="br-card p-4">
     <h2 class="h5 mb-4x"><i class="fas fa-table mr-2 text-primary"></i> Relatórios por Categoria e Bairro</h2>
@@ -91,12 +104,14 @@
             </tr>
           </thead>
           <tbody>
-            {% for row in linhas %}
+            {% for row in rows %}
               <tr>
                 <td>{{ row.categoria }}</td>
                 <td>{{ row.bairro }}</td>
                 <td>
-                  <span class="br-tag count {% with s=row.sigla|lower %}{% if s == 'ab' %}info{% elif s == 'ea' %}warning{% elif s == 'ee' %}ee-status{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ row.status_descricao }}</span>
+                  {# pinto a tag de status pela sigla (coluna sigla_status da vw): ab=aberto (info), ea=em andamento (warning), #}
+                  {# ee=em execucao, co=concluido (success), ca=cancelado (danger) #}
+                  <span class="br-tag count {% with s=row.sigla_status|lower %}{% if s == 'ab' %}info{% elif s == 'ea' %}warning{% elif s == 'ee' %}ee-status{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ row.status_descricao }}</span>
                 </td>
                 <td class="font-weight-bold">{{ row.total_chamados }}</td>
               </tr>

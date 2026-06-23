@@ -1,3 +1,8 @@
+{# ====== GESTAO: NOVO COLABORADOR ====== #}
+{# Pagina propria de cadastro de colaborador (servidor perfil COL). Vem da view #}
+{# gestao_colaborador_novo (so GES). Contexto: form (ColaboradorNovoForm, usado pra validar). #}
+{# [!] os campos sao montados na mao; os names tem que bater com o ColaboradorNovoForm. #}
+{# A senha provisoria vira hash bcrypt no banco e ele eh obrigado a trocar no 1o acesso. #}
 {% extends "portal/base.html" %}
 {% load static %}
 
@@ -17,7 +22,9 @@
 
   <h1 class="h3 mb-4x">Novo Colaborador</h1>
 
+  {# ====== FORM DE CADASTRO ====== #}
   <div class="br-card p-4 mx-auto" style="max-width: 700px;">
+    {# posta pra propria view; no sucesso ela volta pra lista de colaboradores #}
     <form action="{% url 'portal:gestao_colaborador_novo' %}" method="post">
       {% csrf_token %}
       <div class="br-input mb-3x">
@@ -29,6 +36,7 @@
         <div class="col-6">
           <div class="br-input">
             <label for="id_cpf">CPF *</label>
+            {# o oninput limpa tudo que nao for digito enquanto digito, pra mandar so numero pro banco #}
             <input id="id_cpf" name="cpf" type="text" maxlength="11" placeholder="Somente numeros" required oninput="this.value=this.value.replace(/\D/g,'')" />
           </div>
         </div>
@@ -47,9 +55,11 @@
 
       <div class="br-input mb-3x">
         <label for="id_tel">Telefone *</label>
+        {# mesmo truque do CPF: so digito vai pro banco #}
         <input id="id_tel" name="telefone" type="tel" required oninput="this.value=this.value.replace(/\D/g,'')" />
       </div>
 
+      {# senha provisoria: a view salva como hash bcrypt e marca pra trocar no 1o acesso #}
       <div class="br-input input-button mb-3x large">
         <label for="id_senha">Senha Provisória *</label>
         <input id="id_senha" name="senha_provisoria" type="password" required />

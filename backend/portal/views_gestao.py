@@ -128,10 +128,43 @@ def gestao_estatisticas(request):
             rows = [dict(zip(cols, r, strict=True)) for r in c.fetchall()]
     except ProgrammingError:
         pass
+
+    # cards do topo: total, concluidos e em andamento eu somo direto das rows
+    # (a vw ja agrupa por categoria/bairro/status, entao e so somar total_chamados).
+    # sigla CO = concluido; AB/EA/EE = em andamento (mesma divisao que uso nas triggers).
+    total = sum(r["total_chamados"] for r in rows)
+    concluidos = sum(r["total_chamados"] for r in rows if r["sigla_status"] == "CO")
+    em_andamento = sum(r["total_chamados"] for r in rows if r["sigla_status"] in ("AB", "EA", "EE"))
+
+    # criticos (> 10 dias em aberto) nao tem na vw, entao conto a parte: chamados cujo
+    # ultimo status nao e CO/CA e que foram abertos ha mais de 10 dias. mesmo padrao de
+    # subconsulta do ultimo status que uso no resto do projeto. guardo num try proprio.
+    criticos = 0
+    try:
+        with connection.cursor() as c:
+            c.execute(
+                "SELECT COUNT(*) FROM chamado ch WHERE ("
+                "  SELECT sc.sigla FROM historico_chamado hc "
+                "  JOIN status_chamado sc ON sc.id_status = hc.id_status "
+                "  WHERE hc.id_chamado = ch.id_chamado "
+                "  ORDER BY hc.dt_alteracao DESC LIMIT 1"
+                ") NOT IN ('CO', 'CA') "
+                "AND ch.dt_abertura < NOW() - INTERVAL '10 days'"
+            )
+            criticos = c.fetchone()[0] or 0
+    except ProgrammingError:
+        pass
+
+    stats = {
+        "total": total,
+        "concluidos": concluidos,
+        "em_andamento": em_andamento,
+        "criticos": criticos,
+    }
     return render(
         request,
         "portal/gestao/estatisticas.html",
-        {"rows": rows},
+        {"rows": rows, "stats": stats},
     )
 
 

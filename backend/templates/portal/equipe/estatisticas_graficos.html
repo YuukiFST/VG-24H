@@ -1,5 +1,12 @@
 {% extends "portal/base.html" %}
 {% load static %}
+{# ========================================================================== #}
+{# ESTATISTICAS / GRAFICOS DA EQUIPE — COL e GES #}
+{# Vem da view equipe_dashboard (views_equipe.py), rota equipe_dashboard #}
+{# [!] @perfis("COL", "GES") — so servidores #}
+{# 2 cards de numero (hoje/semana) + 2 graficos Chart.js (status e bairros) #}
+{# Os dados *_json sao serializados na view (json.dumps) e injetados em <script> #}
+{# ========================================================================== #}
 {% block title %}Estatísticas — VG 24H{% endblock %}
 
 {% block content %}
@@ -26,6 +33,9 @@
         </div>
     </div>
 
+    {# ====== CARDS DE NUMERO (hoje / semana) ====== #}
+    {# atendidas_hoje e atendidas_semana vem de db.buscar_stats_dashboard (contagem de concluidos no periodo). #}
+    {# nao mostro "% do total" aqui: a view nao manda um total de referencia, entao a porcentagem ficaria sem base. #}
     <div class="row mb-4x">
         <!-- Atendimentos de Hoje -->
         <div class="col-sm-6 mb-3x">
@@ -34,7 +44,6 @@
                 style="border-top: 4px solid #1351b4;">
                 <h2 class="text-up-02 mb-3 text-muted text-weight-regular">Chamados Atendidos Hoje</h2>
                 <div class="text-up-06 text-interactive text-weight-bold">{{ atendidas_hoje }}</div>
-                <div class="text-down-01 text-muted mt-2">{{ pct_hoje }}% do total</div>
             </div>
         </div>
 
@@ -45,12 +54,14 @@
                 style="border-top: 4px solid #168821;">
                 <h2 class="text-up-02 mb-3 text-muted text-weight-regular">Chamados Atendidos na Semana</h2>
                 <div class="text-up-06 text-success text-weight-bold">{{ atendidas_semana }}</div>
-                <div class="text-down-01 text-muted mt-2">{{ pct_semana }}% do total</div>
             </div>
         </div>
     </div>
 
+    {# ====== GRAFICOS ====== #}
+    {# os <canvas> ficam vazios aqui; o Chart.js la embaixo desenha em cima deles #}
     <div class="row mb-4x">
+        {# rosca = total de chamados agrupados por status de atendimento #}
         <!-- Gráfico de Rosca: Status -->
         <div class="col-md-6 mb-3x">
             <div class="br-card h-100 p-3">
@@ -75,6 +86,7 @@
             </div>
         </div>
 
+        {# barras = quantidade de chamados por bairro #}
         <!-- Gráfico de Barras: Distribuição por Bairros -->
         <div class="col-md-6 mb-3x">
             <div class="br-card h-100 p-3">
@@ -104,6 +116,9 @@
 
 <!-- Importação do Chart.js via CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{# [!] dados do Django jogados em blocos JSON (nao em variavel JS) pra nao misturar #}
+{#     template tag com codigo JS. o JS la embaixo le pelo id com JSON.parse #}
+{#     labels = nomes dos eixos, data = os valores. tudo serializado na view com json.dumps #}
 <!-- Dados injetados pelo Django (o IDE não valida type="application/json") -->
 <script id="statusLabelsData" type="application/json">{{ status_labels_json|safe }}</script>
 <script id="statusDataData" type="application/json">{{ status_data_json|safe }}</script>
@@ -111,8 +126,9 @@
 <script id="bairrosDataData" type="application/json">{{ bairros_data_json|safe }}</script>
 
 <script>
+    // monto os dois graficos depois que a pagina carrega (canvas ja existe no DOM)
     document.addEventListener('DOMContentLoaded', function () {
-        // Cores padronizadas do Gov.br
+        // paleta fixa do Design System GOV.br, reaproveitada nos dois graficos
         const colorsGov = [
             '#1351b4', '#168821', '#ffcd07', '#e52207',
             '#2670e8', '#0c326f', '#1f7a1f', '#e6b800', '#991705'
@@ -122,9 +138,10 @@
         const statusLabels = JSON.parse(document.getElementById('statusLabelsData').textContent);
         const statusData = JSON.parse(document.getElementById('statusDataData').textContent);
 
-        // Status Geral (Rosca)
+        // GRAFICO 1 - Status Geral (rosca/doughnut): chamados por status de atendimento
         const ctxStatus = document.getElementById('chartStatus');
 
+        // se nao tem dado nenhum, nem desenho: troco o canvas por um aviso de "vazio"
         if (statusData.length > 0) {
             new Chart(ctxStatus.getContext('2d'), {
                 type: 'doughnut',
@@ -149,6 +166,7 @@
                         },
                         tooltip: {
                             callbacks: {
+                                // tooltip mostra valor + porcentagem em cima do total da rosca
                                 label: function(context) {
                                     const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                     const val = context.raw;
@@ -158,21 +176,22 @@
                             }
                         }
                     },
-                    cutout: '65%'
+                    cutout: '65%' // buraco do meio da rosca
                 }
             });
         } else {
             ctxStatus.outerHTML = '<div class="d-flex flex-column align-items-center justify-content-center h-100 text-center"><i class="fas fa-folder-open text-up-06 text-muted mb-3" aria-hidden="true"></i><p class="text-up-01 text-muted text-weight-semi-bold">Não há chamados para exibir</p></div>';
         }
 
-        // Distribuição por Bairros (Barras)
+        // GRAFICO 2 - Distribuicao por Bairros (barras): quantos chamados em cada bairro
         const ctxBairros = document.getElementById('chartBairros');
         const bairrosLabels = JSON.parse(document.getElementById('bairrosLabelsData').textContent);
         const bairrosData = JSON.parse(document.getElementById('bairrosDataData').textContent);
 
-        // Gera uma cor distinta do DS Gov para cada barra
+        // uma cor por barra; se tiver mais bairros que cores, dou a volta na paleta (modulo)
         const bairrosColors = bairrosLabels.map((_, i) => colorsGov[i % colorsGov.length]);
 
+        // mesmo esquema do outro grafico: sem dado, mostro aviso de vazio no lugar
         if (bairrosData.length > 0) {
             new Chart(ctxBairros.getContext('2d'), {
                 type: 'bar',
@@ -206,6 +225,7 @@
                         },
                         y: {
                             beginAtZero: true,
+                            // stepSize 1 pq contagem de chamado eh inteiro (sem casa decimal no eixo)
                             ticks: { font: { family: 'Rawline, Raleway, sans-serif' }, stepSize: 1 }
                         }
                     }

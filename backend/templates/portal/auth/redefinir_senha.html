@@ -1,6 +1,10 @@
 {% extends "portal/base.html" %}
 {% load static %}
-{# REDEFINIR SENHA — Formulario apos clicar no link do email. Token validado pela view. #}
+{# ====== REDEFINIR SENHA ====== #}
+{# essa tela so abre se o token do link (na URL) for valido e nao tiver vencido. #}
+{# quem confere o token eh a redefinir_senha_view ANTES de renderizar aqui; se #}
+{# for falso/velho ou o cidadao nao existir mais, a view ja joga pro login. #}
+{# [!] o form posta pra action="" (mesma URL, mantendo o token); name="senha" e name="senha2" #}
 {% block title %}Redefinir Senha — VG 24H{% endblock %}
 
 {% block content %}
@@ -11,6 +15,9 @@
         <div class="card-content">
         <h1 class="h3 mb-base">Redefinir Senha</h1>
         <p class="text-muted mb-4x">Informe sua nova senha abaixo.</p>
+        {# ====== FORM DE NOVA SENHA ====== #}
+        {# campos crus no html (nao uso {{ form }} aqui); o RedefinirSenhaForm valida #}
+        {# os dois no backend. o minlength=6 eh so um primeiro filtro no navegador #}
         <form action="" method="post" novalidate>
           {% csrf_token %}
           <div class="br-input input-button mb-3x">
@@ -27,6 +34,9 @@
               <i class="fas fa-eye" aria-hidden="true"></i>
             </button>
           </div>
+          {# ====== ERROS DO FORM ====== #}
+          {# so aparece se o RedefinirSenhaForm voltar com erro (ex: senhas diferentes). #}
+          {# junto non_field_errors + erro de cada campo no mesmo balao danger do GOV.br #}
           {% if form.errors %}
             <div class="br-message danger mb-3x" role="alert">
               <div class="icon"><i class="fas fa-times-circle fa-lg" aria-hidden="true"></i></div>

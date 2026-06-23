@@ -1,3 +1,5 @@
+{# Tela de gestao de bairros: lista todos os bairros e tem o modal de criar novo. #}
+{# Vem da view gestao_bairros (perfil COL e GES). O POST de criar cai na propria URL. #}
 {% extends "portal/base.html" %}
 {% load static %}
 
@@ -5,6 +7,8 @@
 
 {% block content %}
 <div class="dashboard-content">
+  {# ====== Breadcrumb ====== #}
+  {# trilha Home > Administracao > Bairros, padrao br-breadcrumb do GOV.br #}
   <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
     <ol class="crumb-list">
       <li class="crumb home">
@@ -24,6 +28,8 @@
     </ol>
   </nav>
 
+  {# ====== Cabecalho + botao de novo ====== #}
+  {# o botao so abre o modal-novo-bairro (data-modal-open), nao navega pra outra pagina #}
   <div class="dashboard-header">
     <div>
       <h1>Bairros e Regiões</h1>
@@ -34,6 +40,8 @@
     </button>
   </div>
 
+  {# ====== Tabela de bairros ====== #}
+  {# percorro 'lista' (todos os bairros, ativos e inativos) que veio da view #}
   <div class="br-card p-4">
     <div class="vg-table-wrapper">
       <div class="br-table">
@@ -55,6 +63,7 @@
               <tr>
                 <td><strong>{{ b.nome_bairro }}</strong></td>
                 <td>
+                  {# tag verde/vermelha conforme o ativo (soft delete: inativo ainda aparece) #}
                   {% if b.ativo %}
                     <span class="br-tag success">Ativo</span>
                   {% else %}
@@ -62,9 +71,11 @@
                   {% endif %}
                 </td>
                 <td>
+                  {# editar leva pro bairro_form; o resto sao acoes POST com confirm() #}
                   <a href="{% url 'portal:gestao_bairro_editar' b.pk %}" class="br-button circle small" title="Editar">
                     <i class="fas fa-edit"></i>
                   </a>
+                  {# se ativo mostro o botao de desativar, se inativo o de reativar (um ou outro) #}
                   {% if b.ativo %}
                   <form action="{% url 'portal:gestao_bairro_desativar' b.pk %}" method="post" style="display:inline;">
                     {% csrf_token %}
@@ -83,6 +94,7 @@
                 </td>
               </tr>
             {% empty %}
+              {# lista vazia: linha unica ocupando as 3 colunas #}
               <tr><td colspan="3" class="text-center">Nenhum bairro cadastrado.</td></tr>
             {% endfor %}
           </tbody>
@@ -92,6 +104,9 @@
   </div>
 </div>
 
+{# ====== Modal de criar bairro ====== #}
+{# o form posta pra gestao_bairros; os campos value=form.x.value sao pra repopular #}
+{# quando a view ligar mostrar_form (form invalido) e reabrir o modal pelo JS la embaixo #}
 <!-- Modal Adicionar Bairro -->
 <div class="vg-modal-overlay" id="modal-novo-bairro">
   <div class="br-modal">
@@ -112,6 +127,7 @@
           <label for="id_cep_novo">CEP (Opcional)</label>
           <input id="id_cep_novo" name="cep" type="text" value="{{ form.cep.value|default_if_none:'' }}" />
         </div>
+        {# regiao eh combo de valores fixos (Central/Norte/Sul...) pra ninguem digitar errado #}
         <div class="br-input mb-3x">
           <label for="id_regiao_novo">Região</label>
           <select id="id_regiao_novo" name="regiao">
@@ -133,9 +149,11 @@
   </div>
 </div>
 
+{# ====== JS: reabrir o modal quando o form veio com erro ====== #}
 {% block extra_js %}
 <script>
   document.addEventListener("DOMContentLoaded", function() {
+    // se a view setou mostrar_form (POST invalido), reabro o modal ja com os erros
     {% if mostrar_form %}
     const overlay = document.getElementById('modal-novo-bairro');
     if (overlay) overlay.classList.add('active');

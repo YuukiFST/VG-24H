@@ -1,8 +1,15 @@
 {% extends "portal/base.html" %}
-{# RECUPERAR SENHA — Formulario de email. Gera token criptografado (3 dias de validade). #}
+{# ====== RECUPERAR SENHA ====== #}
+{# so peco o email aqui. a view recuperar_senha_view procura o cidadao, gera um #}
+{# token assinado (signing.dumps, salt vg.pwreset) com o id dentro e manda por #}
+{# email um link pra redefinir. o token vale 3 dias. #}
+{# [!] seguranca: ache ou nao ache o email, a view sempre redireciona pro login #}
+{#     com a mesma mensagem neutra, pra ninguem descobrir quais emails existem #}
 {% block title %}Recuperar senha{% endblock %}
 {% block content %}
   <h1 class="mb-4x">Recuperar senha</h1>
+  {# ====== FORM (campo unico de email) ====== #}
+  {# uso o RecuperarSenhaForm renderizado pelo Django (form.email vem do context da view) #}
   <form method="post" class="col-md-6">
     {% csrf_token %}
     <div class="br-input mb-3x">

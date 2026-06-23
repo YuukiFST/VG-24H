@@ -1,8 +1,16 @@
 {% extends "portal/base.html" %}
+{# ====== TROCA OBRIGATORIA DE SENHA ====== #}
+{# tela que obriga o servidor a trocar a senha no primeiro acesso. quando o gestor #}
+{# cria um colaborador ele poe senha provisoria e marca senha_temporaria; o middleware #}
+{# ve isso e empurra TODA requisicao pra ca ate trocar. #}
+{# [!] a troca_senha_obrigatoria_view so deixa entrar aqui se a flag forcar_troca_senha #}
+{#     estiver na sessao; senao manda pra home. depois de trocar ela limpa a flag. #}
 {% block title %}Trocar senha{% endblock %}
 {% block content %}
   <h1 class="mb-4x">Defina uma nova senha</h1>
   <p class="text-down-01 mb-3x">Obrigatório no primeiro acesso com senha provisória.</p>
+  {# ====== FORM (senha + confirmacao) ====== #}
+  {# uso o TrocaSenhaObrigatoriaForm renderizado pelo Django (form.senha / form.senha2) #}
   <form method="post" class="col-md-6">
     {% csrf_token %}
     <div class="br-input input-button mb-3x">

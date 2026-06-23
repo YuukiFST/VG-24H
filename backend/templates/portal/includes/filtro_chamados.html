@@ -1,6 +1,13 @@
+{# ====== INCLUDE PARCIAL: BARRA DE FILTROS DOS CHAMADOS ====== #}
+{# Eu puxo esse pedaco com {% include %} na lista de chamados da equipe (equipe/dashboard.html). #}
+{# As variaveis (filtro_de, filtro_ate, servicos, bairros, statuses, filtro_servico/bairro/status, #}
+{# mostrar_encerrados) vem do contexto do dashboard (view equipe_dashboard). #}
+{# [!] form method=get: ele recarrega a propria lista mandando os filtros pela query string. #}
 <div class="br-card p-3 mb-4x">
     <form method="get" id="form-filtros">
         <div class="row align-items-end">
+            {# ====== INTERVALO DE DATAS (de / ate) ====== #}
+            {# input date; reabro com filtro_de/filtro_ate pra manter o que ja foi escolhido #}
             <div class="col-12 col-lg-2 mb-3">
                 <label for="filter-de" class="small font-weight-bold">De</label>
                 <div class="br-input"><input id="filter-de" name="de" type="date" value="{{ filtro_de }}" /></div>
@@ -9,6 +16,9 @@
                 <label for="filter-ate" class="small font-weight-bold">Até</label>
                 <div class="br-input"><input id="filter-ate" name="ate" type="date" value="{{ filtro_ate }}" /></div>
             </div>
+            {# ====== FILTRO POR SERVICO ====== #}
+            {# br-select (componente do GOV.br): o input mostra o nome e o radio escolhido grava o id #}
+            {# no hidden name=servico. Pinto o nome atual achando o servico cujo id bate com filtro_servico. #}
             <div class="col-12 col-lg-3 mb-3">
                 <label for="filter-servico" class="small font-weight-bold">Serviço</label>
                 <div class="br-select" id="br-select-servico">
@@ -38,6 +48,8 @@
                 </div>
                 <input type="hidden" name="servico" id="filter-servico-hidden" value="{{ filtro_servico|default:'' }}" />
             </div>
+            {# ====== FILTRO POR BAIRRO ====== #}
+            {# mesma logica do servico: radio escolhe o id_bairro e cai no hidden name=bairro #}
             <div class="col-12 col-lg-3 mb-3">
                 <label for="filter-bairro" class="small font-weight-bold">Bairro</label>
                 <div class="br-select" id="br-select-bairro">
@@ -67,6 +79,8 @@
                 </div>
                 <input type="hidden" name="bairro" id="filter-bairro-hidden" value="{{ filtro_bairro|default:'' }}" />
             </div>
+            {# ====== FILTRO POR STATUS ====== #}
+            {# mesma logica: radio escolhe o id_status e cai no hidden name=status #}
             <div class="col-12 col-lg-2 mb-3">
                 <label for="filter-status" class="small font-weight-bold">Status</label>
                 <div class="br-select" id="br-select-status">
@@ -100,6 +114,8 @@
         <div class="row" style="margin-top: 9px;">
             <div class="col-12 d-flex flex-wrap align-items-center justify-content-between">
                 
+                {# ====== ACOES + EXIBICAO ====== #}
+                {# Filtrar = submit (manda os filtros). Limpar Filtros aponta pra equipe_chamados sem query, zerando tudo. #}
                 <div class="d-flex align-items-center mb-3 mb-md-0" style="gap: 2px;">
                     <button class="br-button primary" type="submit">
                         <i class="fas fa-filter mr-1"></i> Filtrar
@@ -109,6 +125,7 @@
                     </a>
                 </div>
 
+                {# radio mostrar_encerrados: vazio = so ativos, "1" = inclui encerrados (a view le == "1") #}
                 <div class="exibicao-radio-group d-flex align-items-center">
                     <span class="small font-weight-bold mb-0">Exibição:</span>
                     <label class="custom-radio mb-0">

@@ -24,6 +24,9 @@
           <h1 class="auth-title">Acesse sua conta</h1>
           <p class="auth-subtitle">Informe seus dados para entrar no portal.</p>
 
+          {# ====== FORM DE LOGIN ====== #}
+          {# [!] a view espera os campos name="email" e name="password" (nao "senha") #}
+          {# [!] o rate limit (5 tentativas / 5 min) eh todo no backend; aqui nao tem nada disso #}
           <form id="login-form" action="{% url 'portal:login' %}" method="post">
             {% csrf_token %}
             <div class="form-group">
@@ -39,6 +42,7 @@
               </div>
             </div>
 
+            {# ====== CAMPO SENHA + BOTAO OLHO ====== #}
             <div class="form-group">
               <div class="br-input input-button">
                 <label for="input-password">Senha</label>
@@ -49,6 +53,9 @@
               </div>
             </div>
             
+            {# [!] esse JS eu coloquei pra resolver um conflito: o core-init do GOV.br #}
+            {#     ja prende um handler no botao do olho, entao eu clono o botao pra #}
+            {#     matar os eventos antigos e ligo so o meu toggle de mostrar/esconder senha #}
             <script>
             window.addEventListener("load", function() {
                 var input = document.getElementById("input-password");
@@ -75,6 +82,8 @@
             });
             </script>
 
+            {# ====== MANTER CONECTADO + ESQUECI A SENHA ====== #}
+            {# [!] o "Manter-me conectado" eh so visual, nao mando ele no POST nem trato no backend #}
             <div class="d-flex justify-content-between align-items-center mb-4x mt-2">
               <div class="br-checkbox">
                 <input id="manter-conectado" type="checkbox" aria-label="Manter-me conectado" />
@@ -94,6 +103,8 @@
 
           <span class="br-divider my-4"></span>
 
+          {# ====== LINK PRO CADASTRO ====== #}
+          {# so cidadao se cadastra por aqui; servidor quem cria eh o gestor no painel #}
           <div class="form-link">
             Não tem uma conta?
             <a href="{% url 'portal:cadastro' %}">Crie sua conta gratuitamente</a>

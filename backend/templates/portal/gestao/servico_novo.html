@@ -1,3 +1,7 @@
+{# ====== GESTAO: NOVO SERVICO ====== #}
+{# Pagina propria de cadastro de servico (nao eh modal). Vem da view gestao_servico_novo (so GES). #}
+{# Contexto: form (ServicoForm, usado so pra validar no POST) e categorias (ativas, pro select). #}
+{# [!] os campos sao montados na mao; os names tem que bater com o ServicoForm. #}
 {% extends "portal/base.html" %}
 {% load static %}
 
@@ -17,7 +21,9 @@
 
   <h1 class="h3 mb-4x">Novo Serviço</h1>
 
+  {# ====== FORM DE CADASTRO ====== #}
   <div class="br-card p-4 mx-auto" style="max-width: 700px;">
+    {# posta pra propria view de criacao; no sucesso ela redireciona pra lista de servicos #}
     <form action="{% url 'portal:gestao_servico_novo' %}" method="post">
       {% csrf_token %}
       <div class="br-input mb-3x">
@@ -25,6 +31,7 @@
         <input id="id_nome" name="nome" type="text" required />
       </div>
 
+      {# select de categoria: "Selecione" vazio de placeholder + as categorias ativas #}
       <div class="form-group mb-3x">
         <div class="br-input">
           <label for="id_cat">Categoria *</label>

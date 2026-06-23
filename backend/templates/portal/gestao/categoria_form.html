@@ -1,3 +1,6 @@
+{# Form de editar categoria. Vem da view gestao_categoria_edit (perfil GES). #}
+{# [!] uso 'obj' aqui (obj.nome/obj.ativo/obj.pk) porque eh a chave que a view manda no contexto. #}
+{# o obj eh um CategoriaServico montado na mao na view; obj.pk = id_categoria (PK do model). #}
 {% extends "portal/base.html" %}
 {% load static %}
 
@@ -5,6 +8,7 @@
 
 {% block content %}
 <div class="dashboard-content">
+  {# ====== Breadcrumb ====== #}
   <nav class="br-breadcrumb page-breadcrumb" aria-label="Breadcrumb">
     <div class="crumb-list">
       <span class="crumb"><a href="{% url 'portal:root' %}"><i class="fas fa-home" aria-hidden="true"></i></a></span>
@@ -15,17 +19,20 @@
     </div>
   </nav>
 
-  <h1 class="h3 mb-4x">Editar Categoria: {{ cat.nome }}</h1>
+  <h1 class="h3 mb-4x">Editar Categoria: {{ obj.nome }}</h1>
 
+  {# ====== Form de edicao ====== #}
+  {# posta pra propria URL de editar; a view valida o CategoriaForm e da UPDATE via SQL #}
   <div class="br-card p-4 mx-auto" style="max-width: 600px;">
-    <form action="{% url 'portal:gestao_categoria_editar' cat.pk %}" method="post">
+    <form action="{% url 'portal:gestao_categoria_editar' obj.pk %}" method="post">
       {% csrf_token %}
       <div class="br-input mb-3x">
         <label for="id_nome">Nome *</label>
-        <input id="id_nome" name="nome" type="text" value="{{ cat.nome }}" required />
+        <input id="id_nome" name="nome" type="text" value="{{ obj.nome }}" required />
       </div>
+      {# checkbox do ativo (so muda o estado visual; o UPDATE da view atualiza nome e descricao) #}
       <div class="br-checkbox mb-4x">
-        <input id="id_ativo" name="ativo" type="checkbox" {% if cat.ativo %}checked{% endif %} />
+        <input id="id_ativo" name="ativo" type="checkbox" {% if obj.ativo %}checked{% endif %} />
         <label for="id_ativo">Categoria Ativa</label>
       </div>
       <div class="d-flex justify-content-end">

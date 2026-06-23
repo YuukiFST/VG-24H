@@ -1,15 +1,20 @@
+{# herdo o master portal/base.html (header, nav, footer, mensagens GOV.br) #}
 {% extends "portal/base.html" %}
 {% load static %}
 {# ========================================================================== #}
 {# DASHBOARD CIDADAO — Lista de chamados do cidadao logado                  #}
-{# [!] Filtro por status usa Subquery no ultimo historico (sigla_status)    #}
-{#     Semaforo: verde/amarelo/vermelho calculado com prazos do servico     #}
-{#     Dados vem de views_cidadao.cidadao_chamados_lista()                  #}
+{# Dados vem de views_cidadao.cidadao_chamados_lista()                      #}
+{# [!] o status atual NAO eh campo do chamado: vem do ultimo registro do    #}
+{#     historico_chamado. No template eu leio isso via ch.status_atual.     #}
+{# [!] a view tambem manda 'stats' (semaforo) mas aqui eu NAO desenho       #}
+{#     semaforo nenhum; so uso a lista paginada e o total_count.            #}
 {# ========================================================================== #}
 {% block title %}Meu Painel — VG 24H{% endblock %}
 
 {% block content %}
 <div class="container-lg py-4">
+  {# ====== CABECALHO + BOTAO NOVO CHAMADO ====== #}
+  {# titulo da pagina e atalho pro form de abrir chamado (rota cidadao_chamado_novo) #}
   <div class="d-flex justify-content-between align-items-center mb-4x">
     <h1 class="h3 mb-0">Meu Painel de Chamados</h1>
     <a href="{% url 'portal:cidadao_chamado_novo' %}" class="br-button primary">
@@ -17,6 +22,9 @@
     </a>
   </div>
 
+  {# ====== BARRA DE FILTROS ====== #}
+  {# form GET: os campos viram query string (?status=&data=&q=) que a view le do request.GET #}
+  {# [!] eu repito request.GET.* nos selects/inputs pra manter o filtro marcado depois de filtrar #}
   <!-- ====== FILTER BAR ====== -->
   <div class="br-card p-3 mb-4x">
     <form method="get" class="row align-items-end">
@@ -53,6 +61,8 @@
     </form>
   </div>
 
+  {# ====== TABELA DE CHAMADOS ====== #}
+  {# componente br-table do GOV.br; total_count eh o nº total ja filtrado (antes da paginacao) #}
   <!-- ====== TICKETS TABLE ====== -->
   <div class="br-table">
     <div class="table-header">
@@ -71,12 +81,14 @@
         </tr>
       </thead>
       <tbody>
+        {# lista = page_obj (so a fatia da pagina atual); cada ch ja vem com JOIN em servico #}
         {% for ch in lista %}
           <tr>
             <td data-th="Protocolo"><span class="text-bold">{{ ch.num_protocolo }}</span></td>
             <td data-th="Serviço">{{ ch.id_servico.nome }}</td>
             <td data-th="Abertura">{{ ch.dt_abertura|date:"d/m/Y H:i" }}</td>
             <td data-th="Status">
+              {# pego a sigla do status atual e mapeio pra cor do br-tag (AB=info, EA=warning, etc) #}
               {% with st_lower=ch.status_atual.sigla|lower %}
                 <span class="br-tag vg-tag-fixed rounder-none {% if st_lower == 'ab' %}info{% elif st_lower == 'ea' %}warning{% elif st_lower == 'ee' %}ee-status{% elif st_lower == 'co' %}success{% elif st_lower == 'ca' %}danger{% endif %}">{{ ch.status_atual.descricao }}</span>
               {% endwith %}
@@ -88,12 +100,15 @@
             </td>
           </tr>
         {% empty %}
+          {# cai aqui quando o cidadao nao tem chamado (ou o filtro nao achou nada) #}
           <tr>
             <td colspan="5" class="text-center py-4">Você ainda não possui chamados registrados.</td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
+    {# ====== PAGINACAO ====== #}
+    {# [!] cada link carrega de novo os filtros (status/data/q) na URL pra nao perde-los ao trocar de pagina #}
     <!-- Paginação (só aparece se tiver mais de 1 página) -->
     {% if page_obj.paginator.num_pages > 1 %}
     <div class="table-footer d-flex justify-content-center pt-3x pb-2 border-top">

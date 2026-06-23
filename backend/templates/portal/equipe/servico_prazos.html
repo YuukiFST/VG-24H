@@ -1,5 +1,12 @@
 {% extends "portal/base.html" %}
 {% load static %}
+{# ========================================================================== #}
+{# PRAZOS DO SEMAFORO (global) — form simples #}
+{# Vem da view gestao_prazos (views_equipe.py), rota gestao_prazos #}
+{# [!] So o GES entra: a view checa o perfil na mao (sem decorator) e barra COL #}
+{# [!] Prazo agora eh GLOBAL (um ConfiguracaoSemaforo singleton), nao por servico #}
+{# POST salva e faz redirect (PRG); GET so preenche o form com config atual #}
+{# ========================================================================== #}
 
 {% block title %}Gerenciar Prazos Globais — VG 24H{% endblock %}
 
@@ -22,6 +29,9 @@
     </div>
   </div>
 
+  {# ====== FORM DOS PRAZOS ====== #}
+  {# manda POST pra propria URL (action vazio). valores vem de config (config atual do semaforo) #}
+  {# [!] amarelo = limite pra virar amarelo; vermelho = limite pra virar vermelho (em dias) #}
   <div class="br-card p-4 mx-auto" style="max-width: 500px;">
     <form method="post">
       {% csrf_token %}
