@@ -2,7 +2,7 @@
 views_root.py — aqui ficam minhas views publicas e de raiz (Portal VG 24H)
 
 Joguei aqui as views que NAO precisam de login mais as rotas de raiz:
-pagina inicial, troca forcada de senha e o upload/remocao de foto de perfil.
+pagina inicial, catalogo publico de servicos e troca forcada de senha.
 
 A troca de senha aqui eh obrigatoria pra servidor que ta com
 senha_temporaria='1' (colaborador que o gestor acabou de criar). O
@@ -18,7 +18,6 @@ from django.views.decorators.http import require_http_methods
 from portal import db
 from portal.decorators import autenticado
 from portal.forms import NovaSenhaForm
-from portal.utils import salvar_foto_upload
 
 
 def root_view(request):
@@ -73,66 +72,6 @@ def trocar_senha(request):
 
     return render(request, "portal/senha/trocar_senha.html", {"form": form})
 
-
-# ------------------------------------------------------------------
-# UPLOAD DE FOTO DO PERFIL (cidadao e servidor)
-# ------------------------------------------------------------------
-
-@autenticado
-@require_http_methods(["POST"])
-def upload_foto_perfil(request):
-    """Salva ou troca a foto de perfil de quem ta logado.
-
-    Sozinho eu descubro se eh cidadao ou servidor e atualizo a tabela
-    certa. O upload vai pro Cloudinary (se tiver configurado) ou pro
-    filesystem local.
-    """
-    foto = request.FILES.get("foto")
-    if not foto:
-        # nao mandaram arquivo nenhum, aviso e volto pra home
-        messages.error(request, "Nenhuma foto selecionada.")
-        return redirect("/")
-
-    try:
-        # essa funcao do utils salva a foto e me devolve a url
-        url = salvar_foto_upload(foto, request=request)
-    except ValueError as e:
-        # se a foto for invalida (tipo/tamanho) ela estoura ValueError
-        messages.error(request, str(e))
-        return redirect("/")
-
-    user = request.portal_user
-
-    # uso isinstance pra saber se eh Cidadao e gravar a url na tabela certa
-    from portal.models import Cidadao
-    if isinstance(user, Cidadao):
-        db.atualizar_foto_perfil("cidadao", user.pk, url)
-    else:
-        db.atualizar_foto_perfil("servidor", user.pk, url)
-
-    messages.success(request, "Foto atualizada com sucesso!")
-    return redirect("/")
-
-
-# ------------------------------------------------------------------
-# EXCLUIR FOTO DO PERFIL
-# ------------------------------------------------------------------
-
-@autenticado
-@require_http_methods(["POST"])
-def excluir_foto_perfil(request):
-    """Tira a foto de perfil (deixa NULL no banco)."""
-    user = request.portal_user
-
-    # mesma logica do upload: descubro o tipo e removo na tabela certa
-    from portal.models import Cidadao
-    if isinstance(user, Cidadao):
-        db.remover_foto_perfil("cidadao", user.pk)
-    else:
-        db.remover_foto_perfil("servidor", user.pk)
-
-    messages.success(request, "Foto removida com sucesso!")
-    return redirect("/")
 
 def catalogo_servicos(request):
     """Catalogo publico de servicos."""

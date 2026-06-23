@@ -89,10 +89,6 @@ urlpatterns = [
     # reordenar muda a ordem que os banners aparecem no carrossel
     path("gestao/banners/<int:pk>/reordenar/", views_gestao.gestao_banner_reordenar, name="gestao_banner_reordenar"),
 
-    # foto de perfil do usuario (upload e remover)
-    path("perfil/foto/", views_root.upload_foto_perfil, name="upload_foto_perfil"),
-    path("perfil/foto/excluir/", views_root.excluir_foto_perfil, name="excluir_foto_perfil"),
-
     # trocar senha quando o cara ja ta logado e quer mudar por conta propria
     path("trocar-senha/", views_root.trocar_senha, name="trocar_senha"),
 ]

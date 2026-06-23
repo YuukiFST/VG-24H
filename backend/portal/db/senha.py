@@ -1,4 +1,4 @@
-"""portal.db.senha — parte do db.py que cuida de senha e foto de perfil (SQL puro).
+"""portal.db.senha — parte do db.py que cuida de senha (SQL puro).
 A fachada publica fica em portal/db/__init__.py."""
 
 
@@ -44,24 +44,3 @@ def buscar_cidadao_para_reset(email):
             "WHERE LOWER(email) = %s AND ativo = TRUE", [email]
         )
         return cursor.fetchone()
-
-def atualizar_foto_perfil(tabela, pk, url):
-    """Atualiza a foto de perfil do cidadao ou servidor (so salva a URL)."""
-    # de novo: valido a tabela antes porque ela vai na f-string.
-    _validar_tabela(tabela)
-    col = "id_cidadao" if tabela == "cidadao" else "id_servidor"
-    with connection.cursor() as cursor:
-        # url e pk parametrizados; tabela/col ja validados.
-        cursor.execute(
-            f"UPDATE {tabela} SET foto_perfil = %s WHERE {col} = %s", [url, pk]
-        )
-
-def remover_foto_perfil(tabela, pk):
-    """Tira a foto de perfil (seta como NULL)."""
-    _validar_tabela(tabela)
-    col = "id_cidadao" if tabela == "cidadao" else "id_servidor"
-    with connection.cursor() as cursor:
-        # so jogo NULL na coluna foto_perfil do registro daquele pk.
-        cursor.execute(
-            f"UPDATE {tabela} SET foto_perfil = NULL WHERE {col} = %s", [pk]
-        )
