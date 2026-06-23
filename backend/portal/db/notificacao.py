@@ -30,23 +30,6 @@ def listar_notificacoes_cidadao(uid):
         fields=_NOTIF_FIELDS,
     )
 
-def listar_notificacoes_servidor(uid):
-    """Pega as notificacoes (nao arquivadas) de um servidor."""
-    # parecido com a do cidadao, mas aqui o "dono" do chamado pro servidor eh
-    # quem mexeu no historico. Entao o subselect olha o historico_chamado e
-    # pega os chamados onde esse servidor atuou (DISTINCT pra nao repetir).
-    return fetch_all(
-        "SELECT n.id_notificacao, n.mensagem, n.lida, n.arquivada, "
-        "n.dt_envio, n.id_chamado "
-        "FROM notificacao n "
-        "WHERE n.arquivada = FALSE "
-        "AND n.id_chamado IN ("
-        "  SELECT DISTINCT hc.id_chamado FROM historico_chamado hc WHERE hc.id_servidor = %s"
-        ") ORDER BY n.dt_envio DESC",
-        [uid],
-        fields=_NOTIF_FIELDS,
-    )
-
 def marcar_notificacoes_lidas(nids):
     """Marca um monte de notificacoes como lidas de uma vez."""
     # se a lista veio vazia eu nem rodo SQL, saio fora pra nao gastar a toa.

@@ -11,15 +11,15 @@ da pasta database/. O Django so le e escreve os registros.
 
 Entao pra que servem esses models? Pra tres coisas:
 - Forms: o ModelChoiceField usa o queryset do ORM pra validar as FKs.
-- Properties uteis: Chamado.status_atual, Chamado.cor_semaforo.
-- Metodos de classe: Chamado.calcular_stats().
+- Carregadores de dados: Cidadao e Servidor sao instanciados "crus" na
+  camada de SQL puro pra carregar os dados do usuario logado.
+- ConfiguracaoSemaforo: o singleton dos prazos do semaforo.
 
 E de novo: as views fazem tudo em SQL puro (INSERT, UPDATE, SELECT, DELETE).
 """
 
-# models do ORM e timezone pra trabalhar com datas "aware"
+# models do ORM
 from django.db import models
-from django.utils import timezone
 
 
 class StatusChamado(models.Model):
@@ -224,11 +224,10 @@ class Chamado(models.Model):
     sempre o do ULTIMO registro de HistoricoChamado. Isso eh event sourcing:
     o estado vem do historico de eventos, nao de uma coluna fixa.
 
-    Minhas properties principais:
-    - status_atual: o objeto StatusChamado do ultimo historico
-    - sigla_status: a sigla em texto (ex: 'AB', 'CO')
-    - cor_semaforo: 'verde', 'amarelo' ou 'vermelho' conforme os prazos
-    - ultima_atualizacao: data/hora do ultimo historico
+    Status, sigla e cor do semaforo sao calculados na camada de SQL puro
+    (portal.db.stats / portal.db.chamado) e entregues ja prontos nos DTOs
+    (portal.types). O app nunca instancia este model; ele existe pra ancorar
+    as FKs e documentar o schema (managed=False).
     """
     id_chamado = models.AutoField(primary_key=True)
     num_protocolo = models.CharField(max_length=20, unique=True)  # protocolo unico
@@ -256,76 +255,6 @@ class Chamado(models.Model):
     class Meta:
         managed = False
         db_table = "chamado"
-
-    @property
-    def _ultimo_historico(self):
-        # helper privado: acha o historico mais recente desse chamado.
-        # uso list(self.historicos.all()) de proposito pra aproveitar o cache
-        # do prefetch_related quando a view ja trouxe os historicos juntos
-        try:
-            historicos = list(self.historicos.all())
-            if not historicos:
-                return None
-            # o mais novo eh o de maior dt_alteracao
-            return max(historicos, key=lambda h: h.dt_alteracao)
-        except (ValueError, AttributeError):
-            # se der ruim (sem historico/sem relacao) eu so devolvo None
-            return None
-
-    @property
-    def status_atual(self):
-        # status atual = o status do ultimo historico (a tal fonte da verdade)
-        ultimo = self._ultimo_historico
-        return ultimo.id_status if ultimo else None
-
-    @property
-    def sigla_status(self):
-        # mesma coisa, mas ja devolvendo a sigla limpa em string (ex: 'AB')
-        st = self.status_atual
-        return (st.sigla or "").strip() if st else ""
-
-    @property
-    def ultima_atualizacao(self):
-        # data da ultima mudanca; se nao tiver historico, caio pra dt_abertura
-        ultimo = self._ultimo_historico
-        return ultimo.dt_alteracao if ultimo else self.dt_abertura
-
-    @property
-    def cor_semaforo(self):
-        """Classifica o chamado por urgencia usando os prazos globais.
-
-        Devolve 'verde' (no prazo), 'amarelo' (atencao) ou 'vermelho' (critico).
-        """
-        config = ConfiguracaoSemaforo.get_singleton()  # pego os prazos globais
-        dias = (timezone.now() - self.dt_abertura).days  # ha quantos dias ta aberto
-        # ordem importa: testo o vermelho (maior prazo) primeiro
-        if dias >= config.prazo_vermelho_dias:
-            return "vermelho"
-        if dias >= config.prazo_amarelo_dias:
-            return "amarelo"
-        return "verde"
-
-    @classmethod
-    def calcular_stats(cls, queryset):
-        """Conta os chamados por cor do semaforo pra um queryset.
-
-        Devolve um dict: {'no_prazo': N, 'atencao': N, 'critico': N}.
-        Faco em Python pra reaproveitar a mesma regra de dias do cor_semaforo.
-        """
-        config = ConfiguracaoSemaforo.get_singleton()
-        stats = {"no_prazo": 0, "atencao": 0, "critico": 0}
-        now = timezone.now()  # pego o agora uma vez so, fora do loop
-        # select_related pra nao tomar N+1 ao acessar o servico
-        for ch in queryset.select_related("id_servico"):
-            dias = (now - ch.dt_abertura).days
-            # mesma logica de faixas do cor_semaforo, so que somando contadores
-            if dias >= config.prazo_vermelho_dias:
-                stats["critico"] += 1
-            elif dias >= config.prazo_amarelo_dias:
-                stats["atencao"] += 1
-            else:
-                stats["no_prazo"] += 1
-        return stats
 
 
 class FotoChamado(models.Model):

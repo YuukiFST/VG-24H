@@ -2,17 +2,12 @@
 views_root.py — aqui ficam minhas views publicas e de raiz (Portal VG 24H)
 
 Joguei aqui as views que NAO precisam de login mais as rotas de raiz:
-pagina inicial, troca forcada de senha, painel do cidadao (acesso rapido)
-e as notificacoes.
+pagina inicial, troca forcada de senha e o upload/remocao de foto de perfil.
 
 A troca de senha aqui eh obrigatoria pra servidor que ta com
 senha_temporaria='1' (colaborador que o gestor acabou de criar). O
 decorator @exige_troca_senha segura QUALQUER requisicao e manda o cara
 pra tela de troca ate ele botar uma senha nova.
-
-Lembrete pra mim: as notificacoes quem cria eh o banco sozinho
-(Trigger 2B: fn_notificar_status_update) toda vez que o status de um
-chamado muda. Aqui eu so listo e deleto, nunca crio notificacao na mao.
 """
 
 # imports do django + meus modulos (db = minhas funcoes de SQL puro, decorators, forms, utils)
@@ -77,56 +72,6 @@ def trocar_senha(request):
         form = NovaSenhaForm()
 
     return render(request, "portal/senha/trocar_senha.html", {"form": form})
-
-
-# ------------------------------------------------------------------
-# NOTIFICACOES (servidores) — lista e exclusao
-# ------------------------------------------------------------------
-
-@autenticado
-def notificacoes(request):
-    """Lista as notificacoes do servidor que ta logado.
-
-    Quem cria as notificacao eh o trigger do banco
-    (fn_notificar_status_update) quando o status do chamado muda. Aqui
-    eu so vejo e deleto.
-
-    Seguranca (lembrete): a subquery la no db garante que o servidor so
-    enxerga notificacao dos chamados que ELE atendeu (via historico_chamado).
-    """
-    uid = request.portal_user.pk  # id do servidor logado
-    notifs = db.listar_notificacoes_servidor(uid)
-
-    # pego as nao lidas e ja marco como lidas (abriu, leu)
-    nids = [n.pk for n in notifs if not n.lida]
-    db.marcar_notificacoes_lidas(nids)
-
-    # se veio POST eh pra excluir uma notificacao especifica.
-    # passo uid_servidor pra subquery so deixar deletar o que eh meu mesmo,
-    # assim ninguem apaga notificacao de outro servidor mexendo no POST
-    if request.method == "POST":
-        nid = request.POST.get("excluir")
-        if nid:
-            db.excluir_notificacao(nid, uid_servidor=uid)
-            messages.info(request, "Notificação removida.")
-        return redirect("portal:notificacoes")  # PRG: redireciona depois do POST
-
-    return render(request, "portal/notificacoes.html", {"lista": notifs})
-
-
-# ------------------------------------------------------------------
-# PAINEL DO CIDADAO (acesso rapido — perfil CID)
-# ------------------------------------------------------------------
-
-@autenticado
-def painel_cidadao(request):
-    # painel rapido do cidadao: o user logado eh o proprio cidadao
-    cidadao = request.portal_user
-    # busco os chamados dele pra mostrar resumido no painel
-    chamados = db.listar_chamados_painel(cidadao.pk)
-    return render(request, "portal/cidadao/painel.html", {
-        "cidadao": cidadao, "chamados": chamados,
-    })
 
 
 # ------------------------------------------------------------------

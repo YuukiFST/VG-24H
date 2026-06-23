@@ -327,38 +327,6 @@ def chamado_existe(pk):
         cursor.execute("SELECT 1 FROM chamado WHERE id_chamado = %s", [pk])
         return cursor.fetchone() is not None
 
-def listar_chamados_painel(cidadao_pk):
-    """Lista chamados do cidadao para o painel (versao resumida)."""
-    with connection.cursor() as cursor:
-        # versao resumida pro painel: menos colunas
-        cursor.execute(
-            "SELECT c.id_chamado, c.num_protocolo, c.descricao, "
-            "c.prioridade, c.dt_abertura, "
-            "s.nome AS servico_nome, b.nome_bairro, "
-            "ultimo.sigla AS sigla_status "
-            "FROM chamado c "
-            # uso LEFT JOIN aqui pra nao perder o chamado caso servico/bairro esteja faltando
-            "LEFT JOIN servico s ON c.id_servico = s.id_servico "
-            "LEFT JOIN bairro b ON c.id_bairro = b.id_bairro "
-            # LATERAL trazendo so a sigla (passo colunas="sc.sigla" porque aqui so quero ela)
-            + sql_lateral_ultimo_status(colunas="sc.sigla")
-            + "WHERE c.id_cidadao = %s "
-            "ORDER BY c.dt_abertura DESC", [cidadao_pk]
-        )
-        config = ConfiguracaoSemaforo.get_singleton()
-        chamados = []
-        for row in cursor.fetchall():
-            cor = cor_semaforo(row[4], config.prazo_amarelo_dias, config.prazo_vermelho_dias)
-            chamados.append(SimpleNamespace(
-                id_chamado=row[0], num_protocolo=row[1], descricao=row[2],
-                prioridade=row[3], dt_abertura=row[4],
-                servico_nome=row[5], nome_bairro=row[6],
-                sigla_status=row[7], cor_semaforo=cor,
-                # calculo os dias em aberto aqui no Python (hoje menos a data de abertura)
-                dias_em_aberto=(timezone.now().date() - row[4].date()).days,
-            ))
-        return chamados
-
 def avaliar_chamado(chamado_id, nota, comentario):
     """Registra avaliacao de chamado."""
     with connection.cursor() as cursor:

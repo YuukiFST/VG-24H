@@ -446,7 +446,6 @@ def gestao_chamado_excluir(request, pk):
 @require_http_methods(["GET"])
 def equipe_dashboard(request):
     # dashboard dos graficos. busco os numeros de uma vez no db
-    import json
     stats = db.buscar_stats_dashboard()
     # monto o context; os campos *_json eu serializo pro Chart.js ler no front.
     # labels = nomes dos eixos, data = os valores
