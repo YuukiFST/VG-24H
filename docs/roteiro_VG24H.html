@@ -420,7 +420,7 @@ cursor.execute(
           <div class="fala">"Para abrir um chamado eu gero o número de protocolo de forma atômica (sem dois iguais),
           faço o <code>INSERT</code> na tabela <code>chamado</code> e registro a foto. Eu <b>não</b> insiro o status
           inicial — um <i>trigger</i> do banco cria sozinho o histórico 'AB' (Aberto)."</div>
-          <div class="arquivo">backend/portal/utils.py — proximo_protocolo (linhas ~30-60)</div>
+          <div class="arquivo">backend/portal/utils.py — proximo_protocolo (linhas ~34-62)</div>
           <pre class="cod">cursor.execute(
     "INSERT INTO protocolo_seq (ano, ultimo_numero) VALUES (%s, 1) "
     "ON CONFLICT (ano) DO UPDATE SET ultimo_numero = protocolo_seq.ultimo_numero + 1 "
@@ -435,7 +435,7 @@ protocolo = f"{y}{n:06d}"   # ex.: 2026000001</pre>
             chamados pegarem o mesmo número.</li>
             <li>O protocolo é o ano + 6 dígitos: <code>f"{y}{n:06d}"</code>.</li>
           </ul>
-          <div class="arquivo">backend/portal/services/chamado.py — criar_novo_chamado (linhas ~20-50)</div>
+          <div class="arquivo">backend/portal/services/chamado.py — criar_novo_chamado (linhas ~11-52)</div>
           <pre class="cod">cursor.execute(
     "INSERT INTO chamado "
     "(num_protocolo, prioridade, ponto_de_referencia, descricao, "
@@ -467,7 +467,7 @@ cursor.execute(
           chamado. Faço isso com <code>JOIN LATERAL</code>: para cada chamado, rodo uma subconsulta que pega só o
           registro mais recente do histórico. É a consulta mais importante do projeto. Esse trecho fica num
           helper reutilizável, <code>sql_lateral_ultimo_status()</code>, usado pelas listagens do cidadão e da equipe."</div>
-          <div class="arquivo">backend/portal/db/_shared.py — sql_lateral_ultimo_status (~linha 54)</div>
+          <div class="arquivo">backend/portal/db/_shared.py — sql_lateral_ultimo_status (~linha 74)</div>
           <pre class="cod">FROM chamado c
 JOIN servico s ON c.id_servico = s.id_servico
 JOIN bairro b ON c.id_bairro = b.id_bairro
@@ -497,7 +497,7 @@ WHERE c.id_cidadao = %s</pre>
           <div class="fala">"O semáforo compara quantos dias o chamado está aberto com os prazos <b>globais</b>
           (tabela <code>configuracao_semaforo</code>). Tem duas formas no código: uma função simples por chamado, e uma
           consulta SQL que conta tudo de uma vez (verde/amarelo/vermelho) usando <code>CASE WHEN</code> e intervalos de dias."</div>
-          <div class="arquivo">backend/portal/db/stats.py — cor_semaforo (~linha 11)</div>
+          <div class="arquivo">backend/portal/db/stats.py — cor_semaforo (~linha 24)</div>
           <pre class="cod">def cor_semaforo(dt_abertura, prazo_amarelo_dias, prazo_vermelho_dias):
     dias = (timezone.now() - dt_abertura).days
     if dias &gt;= prazo_vermelho_dias:
@@ -509,7 +509,7 @@ WHERE c.id_cidadao = %s</pre>
             <li><code>dias = (agora - dt_abertura).days</code>: dias desde a abertura.</li>
             <li>Se passou do prazo vermelho → "vermelho"; senão se passou do amarelo → "amarelo"; senão "verde".</li>
           </ul>
-          <div class="arquivo">backend/portal/db/stats.py — calcular_stats_semaforo (~linha 24)</div>
+          <div class="arquivo">backend/portal/db/stats.py — calcular_stats_semaforo (~linha 41)</div>
           <pre class="cod">SELECT
   COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) &lt; make_interval(days := cfg.prazo_amarelo_dias) THEN 1 ELSE 0 END), 0),
   COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) &gt;= make_interval(days := cfg.prazo_amarelo_dias)
@@ -541,7 +541,7 @@ WHERE TRUE</pre>
           cidadão, mas sem filtrar por cidadão — começa com <code>WHERE TRUE</code> e vai juntando os filtros
           (bairro, status, serviço, datas). Também junta com <code>cidadao</code> para mostrar quem abriu. Fica na
           função <code>listar_chamados_equipe</code> de <code>db/chamado.py</code>; a view só monta o dicionário de filtros."</div>
-          <div class="arquivo">backend/portal/db/chamado.py — listar_chamados_equipe (~linha 140)</div>
+          <div class="arquivo">backend/portal/db/chamado.py — listar_chamados_equipe (~linha 170)</div>
           <pre class="cod">FROM chamado c
 JOIN servico s ON c.id_servico = s.id_servico
 JOIN bairro b ON c.id_bairro = b.id_bairro
@@ -579,7 +579,7 @@ AND ultimo.sigla NOT IN ('CO', 'CA')   -- enquanto "mostrar encerrados" estiver 
           histórico (função <code>db.criar_historico</code>). Esse INSERT dispara o Trigger 2B, que cuida da data de
           conclusão e da notificação. Depois, em <code>alterar_status</code>, faço um UPDATE montado dinamicamente só
           com os campos que mudaram (prioridade e/ou resolução). Observação é só mais um INSERT no histórico."</div>
-          <div class="arquivo">backend/portal/db/historico.py — criar_historico (~linha 85)</div>
+          <div class="arquivo">backend/portal/db/historico.py — criar_historico (~linha 103)</div>
           <pre class="cod">cursor.execute(
     "INSERT INTO historico_chamado "
     "(id_chamado, id_servidor, id_status, observacao, dt_alteracao) "
@@ -587,7 +587,7 @@ AND ultimo.sigla NOT IN ('CO', 'CA')   -- enquanto "mostrar encerrados" estiver 
     "RETURNING id_historico_chamado",
     [chamado_id, servidor_id, status_id, observacao, dt_alteracao],
 )</pre>
-          <div class="arquivo">backend/portal/services/chamado.py — alterar_status (linhas ~53-82)</div>
+          <div class="arquivo">backend/portal/services/chamado.py — alterar_status (linhas ~64-98)</div>
           <pre class="cod">db.criar_historico(chamado_id, novo_status.pk, servidor_id=servidor_id, observacao=observacao)
 
 update_fields = []
@@ -816,7 +816,7 @@ GROUP BY cat.nome, b.nome_bairro, s.sigla, s.descricao;</pre>
         <div class="crud-corpo">
           <div class="fala">"O dashboard de gráficos tem várias consultas: concluídos hoje, concluídos na semana,
           distribuição por status e top 10 bairros. Todas usam a subconsulta do último status."</div>
-          <div class="arquivo">backend/portal/db/stats.py — buscar_stats_dashboard (~linha 125)</div>
+          <div class="arquivo">backend/portal/db/stats.py — buscar_stats_dashboard (~linha 160)</div>
           <pre class="cod">-- concluídos hoje
 SELECT COUNT(*) FROM chamado c
 WHERE (
@@ -849,7 +849,7 @@ LIMIT 10;</pre>
           <div class="fala">"Banners têm CRUD completo em SQL (funções de <code>db/catalogo.py</code>, chamadas pelas views
           <code>gestao_banner_*</code>): listar, criar (com ordem automática), editar, excluir (DELETE físico) e
           reordenar (troca a ordem com o vizinho)."</div>
-          <div class="arquivo">backend/portal/db/catalogo.py — listar_banners_todos / inserir_banner / atualizar_banner / excluir_banner / reordenar_banner (~linhas 202-278)</div>
+          <div class="arquivo">backend/portal/db/catalogo.py — listar_banners_todos / inserir_banner / atualizar_banner / excluir_banner / reordenar_banner (~linhas 234-324)</div>
           <pre class="cod">-- listar
 SELECT id_banner, titulo, descricao, url_imagem, link, ordem, ativo, dt_criacao
 FROM banner_publicacao ORDER BY ordem, dt_criacao DESC;
@@ -875,7 +875,7 @@ DELETE FROM banner_publicacao WHERE id_banner = %s;</pre>
         <div class="crud-corpo">
           <div class="fala">"Bairros: listar todos, criar, editar e ativar/desativar (soft delete). SQL em
           <code>db/catalogo.py</code>, chamado pelas views <code>gestao_bairro_*</code>."</div>
-          <div class="arquivo">backend/portal/db/catalogo.py — listar_bairros_todos / inserir_bairro / atualizar_bairro / desativar_bairro / ativar_bairro (~linhas 153-194)</div>
+          <div class="arquivo">backend/portal/db/catalogo.py — listar_bairros_todos / inserir_bairro / atualizar_bairro / desativar_bairro / ativar_bairro (~linhas 177-226)</div>
           <pre class="cod">SELECT id_bairro, nome_bairro, cep, regiao, ativo FROM bairro ORDER BY nome_bairro;
 INSERT INTO bairro (nome_bairro, cep, regiao, ativo) VALUES (%s, %s, %s, %s);
 UPDATE bairro SET nome_bairro=%s, cep=%s, regiao=%s, ativo=%s WHERE id_bairro=%s;
@@ -893,7 +893,7 @@ UPDATE bairro SET ativo = TRUE  WHERE id_bairro = %s;   -- reativar</pre>
         <div class="crud-corpo">
           <div class="fala">"Serviços: listar (só ativos, com JOIN na categoria), criar, editar, desativar. E há uma tela
           separada que edita os prazos <b>globais</b> do semáforo (não por serviço). SQL em <code>db/catalogo.py</code>."</div>
-          <div class="arquivo">backend/portal/db/catalogo.py — listar_servicos_com_categoria / inserir_servico / desativar_servico (~linhas 112-150)</div>
+          <div class="arquivo">backend/portal/db/catalogo.py — listar_servicos_com_categoria / inserir_servico / desativar_servico (~linhas 130-175)</div>
           <pre class="cod">SELECT s.id_servico, s.nome, s.descricao, s.ativo, s.id_categoria, cat.nome AS categoria_nome
 FROM servico s JOIN categoria_servico cat ON s.id_categoria = cat.id_categoria
 WHERE s.ativo = TRUE ORDER BY s.nome;
@@ -901,7 +901,7 @@ WHERE s.ativo = TRUE ORDER BY s.nome;
 INSERT INTO servico (nome, descricao, ativo, id_categoria)
 VALUES (%s, %s, %s, %s);
 UPDATE servico SET ativo = FALSE WHERE id_servico = %s;   -- soft delete</pre>
-          <div class="arquivo">backend/portal/db/config.py — atualizar_configuracao_prazos (~linha 23)</div>
+          <div class="arquivo">backend/portal/db/config.py — atualizar_configuracao_prazos (~linha 28)</div>
           <pre class="cod">UPDATE configuracao_semaforo SET prazo_amarelo_dias = %s, prazo_vermelho_dias = %s
 WHERE id = 1;   -- prazos GLOBAIS (singleton), não por serviço</pre>
           <ul class="exp">
@@ -918,7 +918,7 @@ WHERE id = 1;   -- prazos GLOBAIS (singleton), não por serviço</pre>
         <div class="crud-corpo">
           <div class="fala">"Categorias: listar ativas, criar (ligada à secretaria) e editar. SQL em <code>db/catalogo.py</code>,
           chamado pelas views <code>gestao_categorias</code> / <code>gestao_categoria_edit</code>."</div>
-          <div class="arquivo">backend/portal/db/catalogo.py — listar_categorias_todas / inserir_categoria / atualizar_categoria (~linhas 86-110)</div>
+          <div class="arquivo">backend/portal/db/catalogo.py — listar_categorias_todas / inserir_categoria / atualizar_categoria (~linhas 100-128)</div>
           <pre class="cod">SELECT id_categoria, nome, descricao, ativo
 FROM categoria_servico WHERE ativo = TRUE ORDER BY nome;
 
@@ -937,7 +937,7 @@ UPDATE categoria_servico SET nome = %s, descricao = %s WHERE id_categoria = %s;<
           <div class="fala">"Colaboradores são servidores com perfil 'COL'. Listo, crio (com senha provisória em hash),
           ativo/inativo e reset de senha. Verifico e-mail/CPF duplicado antes de inserir. SQL em <code>db/servidor.py</code>,
           chamado pelas views <code>gestao_colaborador_*</code>."</div>
-          <div class="arquivo">backend/portal/db/servidor.py — listar_colaboradores / inserir_colaborador / alternar_colaborador_ativo / resetar_senha_colaborador (~linhas 71-127)</div>
+          <div class="arquivo">backend/portal/db/servidor.py — listar_colaboradores / inserir_colaborador / alternar_colaborador_ativo / resetar_senha_colaborador (~linhas 83-149)</div>
           <pre class="cod">SELECT id_servidor, nome_completo, cpf, email, telefone, perfil, ativo, dt_cadastro
 FROM servidor WHERE perfil = 'COL' ORDER BY ativo DESC, nome_completo;
 
@@ -954,27 +954,6 @@ WHERE id_servidor = %s AND perfil = 'COL';                                      
         </div>
       </details>
 
-      <!-- 20b. FOTO DE PERFIL (SQL) -->
-      <details class="crud">
-        <summary>CRUD Foto de perfil (SQL) <span class="tag crud">CRUD</span></summary>
-        <div class="crud-corpo">
-          <div class="fala">"A foto de perfil do usuário (cidadão ou servidor) é só uma URL guardada na coluna
-          <code>foto_perfil</code> da tabela certa. São duas operações em SQL: gravar a URL (UPDATE) e remover
-          (UPDATE para <code>NULL</code>). O nome da tabela é validado por uma lista branca antes de entrar na query."</div>
-          <div class="arquivo">backend/portal/db/senha.py — atualizar_foto_perfil / remover_foto_perfil (~linhas 36-52)</div>
-          <pre class="cod">-- gravar/atualizar a foto (cidadao OU servidor):
-UPDATE cidadao  SET foto_perfil = %s   WHERE id_cidadao  = %s;
--- remover a foto:
-UPDATE servidor SET foto_perfil = NULL WHERE id_servidor = %s;</pre>
-          <ul class="exp">
-            <li>O nome da tabela entra por <i>f-string</i>, mas só depois de passar por <code>_validar_tabela(tabela)</code>
-            (lista branca <code>{cidadao, servidor}</code>) — sem risco de injection. O valor (URL) e o id vão por <code>%s</code>.</li>
-            <li>A coluna de id (<code>id_cidadao</code> ou <code>id_servidor</code>) é escolhida conforme a tabela.</li>
-            <li>Remover não apaga o registro: só zera (<code>NULL</code>) a coluna <code>foto_perfil</code>.</li>
-          </ul>
-        </div>
-      </details>
-
       <!-- 21. EXCLUIR CHAMADO -->
       <details class="crud">
         <summary>Excluir chamado (só gestor) — DELETE em cascata <span class="tag sql">transação</span></summary>
@@ -983,7 +962,7 @@ UPDATE servidor SET foto_perfil = NULL WHERE id_servidor = %s;</pre>
           <code>gestao_chamado_excluir</code> grava o log de auditoria e chama <code>db.excluir_chamado_com_cascata</code>,
           que liga a variável de sessão <code>portal.excluindo</code> (destrava os triggers de proteção) e apaga os filhos
           na ordem certa por causa das FKs. Tudo dentro de uma transação."</div>
-          <div class="arquivo">backend/portal/db/chamado.py — excluir_chamado_com_cascata (~linha 64) · view: views_equipe.py — gestao_chamado_excluir (~linhas 325-378)</div>
+          <div class="arquivo">backend/portal/db/chamado.py — excluir_chamado_com_cascata (~linha 75) · view: views_equipe.py — gestao_chamado_excluir (~linhas 383-438)</div>
           <pre class="cod">cursor.execute("SELECT set_config('portal.excluindo', 'true', true)")
 -- log de auditoria antes de apagar:
 INSERT INTO historico_chamado (id_chamado, id_servidor, id_status, observacao, dt_alteracao)
@@ -1043,7 +1022,7 @@ def equipe_chamados_lista(request):
           <div class="fala">"A home é a view <code>root_view</code>. Ela não exige login. Eu apenas chamo três funções do
           pacote <code>db/</code> (banners, categorias com serviços e estatísticas — o Rafael mostra o SQL) e mando tudo
           para o template <code>root.html</code>. A própria view não tem SQL: ela delega para o <code>db</code>."</div>
-          <div class="arquivo">backend/portal/views_root.py — root_view (~linhas 29-35)</div>
+          <div class="arquivo">backend/portal/views_root.py — root_view (~linhas 23-32)</div>
           <pre class="cod">def root_view(request):
     banners = db.listar_banners_ativos()
     categorias = db.listar_categorias_com_servicos()
@@ -1069,7 +1048,7 @@ def equipe_chamados_lista(request):
           mostro erro. Se achar, comparo a senha digitada com o hash usando <code>check_password</code>. Se bater, crio a
           sessão e mostro 'Olá, ...'. Se não bater, mostro 'E-mail ou senha incorretos.' É <b>essa</b> mensagem que aparece
           na tela quando o login está errado."</div>
-          <div class="arquivo">backend/portal/views_auth.py — login_view (linhas ~66-127)</div>
+          <div class="arquivo">backend/portal/views_auth.py — login_view (linhas ~74-138)</div>
           <pre class="cod">if request.method == "POST":
     if _check_login_rate_limit(request):
         messages.error(request, "Muitas tentativas. Aguarde 5 minutos.")
@@ -1123,7 +1102,7 @@ def equipe_chamados_lista(request):
           <div class="fala">"No cadastro eu valido o formulário (<code>CadastroCidadaoForm</code>), checo duplicidade com
           <code>db.existe_email_ou_cpf</code> e, se estiver tudo certo, gravo com <code>db.inserir_cidadao</code> (a senha
           já vira hash). Em vez de pedir login de novo, eu já <b>logo o cidadão</b> e mando para a home."</div>
-          <div class="arquivo">backend/portal/views_auth.py — cadastro_view (linhas ~152-193)</div>
+          <div class="arquivo">backend/portal/views_auth.py — cadastro_view (linhas ~165-200)</div>
           <pre class="cod">if request.method == "POST":
     form = CadastroCidadaoForm(request.POST)
     if form.is_valid():
@@ -1154,7 +1133,7 @@ def equipe_chamados_lista(request):
         <div class="crud-corpo">
           <div class="fala">"O dashboard de gráficos é a primeira tela do gestor depois do login. A view roda as consultas
           (concluídos hoje/semana, status, bairros) e converte os resultados para JSON, que o Chart.js usa no template."</div>
-          <div class="arquivo">backend/portal/views_equipe.py — equipe_dashboard (~linhas 385-398)</div>
+          <div class="arquivo">backend/portal/views_equipe.py — equipe_dashboard (~linhas 447-460)</div>
           <pre class="cod">stats = db.buscar_stats_dashboard()
 context = {
     'atendidas_hoje': stats['atendidas_hoje'],
@@ -1297,7 +1276,7 @@ for _ in range(100):
         <div class="crud-corpo">
           <div class="fala">"O cidadão pode adicionar observação/foto enquanto o chamado está aberto, cancelar (se AB ou EA)
           e avaliar (se concluído e ainda sem nota). Eu calculo essas permissões com base no status atual."</div>
-          <div class="arquivo">backend/portal/views_cidadao.py — cidadao_chamado_detalhe (linhas ~174-181)</div>
+          <div class="arquivo">backend/portal/views_cidadao.py — cidadao_chamado_detalhe (linhas ~186-192)</div>
           <pre class="cod">ch = _chamado_do_cidadao(request, pk)   # 404 se não for do cidadão (segurança)
 ts = ch.sigla_status
 pode_obs_foto = ts not in ("CO", "CA")
@@ -1319,7 +1298,7 @@ pode_avaliar  = ts == "CO" and ch.nota_avaliacao is None</pre>
         <div class="crud-corpo">
           <div class="fala">"A view só lista e exclui notificações — quem cria é o trigger do banco. A consulta filtra pelos
           chamados do próprio cidadão, então ninguém vê notificação de outro."</div>
-          <div class="arquivo">backend/portal/views_cidadao.py — cidadao_notificacoes (linhas ~298-329)</div>
+          <div class="arquivo">backend/portal/views_cidadao.py — cidadao_notificacoes (linhas ~328-359)</div>
           <pre class="cod">lista = db.listar_notificacoes_cidadao(uid)
 
 nids = [n.pk for n in lista if not n.lida]
@@ -1347,7 +1326,7 @@ return render(request, "portal/cidadao/notificacoes.html", {"lista": lista})</pr
         <div class="crud-corpo">
           <div class="fala">"O controle de quem acessa o quê é feito no Django (não no banco): decorators em cima das views e
           um middleware que carrega o usuário a cada requisição e injeta variáveis de sessão no PostgreSQL para os triggers."</div>
-          <div class="arquivo">backend/portal/decorators.py — perfis (linhas ~58-80)</div>
+          <div class="arquivo">backend/portal/decorators.py — perfis (linhas ~65-91)</div>
           <pre class="cod">def perfis(*codigos):
     def dec(view):
         @wraps(view)
@@ -1361,7 +1340,7 @@ return render(request, "portal/cidadao/notificacoes.html", {"lista": lista})</pr
             return view(request, *args, **kwargs)
         return w
     return dec</pre>
-          <div class="arquivo">backend/portal/middleware.py — PortalUserMiddleware (linhas ~80-89)</div>
+          <div class="arquivo">backend/portal/middleware.py — PortalUserMiddleware (linhas ~91-105)</div>
           <pre class="cod">def __call__(self, request):
     user = _usuario_da_sessao(request)      # SELECT do usuário pelo cookie
     request.portal_user = user
@@ -1404,43 +1383,13 @@ def gestao_servico_novo(request):
         </div>
       </details>
 
-      <!-- FOTO DE PERFIL (VIEW) -->
-      <details class="crud">
-        <summary>Foto de perfil — enviar e remover <span class="tag crud">CRUD</span></summary>
-        <div class="crud-corpo">
-          <div class="fala">"Qualquer usuário logado pode trocar ou remover a própria foto de perfil. A view detecta se o
-          usuário é cidadão ou servidor (<code>isinstance</code>) e chama o SQL na tabela certa. O upload vai para o
-          Cloudinary (ou disco local) e devolve a URL que será gravada."</div>
-          <div class="arquivo">backend/portal/views_root.py — upload_foto_perfil / excluir_foto_perfil (~linhas 131-179)</div>
-          <pre class="cod">def upload_foto_perfil(request):
-    foto = request.FILES.get("foto")
-    if not foto:
-        messages.error(request, "Nenhuma foto selecionada.")
-        return redirect("/")
-    url = salvar_foto_upload(foto, request=request)   # Cloudinary ou disco local
-    user = request.portal_user
-    if isinstance(user, Cidadao):
-        db.atualizar_foto_perfil("cidadao", user.pk, url)
-    else:
-        db.atualizar_foto_perfil("servidor", user.pk, url)
-# excluir_foto_perfil: db.remover_foto_perfil("cidadao"/"servidor", user.pk)</pre>
-          <ul class="exp">
-            <li><code>salvar_foto_upload(...)</code> (em <code>utils.py</code>) devolve a URL — Cloudinary se configurado,
-            senão salva no disco local; erros viram <code>messages.error</code>.</li>
-            <li><code>isinstance(user, Cidadao)</code> decide a tabela (cidadao ou servidor); o SQL é o do Rafael
-            (<code>db.atualizar_foto_perfil</code> / <code>db.remover_foto_perfil</code>).</li>
-            <li>Rotas (só POST): <code>/perfil/foto/</code> (enviar) e <code>/perfil/foto/excluir/</code> (remover).</li>
-          </ul>
-        </div>
-      </details>
-
       <!-- EXCLUIR CHAMADO -->
       <details class="crud">
         <summary>Excluir chamado — fluxo controlado (só GES) <span class="tag auth">view</span></summary>
         <div class="crud-corpo">
           <div class="fala">"A exclusão exige justificativa e perfil de gestor. A view liga a variável de sessão que destrava
           os triggers, grava o log e apaga tudo numa transação (o SQL detalhado está no card do Rafael)."</div>
-          <div class="arquivo">backend/portal/views_equipe.py — gestao_chamado_excluir (~linhas 325-378)</div>
+          <div class="arquivo">backend/portal/views_equipe.py — gestao_chamado_excluir (~linhas 383-438)</div>
           <pre class="cod">@perfis("GES")
 @require_http_methods(["POST"])
 def gestao_chamado_excluir(request, pk):
@@ -1598,7 +1547,7 @@ def gestao_chamado_excluir(request, pk):
           <div class="fala">"Esta é a tela principal da equipe. No topo, quatro cards de semáforo (total, verde, amarelo,
           vermelho). Na tabela, cada chamado mostra a prioridade (tag colorida), os dias em aberto e o status (tag colorida
           conforme a sigla)."</div>
-          <div class="arquivo">backend/templates/portal/equipe/dashboard.html (linhas ~38-61) — cards do semáforo</div>
+          <div class="arquivo">backend/templates/portal/equipe/dashboard.html (linhas ~47-70) — cards do semáforo</div>
           <pre class="cod">&lt;div class="semaforo-grid mb-4x"&gt;
   &lt;div class="semaforo-card total"&gt;
     &lt;div class="card-value"&gt;{{ total_count|default:0 }}&lt;/div&gt;
@@ -1617,7 +1566,7 @@ def gestao_chamado_excluir(request, pk):
     &lt;div class="card-label"&gt;Crítico (Vermelho)&lt;/div&gt;
   &lt;/div&gt;
 &lt;/div&gt;</pre>
-          <p class="sub">Prioridade, "tempo em aberto" e status na tabela (linhas ~211-231)</p>
+          <p class="sub">Prioridade, "tempo em aberto" e status na tabela (linhas ~236-257)</p>
           <pre class="cod">&lt;td data-th="Prioridade"&gt;
   {% if linha.ch.prioridade == 5 %}&lt;span class="br-tag vg-tag-fixed rounder-none"
        style="background:var(--vg-priority-5); color:var(--vg-priority-5-fg);"&gt;Urgente&lt;/span&gt;
@@ -1699,7 +1648,7 @@ def gestao_chamado_excluir(request, pk):
         <div class="crud-corpo">
           <div class="fala">"O cidadão vê seus chamados numa tabela <code>br-table</code> com filtro de status, data e busca por
           protocolo. O status vira uma tag colorida igual à da equipe."</div>
-          <div class="arquivo">backend/templates/portal/cidadao/dashboard.html (linhas ~79-83)</div>
+          <div class="arquivo">backend/templates/portal/cidadao/dashboard.html (linhas ~90-95)</div>
           <pre class="cod">&lt;td data-th="Status"&gt;
   {% with st_lower=ch.status_atual.sigla|lower %}
     &lt;span class="br-tag vg-tag-fixed rounder-none {% if st_lower == 'ab' %}info{% elif st_lower == 'ea' %}warning{% elif st_lower == 'ee' %}ee-status{% elif st_lower == 'co' %}success{% elif st_lower == 'ca' %}danger{% endif %}"&gt;{{ ch.status_atual.descricao }}&lt;/span&gt;
@@ -1720,7 +1669,7 @@ def gestao_chamado_excluir(request, pk):
         <div class="crud-corpo">
           <div class="fala">"As notificações aparecem numa <code>br-list</code>. Cada item mostra a mensagem (que o trigger
           gerou) e a data, com um botão de excluir. Se não houver nenhuma, mostro um estado vazio."</div>
-          <div class="arquivo">backend/templates/portal/cidadao/notificacoes.html (linhas ~7-24)</div>
+          <div class="arquivo">backend/templates/portal/cidadao/notificacoes.html (linhas ~16-33)</div>
           <pre class="cod">&lt;div class="br-list"&gt;
   {% for n in lista %}
   &lt;div class="br-item"&gt;
@@ -1823,7 +1772,7 @@ def gestao_chamado_excluir(request, pk):
     <details class="pergunta">
       <summary>"Onde o código verifica se o login está certo ou errado?"</summary>
       <div class="resp"><b>Bruno:</b> em <code>backend/portal/views_auth.py</code>, função <code>login_view</code>
-      (~linha 104): <code>check_password(senha, user.senha_hash)</code> compara a senha digitada com o hash do banco.
+      (~linha 115): <code>check_password(senha, user.senha_hash)</code> compara a senha digitada com o hash do banco.
       Antes disso, o <code>SELECT</code> em <code>db.buscar_cidadao_por_email</code> / <code>buscar_servidor_por_email</code>
       (Rafael) decide se o e-mail existe.</div>
     </details>
@@ -1843,16 +1792,16 @@ def gestao_chamado_excluir(request, pk):
       (<code>database/01_schema.sql</code>). <b>Bruno:</b> é gravada no <code>UPDATE chamado SET prioridade=%s</code>
       dentro de <code>alterar_status</code> (<code>services/chamado.py</code>), chamado pela view
       <code>equipe_chamado_status</code>. <b>Yuuki:</b> aparece como tag colorida na tabela
-      (<code>equipe/dashboard.html</code>, ~linha 212).</div>
+      (<code>equipe/dashboard.html</code>, ~linha 236).</div>
     </details>
 
     <details class="pergunta">
       <summary>"Onde está o semáforo (verde/amarelo/vermelho)?"</summary>
-      <div class="resp"><b>Rafael:</b> em <code>db/stats.py</code>: função <code>cor_semaforo</code> (~linha 11) e a consulta
-      <code>calcular_stats_semaforo</code> (~linha 24) com <code>CASE WHEN ... make_interval(days := cfg....)</code>.
+      <div class="resp"><b>Rafael:</b> em <code>db/stats.py</code>: função <code>cor_semaforo</code> (~linha 24) e a consulta
+      <code>calcular_stats_semaforo</code> (~linha 41) com <code>CASE WHEN ... make_interval(days := cfg....)</code>.
       Os prazos são <b>globais</b>, na tabela <code>configuracao_semaforo</code> (<code>prazo_amarelo_dias</code> /
       <code>prazo_vermelho_dias</code>), trazida por <code>CROSS JOIN</code>.
-      <b>Yuuki:</b> os 4 cards e a legenda em <code>equipe/dashboard.html</code> (~linha 38).</div>
+      <b>Yuuki:</b> os 4 cards e a legenda em <code>equipe/dashboard.html</code> (~linha 47).</div>
     </details>
 
     <details class="pergunta">
@@ -1867,7 +1816,7 @@ def gestao_chamado_excluir(request, pk):
     <details class="pergunta">
       <summary>"Em quantos dias o chamado está aberto — onde isso é calculado?"</summary>
       <div class="resp"><b>Bruno/Rafael:</b> na função <code>formatar_dias_em_aberto(dt_abertura)</code>
-      (<code>utils.py</code>, ~linha 64), que devolve um texto como <code>"12 dia(s)"</code> (ou minutos/horas se for
+      (<code>utils.py</code>, ~linha 76), que devolve um texto como <code>"12 dia(s)"</code> (ou minutos/horas se for
       recente). É usada ao montar a lista da equipe (<code>db.listar_chamados_equipe</code>) e no detalhe.
       <b>Yuuki:</b> exibido com <code>{{ linha.dias_aberto }}</code> numa tag colorida pela cor do semáforo.</div>
     </details>
@@ -1897,7 +1846,7 @@ def gestao_chamado_excluir(request, pk):
     <details class="pergunta">
       <summary>"Quais CRUDs o sistema tem?"</summary>
       <div class="resp">Chamados (abrir/editar/excluir), <b>Banners</b>, <b>Bairros</b>, <b>Serviços</b>,
-      <b>Categorias</b>, <b>Colaboradores</b>, <b>Foto de perfil</b> e os <b>prazos globais</b> do semáforo, além de
+      <b>Categorias</b>, <b>Colaboradores</b> e os <b>prazos globais</b> do semáforo, além de
       Cadastro/Login, troca/recuperação de senha e Notificações. Todos têm card próprio em cada integrante.</div>
     </details>
 
@@ -2044,15 +1993,6 @@ def gestao_chamado_excluir(request, pk):
     </details>
 
     <details class="pergunta">
-      <summary>"Como funciona a foto de perfil e onde ela é guardada?"</summary>
-      <div class="resp"><b>Bruno:</b> <code>upload_foto_perfil</code> (<code>views_root.py</code>) faz o upload com
-      <code>salvar_foto_upload</code> (Cloudinary ou disco) e, conforme o tipo do usuário, chama
-      <code>db.atualizar_foto_perfil("cidadao"/"servidor", pk, url)</code>. <b>Rafael:</b> isso é um
-      <code>UPDATE ... SET foto_perfil = %s</code> na tabela certa (<code>db/senha.py</code>); remover é
-      <code>SET foto_perfil = NULL</code>. A foto é só uma <b>URL</b> na coluna <code>foto_perfil</code>.</div>
-    </details>
-
-    <details class="pergunta">
       <summary>"O que é o catálogo público de serviços (<code>/servicos/</code>)?"</summary>
       <div class="resp"><b>Bruno:</b> a view <code>catalogo_servicos</code> (<code>views_root.py</code>) é pública e mostra as
       categorias com seus serviços ativos. Usa a mesma função <code>db.listar_categorias_com_servicos()</code> da home,
@@ -2163,7 +2103,6 @@ def gestao_chamado_excluir(request, pk):
       <tr><td>Colaboradores</td><td>servidor CRUD</td><td>gestao_colaborador_*</td><td>gestao/colaboradores.html</td></tr>
       <tr><td>Estatísticas</td><td>vw_estatisticas_chamados</td><td>gestao_estatisticas</td><td>gestao/estatisticas.html</td></tr>
       <tr><td>Excluir chamado</td><td>set_config + DELETE cascata</td><td>gestao_chamado_excluir</td><td>botão na tabela</td></tr>
-      <tr><td>Foto de perfil</td><td>db/senha.py atualizar_foto_perfil / remover_foto_perfil</td><td>views_root.upload_foto_perfil / excluir_foto_perfil</td><td>perfil (header)</td></tr>
       <tr><td>Catálogo público</td><td>db/catalogo.py listar_categorias_com_servicos</td><td>views_root.catalogo_servicos</td><td>public/catalogo_servicos.html</td></tr>
       <tr><td>Trocar senha (1º acesso)</td><td>db/senha.py atualizar_senha_usuario</td><td>views_auth.troca_senha_obrigatoria_view</td><td>auth/troca_senha_obrigatoria.html</td></tr>
       <tr><td>Recuperar / Redefinir senha</td><td>db/senha.py buscar_cidadao_para_reset / atualizar_senha_usuario</td><td>views_auth.recuperar_senha_view · redefinir_senha_view</td><td>auth/recuperar_senha.html · auth/redefinir_senha.html</td></tr>
