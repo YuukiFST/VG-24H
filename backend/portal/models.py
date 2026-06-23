@@ -58,9 +58,6 @@ class Secretaria(models.Model):
         managed = False  # tabela vem do meu SQL
         db_table = "secretaria"
 
-    def __str__(self):
-        return self.nome
-
 
 class CategoriaServico(models.Model):
     """Agrupa os servicos por area (ex: Infraestrutura, Mobilidade Urbana).
@@ -181,9 +178,6 @@ class Cidadao(models.Model):
         managed = False
         db_table = "cidadao"
 
-    def __str__(self):
-        return self.nome_completo
-
 
 class Servidor(models.Model):
     """Colaboradores e gestores da prefeitura (o pessoal interno).
@@ -212,9 +206,6 @@ class Servidor(models.Model):
     class Meta:
         managed = False
         db_table = "servidor"
-
-    def __str__(self):
-        return self.nome_completo
 
 
 class Chamado(models.Model):
@@ -356,6 +347,3 @@ class BannerPublicacao(models.Model):
         db_table = "banner_publicacao"
         # ordena por ordem e, em empate, mostra o mais recente primeiro
         ordering = ["ordem", "-dt_criacao"]
-
-    def __str__(self):
-        return self.titulo
