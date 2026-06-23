@@ -8,6 +8,18 @@ from django.utils import timezone
 # _validar_tabela checa se o nome da tabela eh permitido (uso quando preciso interpolar nome de tabela na query)
 from portal.db._shared import _validar_tabela
 
+# As 3 contagens do semaforo (no_prazo, atencao, critico) sao identicas nas duas
+# funcoes de stats abaixo, entao deixo a expressao numa constante so. Cada CASE
+# usa um %s pro "now" (4 no total: amarelo, amarelo+vermelho, vermelho). A
+# constante termina sem virgula/espaco final pra cada call site emendar do seu
+# jeito (um segue com " FROM", o outro com ", COUNT(*)").
+_SEMAFORO_CASE_COLUNAS = (
+    "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) < make_interval(days := cfg.prazo_amarelo_dias) THEN 1 ELSE 0 END), 0), "
+    "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := cfg.prazo_amarelo_dias) "
+    "    AND (%s - c.dt_abertura) < make_interval(days := cfg.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0), "
+    "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := cfg.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0)"
+)
+
 
 def cor_semaforo(dt_abertura, prazo_amarelo_dias, prazo_vermelho_dias):
     """Classifica a urgencia do chamado com base nos prazos do servico.
@@ -46,13 +58,9 @@ def calcular_stats_semaforo(cidadao_id=None):
 
     sql = (
         "SELECT "
-        # no_prazo: conto os chamados onde (agora - abertura) ainda eh menor que o prazo amarelo
-        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) < make_interval(days := cfg.prazo_amarelo_dias) THEN 1 ELSE 0 END), 0), "
-        # atencao: passou do amarelo mas ainda nao chegou no vermelho
-        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := cfg.prazo_amarelo_dias) "
-        "    AND (%s - c.dt_abertura) < make_interval(days := cfg.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0), "
-        # critico: ja passou ou bateu o prazo vermelho
-        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := cfg.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0) "
+        # as 3 contagens do semaforo (no_prazo, atencao, critico); ver _SEMAFORO_CASE_COLUNAS
+        + _SEMAFORO_CASE_COLUNAS +
+        " "
         "FROM chamado c "
         # CROSS JOIN com a config (que eh linha unica) pra ter os prazos disponiveis em cada linha
         "CROSS JOIN configuracao_semaforo cfg "
@@ -79,10 +87,8 @@ def calcular_stats_semaforo_por_servico():
         # agrupado por servico, entao trago id e nome do servico
         "  s.id_servico, s.nome, "
         # mesmas 3 contagens do semaforo de antes (no prazo, atencao, critico)
-        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) < make_interval(days := cfg.prazo_amarelo_dias) THEN 1 ELSE 0 END), 0), "
-        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := cfg.prazo_amarelo_dias) "
-        "    AND (%s - c.dt_abertura) < make_interval(days := cfg.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0), "
-        "  COALESCE(SUM(CASE WHEN (%s - c.dt_abertura) >= make_interval(days := cfg.prazo_vermelho_dias) THEN 1 ELSE 0 END), 0), "
+        + _SEMAFORO_CASE_COLUNAS +
+        ", "
         # total geral de chamados do servico
         "  COUNT(*) "
         "FROM chamado c "
