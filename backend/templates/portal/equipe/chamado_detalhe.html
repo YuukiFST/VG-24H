@@ -200,7 +200,7 @@
         <div class="info-row">
           <span class="info-label">Status</span>
           <span class="info-value">
-            <span class="br-tag count vg-tag-fixed {% with s=sigla_status|lower %}{% if s == 'ab' %}info{% elif s == 'ea' %}warning{% elif s == 'ee' %}ee-status{% elif s == 'co' %}success{% elif s == 'ca' %}danger{% endif %}{% endwith %}">{{ ch.status_atual.descricao }}</span>
+            {{ ch.status_atual.descricao }}
           </span>
         </div>
         <div class="info-row">
@@ -233,7 +233,7 @@
       <div class="ticket-info-card">
         <h2><i class="fas fa-route mr-2" style="color:var(--vg-primary);" aria-hidden="true"></i> Histórico de Status</h2>
         <div class="timeline">
-          {% for h in historicos %}
+          {% for h in historico_status %}
             <div class="timeline-item">
               <div class="timeline-dot"><i class="fas fa-check" aria-hidden="true"></i></div>
               <div class="timeline-content">

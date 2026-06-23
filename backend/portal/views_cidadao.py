@@ -197,6 +197,13 @@ def cidadao_chamado_detalhe(request, pk):
 
     # observacoes = os registros do historico que tem texto em observacao
     observacoes = [h for h in historicos if h.observacao]
+    # historico_status = so mudancas reais de status (pula observacoes que reusam o mesmo status)
+    historico_status = []
+    prev_id = None
+    for h in historicos:
+        if h.id_status.pk != prev_id or h.observacao:
+            historico_status.append(h)
+            prev_id = h.id_status.pk
 
     return render(
         request,
@@ -204,6 +211,7 @@ def cidadao_chamado_detalhe(request, pk):
         {
             "ch": ch,
             "historicos": historicos,
+            "historico_status": historico_status,
             "fotos": fotos,
             "observacoes": observacoes,
             "sigla_status": ts,

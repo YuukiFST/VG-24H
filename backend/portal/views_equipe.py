@@ -210,6 +210,13 @@ def equipe_chamado_detalhe(request, pk):
     historicos = db.buscar_historicos(pk)
     fotos = db.buscar_fotos(pk)
     observacoes = [h for h in historicos if h.observacao]
+    # historico_status = so mudancas reais de status (pula observacoes que reusam o mesmo status)
+    historico_status = []
+    prev_id = None
+    for h in historicos:
+        if h.id_status.pk != prev_id or h.observacao:
+            historico_status.append(h)
+            prev_id = h.id_status.pk
 
     # ja deixo o form de status preenchido com o status e a resolucao atuais
     form_status = EquipeStatusForm(
@@ -243,6 +250,7 @@ def equipe_chamado_detalhe(request, pk):
             "pode_status": pode_status,
             "bloqueia_status_col": bloqueia_status_col,
             "historicos": historicos,
+            "historico_status": historico_status,
             "fotos": fotos,
             "observacoes": observacoes,
             "form_status": form_status,
