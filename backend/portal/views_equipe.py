@@ -358,7 +358,7 @@ def equipe_chamado_foto(request, pk):
             # o service pode estourar ValueError (ex: tipo invalido); ai eu
             # mostro o erro. se nao estourar, cai no else e avisa sucesso
             try:
-                chamado_service.adicionar_foto(pk, request.FILES["foto"], request=request)
+                chamado_service.adicionar_foto(pk, request.FILES["foto"])
             except ValueError as e:
                 messages.error(request, str(e))
             else:

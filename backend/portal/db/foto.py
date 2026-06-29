@@ -17,7 +17,7 @@ def buscar_fotos(chamado_pk):
     """Pega as fotos de um chamado, ordenadas pela data de upload.
 
     Lembrete: a foto em si nao fica no banco, o que eu guardo eh a URL dela
-    (pode ser do Cloudinary ou do filesystem local). O banco so tem o link.
+    (do Cloudinary). O banco so tem o link.
     """
     with connection.cursor() as cursor:
         # filtro pelas fotos do chamado (id_chamado = %s, parametrizado) e

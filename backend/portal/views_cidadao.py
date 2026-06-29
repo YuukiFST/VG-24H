@@ -149,7 +149,6 @@ def cidadao_chamado_novo(request):
                     descricao=d["descricao"],
                     ponto_referencia=d.get("ponto_de_referencia"),
                     foto_file=request.FILES.get("foto"),
-                    request=request,
                 )
             except ValueError as e:
                 # deu ruim: re-renderizo o form com a msg de erro e os selects
@@ -262,7 +261,7 @@ def cidadao_chamado_foto(request, pk):
     # so sigo se o form ta ok E veio mesmo um arquivo de foto
     if form_f.is_valid() and request.FILES.get("foto"):
         try:
-            chamado_service.adicionar_foto(pk, request.FILES["foto"], request=request)
+            chamado_service.adicionar_foto(pk, request.FILES["foto"])
         except ValueError as e:
             # foto invalida (tipo/tamanho) -> service estoura ValueError
             messages.error(request, str(e))

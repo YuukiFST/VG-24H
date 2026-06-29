@@ -4,16 +4,13 @@ utils.py — minhas funcoes auxiliares do Portal VG 24H
 Aqui eu junto as funcoes soltas que varias views minhas usam:
 - escape_like: escapar os caracteres chatos do LIKE/ILIKE
 - proximo_protocolo: gerar numero de protocolo de forma atomica
-- salvar_foto_upload: salvar foto no Cloudinary ou no disco
+- salvar_foto_upload: salvar foto no Cloudinary
 """
 
-# os e uuid pra mexer com extensao de arquivo e gerar nome unico
+# os pra ler a env do Cloudinary
 import os
-import uuid
 
-# settings/storage pra salvar foto local, connection pro SQL puro, timezone pras datas
-from django.conf import settings
-from django.core.files.storage import default_storage
+# connection pro SQL puro, timezone pras datas
 from django.db import connection
 from django.utils import timezone
 from django.utils.timezone import is_naive, make_aware
@@ -94,58 +91,44 @@ def formatar_dias_em_aberto(dt_abertura):
     return f"{delta.days} dia(s)"
 
 
-def salvar_foto_upload(arquivo, request=None):
-    """Salvo a foto no Cloudinary (se tiver configurado) ou no disco local.
+def salvar_foto_upload(arquivo):
+    """Salvo a foto no Cloudinary e devolvo a URL segura (https).
 
-    Se a env CLOUDINARY_URL existir eu mando pro Cloudinary e devolvo a URL
-    segura (https). Se nao, eu salvo aqui mesmo em
-    MEDIA_ROOT/chamados/{uuid}.{ext} e devolvo a URL.
+    Exijo a env CLOUDINARY_URL: mando a imagem pro Cloudinary e devolvo a
+    secure_url (https).
 
-    Solto ValueError se nao vier arquivo, ou se o upload falhar (timeout,
-    rede, erro da API). Solto ImportError se o Cloudinary ta configurado
-    mas o pacote nao ta instalado.
+    Solto ValueError se nao vier arquivo, se o Cloudinary nao estiver
+    configurado, ou se o upload falhar (timeout, rede, erro da API). Solto
+    ImportError se o pacote cloudinary nao estiver instalado.
     """
     # sem arquivo nem comeco
     if not arquivo:
         raise ValueError("Foto obrigatoria.")
 
-    # se essa env existe eu vou pelo caminho do Cloudinary
+    # Cloudinary e obrigatorio: sem a env nao tem onde salvar a foto
     cu = os.environ.get("CLOUDINARY_URL")
-    if cu:
-        try:
-            # importo aqui dentro pra so exigir o pacote quando realmente for usar
-            import cloudinary
-            import cloudinary.uploader
-        except ImportError as exc:
-            # ta configurado mas nao instalado: aviso como instalar
-            raise ImportError(
-                "Cloudinary nao instalado. Execute: pip install cloudinary"
-            ) from exc
-        # configuro o cloudinary com a url que veio da env
-        cloudinary.config(cloudinary_url=cu)
-        try:
-            # mando a imagem pra pasta vg_portal, com 30s de timeout
-            r = cloudinary.uploader.upload(
-                arquivo, folder="vg_portal", resource_type="image", timeout=30
-            )
-            # devolvo o link https que o cloudinary me deu
-            return r["secure_url"]
-        except Exception as e:
-            # qualquer erro no upload vira ValueError com a mensagem (ou uma generica)
-            msg = str(e) or "Erro ao fazer upload da foto."
-            raise ValueError(msg) from e
+    if not cu:
+        raise ValueError("CLOUDINARY_URL nao configurado.")
 
-    # Fallback: nao tem cloudinary, salvo local com nome unico (UUID).
-    # pego a extensao do arquivo original em minusculo
-    ext_raw = os.path.splitext(arquivo.name)[1].lower()
-    # so aceito esses formatos de imagem, qualquer outra coisa eu forco .jpg
-    ext = ext_raw if ext_raw in (".jpg", ".jpeg", ".png", ".gif", ".webp") else ".jpg"
-    # nome unico com uuid pra duas fotos nunca se atropelarem
-    nome = f"chamados/{uuid.uuid4().hex}{ext}"
-    # o storage do Django salva e me devolve o caminho que ficou de fato
-    caminho = default_storage.save(nome, arquivo)
-    # se eu tenho o request eu monto a URL absoluta (com dominio)
-    if request:
-        return request.build_absolute_uri(f"{settings.MEDIA_URL}{caminho}")
-    # sem request eu devolvo so a URL relativa
-    return f"{settings.MEDIA_URL}{caminho}"
+    try:
+        # importo aqui dentro pra so exigir o pacote quando realmente for usar
+        import cloudinary
+        import cloudinary.uploader
+    except ImportError as exc:
+        # ta configurado mas nao instalado: aviso como instalar
+        raise ImportError(
+            "Cloudinary nao instalado. Execute: pip install cloudinary"
+        ) from exc
+    # configuro o cloudinary com a url que veio da env
+    cloudinary.config(cloudinary_url=cu)
+    try:
+        # mando a imagem pra pasta vg_portal, com 30s de timeout
+        r = cloudinary.uploader.upload(
+            arquivo, folder="vg_portal", resource_type="image", timeout=30
+        )
+        # devolvo o link https que o cloudinary me deu
+        return r["secure_url"]
+    except Exception as e:
+        # qualquer erro no upload vira ValueError com a mensagem (ou uma generica)
+        msg = str(e) or "Erro ao fazer upload da foto."
+        raise ValueError(msg) from e

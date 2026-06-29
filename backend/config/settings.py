@@ -129,12 +129,6 @@ if not DEBUG:
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ============================================================================
-# MIDIA (uploads de fotos que os usuarios mandam)
-# ============================================================================
-MEDIA_URL = "media/"                              # prefixo da URL dos uploads
-MEDIA_ROOT = BASE_DIR / "media"                   # pasta no disco onde salvo as fotos
-
-# ============================================================================
 # EMAIL
 # ============================================================================
 # de quem sai o email; se nao definir no .env uso um remetente fake
