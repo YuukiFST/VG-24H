@@ -200,12 +200,12 @@ CREATE TABLE chamado (
 -- ============================================================
 -- Entidade 9: foto_chamado (fotos anexadas ao chamado)
 -- ============================================================
--- FK → chamado. As URLs sao armazenadas (Cloudinary ou local).
+-- FK → chamado. As URLs sao armazenadas (Cloudinary).
 -- Trigger de integridade (R1→T em 04_rules.sql): bloqueia INSERT se chamado estiver CO/CA.
 -- ============================================================
 CREATE TABLE foto_chamado (
     id_foto    SERIAL PRIMARY KEY,
-    url_foto   VARCHAR(200) NOT NULL,             -- URL da foto (Cloudinary ou media local)
+    url_foto   VARCHAR(200) NOT NULL,             -- URL da foto (Cloudinary)
     dt_upload  TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     id_chamado INTEGER NOT NULL REFERENCES chamado (id_chamado)  -- FK → chamado
 );

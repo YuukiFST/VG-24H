@@ -249,7 +249,7 @@ class Chamado(models.Model):
 
 
 class FotoChamado(models.Model):
-    """Fotos anexadas aos chamados. Guardo so a URL (Cloudinary ou local).
+    """Fotos anexadas aos chamados. Guardo so a URL (Cloudinary).
 
     Tem um trigger de integridade no banco que BLOQUEIA o INSERT de foto
     se o chamado ja estiver concluido ou cancelado. Ou seja, nao da pra

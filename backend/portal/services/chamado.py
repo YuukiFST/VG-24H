@@ -8,7 +8,7 @@ from portal import db
 from portal.utils import proximo_protocolo, salvar_foto_upload
 
 
-def criar_novo_chamado(cidadao, servico, bairro, descricao, ponto_referencia, foto_file, request=None):
+def criar_novo_chamado(cidadao, servico, bairro, descricao, ponto_referencia, foto_file):
     """Cria o chamado com a foto e um protocolo unico.
 
     Faco o INSERT do chamado e da foto dentro de uma transacao so. Se dois
@@ -17,7 +17,7 @@ def criar_novo_chamado(cidadao, servico, bairro, descricao, ponto_referencia, fo
     Depois do INSERT, o Trigger 1 (AFTER INSERT) cria sozinho o primeiro
     registro la em historico_chamado (o status inicial AB).
     """
-    url = salvar_foto_upload(foto_file, request=request)  # subo a foto antes de tudo
+    url = salvar_foto_upload(foto_file)  # subo a foto antes de tudo
     now = timezone.now()  # mesma hora pra abertura e atualizacao
     protocolo = proximo_protocolo()  # primeiro palpite de protocolo
     chamado_id = None  # guardo aqui pra saber se o INSERT do chamado ja passou
@@ -133,8 +133,8 @@ def cancelar_chamado_cidadao(chamado_id, motivo):
             )
 
 
-def adicionar_foto(chamado_id, arquivo_foto, request=None):
+def adicionar_foto(chamado_id, arquivo_foto):
     """Sobe mais uma foto e anexa ao chamado."""
-    url = salvar_foto_upload(arquivo_foto, request=request)  # faz o upload
+    url = salvar_foto_upload(arquivo_foto)  # faz o upload
     db.inserir_foto_chamado(chamado_id, url)  # grava a URL via helper
     return url

@@ -540,7 +540,7 @@ def gestao_banner_novo(request):
     """Cria um banner novo com upload de imagem.
 
     A ordem eu deixo o db calcular (MAX + 1), entao o banner novo cai no fim
-    do carrossel. A imagem pode ir pro Cloudinary ou pro disco local. Limite
+    do carrossel. A imagem vai pro Cloudinary. Limite
     de 5MB. Resolucao recomendada 1200x400 (3:1).
     """
     if request.method == "POST":
