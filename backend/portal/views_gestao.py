@@ -259,23 +259,14 @@ def gestao_categoria_edit(request, pk):
 # ------------------------------------------------------------------
 
 @perfis("GES")
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET"])
 def gestao_servicos(request):
-    """Lista os servicos e cria novos (mesma pagina).
+    """Lista os servicos.
 
     Servico eh o que o cidadao escolhe quando abre chamado (ex: "Tapa-buraco").
     Cada um fica numa categoria e tem prazos pro semaforo (amarelo/vermelho
     em dias).
     """
-    if request.method == "POST":
-        # mesma logica do servico_novo, so que aqui a lista ja vem junto
-        form = ServicoForm(request.POST)
-        if form.is_valid():
-            d = form.cleaned_data
-            db.inserir_servico(d["nome"], d.get("descricao"), d["id_categoria"].pk)
-            messages.success(request, "Serviço criado.")
-        return redirect("portal:gestao_servicos")
-
     # GET: form vazio + lista de servicos (com a categoria) + categorias pro select
     form = ServicoForm()
     lista = db.listar_servicos_com_categoria()
