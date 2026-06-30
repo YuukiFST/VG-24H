@@ -1,7 +1,7 @@
 {% extends "portal/base.html" %}
 {# ========================================================================== #}
 {# NOTIFICACOES (Cidadao) — lista e exclui notificacoes do cidadao logado   #}
-{# Vem de views_cidadao.cidadao_notificacoes(); contexto so tem 'lista'.    #}
+{# Vem de views_cidadao.cidadao_notificacoes(); contexto tem 'page_obj'.    #}
 {# [!] quem cria notificacao eh o Trigger 2B (mudanca de status); aqui eu   #}
 {#     so vejo e deleto. A view ja marca todas como lidas ao abrir a pagina.#}
 {# [!] excluir eh um POST com PRG (redirect depois) pra nao reenviar no F5. #}
@@ -12,9 +12,9 @@
   <h1 class="h3 mb-4x">Notificações</h1>
 
   {# ====== LISTA DE NOTIFICACOES ====== #}
-  {# componente br-list do GOV.br; itero 'lista' (notificacoes so deste cidadao) #}
+  {# componente br-list do GOV.br; itero 'page_obj' (paginado) #}
   <div class="br-list">
-    {% for n in lista %}
+    {% for n in page_obj %}
     <div class="br-item">
       <div class="row align-items-center">
         <div class="col">
@@ -52,5 +52,42 @@
     </div>
     {% endfor %}
   </div>
+
+  {# ====== PAGINACAO (GOV.BR br-pagination) ====== #}
+  {# so mostra se tiver mais de uma pagina #}
+  {% if page_obj.paginator.num_pages > 1 %}
+  {# [!] core-init.min.js auto-inicializa BRPagination pelo seletor .br-pagination #}
+  <nav class="br-pagination mt-4" aria-label="Paginação" data-total="{{ page_obj.paginator.num_pages }}" data-current="{{ page_obj.number }}">
+    <ul>
+      <li>
+        {% if page_obj.has_previous %}
+        <a class="br-button circle" href="?page={{ page_obj.previous_page_number }}" aria-label="Voltar página">
+          <i class="fas fa-angle-left"></i>
+        </a>
+        {% else %}
+        <button class="br-button circle" data-previous-page aria-label="Voltar página" disabled>
+          <i class="fas fa-angle-left"></i>
+        </button>
+        {% endif %}
+      </li>
+      {% for num in page_obj.paginator.page_range %}
+      <li>
+        <a class="page {% if num == page_obj.number %}active{% endif %}" href="?page={{ num }}" aria-label="Página {{ num }}">{{ num }}</a>
+      </li>
+      {% endfor %}
+      <li>
+        {% if page_obj.has_next %}
+        <a class="br-button circle" href="?page={{ page_obj.next_page_number }}" aria-label="Página seguinte">
+          <i class="fas fa-angle-right"></i>
+        </a>
+        {% else %}
+        <button class="br-button circle" data-next-page aria-label="Página seguinte" disabled>
+          <i class="fas fa-angle-right"></i>
+        </button>
+        {% endif %}
+      </li>
+    </ul>
+  </nav>
+  {% endif %}
 </div>
 {% endblock %}

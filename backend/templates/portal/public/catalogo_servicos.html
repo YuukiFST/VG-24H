@@ -7,6 +7,7 @@
 <li class="crumb" data-active="active"><i class="icon fas fa-chevron-right" aria-hidden="true"></i><span tabindex="0" aria-current="page">Categorias e serviços</span></li>
 {% endblock %}
 {% block content %}
+<div class="container-lg py-4">
   <h1 class="mb-3x">Categorias e serviços oferecidos</h1>
   {# se veio uma busca (q), mostro pra qual termo sao os resultados + link pra limpar #}
   {% if q %}
@@ -40,4 +41,5 @@
   {% empty %}
   <p>{% if q %}Nenhum serviço encontrado para essa busca.{% else %}Nenhuma categoria cadastrada.{% endif %}</p>
   {% endfor %}
+</div>
 {% endblock %}
