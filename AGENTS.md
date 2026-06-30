@@ -1,103 +1,3 @@
-# CLAUDE.md
-
-Behavioral guidelines to reduce LLM coding mistakes. Merge with project instructions.
-
-**Tradeoff:** Bias caution over speed. Trivial tasks → use judgment.
-
-## 0. Output Style
-
-- Thorough reasoning, concise output.
-- No sycophantic openers or closing fluff. No emojis. No em-dashes.
-- Read existing files before writing. Don't re-read unless changed.
-- Skip files >100KB unless required.
-
-## 1. Think Before Coding
-
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
-
-- State assumptions explicitly. Uncertain → ask.
-- Multiple interpretations → present them, don't pick silently.
-- Simpler approach exists → say so. Push back when warranted.
-- Unclear → stop, name what's confusing, ask.
-- Never guess APIs, versions, flags, commit SHAs, package names. Verify via code/docs before asserting.
-
-## 2. Simplicity First
-
-**Minimum code that solves the problem. Nothing speculative.**
-
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility"/"configurability" unrequested.
-- No error handling for impossible scenarios.
-- 200 lines that could be 50 → rewrite.
-
-Test: "Would a senior engineer say this is overcomplicated?" Yes → simplify.
-
-## 3. Surgical Changes
-
-**Touch only what you must. Clean only your own mess.**
-
-Editing existing code:
-- Don't "improve" adjacent code, comments, formatting.
-- Don't refactor what isn't broken.
-- Match existing style.
-- Unrelated dead code → mention, don't delete.
-
-Orphans from your changes:
-- Remove imports/vars/fns YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
-
-Test: every changed line traces directly to user request.
-
-## 4. Goal-Driven Execution
-
-**Define success criteria. Loop until verified.**
-
-Convert tasks → verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, make them pass"
-- "Fix the bug" → "Write test that reproduces it, make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
-
-Multi-step → brief plan:
-
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-```
-
-Strong criteria → loop independently. Weak ("make it work") → constant clarification.
-
----
-
-**Working if:** fewer unnecessary diff lines, fewer overcomplication rewrites, clarifying questions before mistakes.
-
-## 5. Project Doc Structure (Token-Efficient)
-
-Source: nadimtuhin/claude-token-optimizer. Target: ≤800 tokens loaded at startup, rest lazy.
-
-**Layout per project:**
-```
-CLAUDE.md / AGENTS.md       # entry point only — ≤800 tokens
-.claudeignore               # excludes archive/legacy docs
-.claude/
-  COMMON_MISTAKES.md        # top 5 critical bugs only
-  QUICK_START.md            # daily commands
-  ARCHITECTURE_MAP.md       # system layout
-  completions/              # done tasks (0 tokens until read)
-  sessions/                 # historical work (0 tokens)
-docs/
-  INDEX.md
-  learnings/                # topic files, loaded on request
-  archive/                  # deprecated (ignored)
-```
-
-**Rules:**
-- Entry file references topic files by path; agent loads on demand.
-- `.claudeignore` MUST exclude `archive/`, old wikis, generated docs.
-- `COMMON_MISTAKES.md` — only log bugs that took >1h to debug. Keep ≤5 entries; prune oldest.
-- Never inline content from topic files into entry. Link instead.
-- Initial context budget: ~1300 tokens total across entry + 3 essentials.
-
 ## 6. Gov.br Design System Gatekeeper (Always Active)
 
 Block any frontend change that lacks explicit backing from the GOV/ reference directory. No reference, no change.
@@ -141,10 +41,10 @@ If **NO** to any → **block the change**.
 If all gates pass: implement exactly matching reference structure. No invented classes, no custom CSS when GOV utility exists.
 If blocked:
 ```
-[GOV-DS GATEKEEPER] Modificação bloqueada.
-Motivo: [what reference was missing]
-Buscado em: [GOV/ paths searched]
-Recomendação: [closest DS pattern + suggestion]
+[GOV-DS GATEKEEPER] Modification blocked.
+Reason: [what reference was missing]
+Searched in: [GOV/ paths searched]
+Recommendation: [closest DS pattern + suggestion]
 ```
 
 ### UX Writing Rule (Always Active)
@@ -157,11 +57,19 @@ Rules: labels max 2 words (3 if unavoidable), sentence case. Buttons: all caps, 
 
 ### Key GOV/ Structure
 
+**Components (34 total — see GOV-MAP.md for full list)** — generic reference:
+
 | Concern | Path |
 |---|---|
-| Any component | `GOV/components/<name>/<name>-dev.md` |
+| Component dev reference | `GOV/components/<name>/<name>-dev.md` |
 | Component overview | `GOV/components/<name>/<name>.md` |
 | Component SCSS | `GOV/src/components/<name>/_<name>.scss` |
+| Component visual overview | `GOV/components/visao-geral/visao-geral.html` |
+
+**Visual Foundations (Fundamentos Visuais):**
+
+| Foundation | Dev Reference |
+|---|---|
 | Colors | `GOV/fundamentos-visuais/cores/cores-dev.md` |
 | Typography | `GOV/fundamentos-visuais/tipografia/tipografia-dev.md` |
 | Spacing | `GOV/fundamentos-visuais/espacamento/espacamento-dev.md` |
@@ -170,13 +78,78 @@ Rules: labels max 2 words (3 if unavoidable), sentence case. Buttons: all caps, 
 | Icons | `GOV/fundamentos-visuais/iconografia/iconografia-dev.md` |
 | Motion | `GOV/fundamentos-visuais/movimento/movimento-dev.md` |
 | Surface | `GOV/fundamentos-visuais/superficie/superficie-dev.md` |
-| Form pattern | `GOV/padroes/design/formulario.md` |
-| Navigation pattern | `GOV/padroes/design/navegacao.md` |
-| UX Writing | `GOV/padroes/writing/` |
-| Template base | `GOV/templates/base/base-dev.md` |
+
+**Design Patterns (Padrões de Design):**
+
+| Pattern | Path |
+|---|---|
+| Form | `GOV/padroes/design/formulario.md` |
+| Navigation | `GOV/padroes/design/navegacao.md` |
+| Help & Communication | `GOV/padroes/design/ajuda-comunicacao.md` |
+| Density | `GOV/padroes/design/densidade.md` |
+| Content Overflow | `GOV/padroes/design/contentoverflow.md` |
+| Dropdown | `GOV/padroes/design/dropdown.md` |
+| Empty States | `GOV/padroes/design/emptystates.md` |
+| Graphs | `GOV/padroes/design/grafico.md` |
+| Onboarding | `GOV/padroes/design/onboarding.md` |
+| Collapse | `GOV/padroes/design/collapse.md` |
+
+**UX Writing:**
+
+| Resource | Path |
+|---|---|
+| Principles | `GOV/padroes/writing/principios-writing.md` |
+| Microcopy Rules | `GOV/padroes/writing/microcopy.md` |
+
+**Templates:**
+
+| Template | Dev Reference |
+|---|---|
+| Base layout | `GOV/templates/base/base-dev.md` |
 | Error pages | `GOV/templates/erro/erro-dev.md` |
-| JS coding | `GOV/codificacao-javascript/codificacao-javascript.md` |
-| Component construction | `GOV/construcao-de-componentes/construcao-de-componentes.md` |
+
+**Engineering Guides:**
+
+| Guide | Path |
+|---|---|
+| Component Construction | `GOV/construcao-de-componentes/construcao-de-componentes.md` |
+| JavaScript Coding | `GOV/codificacao-javascript/codificacao-javascript.md` |
+| Sass Coding | `GOV/codificacao-sass/codificacao-sass.md` |
+| Using Sass | `GOV/utilizando-sass/utilizando-sass.md` |
+| Installation | `GOV/instalacao/instalacao.md` |
+| Lite Version | `GOV/versao-lite/versao-lite.md` |
+| Vendors | `GOV/vendors/vendors.md` |
+| PurgeCSS | `GOV/purgecss/purgecss.md` |
+
+**CSS Utilities (Utilitários):**
+
+| Category | Path |
+|---|---|
+| Colors | `GOV/utilitarios/css/cores/` |
+| Typography | `GOV/utilitarios/css/tipografia/` |
+| Spacing | `GOV/utilitarios/css/espacamento/` |
+| Grid | `GOV/utilitarios/css/grid/` |
+| Flexbox | `GOV/utilitarios/css/flexbox/` |
+| Display | `GOV/utilitarios/css/display/` |
+| Elevation | `GOV/utilitarios/css/elevacao/` |
+| Borders | `GOV/utilitarios/css/bordas/` |
+| Rounding | `GOV/utilitarios/css/arredondamento/` |
+| Overflow | `GOV/utilitarios/css/overflow/` |
+| Motion | `GOV/utilitarios/css/movimento/` |
+| Text | `GOV/utilitarios/css/textos/` |
+
+**Core SCSS Architecture:**
+
+| File | Purpose |
+|---|---|
+| `GOV/src/core.scss` | Main entry point |
+| `GOV/src/partial/scss/_configs.scss` | All design tokens |
+| `GOV/src/partial/scss/_base.scss` | Reset & base styles |
+| `GOV/src/partial/scss/_components.scss` | All component styles |
+| `GOV/src/partial/scss/_templates.scss` | Template styles |
+| `GOV/src/partial/scss/_utilities.scss` | Utility classes |
+| `GOV/src/partial/scss/_mixins.scss` | Sass mixins |
+| `GOV/src/partial/scss/_functions.scss` | Sass functions |
 
 Full map: `GOV-MAP.md` (project root)
 
@@ -190,24 +163,69 @@ Full map: `GOV-MAP.md` (project root)
 - Never instantiate JS components without documented pattern (`core.BRComponentName(...)`)
 - Never write button/input/label text without checking UX Writing rules
 
-## 7. Banco de Dados: Recursos Avancados Obrigatorios
+## 7. Database: Mandatory Advanced Features
 
-O projeto DEVE ter no banco de dados recursos avancados do PostgreSQL. Minimo obrigatorio:
+The project MUST have advanced PostgreSQL features in the database. Minimum required:
 
-- **1 trigger** (ex.: auditoria, atualizacao automatica de timestamps, validacao)
-- **1 view** (ex.: relatorio, consolidacao, camada de abstracao de consultas)
-- **1 stored procedure / function** (ex.: regra de negocio no banco, calculo, insercao atomica)
+- **1 trigger** (e.g.: audit, automatic timestamp updates, validation)
+- **1 view** (e.g.: report, consolidation, query abstraction layer)
+- **1 stored procedure / function** (e.g.: business rule in DB, calculation, atomic insert)
 
-Nao remover ou desativar esses recursos sem substituir por equivalente em codigo com mesma garantia de consistencia.
+Do not remove or disable these features without replacing them with equivalent code that provides the same consistency guarantees.
 
-## 8. Portabilidade de Banco de Dados
+## 8. Database Portability
 
-O projeto atualmente usa **Neon** (PostgreSQL gerenciado em nuvem) como banco de dados, mas DEVE ser compativel com migracao futura para o banco da prefeitura (ambiente on-premise ou outro fornecedor).
+The project currently uses **Neon** (managed cloud PostgreSQL) as the database, but MUST be compatible with future migration to the city hall's database (on-premise or other provider).
 
-### Regras
+### Rules
 
-- Nao usar recursos exclusivos do Neon (ex.: extensoes, funcoes, APIs proprietarias). Verificar antes de adotar qualquer extensao.
-- Toda query SQL deve ser PostgreSQL padrao (portavel entre versoes 13+).
-- Se for necessario usar extensao especifica (ex.: pgcrypto, pg_trgm), documentar no codigo e em `docs/learnings/dependencias-banco.md`.
-- Separar configuracao de conexao do codigo (via variaveis de ambiente). O schema de `DATABASE_URL` deve ser o padrao PostgreSQL (`postgresql://user:pass@host:port/db`).
-- Evitar functions/extension-only features no SQL de migracoes se houver alternativa padrao viavel.
+- Do not use Neon-exclusive features (extensions, functions, proprietary APIs). Check before adopting any extension.
+- All SQL queries must be standard PostgreSQL (portable across versions 13+).
+- If a specific extension is necessary (e.g.: pgcrypto, pg_trgm), document it in-code and in `docs/learnings/dependencias-banco.md`.
+- Keep connection config separate from code (via environment variables). The `DATABASE_URL` schema must be standard PostgreSQL (`postgresql://user:pass@host:port/db`).
+- Avoid functions/extension-only features in migration SQL when a standard alternative is available.
+
+## 9. Commit and Authorship Rules
+
+Commits MUST be separated by domain. Each commit uses the author matching the change type.
+
+| Domain | Author | Email |
+|---|---|---|
+| Frontend (HTML templates, CSS, JS, SCSS, ui) | YuukiFST | faustoyuuki@gmail.com |
+| Backend (Python, Django, views, services, models) | bruno-d | brunoodfonteles@gmail.com |
+| Database (SQL, migrations, DB models, schema) | RafaelPMarquesP | rafpereiramar@gmail.com |
+
+### Rules
+
+- Never mix frontend + backend + DB in the same commit. Atomic commits per domain.
+- Before each commit, configure the author locally:
+  ```
+  git -c user.name="Name" -c user.email="email" commit -m "tipo(escopo): mensagem"
+  ```
+  Or via `git config user.name` / `user.email` in the repository before committing.
+- The commit message must reflect only the commit's domain.
+- Commit messages must be in PT-BR following conventional commits format.
+- If the work involves multiple domains, create separate commits for each, starting with dependencies (DB → Backend → Frontend).
+
+## 10. Code Documentation for Academic Purposes
+
+All new code (Python, HTML, CSS, JS, SQL) MUST contain explanatory comments line by line or block by block, so that any team member can understand and explain the code during the project presentation.
+
+### General Rules
+
+- Document every function/method: purpose, parameters, return value, step-by-step logic.
+- Document HTML templates: purpose of each block/section, data flow, conditionals.
+- Document SQL: what each query/trigger/view/procedure does, tables involved, business rules.
+- Comments in PT-BR, didactic style (classroom language).
+- Detail level: enough for a teammate to read and explain without doubts.
+- Avoid obvious comments that merely repeat the code — focus on the "why" and context.
+
+### Frontend-Specific Rule (GOV/DS)
+
+- Comment CSS/SCSS: which component/element each rule styles and why.
+- **Whenever the GOV Design System justifies the decision, include it in the comment.**
+  Example: if a GOV class exists for accessibility reasons, mention it.
+  If GOV recommends a pattern for usability, performance, or visual consistency,
+  make that explicit in the comment.
+- This ensures that during the presentation the team member can say: "we used X because
+  the Padrao Digital de Governo defines Y, and that guarantees Z."
