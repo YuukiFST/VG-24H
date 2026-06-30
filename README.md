@@ -20,7 +20,7 @@ Este projeto é um trabalho original desenvolvido para a disciplina de Programa�
 A execução técnica, incluindo a arquitetura de sistemas, modelagem de dados (NeonDB), lógica de back-end (Django) e integração de interface, foi realizada integralmente pelos desenvolvedores:
 
 - Bruno Dias Fonteles
-- Fausto Yuuki Tadano Araújo Freire
+- Fausto Yuuki
 - Rafael Pereira Marques
 
 ---
