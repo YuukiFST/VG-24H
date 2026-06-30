@@ -31,6 +31,7 @@ revelar que o recurso existe.
 # imports do django + meus modulos (db = SQL puro, decorators, forms, e o
 # service que concentra a regra de negocio dos chamados)
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
@@ -351,8 +352,13 @@ def cidadao_notificacoes(request):
             messages.info(request, "Notificação removida.")
         return redirect("portal:cidadao_notificacoes")  # PRG depois do POST
 
+    # paginacao: 10 notificacoes por pagina
+    paginator = Paginator(lista, 10)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+
     return render(
         request,
         "portal/cidadao/notificacoes.html",
-        {"lista": lista},
+        {"page_obj": page_obj},
     )
