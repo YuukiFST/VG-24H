@@ -62,7 +62,7 @@ def buscar_servidor_por_email(email):
             "SELECT id_servidor, nome_completo, senha_hash, perfil, senha_temporaria "
             "FROM servidor "
             # LOWER pra email case-insensitive e so ativo
-            "WHERE LOWER(email) = %s AND ativo = TRUE",
+            "WHERE LOWER(email) = LOWER(%s) AND ativo = TRUE",
             [email],
         )
         row = cursor.fetchone()
