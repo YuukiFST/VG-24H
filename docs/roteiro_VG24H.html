@@ -576,7 +576,7 @@ cursor.execute(
           chamado. Faço isso com <code>JOIN LATERAL</code>: para cada chamado, rodo uma subconsulta que pega só o
           registro mais recente do histórico. É a consulta mais importante do projeto. Esse trecho fica num
           helper reutilizável, <code>sql_lateral_ultimo_status()</code>, usado pelas listagens do cidadão e da equipe."</div>
-          <div class="arquivo">backend/portal/db/_shared.py — sql_lateral_ultimo_status (~linha 74)</div>
+          <div class="arquivo">backend/portal/db/_shared.py — sql_lateral_ultimo_status (~linha 78)</div>
           <pre class="cod">FROM chamado c
 JOIN servico s ON c.id_servico = s.id_servico
 JOIN bairro b ON c.id_bairro = b.id_bairro
@@ -925,7 +925,7 @@ GROUP BY cat.nome, b.nome_bairro, s.sigla, s.descricao;</pre>
         <div class="crud-corpo">
           <div class="fala">"O dashboard de gráficos tem várias consultas: concluídos hoje, concluídos na semana,
           distribuição por status e top 10 bairros. Todas usam a subconsulta do último status."</div>
-          <div class="arquivo">backend/portal/db/stats.py — buscar_stats_dashboard (~linha 160)</div>
+          <div class="arquivo">backend/portal/db/stats.py — buscar_stats_dashboard (~linha 188)</div>
           <pre class="cod">-- concluídos hoje
 SELECT COUNT(*) FROM chamado c
 WHERE (
@@ -958,7 +958,7 @@ LIMIT 10;</pre>
           <div class="fala">"Banners têm CRUD completo em SQL (funções de <code>db/catalogo.py</code>, chamadas pelas views
           <code>gestao_banner_*</code>): listar, criar (com ordem automática), editar, excluir (DELETE físico) e
           reordenar (troca a ordem com o vizinho)."</div>
-          <div class="arquivo">backend/portal/db/catalogo.py — listar_banners_todos / inserir_banner / atualizar_banner / excluir_banner / reordenar_banner (~linhas 234-324)</div>
+          <div class="arquivo">backend/portal/db/catalogo.py — listar_banners_todos / inserir_banner / atualizar_banner / excluir_banner / reordenar_banner (~linhas 296-386)</div>
           <pre class="cod">-- listar
 SELECT id_banner, titulo, descricao, url_imagem, link, ordem, ativo, dt_criacao
 FROM banner_publicacao ORDER BY ordem, dt_criacao DESC;
@@ -984,7 +984,7 @@ DELETE FROM banner_publicacao WHERE id_banner = %s;</pre>
         <div class="crud-corpo">
           <div class="fala">"Bairros: listar todos, criar, editar e ativar/desativar (soft delete). SQL em
           <code>db/catalogo.py</code>, chamado pelas views <code>gestao_bairro_*</code>."</div>
-          <div class="arquivo">backend/portal/db/catalogo.py — listar_bairros_todos / inserir_bairro / atualizar_bairro / desativar_bairro / ativar_bairro (~linhas 177-226)</div>
+          <div class="arquivo">backend/portal/db/catalogo.py — listar_bairros_todos / inserir_bairro / atualizar_bairro / desativar_bairro / ativar_bairro (~linhas 239-288)</div>
           <pre class="cod">SELECT id_bairro, nome_bairro, cep, regiao, ativo FROM bairro ORDER BY nome_bairro;
 INSERT INTO bairro (nome_bairro, cep, regiao, ativo) VALUES (%s, %s, %s, %s);
 UPDATE bairro SET nome_bairro=%s, cep=%s, regiao=%s, ativo=%s WHERE id_bairro=%s;
@@ -1303,7 +1303,7 @@ linhas.append({"ch": ch, "cor": cor, "dias_aberto": formatar_dias_em_aberto(ch.d
           <b>própria rota POST</b>: alterar status, observação e foto são views separadas (não há um campo
           <code>acao</code>). Eu aplico a regra: colaborador (COL) não pode mexer em chamado já encerrado (CO/CA) —
           só o gestor (GES)."</div>
-          <div class="arquivo">backend/portal/views_equipe.py — equipe_chamado_detalhe (GET) + equipe_chamado_status (POST) (linhas ~169-282)</div>
+          <div class="arquivo">backend/portal/views_equipe.py — equipe_chamado_detalhe (GET, ~192-262) + equipe_chamado_status (POST, ~272-326)</div>
           <pre class="cod"># GET — equipe_chamado_detalhe: calcula a permissão e renderiza o template
 p = perfil_codigo(request.portal_user)
 ts = ch.sigla_status
@@ -1374,7 +1374,7 @@ for _ in range(100):                  # retry: se colidir protocolo, gera outro
         protocolo = proximo_protocolo()</pre>
           <ul class="exp">
             <li>A view valida o form e <b>delega</b> a criação para <code>chamado_service.criar_novo_chamado</code>.</li>
-            <li><code>salvar_foto_upload(...)</code>: salva a imagem (Cloudinary ou disco local) e devolve a URL.</li>
+            <li><code>salvar_foto_upload(...)</code>: salva a imagem no Cloudinary e devolve a URL (sem Cloudinary configurado, lança erro — não há fallback em disco).</li>
             <li><code>transaction.atomic()</code>: o INSERT do chamado e da foto acontecem juntos (ou nada).</li>
             <li>O <code>except IntegrityError</code> + novo protocolo é a proteção contra colisão de protocolo.</li>
           </ul>
@@ -1422,7 +1422,8 @@ if request.method == "POST":
         db.excluir_notificacao(nid, uid_cidadao=uid)   # DELETE só dos próprios chamados
         messages.info(request, "Notificação removida.")
     return redirect("portal:cidadao_notificacoes")
-return render(request, "portal/cidadao/notificacoes.html", {"lista": lista})</pre>
+page_obj = Paginator(lista, 10).get_page(request.GET.get("page", 1))   # 10 por página
+return render(request, "portal/cidadao/notificacoes.html", {"page_obj": page_obj})</pre>
           <ul class="exp">
             <li>Ao abrir a tela, as notificações não lidas viram lidas (<code>db.marcar_notificacoes_lidas</code>).</li>
             <li>O número no sininho do topo vem do <code>context_processors</code>
@@ -1726,7 +1727,8 @@ def gestao_chamado_excluir(request, pk):
   &lt;div class="br-input"&gt;
     &lt;label for="prioridade-select"&gt;Prioridade&lt;/label&gt;
     &lt;select id="prioridade-select" name="prioridade"&gt;
-      {% for val, lbl in prioridades %}&lt;option value="{{ val }}" ...&gt;{{ lbl }}&lt;/option&gt;{% endfor %}
+      {% for val, lbl in prioridades %}&lt;option value="{{ lbl }}"
+        {% if ch.prioridade == val %}selected{% endif %}&gt;{{ lbl }}&lt;/option&gt;{% endfor %}
     &lt;/select&gt;
   &lt;/div&gt;
   &lt;div id="resolucao-wrapper" class="br-input"&gt;
@@ -1809,7 +1811,7 @@ def gestao_chamado_excluir(request, pk):
           gerou) e a data, com um botão de excluir. Se não houver nenhuma, mostro um estado vazio."</div>
           <div class="arquivo">backend/templates/portal/cidadao/notificacoes.html (linhas ~16-33)</div>
           <pre class="cod">&lt;div class="br-list"&gt;
-  {% for n in lista %}
+  {% for n in page_obj %}
   &lt;div class="br-item"&gt;
     &lt;p class="mb-base"&gt;{{ n.mensagem }}&lt;/p&gt;
     &lt;span class="text-down-01"&gt;{{ n.dt_envio|date:"d/m/Y H:i" }}&lt;/span&gt;
