@@ -130,28 +130,12 @@ def atualizar_categoria(pk, nome, descricao):
             "WHERE id_categoria = %s", [nome, descricao or None, pk]
         )
 
-def listar_servicos_com_categoria():
-    """Lista servicos ativos com nome da categoria."""
-    with connection.cursor() as cursor:
-        # JOIN do servico com a categoria pra eu trazer o nome da categoria junto
-        cursor.execute(
-            "SELECT s.id_servico, s.nome, s.descricao, s.ativo, "
-            "s.id_categoria, cat.nome AS categoria_nome "
-            "FROM servico s "
-            "JOIN categoria_servico cat ON s.id_categoria = cat.id_categoria "
-            "WHERE s.ativo = TRUE ORDER BY s.nome"
-        )
-        # monto cada servico como objeto e aninho a categoria dentro como outro SimpleNamespace
-        return [SimpleNamespace(id_servico=r[0], pk=r[0], nome=r[1], descricao=r[2],
-                ativo=r[3], id_categoria=SimpleNamespace(id_categoria=r[4], pk=r[4], nome=r[5]))
-                for r in cursor.fetchall()]
-
 def listar_servicos_todos():
     """Lista todos os servicos (ativos e inativos) com nome da categoria.
 
-    Diferente de listar_servicos_com_categoria, NAO filtra por ativo = TRUE.
-    O gestor precisa ver tambem os servicos desativados para saber o que ja
-    foi inativado e eventualmente reativar.
+    NAO filtra por ativo = TRUE: traz ativos e inativos, porque o gestor
+    precisa ver tambem os servicos desativados para saber o que ja foi
+    inativado e eventualmente reativar.
     """
     with connection.cursor() as cursor:
         cursor.execute(

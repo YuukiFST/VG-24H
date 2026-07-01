@@ -97,7 +97,7 @@ def sql_lateral_ultimo_status(colunas="sc.sigla, sc.descricao, sc.id_status", al
     # do historico_chamado, junta com status_chamado pra pegar a sigla/descricao,
     # casa pelo id_chamado do chamado de fora (alias c) e limita a 1 linha.
     return (
-        "JOIN LATERAL ("
+        "JOIN LATERAL ("  # noqa: S608 (colunas e alias validados por whitelist acima)
         f"  SELECT {colunas} FROM historico_chamado hc "
         "  JOIN status_chamado sc ON hc.id_status = sc.id_status "
         f"  WHERE hc.id_chamado = {alias}.id_chamado "

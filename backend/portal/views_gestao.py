@@ -256,10 +256,11 @@ def gestao_categoria_edit(request, pk):
         if form.is_valid():
             d = form.cleaned_data
             # so confiro duplicidade se o nome mudou (evita falso positivo)
-            if d["nome"].lower() != (obj.nome or "").lower():
-                if db.existe_nome("categoria_servico", "nome", d["nome"]):
-                    messages.error(request, "Já existe uma categoria com este nome.")
-                    return redirect("portal:gestao_categoria_editar", pk=pk)
+            if d["nome"].lower() != (obj.nome or "").lower() and db.existe_nome(
+                "categoria_servico", "nome", d["nome"]
+            ):
+                messages.error(request, "Já existe uma categoria com este nome.")
+                return redirect("portal:gestao_categoria_editar", pk=pk)
             try:
                 db.atualizar_categoria(pk, d["nome"], d.get("descricao"))
                 messages.success(request, "Categoria atualizada.")
@@ -334,12 +335,13 @@ def gestao_servico_edit(request, pk):
             # so confiro duplicidade se o nome ou categoria mudou
             nome_mudou = d["nome"].lower() != (obj.nome or "").lower()
             cat_mudou = cat_id != obj.id_categoria_id
-            if nome_mudou or cat_mudou:
-                if db.existe_nome("servico", "nome", d["nome"],
-                                  extra_where="AND id_categoria = %s",
-                                  extra_params=[cat_id]):
-                    messages.error(request, "Já existe um serviço com este nome nesta categoria.")
-                    return redirect("portal:gestao_servico_editar", pk=pk)
+            if (nome_mudou or cat_mudou) and db.existe_nome(
+                "servico", "nome", d["nome"],
+                extra_where="AND id_categoria = %s",
+                extra_params=[cat_id],
+            ):
+                messages.error(request, "Já existe um serviço com este nome nesta categoria.")
+                return redirect("portal:gestao_servico_editar", pk=pk)
             try:
                 db.atualizar_servico(pk, d["nome"], d.get("descricao"), cat_id)
                 messages.success(request, "Serviço atualizado.")
@@ -431,10 +433,11 @@ def gestao_bairro_edit(request, pk):
         if form.is_valid():
             d = form.cleaned_data
             # so confiro duplicidade se o nome mudou em relacao ao atual
-            if d["nome_bairro"].lower() != (obj.nome_bairro or "").lower():
-                if db.existe_nome("bairro", "nome_bairro", d["nome_bairro"]):
-                    messages.error(request, "Já existe um bairro com este nome.")
-                    return redirect("portal:gestao_bairro_editar", pk=pk)
+            if d["nome_bairro"].lower() != (obj.nome_bairro or "").lower() and db.existe_nome(
+                "bairro", "nome_bairro", d["nome_bairro"]
+            ):
+                messages.error(request, "Já existe um bairro com este nome.")
+                return redirect("portal:gestao_bairro_editar", pk=pk)
             try:
                 db.atualizar_bairro(pk, d["nome_bairro"], d["cep"], d.get("regiao"), d.get("ativo", True))
                 messages.success(request, "Bairro atualizado.")

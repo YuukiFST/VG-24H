@@ -16,6 +16,8 @@ BEGIN;
 
 DROP VIEW IF EXISTS vw_estatisticas_chamados CASCADE;
 
+DROP TABLE IF EXISTS banner_publicacao CASCADE;   -- tabela extra (carrossel da home)
+DROP TABLE IF EXISTS protocolo_seq CASCADE;       -- tabela auxiliar (contador de protocolo)
 DROP TABLE IF EXISTS configuracao_semaforo CASCADE;
 DROP TABLE IF EXISTS notificacao CASCADE;
 DROP TABLE IF EXISTS historico_chamado CASCADE;
@@ -247,6 +249,26 @@ CREATE TABLE notificacao (
 );
 
 -- ============================================================
+-- Tabela extra: banner_publicacao (carrossel de destaques da home)
+-- ============================================================
+-- [!] NAO faz parte das 11 entidades do DER — e um recurso extra do portal.
+--     Alimenta o carrossel da home (root_view) e o CRUD de banners do gestor
+--     (db/catalogo.py: listar_banners_ativos/inserir/atualizar/reordenar_banner).
+--     Sem esta tabela a home retorna 500 ("relation banner_publicacao does not exist").
+--     Espelhada pelo model managed=False BannerPublicacao (models.py).
+-- ============================================================
+CREATE TABLE banner_publicacao (
+    id_banner    SERIAL PRIMARY KEY,
+    titulo       VARCHAR(100) NOT NULL,                          -- titulo exibido no banner
+    descricao    VARCHAR(300),                                   -- texto opcional de apoio
+    url_imagem   VARCHAR(500) NOT NULL,                          -- URL da imagem (Cloudinary)
+    link         VARCHAR(500),                                   -- link opcional ao clicar no banner
+    ordem        INTEGER NOT NULL DEFAULT 0,                     -- posicao no carrossel (menor primeiro)
+    ativo        BOOLEAN NOT NULL DEFAULT TRUE,                  -- soft toggle: so os ativos aparecem na home
+    dt_criacao   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP  -- data de criacao (desempate do carrossel)
+);
+
+-- ============================================================
 -- Indices de performance
 -- ============================================================
 -- [!] NAO existe ix_chamado_status porque chamado nao tem id_status.
@@ -260,6 +282,7 @@ CREATE INDEX ix_foto_chamado      ON foto_chamado (id_chamado);   -- JOIN para l
 CREATE INDEX ix_historico_chamado  ON historico_chamado (id_chamado);  -- JOIN para buscar historico de um chamado
 CREATE INDEX ix_historico_chamado_status ON historico_chamado (id_chamado, dt_alteracao);  -- "ultimo status" queries (LATERAL/Subquery)
 CREATE INDEX ix_notificacao_chamado ON notificacao (id_chamado);  -- JOIN para notificacoes de um chamado
+CREATE INDEX ix_banner_ordem       ON banner_publicacao (ordem);  -- ordenacao do carrossel da home
 
 -- ============================================================
 -- Tabela auxiliar: sequencia de protocolo por ano

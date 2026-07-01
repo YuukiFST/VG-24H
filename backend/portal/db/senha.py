@@ -28,7 +28,7 @@ def atualizar_senha_usuario(tabela, pk, nova_senha):
         # tabela e id_col entram via f-string (ja validados), mas o valor da
         # senha e o pk vao parametrizados (%s) que eh a parte sensivel.
         cursor.execute(
-            f"UPDATE {tabela} SET senha_hash = %s, senha_temporaria = NULL "
+            f"UPDATE {tabela} SET senha_hash = %s, senha_temporaria = NULL "  # noqa: S608 (tabela/id_col ja validados; valores parametrizados)
             f"WHERE {id_col} = %s",
             [make_password(nova_senha), pk],
         )

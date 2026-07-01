@@ -33,41 +33,22 @@ def proximo_protocolo():
 
     Exemplo: 2026000001 (ano 2026, sequencial 000001).
 
-    O passo principal e atomico (INSERT ... ON CONFLICT DO UPDATE RETURNING),
-    entao dois pedidos ao mesmo tempo nao pegam o mesmo numero. Se mesmo assim
-    o numero ja existir em chamado (algo dessincronizou), eu avanco sozinho pro
-    proximo. Pode ficar buraco na sequencia, pra mim ta de boa.
+    Toda a logica atomica mora na stored function fn_proximo_protocolo(ano) no
+    banco (INSERT ... ON CONFLICT DO UPDATE RETURNING dentro de um LOOP que ja
+    pula numeros ocupados). Aqui eu so chamo a funcao passando o ano da
+    aplicacao (fuso America/Cuiaba), pra casar com o ano usado no resto do
+    sistema, e devolvo o protocolo que ela montou.
     """
-    # ano de agora, e o protocolo comeca com ele
+    # ano de agora no fuso da aplicacao (mando ele explicito pra funcao do banco)
     y = timezone.now().year
-    # tento ate 100 vezes pra achar um numero que ainda nao foi usado
-    for _ in range(100):
-        with connection.cursor() as cursor:
-            # se nao tem linha pro ano eu crio com 1, se ja tem eu somo +1 -- tudo atomico
-            cursor.execute(
-                "INSERT INTO protocolo_seq (ano, ultimo_numero) VALUES (%s, 1) "
-                "ON CONFLICT (ano) DO UPDATE SET ultimo_numero = protocolo_seq.ultimo_numero + 1 "
-                "RETURNING ultimo_numero",
-                [y],
-            )
-            row = cursor.fetchone()
-            # o RETURNING sempre tem que vir com algo; se vier vazio e bug feio
-            if not row:
-                raise RuntimeError("protocolo_seq INSERT/RETURNING nao retornou linha")
-            n = row[0]
-        # monto o protocolo: ano grudado no sequencial com zeros a esquerda (6 digitos)
-        protocolo = f"{y}{n:06d}"
-        with connection.cursor() as cursor:
-            # confiro se por acaso esse protocolo ja existe em chamado
-            cursor.execute(
-                "SELECT 1 FROM chamado WHERE num_protocolo = %s",
-                [protocolo],
-            )
-            # nao achou? entao ta livre, devolvo ele
-            if not cursor.fetchone():
-                return protocolo
-    # se em 100 tentativas eu nao consegui, ai realmente tem algo muito errado
-    raise RuntimeError("Nao foi possivel gerar protocolo unico apos 100 tentativas")
+    with connection.cursor() as cursor:
+        # a funcao do banco cuida da atomicidade e da unicidade e ja devolve pronto
+        cursor.execute("SELECT fn_proximo_protocolo(%s)", [y])
+        row = cursor.fetchone()
+        # a funcao sempre retorna um protocolo; vazio aqui seria bug grave
+        if not row:
+            raise RuntimeError("fn_proximo_protocolo nao retornou protocolo")
+        return row[0]
 
 
 def formatar_dias_em_aberto(dt_abertura):
