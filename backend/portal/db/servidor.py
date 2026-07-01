@@ -113,22 +113,28 @@ def inserir_colaborador(dados):
         )
 
 def alternar_colaborador_ativo(pk):
-    """Alterna status ativo de um colaborador. Retorna (nome, novo_status) ou None."""
+    """Alterna status ativo de um colaborador. Retorna (nome, novo_status) ou None.
+
+    Aplica-se apenas a servidores com perfil COL. Gestores (GES) nao podem ser
+    desativados por este endpoint — o WHERE perfil = 'COL' garante que a
+    tentativa de desativar um gestor via esta funcao retorna None (sem efeito).
+    """
     with connection.cursor() as cursor:
-        # primeiro leio o estado atual do colaborador pra saber se ta ativo ou nao
+        # leio o estado atual do colaborador (so COL, pra nao afetar gestor)
         cursor.execute(
             "SELECT id_servidor, nome_completo, ativo "
-            "FROM servidor WHERE id_servidor = %s", [pk]
+            "FROM servidor WHERE id_servidor = %s AND perfil = 'COL'",
+            [pk],
         )
         row = cursor.fetchone()
-        # se nao existe, nao tem o que alternar
+        # se nao existe (ou nao eh COL), nao tem o que alternar
         if not row:
             return None
         # inverto o ativo: se era True vira False e vice-versa
         novo_ativo = not row[2]
-        # gravo o valor invertido de volta
+        # gravo o valor invertido de volta (restringindo a COL de novo por seguranca)
         cursor.execute(
-            "UPDATE servidor SET ativo = %s WHERE id_servidor = %s",
+            "UPDATE servidor SET ativo = %s WHERE id_servidor = %s AND perfil = 'COL'",
             [novo_ativo, pk],
         )
         # devolvo o nome e um texto bonitinho pro feedback dependendo do novo estado

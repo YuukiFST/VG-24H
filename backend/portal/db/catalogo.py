@@ -143,6 +143,25 @@ def listar_servicos_com_categoria():
                 ativo=r[3], id_categoria=SimpleNamespace(id_categoria=r[4], pk=r[4], nome=r[5]))
                 for r in cursor.fetchall()]
 
+def listar_servicos_todos():
+    """Lista todos os servicos (ativos e inativos) com nome da categoria.
+
+    Diferente de listar_servicos_com_categoria, NAO filtra por ativo = TRUE.
+    O gestor precisa ver tambem os servicos desativados para saber o que ja
+    foi inativado e eventualmente reativar.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT s.id_servico, s.nome, s.descricao, s.ativo, "
+            "s.id_categoria, cat.nome AS categoria_nome "
+            "FROM servico s "
+            "JOIN categoria_servico cat ON s.id_categoria = cat.id_categoria "
+            "ORDER BY s.ativo DESC, s.nome"
+        )
+        return [SimpleNamespace(id_servico=r[0], pk=r[0], nome=r[1], descricao=r[2],
+                ativo=r[3], id_categoria=SimpleNamespace(id_categoria=r[4], pk=r[4], nome=r[5]))
+                for r in cursor.fetchall()]
+
 def inserir_servico(nome, descricao, categoria_id):
     """Cria novo servico."""
     with connection.cursor() as cursor:
@@ -172,6 +191,62 @@ def desativar_servico(pk):
             return False
         # soft delete: nao deleto de verdade, so marco ativo = FALSE
         cursor.execute("UPDATE servico SET ativo = FALSE WHERE id_servico = %s", [pk])
+        return True
+
+def contar_chamados_por_servico(pk):
+    """Conta quantos chamados estao vinculados a um servico.
+
+    Retorna (total, ativos) onde:
+      total  = todos os chamados (abertos + encerrados)
+      ativos = apenas chamados ainda nao encerrados (AB, EA, EE)
+
+    Usado para avisar o gestor antes de desativar um servico que possui
+    chamados vinculados. O soft delete preserva o historico de qualquer
+    forma, mas o aviso impede desativacao acidental de servico em uso.
+    """
+    with connection.cursor() as cursor:
+        # total de chamados (qualquer status)
+        cursor.execute(
+            "SELECT COUNT(*) FROM chamado WHERE id_servico = %s", [pk]
+        )
+        total = cursor.fetchone()[0]
+        # chamados ativos: aqueles cujo status atual NAO eh concluido (CO) nem cancelado (CA)
+        cursor.execute(
+            "SELECT COUNT(*) FROM chamado c WHERE c.id_servico = %s AND ("
+            "  SELECT sc.sigla FROM historico_chamado hc "
+            "  JOIN status_chamado sc ON hc.id_status = sc.id_status "
+            "  WHERE hc.id_chamado = c.id_chamado "
+            "  ORDER BY hc.dt_alteracao DESC LIMIT 1"
+            ") NOT IN ('CO', 'CA')",
+            [pk],
+        )
+        ativos = cursor.fetchone()[0]
+        return total, ativos
+
+def desativar_categoria(pk):
+    """Desativa categoria (soft delete)."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT id_categoria FROM categoria_servico WHERE id_categoria = %s", [pk]
+        )
+        if not cursor.fetchone():
+            return False
+        cursor.execute(
+            "UPDATE categoria_servico SET ativo = FALSE WHERE id_categoria = %s", [pk]
+        )
+        return True
+
+def ativar_categoria(pk):
+    """Reativa categoria."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT id_categoria FROM categoria_servico WHERE id_categoria = %s", [pk]
+        )
+        if not cursor.fetchone():
+            return False
+        cursor.execute(
+            "UPDATE categoria_servico SET ativo = TRUE WHERE id_categoria = %s", [pk]
+        )
         return True
 
 def listar_bairros_todos():

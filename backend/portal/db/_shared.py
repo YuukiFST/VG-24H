@@ -52,9 +52,13 @@ def fetch_one(sql, params=None, *, fields, pk_alias=True):
     return ns
 
 
-# lista branca das tabelas que eu deixo passar no SQL dinamico (cidadao/servidor).
-# uso frozenset porque eh imutavel, ninguem altera isso por acidente.
-TABELAS_VALIDAS = frozenset({"cidadao", "servidor"})
+# lista branca das tabelas que eu deixo passar no SQL dinamico.
+# expandida para incluir as tabelas de catalogo (categoria_servico, servico, bairro)
+# alem das de usuario (cidadao, servidor). uso frozenset porque eh imutavel.
+TABELAS_VALIDAS = frozenset({
+    "cidadao", "servidor",
+    "categoria_servico", "servico", "bairro",
+})
 
 def _validar_tabela(tabela):
     # IMPORTANTE: isso aqui eh minha defesa contra SQL injection. Em alguns

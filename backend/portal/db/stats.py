@@ -134,6 +134,34 @@ def existe_email_ou_cpf(tabela, email, cpf):
         # o resultado eh um bool na primeira coluna
         return cursor.fetchone()[0]
 
+def existe_nome(tabela, campo, nome, *, extra_where="", extra_params=None):
+    """Verifica se um nome ja existe em uma tabela (case-insensitive).
+
+    Usado para validar unicidade de nome em CategoriaServico, Servico e Bairro
+    ANTES do INSERT/UPDATE, evitando IntegrityError e mostrando mensagem amigavel.
+
+    Args:
+        tabela: nome da tabela (precisa estar na TABELAS_VALIDAS).
+        campo: nome da coluna a verificar (ex: 'nome', 'nome_bairro').
+        nome: valor a conferir (ja normalizado em lowercase pelo caller).
+        extra_where: clausula WHERE adicional (ex: 'AND id_categoria = %s').
+        extra_params: parametros correspondentes ao extra_where.
+    """
+    # defesa contra SQL injection: so tabelas na lista branca passam
+    _validar_tabela(tabela)
+    params = [nome.lower()]
+    if extra_params:
+        params.extend(extra_params)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"SELECT EXISTS("
+            f"  SELECT 1 FROM {tabela} WHERE LOWER({campo}) = %s"
+            f"  {extra_where}"
+            f")",
+            params,
+        )
+        return cursor.fetchone()[0]
+
 def buscar_stats_publicas():
     """Retorna estatisticas da pagina inicial."""
     with connection.cursor() as cursor:
