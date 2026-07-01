@@ -5,7 +5,7 @@ Veja portal/db/__init__.py para a fachada publica."""
 # SimpleNamespace eu uso pra criar objetinhos com atributos sem precisar de classe nem ORM
 from types import SimpleNamespace
 
-from django.db import connection
+from django.db import connection, transaction
 from django.utils import timezone
 
 # fetch_all/fetch_one sao meus helpers que rodam o SELECT e ja mapeiam pra
@@ -379,7 +379,10 @@ def reordenar_banner(pk, direcao):
         vizinho = cursor.fetchone()
         # se existe vizinho, eu troco as ordens dos dois (swap): o vizinho fica com a minha e eu com a dele
         if vizinho:
-            cursor.execute("UPDATE banner_publicacao SET ordem = %s WHERE id_banner = %s",
-                           [ordem_atual, vizinho[0]])
-            cursor.execute("UPDATE banner_publicacao SET ordem = %s WHERE id_banner = %s",
-                           [vizinho[1], pk])
+            # os dois UPDATE tem que entrar juntos: se so o primeiro passasse, os
+            # dois banners ficariam com a mesma ordem. atomic garante tudo-ou-nada.
+            with transaction.atomic():
+                cursor.execute("UPDATE banner_publicacao SET ordem = %s WHERE id_banner = %s",
+                               [ordem_atual, vizinho[0]])
+                cursor.execute("UPDATE banner_publicacao SET ordem = %s WHERE id_banner = %s",
+                               [vizinho[1], pk])
