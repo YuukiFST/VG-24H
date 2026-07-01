@@ -1584,16 +1584,38 @@ def gestao_chamado_excluir(request, pk):
     &lt;/div&gt;
     &lt;div class="close"&gt;&lt;button class="br-button circle small" type="button"&gt;&lt;i class="fas fa-times"&gt;&lt;/i&gt;&lt;/button&gt;&lt;/div&gt;
   &lt;/div&gt;
-  {% elif message.tags == 'warning' %} ... {% else %} {# info #} ... {% endif %}
+  {% elif message.tags == 'warning' %}
+  &lt;div class="br-message warning" role="alert"&gt;
+    &lt;div class="icon"&gt;&lt;i class="fas fa-exclamation-triangle fa-lg"&gt;&lt;/i&gt;&lt;/div&gt;
+    &lt;div class="content" aria-label="{{ message }}"&gt;
+      &lt;span class="message-title"&gt;Atenção.&lt;/span&gt;
+      &lt;span class="message-body"&gt; {{ message }}&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class="close"&gt;&lt;button class="br-button circle small" type="button"&gt;&lt;i class="fas fa-times"&gt;&lt;/i&gt;&lt;/button&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  {% else %} {# qualquer outra tag (info) cai aqui #}
+  &lt;div class="br-message info" role="alert"&gt;
+    &lt;div class="icon"&gt;&lt;i class="fas fa-info-circle fa-lg"&gt;&lt;/i&gt;&lt;/div&gt;
+    &lt;div class="content" aria-label="{{ message }}"&gt;
+      &lt;span class="message-title"&gt;Informação.&lt;/span&gt;
+      &lt;span class="message-body"&gt; {{ message }}&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class="close"&gt;&lt;button class="br-button circle small" type="button"&gt;&lt;i class="fas fa-times"&gt;&lt;/i&gt;&lt;/button&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  {% endif %}
   {% endfor %}
 &lt;/div&gt;
 {% endif %}</pre>
           <ul class="exp">
             <li><code>{% for message in messages %}</code>: percorre as mensagens que a view enviou.</li>
-            <li><code>message.tags == 'error'</code> → caixa vermelha (<code>danger</code>); <code>'success'</code> → verde.
-            Há também os ramos <code>warning</code> (amarelo) e <code>info</code> (azul, no <code>{% else %}</code>).</li>
+            <li><b>São 4 tipos</b> (o <code>if/elif/else</code> mapeia a tag do Django para a cor do GOV.br):
+            <code>error</code> → vermelha, título "Erro." (<code>br-message danger</code>);
+            <code>success</code> → verde, "Sucesso." (<code>success</code>);
+            <code>warning</code> → amarela, "Atenção." (<code>warning</code>);
+            e qualquer outra tag — <code>info</code> — cai no <code>{% else %}</code> → azul, "Informação." (<code>info</code>).</li>
             <li>Cada caixa tem ícone, título, corpo (<code>{{ message }}</code>) e um botão de fechar.</li>
-            <li>Resumo do login: o Bruno decide a mensagem na view; <b>eu mostro aqui</b>.</li>
+            <li>Resumo do login: o Bruno decide a mensagem na view; <b>eu mostro aqui</b>. Toda mensagem do sistema
+            (sucesso ao salvar, erro de validação, avisos, informações) passa por este mesmo bloco.</li>
           </ul>
         </div>
       </details>
@@ -1760,9 +1782,13 @@ def gestao_chamado_excluir(request, pk):
         <summary>Combo box (o <code>&lt;select&gt;</code>) — como funciona <span class="tag core">a professora pergunta</span></summary>
         <div class="crud-corpo">
           <div class="fala">"Combo box é o campo de escolha em lista — no HTML é a tag <code>&lt;select&gt;</code> com
-          várias <code>&lt;option&gt;</code>. Uso em vários lugares: escolher o status e a prioridade ao editar um chamado,
-          escolher a categoria ao criar um serviço, e nos filtros (bairro/status/serviço). As opções são geradas por um
-          <code>{% for %}</code> a partir dos dados que a view mandou."</div>
+          várias <code>&lt;option&gt;</code>. No projeto ele aparece em <b>7 lugares</b>: <b>status</b> e <b>prioridade</b>
+          ao editar um chamado; <b>categoria</b> ao criar/editar um serviço; <b>bairro</b> ao abrir um chamado e também no
+          <b>cadastro</b> do cidadão; <b>região</b> ao cadastrar um bairro; e o <b>filtro de status</b> no painel do
+          cidadão. As opções são sempre geradas por um <code>{% for %}</code> a partir dos dados que a view mandou.
+          <b>Atenção</b> (a professora pode inspecionar): os filtros da <b>lista da equipe</b> — serviço/bairro/status —
+          <b>não</b> são <code>&lt;select&gt;</code>; são o <code>br-select</code> do GOV.br, uma lista de
+          <code>radio</code>. Explico logo abaixo na nota."</div>
           <div class="arquivo">exemplo: backend/templates/portal/equipe/chamado_detalhe.html — combo de status</div>
           <pre class="cod">&lt;select id="status-select" name="id_status" required&gt;
   {% for code, label in form_status.fields.id_status.choices %}
@@ -1774,11 +1800,24 @@ def gestao_chamado_excluir(request, pk):
 &lt;/select&gt;</pre>
           <ul class="exp">
             <li><code>&lt;select name="id_status"&gt;</code>: o <b>combo box</b>; o <code>name</code> é o que a view lê no POST.</li>
-            <li><code>{% for ... %}</code> cria uma <code>&lt;option&gt;</code> para cada opção (status, prioridade, categoria...).</li>
+            <li><code>{% for ... %}</code> cria uma <code>&lt;option&gt;</code> para cada opção vinda da view.</li>
             <li><code>selected</code>: marca a opção já escolhida (ex.: o status atual do chamado).</li>
-            <li>Nos <b>filtros</b> dos CRUD é o mesmo combo box (bairro, status, serviço) — cada escolha vira um
-            <code>?bairro=..&amp;status=..</code> na URL que o SQL usa.</li>
+            <li><b>Todos os <code>&lt;select&gt;</code> do projeto (7):</b>
+              <code>id_status</code> e <code>prioridade</code> — <code>equipe/chamado_detalhe.html</code>;
+              <code>id_categoria</code> — <code>gestao/servico_novo.html</code> e <code>servico_form.html</code>;
+              <code>id_bairro</code> — <code>cidadao/novo_chamado.html</code>;
+              <code>bairro_endereco</code> — <code>auth/cadastro.html</code>;
+              <code>regiao</code> — <code>gestao/bairros.html</code>;
+              <code>status</code> (filtro) — <code>cidadao/dashboard.html</code>.</li>
           </ul>
+          <div class="nota imp"><b>Cuidado — dois estilos de "filtro" no sistema:</b> no <b>painel do cidadão</b> o filtro
+          de status é um <code>&lt;select&gt;</code> nativo (o combo acima). Já na <b>lista da equipe</b>
+          (<code>includes/filtro_chamados.html</code>) os filtros de <b>serviço/bairro/status</b> usam o
+          <code>br-select</code> do GOV.br: um campo de texto + uma lista de <code>&lt;input type="radio"&gt;</code>; o
+          radio escolhido grava o id num campo <code>hidden</code> (<code>name="servico"/"bairro"/"status"</code>) que
+          vai pela query string (<code>?servico=..&amp;bairro=..&amp;status=..</code>). Parece um combo, mas por baixo é
+          <b>radio</b> — não é a tag <code>&lt;select&gt;</code>. Se a professora inspecionar o filtro da equipe, é isto
+          que ela vai ver.</div>
         </div>
       </details>
 
