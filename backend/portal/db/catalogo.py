@@ -98,11 +98,14 @@ def listar_categorias_com_servicos():
     return categorias
 
 def listar_categorias_todas():
-    """Lista todas as categorias ativas."""
-    # parecido com listar_categorias_ativas mas tambem trago a coluna ativo
+    """Lista todas as categorias (ativas e inativas).
+
+    Diferente de listar_categorias_ativas, nao filtra por ativo = TRUE.
+    O gestor precisa ver tambem as categorias desativadas para poder reativa-las.
+    """
     return fetch_all(
         "SELECT id_categoria, nome, descricao, ativo "
-        "FROM categoria_servico WHERE ativo = TRUE ORDER BY nome",
+        "FROM categoria_servico ORDER BY ativo DESC, nome",
         fields=("id_categoria", "nome", "descricao", "ativo"),
     )
 

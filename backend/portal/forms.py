@@ -73,8 +73,19 @@ class CadastroCidadaoForm(forms.Form):
     rua = forms.CharField(max_length=100, required=False)
     num_endereco = forms.CharField(max_length=10, required=False)
     complemento_endereco = forms.CharField(max_length=200, required=False)
+    # bairro_endereco envia o nome do bairro (texto); validamos que o nome
+    # existe na tabela bairro para garantir consistencia dos dados
     bairro_endereco = forms.CharField(max_length=200, required=False)
     cep_endereco = forms.CharField(max_length=10, required=False)
+
+    def clean_bairro_endereco(self):
+        """Valida que o nome do bairro informado existe na tabela bairro (ativo)."""
+        nome = self.cleaned_data.get("bairro_endereco", "")
+        if nome:
+            from portal import db
+            if not db.existe_nome("bairro", "nome_bairro", nome):
+                raise forms.ValidationError("Bairro não encontrado.")
+        return nome
 
     def clean_cpf(self):
         # tiro tudo que nao eh numero do CPF (a mascara manda ponto e traco)
@@ -266,9 +277,32 @@ class ServicoForm(forms.ModelForm):
 class BairroForm(forms.ModelForm):
     """Form de bairro (nome, CEP, regiao, ativo).
 
-    O regiao vira um combobox com valores fixos (Central, Norte, Sul, etc.),
-    isso ja vem configurado la no model, nao preciso repetir aqui.
+    O campo regiao usa choices fixos definidos aqui (mesmos valores
+    que o template renderiza no <select>), garantindo que o backend
+    valide contra a lista canonica e nao aceite strings arbitrarias.
     """
+    REGIAO_CHOICES = [
+        ("Central", "Central"),
+        ("Norte", "Norte"),
+        ("Sul", "Sul"),
+        ("Leste", "Leste"),
+        ("Oeste", "Oeste"),
+        ("Rural", "Rural"),
+    ]
+
+    cep = forms.CharField(
+        max_length=8,
+        required=True,
+        label="CEP",
+        error_messages={"required": "O CEP é obrigatório."},
+    )
+
+    regiao = forms.ChoiceField(
+        choices=REGIAO_CHOICES,
+        required=False,
+        label="Região",
+    )
+
     class Meta:
         model = Bairro
         fields = ["nome_bairro", "cep", "regiao", "ativo"]

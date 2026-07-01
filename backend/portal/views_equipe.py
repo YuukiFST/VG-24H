@@ -287,13 +287,15 @@ def equipe_chamado_status(request, pk):
     if form_s.is_valid():
         # status novo escolhido
         novo = form_s.cleaned_data["id_status"]
-        # prioridade vem solta no POST; tento converter e travo entre 0 e 5.
-        # se vier lixo eu suppress o erro e fica no 0 que ja era o default
+        # prioridade vem como texto (ex: "3 — Media"); extraio o numero do inicio.
+        # se vier vazio ou lixo, cai no suppress e fica no 0 (padrao)
         pri = request.POST.get("prioridade")
         prioridade_val = 0
         if pri is not None:
-            with contextlib.suppress(ValueError, TypeError):
-                prioridade_val = max(0, min(5, int(pri)))
+            with contextlib.suppress(ValueError, TypeError, IndexError):
+                # extraio o numero antes do primeiro " — " (se houver) ou o valor todo
+                num_str = pri.split(" — ")[0].strip()
+                prioridade_val = max(0, min(5, int(num_str)))
 
         # pego a sigla do status novo e o texto de resolucao (limpo espacos;
         # se sobrar vazio vira None pra nao gravar string vazia)

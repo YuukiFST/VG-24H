@@ -62,6 +62,8 @@ urlpatterns = [
     # categorias
     path("gestao/categorias/", views_gestao.gestao_categorias, name="gestao_categorias"),
     path("gestao/categorias/<int:pk>/editar/", views_gestao.gestao_categoria_edit, name="gestao_categoria_editar"),
+    path("gestao/categorias/<int:pk>/desativar/", views_gestao.gestao_categoria_desativar, name="gestao_categoria_desativar"),
+    path("gestao/categorias/<int:pk>/ativar/", views_gestao.gestao_categoria_ativar, name="gestao_categoria_ativar"),
     # servicos
     path("gestao/servicos/", views_gestao.gestao_servicos, name="gestao_servicos"),
     path("gestao/servicos/novo/", views_gestao.gestao_servico_novo, name="gestao_servico_novo"),

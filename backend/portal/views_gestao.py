@@ -21,7 +21,7 @@ chama form.save() -> eu pego os dados do cleaned_data e insiro na mao via SQL.
 # imports do Django + os helpers/forms/models meus do portal
 from django.contrib import messages
 from django.db import connection
-from django.db.utils import ProgrammingError
+from django.db.utils import IntegrityError, ProgrammingError
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
@@ -50,13 +50,22 @@ from portal.utils import salvar_foto_upload
 def gestao_servico_novo(request):
     """Cria um servico novo (pagina propria, sem ser modal)."""
     if request.method == "POST":
-        # POST: valido o form, pego os dados do cleaned_data e insiro via SQL.
-        # repara que uso d["id_categoria"].pk -> o form da o objeto, eu quero o id
+        # POST: valido o form, confiro duplicidade de nome dentro da categoria e insiro
         form = ServicoForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-            db.inserir_servico(d["nome"], d.get("descricao"), d["id_categoria"].pk)
-            messages.success(request, "Serviço criado.")
+            cat_id = d["id_categoria"].pk
+            # confiro se ja existe servico com esse nome nesta categoria
+            if db.existe_nome("servico", "nome", d["nome"],
+                              extra_where="AND id_categoria = %s",
+                              extra_params=[cat_id]):
+                messages.error(request, "Já existe um serviço com este nome nesta categoria.")
+            else:
+                try:
+                    db.inserir_servico(d["nome"], d.get("descricao"), cat_id)
+                    messages.success(request, "Serviço criado.")
+                except IntegrityError:
+                    messages.error(request, "Já existe um serviço com este nome nesta categoria.")
             return redirect("portal:gestao_servicos")
 
     # GET (ou POST invalido): mostro o form vazio + as categorias pro select
@@ -86,7 +95,7 @@ def gestao_colaborador_novo(request):
             ja_existe = db.existe_email_ou_cpf("servidor", d["email"].lower(), d["cpf"])
             if ja_existe:
                 # ja existe -> aviso e nao insiro
-                messages.error(request, "E-mail ou CPF já existe.")
+                messages.error(request, "E-mail ou CPF já cadastrado.")
             else:
                 # ok, insiro. ele ja nasce tendo que trocar a senha no 1o acesso
                 db.inserir_colaborador(d)
@@ -185,13 +194,19 @@ def gestao_categorias(request):
     Pego do cleaned_data e faco o INSERT na mao.
     """
     if request.method == "POST":
-        # POST = criar. valido, insiro e mando a mensagem. repara que o redirect
-        # ta fora do if, entao mesmo form invalido recarrega a pagina (PRG)
+        # POST = criar. valido, confiro duplicidade de nome e insiro.
         form = CategoriaForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-            db.inserir_categoria(d["nome"], d.get("descricao"))
-            messages.success(request, "Categoria criada.")
+            # confiro se ja existe categoria com esse nome (case-insensitive)
+            if db.existe_nome("categoria_servico", "nome", d["nome"]):
+                messages.error(request, "Já existe uma categoria com este nome.")
+            else:
+                try:
+                    db.inserir_categoria(d["nome"], d.get("descricao"))
+                    messages.success(request, "Categoria criada.")
+                except IntegrityError:
+                    messages.error(request, "Já existe uma categoria com este nome.")
         return redirect("portal:gestao_categorias")
 
     # GET: form vazio + a lista de todas as categorias pra tabela
@@ -240,8 +255,16 @@ def gestao_categoria_edit(request, pk):
         form = CategoriaForm(request.POST, instance=obj)
         if form.is_valid():
             d = form.cleaned_data
-            db.atualizar_categoria(pk, d["nome"], d.get("descricao"))
-            messages.success(request, "Categoria atualizada.")
+            # so confiro duplicidade se o nome mudou (evita falso positivo)
+            if d["nome"].lower() != (obj.nome or "").lower():
+                if db.existe_nome("categoria_servico", "nome", d["nome"]):
+                    messages.error(request, "Já existe uma categoria com este nome.")
+                    return redirect("portal:gestao_categoria_editar", pk=pk)
+            try:
+                db.atualizar_categoria(pk, d["nome"], d.get("descricao"))
+                messages.success(request, "Categoria atualizada.")
+            except IntegrityError:
+                messages.error(request, "Já existe uma categoria com este nome.")
             return redirect("portal:gestao_categorias")
     else:
         # GET: form ja preenchido com os dados atuais
@@ -267,9 +290,9 @@ def gestao_servicos(request):
     Cada um fica numa categoria e tem prazos pro semaforo (amarelo/vermelho
     em dias).
     """
-    # GET: form vazio + lista de servicos (com a categoria) + categorias pro select
+    # GET: form vazio + lista de servicos (todos, ativos e inativos) + categorias pro select
     form = ServicoForm()
-    lista = db.listar_servicos_com_categoria()
+    lista = db.listar_servicos_todos()
     categorias = db.listar_categorias_ativas()
     return render(
         request,
@@ -307,8 +330,21 @@ def gestao_servico_edit(request, pk):
         form = ServicoForm(request.POST, instance=obj)
         if form.is_valid():
             d = form.cleaned_data
-            db.atualizar_servico(pk, d["nome"], d.get("descricao"), d["id_categoria"].pk)
-            messages.success(request, "Serviço atualizado.")
+            cat_id = d["id_categoria"].pk
+            # so confiro duplicidade se o nome ou categoria mudou
+            nome_mudou = d["nome"].lower() != (obj.nome or "").lower()
+            cat_mudou = cat_id != obj.id_categoria_id
+            if nome_mudou or cat_mudou:
+                if db.existe_nome("servico", "nome", d["nome"],
+                                  extra_where="AND id_categoria = %s",
+                                  extra_params=[cat_id]):
+                    messages.error(request, "Já existe um serviço com este nome nesta categoria.")
+                    return redirect("portal:gestao_servico_editar", pk=pk)
+            try:
+                db.atualizar_servico(pk, d["nome"], d.get("descricao"), cat_id)
+                messages.success(request, "Serviço atualizado.")
+            except IntegrityError:
+                messages.error(request, "Já existe um serviço com este nome nesta categoria.")
             return redirect("portal:gestao_servicos")
     else:
         # GET: form preenchido
@@ -341,10 +377,16 @@ def gestao_bairros(request):
     if request.method == "POST":
         form = BairroForm(request.POST)
         if form.is_valid():
-            # valido OK: insiro e volto pra lista
+            # valido OK: confiro duplicidade de nome antes de inserir
             d = form.cleaned_data
-            db.inserir_bairro(d["nome_bairro"], d["cep"], d.get("regiao"))
-            messages.success(request, "Bairro criado.")
+            if db.existe_nome("bairro", "nome_bairro", d["nome_bairro"]):
+                messages.error(request, "Já existe um bairro com este nome.")
+            else:
+                try:
+                    db.inserir_bairro(d["nome_bairro"], d["cep"], d.get("regiao"))
+                    messages.success(request, "Bairro criado.")
+                except IntegrityError:
+                    messages.error(request, "Já existe um bairro com este nome.")
             return redirect("portal:gestao_bairros")
         # invalido: aviso e ligo a flag pra reabrir o form com os erros
         messages.error(request, "Corrija os erros no formulário.")
@@ -388,8 +430,16 @@ def gestao_bairro_edit(request, pk):
         form = BairroForm(request.POST, instance=obj)
         if form.is_valid():
             d = form.cleaned_data
-            db.atualizar_bairro(pk, d["nome_bairro"], d["cep"], d.get("regiao"), d.get("ativo", True))
-            messages.success(request, "Bairro atualizado.")
+            # so confiro duplicidade se o nome mudou em relacao ao atual
+            if d["nome_bairro"].lower() != (obj.nome_bairro or "").lower():
+                if db.existe_nome("bairro", "nome_bairro", d["nome_bairro"]):
+                    messages.error(request, "Já existe um bairro com este nome.")
+                    return redirect("portal:gestao_bairro_editar", pk=pk)
+            try:
+                db.atualizar_bairro(pk, d["nome_bairro"], d["cep"], d.get("regiao"), d.get("ativo", True))
+                messages.success(request, "Bairro atualizado.")
+            except IntegrityError:
+                messages.error(request, "Já existe um bairro com este nome.")
             return redirect("portal:gestao_bairros")
     else:
         # GET: form preenchido
@@ -432,7 +482,7 @@ def gestao_colaboradores(request):
 
             if ja_existe:
                 # ja existe -> so aviso
-                messages.error(request, "E-mail ou CPF já existe.")
+                messages.error(request, "E-mail ou CPF já cadastrado.")
             else:
                 # insiro o colaborador novo
                 db.inserir_colaborador(d)
@@ -490,7 +540,23 @@ def gestao_servico_desativar(request, pk):
     # soft delete do servico (so marca inativo). se nao achar -> 404
     if not db.desativar_servico(pk):
         raise Http404()
-    messages.info(request, "Serviço inativado.")
+    # confiro se existem chamados vinculados a este servico e mostro aviso
+    total, ativos = db.contar_chamados_por_servico(pk)
+    if total > 0:
+        if ativos > 0:
+            messages.warning(
+                request,
+                f"Serviço inativado. Atenção: existem {ativos} chamado(s) ativo(s) "
+                f"e {total} no total vinculados a este serviço."
+            )
+        else:
+            messages.info(
+                request,
+                f"Serviço inativado. Existem {total} chamado(s) encerrado(s) "
+                f"no histórico vinculados a este serviço."
+            )
+    else:
+        messages.info(request, "Serviço inativado.")
     return redirect("portal:gestao_servicos")
 
 
@@ -512,6 +578,26 @@ def gestao_bairro_ativar(request, pk):
         raise Http404()
     messages.info(request, "Bairro reativado.")
     return redirect("portal:gestao_bairros")
+
+
+@perfis("GES")
+@require_http_methods(["POST"])
+def gestao_categoria_desativar(request, pk):
+    """Desativa categoria (soft delete)."""
+    if not db.desativar_categoria(pk):
+        raise Http404()
+    messages.info(request, "Categoria inativada.")
+    return redirect("portal:gestao_categorias")
+
+
+@perfis("GES")
+@require_http_methods(["POST"])
+def gestao_categoria_ativar(request, pk):
+    """Reativa categoria."""
+    if not db.ativar_categoria(pk):
+        raise Http404()
+    messages.info(request, "Categoria reativada.")
+    return redirect("portal:gestao_categorias")
 
 
 # ------------------------------------------------------------------
