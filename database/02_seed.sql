@@ -6,12 +6,17 @@ BEGIN;
 -- ============================================================================
 -- 5 status do chamado (dominio fixo, corresponde ao CHECK constraint)
 -- ============================================================================
+-- [!] A descricao vai SEM o prefixo da sigla (nao "AB — Aberto", so "Aberto").
+--     A sigla ja fica na coluna propria; a descricao aparece pura para o
+--     usuario e entra na mensagem de notificacao gerada pelo Trigger 2B
+--     ("status alterado para Concluido"). Isso torna o patch pontual
+--     fix_status_descricoes.sql desnecessario em instalacoes novas.
 INSERT INTO status_chamado (sigla, descricao) VALUES
-    ('AB', 'AB — Aberto'),
-    ('EA', 'EA — Em Atendimento'),
-    ('EE', 'EE — Em Execução'),
-    ('CO', 'CO — Concluído'),
-    ('CA', 'CA — Cancelado');
+    ('AB', 'Aberto'),
+    ('EA', 'Em Atendimento'),
+    ('EE', 'Em Execução'),
+    ('CO', 'Concluído'),
+    ('CA', 'Cancelado');
 
 -- ============================================================================
 -- 1 secretaria padrao (secretaria de obras)
