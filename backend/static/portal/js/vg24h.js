@@ -1,15 +1,18 @@
 /* ===================================================================
    vg24h.js — Interacoes client-side do Portal VG 24H
    ===================================================================
-   [!] Inicializa 8 funcionalidades ao carregar a pagina:
+   [!] Inicializa as funcionalidades client-side ao carregar a pagina:
        - initCharCounters    — Contador de caracteres (textarea)
        - initWizard          — Wizard 3 etapas do cadastro
        - initSelectionCards  — Cards selecionaveis (categorias/servicos)
        - initModals          - Modais de confirmacao
        - initTabs            — Abas de navegacao
-       - initMobileMenu      — Menu responsivo (mobile)
        - initRatingStars     — Estrelas de avaliacao (click)
        - initAnimateOnScroll — Animacao ao rolar a pagina
+       - initPasswordToggles — Mostrar/ocultar senha (roda no 'load')
+       - animateCounter      — Contador numerico animado (stats da home)
+       [!] O menu responsivo NAO tem init proprio: usamos o core.BRMenu nativo
+           do GOV.br (evita conflito — ver comentario em initAnimateOnScroll).
    =================================================================== */
 
 // rodo a maioria dos init no DOMContentLoaded pra nao esperar imagem/css carregar
