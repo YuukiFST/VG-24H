@@ -92,7 +92,7 @@ def alterar_status(chamado_id, novo_status, servidor_id, prioridade=None, resolu
         if update_fields:
             update_params.append(chamado_id)  # o id vai por ultimo, pro WHERE
             cursor.execute(
-                f"UPDATE chamado SET {', '.join(update_fields)} "
+                f"UPDATE chamado SET {', '.join(update_fields)} "  # noqa: S608 (update_fields sao literais do codigo; valores parametrizados)
                 f"WHERE id_chamado = %s",
                 update_params,
             )

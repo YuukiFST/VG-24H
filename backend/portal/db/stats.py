@@ -124,7 +124,7 @@ def existe_email_ou_cpf(tabela, email, cpf):
     with connection.cursor() as cursor:
         # EXISTS retorna True/False; uso OR pra dar True se bater o email OU o cpf. Os valores ainda vao como %s
         cursor.execute(
-            f"SELECT EXISTS("
+            f"SELECT EXISTS("  # noqa: S608 (tabela validada por _validar_tabela; valores parametrizados)
             f"  SELECT 1 FROM {tabela} WHERE LOWER(email) = %s"
             f") OR EXISTS("
             f"  SELECT 1 FROM {tabela} WHERE cpf = %s"
@@ -154,7 +154,7 @@ def existe_nome(tabela, campo, nome, *, extra_where="", extra_params=None):
         params.extend(extra_params)
     with connection.cursor() as cursor:
         cursor.execute(
-            f"SELECT EXISTS("
+            f"SELECT EXISTS("  # noqa: S608 (tabela/campo/extra_where validados; nome vai parametrizado)
             f"  SELECT 1 FROM {tabela} WHERE LOWER({campo}) = %s"
             f"  {extra_where}"
             f")",
