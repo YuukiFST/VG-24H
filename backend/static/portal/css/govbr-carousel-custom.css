@@ -79,9 +79,6 @@
   justify-content: center;
   width: var(--carousel-full-size);
 }
-.br-carousel .carousel-stage .carousel-page .carousel-content .carousel-title {
-  position: absolute;
-}
 /* ===== STEP/INDICADORES: as bolinhas/progresso embaixo ===== */
 .br-carousel .carousel-step {
   bottom: 8px;

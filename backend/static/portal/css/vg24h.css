@@ -80,12 +80,8 @@ img {
 }
 
 /* ---- Utility Classes (custom, non-DS) ---- */
-/* dois utilitarios meus que o GOV.br nao tem: texto branco forcado e um
-   container centralizado com largura maxima pro conteudo nao espalhar demais */
-.text-white {
-  color: var(--pure-0) !important;
-}
-
+/* utilitario meu que o GOV.br nao tem: um container centralizado com largura
+   maxima pro conteudo nao espalhar demais em telas largas */
 .container-custom {
   max-width: 1200px;
   margin: 0 auto;
@@ -128,28 +124,6 @@ img {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.03);
   pointer-events: none;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 1;
-  max-width: 720px;
-  margin: 0 auto;
-}
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  padding: 6px 20px;
-  border-radius: 100px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  margin-bottom: 24px;
-  text-transform: uppercase;
 }
 
 .hero h1 {
@@ -208,11 +182,11 @@ img {
 }
 
 /* ===================================================================
-   SERVICE CARDS SECTION
+   SERVICES SECTION WRAPPER + SECTION HEADINGS
    =================================================================== */
-/* grid dos cards de servico na home. Deixo cada card com sombra leve e no hover
-   ele sobe um pouco, ganha sombra forte e aparece a barrinha colorida no topo
-   (::before com scaleX) pra dar a sensacao de selecao */
+/* faixa da home que envolve os cards de servico. Os cards em si usam o
+   componente .grid-cards do GOV.br (govbr-category-cards.css); aqui fica so o
+   fundo da secao e os titulos/subtitulos genericos reusados em outras telas */
 .services-section {
   padding: 64px 16px;
   background: var(--vg-bg-alt);
@@ -234,83 +208,6 @@ img {
   max-width: 560px;
   margin-left: auto;
   margin-right: auto;
-}
-
-.services-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.service-card {
-  background: #fff;
-  border-radius: var(--vg-radius);
-  padding: 32px 24px;
-  text-align: center;
-  box-shadow: var(--vg-shadow);
-  transition:
-    transform var(--vg-transition),
-    box-shadow var(--vg-transition);
-  cursor: pointer;
-  border: 1px solid transparent;
-  position: relative;
-  overflow: hidden;
-}
-
-.service-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--vg-primary);
-  transform: scaleX(0);
-  transition: transform var(--vg-transition);
-}
-
-.service-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--vg-shadow-lg);
-  border-color: rgba(19, 81, 180, 0.15);
-}
-
-.service-card:hover::before {
-  transform: scaleX(1);
-}
-
-.service-card-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: var(--blue-warm-vivid-5, #edf5ff);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 16px;
-  font-size: 1.5rem;
-  color: var(--vg-primary);
-  transition: background var(--vg-transition);
-}
-
-.service-card:hover .service-card-icon {
-  background: var(--vg-primary);
-  color: #fff;
-}
-
-.service-card h3 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--gray-80, #333);
-  margin-bottom: 8px;
-}
-
-.service-card p {
-  font-size: 0.875rem;
-  color: var(--gray-60, #636363);
-  line-height: 1.5;
 }
 
 /* ===================================================================
@@ -458,12 +355,6 @@ img {
    =================================================================== */
 /* telas de login/cadastro/recuperar senha: centralizo um card branco no meio
    da tela e aqui tambem ficam os estilos de form-group/form-row que reuso nesses forms */
-.auth-page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
 .auth-main {
   flex: 1;
   display: flex;
@@ -480,10 +371,6 @@ img {
   padding: 48px 40px;
   width: 100%;
   max-width: 480px;
-}
-
-.auth-card-wide {
-  max-width: 640px;
 }
 
 .auth-logo {
@@ -567,7 +454,7 @@ img {
    DASHBOARD LAYOUT
    =================================================================== */
 /* moldura das paginas internas (dashboard do colaborador/gestor): largura maxima,
-   cabecalho com titulo + mensagem de boas vindas e o sininho de notificacao com badge */
+   cabecalho com titulo e o sininho de notificacao com badge de contagem */
 .dashboard-content {
   max-width: 1200px;
   margin: 0 auto;
@@ -587,11 +474,6 @@ img {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--vg-primary-dark);
-}
-
-.dashboard-header .welcome-msg {
-  font-size: 0.9375rem;
-  color: var(--gray-60, #636363);
 }
 
 /* Notification Bell */
@@ -801,38 +683,6 @@ img {
 }
 
 /* ===================================================================
-   FILTER BAR
-   =================================================================== */
-/* barra branca de filtros acima das listas de chamado: itens em linha que
-   quebram quando falta espaco; em mobile (la embaixo) viram coluna */
-.filter-bar {
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 24px;
-  padding: 20px 24px;
-  background: #fff;
-  border-radius: var(--vg-radius);
-  box-shadow: var(--vg-shadow);
-}
-
-.filter-bar .filter-item {
-  flex: 1;
-  min-width: 160px;
-}
-
-.filter-bar .filter-item label {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--gray-60, #636363);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
-}
-
-/* ===================================================================
    DATA TABLE
    =================================================================== */
 /* embrulho das tabelas (.br-table do GOV): so dou cantos arredondados, sombra e
@@ -853,7 +703,7 @@ img {
    =================================================================== */
 /* pagina de detalhe do chamado: dois cards lado a lado (info + acoes), as linhas
    label/valor do card e a timeline de status com a bolinha e a linha vertical
-   (::before) ligando os pontos. timeline-dot.inactive e o passo ainda nao atingido */
+   (::before) ligando os pontos do historico de status */
 .ticket-status-bar .ticket-info-card form {
   margin-top: 8px;
 }
@@ -956,11 +806,6 @@ img {
   flex-shrink: 0;
   z-index: 1;
   margin-top: 4px;
-}
-
-.timeline-dot.inactive {
-  background: var(--gray-20, #ccc);
-  color: var(--gray-60, #636363);
 }
 
 .timeline-content h4 {
@@ -1178,10 +1023,6 @@ img {
    =================================================================== */
 /* abas das telas de gestao: escondo todo .tab-content e mostro so o .active,
    com o mesmo fadeIn do wizard */
-.admin-tabs {
-  margin-bottom: 24px;
-}
-
 .tab-content {
   display: none;
 }
@@ -1419,20 +1260,12 @@ img {
     grid-template-columns: 1fr 1fr;
   }
 
-  .services-grid {
-    grid-template-columns: 1fr;
-  }
-
   .semaforo-grid {
     grid-template-columns: 1fr 1fr;
   }
 
   .auth-card {
     padding: 32px 20px;
-  }
-
-  .filter-bar {
-    flex-direction: column;
   }
 }
 
