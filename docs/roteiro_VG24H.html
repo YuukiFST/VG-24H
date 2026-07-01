@@ -166,7 +166,8 @@
     <ol class="timeline">
       <li><b>Página inicial</b> — mostrar o portal público (carrossel de banners, categorias, estatísticas).
         <br><small>Cada um explica a sua camada da mesma tela.</small></li>
-      <li><b>Login e Cadastro</b> — fazer login; mostrar onde o sistema valida e a mensagem de erro/sucesso.</li>
+      <li><b>Login e Cadastro</b> — <b>errar a senha</b> de propósito (mostrar a mensagem de erro), depois
+        <b>acertar</b>, e então <b>abrir o código</b> que valida e dispara a mensagem (cards Bruno/Yuuki "Login").</li>
       <li><b>Dashboard</b> — primeira tela do gestor (gráficos) e o painel do cidadão.</li>
       <li><b>Gestão de Chamados</b> <span class="tag core">CORE</span> — lista com semáforo, prioridade e filtros.</li>
       <li><b>Editar um chamado</b> <span class="tag core">CORE</span> — alterar status, prioridade, observação, resolução.</li>
@@ -174,6 +175,92 @@
       <li><b>Notificações</b> — como o cidadão é avisado automaticamente.</li>
       <li><b>Estatísticas</b> — a <i>view</i> SQL e os gráficos.</li>
     </ol>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ====== BLOCOS DA BANCA (o que a professora pediu) ========== -->
+  <!-- ============================================================ -->
+  <div class="bloco">
+    <h2>Mapa da banca — o que a professora pediu × onde mostrar</h2>
+    <p class="legenda">A professora listou o que quer ver. Abra o card indicado na hora de cada pedido.</p>
+    <table class="mini">
+      <tr><th>Pedido da professora</th><th>Onde mostrar</th></tr>
+      <tr><td>DER Conceitual e Lógico + consultas SQL avançadas</td><td>Blocos "DER" e "SQL avançado" (abaixo) + card do Rafael "Modelagem"</td></tr>
+      <tr><td>Explicar as ferramentas utilizadas</td><td>Bloco "Ferramentas utilizadas" (abaixo)</td></tr>
+      <tr><td>Apresentar a proposta + login (errar a senha, depois acertar) e mostrar o código</td><td>Card do Bruno "Login" + cards do Yuuki "Login" e "Mensagens"</td></tr>
+      <tr><td>Mostrar a tela e escolher um CRUD para explicar</td><td>Qualquer card CRUD (sugestão: Serviços — tem FK e busca)</td></tr>
+      <tr><td>Mostrar uma chave estrangeira (FK) nos CRUDs, no código</td><td>Card "Modelagem" (FKs no schema) + Serviços (FK categoria), Categorias (FK secretaria), Chamado (3 FKs)</td></tr>
+      <tr><td>Explicação de combo box</td><td>Card do Yuuki "Combo box (o &lt;select&gt;)"</td></tr>
+      <tr><td>Mostrar as pesquisas/filtros dos CRUD</td><td>Card "Gestão de Chamados" (filtros) + bloco "Buscas e filtros dos CRUD" (abaixo)</td></tr>
+    </table>
+    <div class="nota"><b>Lembretes da professora (repita sempre):</b> <b>explique o que está sendo feito</b> a cada
+    passo; <b>aponte/realce</b> no editor a linha que está explicando; ao <b>excluir</b> algo, <b>diga o que</b> está
+    sendo excluído (ver card "Excluir chamado" — apaga fotos, históricos, notificações e por fim o chamado).</div>
+  </div>
+
+  <div class="bloco">
+    <h2>Ferramentas utilizadas (para a pergunta "quais ferramentas?")</h2>
+    <ul class="exp">
+      <li><b>Linguagem:</b> Python 3.</li>
+      <li><b>Framework web:</b> Django 5.1 — rotas, views, forms, templates, sessão, CSRF. Mas <b>sem o ORM para dados</b>.</li>
+      <li><b>Banco de dados:</b> PostgreSQL (dev: Docker local; produção: Neon). Todo acesso em <b>SQL puro</b>.</li>
+      <li><b>Driver do banco:</b> <code>psycopg</code> 3 — é ele que executa o <code>cursor.execute(...)</code>.</li>
+      <li><b>Design System:</b> gov.br (<code>@govbr-ds/core</code> via CDN) + Font Awesome (ícones).</li>
+      <li><b>Gráficos:</b> Chart.js (dashboard de estatísticas).</li>
+      <li><b>Imagens/upload:</b> Cloudinary + Pillow (fotos dos chamados).</li>
+      <li><b>Produção:</b> Gunicorn (servidor) + WhiteNoise (arquivos estáticos); deploy por <code>Procfile</code>.</li>
+      <li><b>Apoio:</b> <code>python-dotenv</code> (variáveis de ambiente), <b>pytest</b> (testes), <b>Ruff</b> (lint), <b>uv</b> (pacotes).</li>
+    </ul>
+  </div>
+
+  <div class="bloco">
+    <h2>DER: Conceitual × Lógico (como explicar)</h2>
+    <ul class="exp">
+      <li><b>Conceitual:</b> a visão de alto nível — as <b>entidades</b> e como se relacionam, sem detalhe de tipo.
+      Ex.: um <i>Cidadão</i> abre vários <i>Chamados</i>; cada <i>Chamado</i> pertence a um <i>Serviço</i>, a um
+      <i>Bairro</i> e tem vários registros de <i>Histórico</i>; cada <i>Serviço</i> pertence a uma <i>Categoria</i>.</li>
+      <li><b>Lógico:</b> o conceitual já traduzido em <b>tabelas, colunas, PK/FK e tipos</b> — é o
+      <code>database/01_schema.sql</code> (mostre este arquivo). Cada relação vira uma <b>chave estrangeira</b>
+      (<code>REFERENCES</code>); cada regra de valor vira um <code>CHECK</code>.</li>
+      <li><b>11 entidades do DER</b> + 3 tabelas de apoio (<code>configuracao_semaforo</code>, <code>protocolo_seq</code>,
+      <code>banner_publicacao</code>) = <b>14 tabelas</b> no schema.</li>
+      <li>Detalhe forte para citar: o <i>status</i> do chamado <b>não é coluna</b> — é o último registro de
+      <code>historico_chamado</code> (padrão <i>event sourcing</i>).</li>
+    </ul>
+  </div>
+
+  <div class="bloco">
+    <h2>Consultas / recursos SQL avançados (decore para citar)</h2>
+    <p class="legenda">Quando a professora perguntar "quais SQL avançados vocês usaram?", cite esta lista.
+    Cada item aponta o card do Rafael onde o código aparece.</p>
+    <table class="mini">
+      <tr><th>Recurso avançado</th><th>O que faz / onde está</th></tr>
+      <tr><td><b>JOIN LATERAL</b></td><td>Descobre o status atual de cada chamado (último histórico) numa passada só — evita N+1. Card "Status atual".</td></tr>
+      <tr><td><b>Stored function (PL/pgSQL)</b></td><td><code>fn_proximo_protocolo(ano)</code>: gera o protocolo atômico com <code>LOOP</code>. Card "Abrir chamado".</td></tr>
+      <tr><td><b>Triggers (9)</b></td><td>Regras automáticas no banco: cria status "AB", seta conclusão, gera notificação, protege o histórico. Cards "Triggers" e "Regras de integridade".</td></tr>
+      <tr><td><b>VIEW</b></td><td><code>vw_estatisticas_chamados</code>: consulta salva com <code>GROUP BY</code> + <code>JOIN LATERAL</code>. Card "View de estatísticas".</td></tr>
+      <tr><td><b>UPSERT</b> (<code>INSERT ... ON CONFLICT DO UPDATE RETURNING</code>)</td><td>Contador de protocolo sem race condition, dentro da stored function.</td></tr>
+      <tr><td><b>Agregação condicional</b> (<code>SUM(CASE WHEN...)</code> + <code>make_interval</code>)</td><td>Conta verde/amarelo/vermelho do semáforo numa consulta só. Card "Semáforo".</td></tr>
+      <tr><td><b>Subconsulta <code>EXISTS</code></b></td><td>Checa e-mail/CPF duplicado no cadastro. Card "Cadastro".</td></tr>
+      <tr><td><b>Índice composto</b></td><td><code>(id_chamado, dt_alteracao)</code> acelera a busca do último status. Card "Modelagem".</td></tr>
+      <tr><td><b>Soft delete + transação</b></td><td><code>ativo = FALSE</code> nos CRUDs; <code>transaction.atomic()</code> + <code>set_config</code> na exclusão em cascata. Card "Excluir chamado".</td></tr>
+    </table>
+    <div class="nota"><b>Anti-SQL-injection:</b> todo valor entra por parâmetro <code>%s</code>; onde precisa de nome de
+    coluna dinâmico (JOIN LATERAL), há <b>lista branca</b> (<code>COLUNAS_LATERAL_VALIDAS</code>).</div>
+  </div>
+
+  <div class="bloco">
+    <h2>Buscas e filtros dos CRUD (a professora pediu "as pesquisas")</h2>
+    <ul class="exp">
+      <li><b>Gestão de Chamados:</b> filtros por bairro, status, serviço e intervalo de datas + alternar "mostrar
+      encerrados" (combo boxes + campos de data). O SQL em <code>db.listar_chamados_equipe</code> vai somando os
+      <code>AND</code> conforme a query string. Card "Gestão de Chamados".</li>
+      <li><b>Painel do cidadão:</b> busca por protocolo + filtro de status/data na tabela dos próprios chamados.</li>
+      <li><b>Listas administrativas</b> (Bairros, Serviços, Categorias, Colaboradores): trazem ativos e inativos
+      ordenados; a "pesquisa" é o filtro/ordenação da própria tabela.</li>
+      <li>Toda busca por texto passa por <code>escape_like()</code> (<code>utils.py</code>) para tratar <code>%</code> e
+      <code>_</code>, e o valor entra sempre por parâmetro <code>%s</code>.</li>
+    </ul>
   </div>
 
   <!-- ============================================================ -->
@@ -313,10 +400,11 @@ CREATE INDEX ix_historico_chamado_status ON historico_chamado (id_chamado, dt_al
           </ul>
           <div class="nota">Há também as tabelas <code>secretaria</code>, <code>categoria_servico</code>,
           <code>bairro</code>, <code>cidadao</code>, <code>servidor</code>, <code>foto_chamado</code> e
-          <code>notificacao</code> — completando as <b>11 entidades do DER</b>. Fora do DER há duas tabelas de apoio:
-          <code>configuracao_semaforo</code> (prazos globais do semáforo) e <code>protocolo_seq</code> (gerador de protocolo).
-          A tabela <code>banner_publicacao</code> (banners da home) é definida pelo <i>model</i>
-          <code>BannerPublicacao</code> (<code>managed=False</code>, fora das 11 do DER).</div>
+          <code>notificacao</code> — completando as <b>11 entidades do DER</b>. Além delas, o
+          <code>01_schema.sql</code> cria 3 tabelas de apoio: <code>configuracao_semaforo</code> (prazos globais),
+          <code>protocolo_seq</code> (contador de protocolo) e <code>banner_publicacao</code> (banners da home) —
+          <b>14 tabelas no total</b> no schema. <b>Todas</b> as tabelas são criadas pelo nosso SQL; os <i>models</i>
+          Django apenas as espelham (<code>managed=False</code>) para alimentar os formulários — o Django não cria nem altera tabela.</div>
         </div>
       </details>
 
@@ -420,22 +508,43 @@ cursor.execute(
           <div class="fala">"Para abrir um chamado eu gero o número de protocolo de forma atômica (sem dois iguais),
           faço o <code>INSERT</code> na tabela <code>chamado</code> e registro a foto. Eu <b>não</b> insiro o status
           inicial — um <i>trigger</i> do banco cria sozinho o histórico 'AB' (Aberto)."</div>
-          <div class="arquivo">backend/portal/utils.py — proximo_protocolo (linhas ~34-62)</div>
-          <pre class="cod">cursor.execute(
-    "INSERT INTO protocolo_seq (ano, ultimo_numero) VALUES (%s, 1) "
-    "ON CONFLICT (ano) DO UPDATE SET ultimo_numero = protocolo_seq.ultimo_numero + 1 "
-    "RETURNING ultimo_numero",
-    [y],
-)
-n = cursor.fetchone()[0]
-protocolo = f"{y}{n:06d}"   # ex.: 2026000001</pre>
+          <div class="nota imp"><b>Atenção (atualizado no refactor):</b> a lógica atômica do protocolo mora numa
+          <b>stored function</b> no banco — <code>fn_proximo_protocolo(ano)</code>. A aplicação só a chama. Cite isso
+          como um dos recursos SQL avançados (função/procedure com regra de negócio dentro do PostgreSQL).</div>
+          <div class="arquivo">backend/portal/utils.py — proximo_protocolo (linhas ~31-51)</div>
+          <pre class="cod">y = timezone.now().year          # ano de agora no fuso da aplicação (America/Cuiaba)
+with connection.cursor() as cursor:
+    # a app NÃO monta o número: delega tudo pra stored function do banco
+    cursor.execute("SELECT fn_proximo_protocolo(%s)", [y])
+    row = cursor.fetchone()
+    return row[0]                 # ex.: "2026000001" (ano + 6 dígitos)</pre>
+          <div class="arquivo">database/03_functions_triggers.sql — fn_proximo_protocolo (linhas ~148-176)</div>
+          <pre class="cod">CREATE OR REPLACE FUNCTION fn_proximo_protocolo(p_ano INTEGER)
+RETURNS VARCHAR LANGUAGE plpgsql AS $$
+DECLARE v_numero INTEGER; v_protocolo VARCHAR(20);
+BEGIN
+    LOOP
+        -- passo ATÔMICO: cria a linha do ano com 1, ou incrementa +1 se já existe
+        INSERT INTO protocolo_seq (ano, ultimo_numero) VALUES (p_ano, 1)
+        ON CONFLICT (ano) DO UPDATE SET ultimo_numero = protocolo_seq.ultimo_numero + 1
+        RETURNING ultimo_numero INTO v_numero;
+        -- monta ANO + 6 dígitos com zeros à esquerda
+        v_protocolo := p_ano::TEXT || lpad(v_numero::TEXT, 6, '0');
+        -- se esse protocolo ainda não existe em chamado, está livre -> sai do laço
+        EXIT WHEN NOT EXISTS (SELECT 1 FROM chamado WHERE num_protocolo = v_protocolo);
+    END LOOP;
+    RETURN v_protocolo;
+END; $$;</pre>
           <ul class="exp">
-            <li><code>INSERT ... ON CONFLICT (ano) DO UPDATE ... RETURNING</code>: é um "UPSERT". Se o ano ainda não
-            existe, cria com 1; se já existe, soma +1. Tudo em <b>uma</b> operação atômica — sem risco de dois
-            chamados pegarem o mesmo número.</li>
-            <li>O protocolo é o ano + 6 dígitos: <code>f"{y}{n:06d}"</code>.</li>
+            <li><b>Stored function</b> = função salva dentro do banco (regra de negócio no PostgreSQL). É um recurso SQL
+            avançado que a professora costuma pedir — mostre este arquivo.</li>
+            <li><code>INSERT ... ON CONFLICT (ano) DO UPDATE ... RETURNING</code>: é um "UPSERT" atômico. Se o ano não
+            existe, cria com 1; se já existe, soma +1 — sem risco de dois chamados pegarem o mesmo número.</li>
+            <li><code>LOOP ... EXIT WHEN NOT EXISTS(...)</code>: se por dessincronização o número já estiver ocupado,
+            avança sozinho até achar um livre.</li>
+            <li>A aplicação (<code>utils.proximo_protocolo</code>) só faz <code>SELECT fn_proximo_protocolo(ano)</code>.</li>
           </ul>
-          <div class="arquivo">backend/portal/services/chamado.py — criar_novo_chamado (linhas ~11-52)</div>
+          <div class="arquivo">backend/portal/services/chamado.py — criar_novo_chamado (linhas ~11-61)</div>
           <pre class="cod">cursor.execute(
     "INSERT INTO chamado "
     "(num_protocolo, prioridade, ponto_de_referencia, descricao, "
@@ -893,14 +1002,16 @@ UPDATE bairro SET ativo = TRUE  WHERE id_bairro = %s;   -- reativar</pre>
         <div class="crud-corpo">
           <div class="fala">"Serviços: listar (só ativos, com JOIN na categoria), criar, editar, desativar. E há uma tela
           separada que edita os prazos <b>globais</b> do semáforo (não por serviço). SQL em <code>db/catalogo.py</code>."</div>
-          <div class="arquivo">backend/portal/db/catalogo.py — listar_servicos_com_categoria / inserir_servico / desativar_servico (~linhas 130-175)</div>
-          <pre class="cod">SELECT s.id_servico, s.nome, s.descricao, s.ativo, s.id_categoria, cat.nome AS categoria_nome
-FROM servico s JOIN categoria_servico cat ON s.id_categoria = cat.id_categoria
-WHERE s.ativo = TRUE ORDER BY s.nome;
+          <div class="arquivo">backend/portal/db/catalogo.py — listar_servicos_todos / inserir_servico / desativar_servico (~linhas 133-175)</div>
+          <pre class="cod">-- listar: traz ativos E inativos (o gestor precisa ver os desativados pra reativar)
+SELECT s.id_servico, s.nome, s.descricao, s.ativo,
+       s.id_categoria, cat.nome AS categoria_nome
+FROM servico s
+JOIN categoria_servico cat ON s.id_categoria = cat.id_categoria   -- FK: servico -> categoria
+ORDER BY s.ativo DESC, s.nome;
 
-INSERT INTO servico (nome, descricao, ativo, id_categoria)
-VALUES (%s, %s, %s, %s);
-UPDATE servico SET ativo = FALSE WHERE id_servico = %s;   -- soft delete</pre>
+INSERT INTO servico (nome, descricao, ativo, id_categoria) VALUES (%s, %s, %s, %s);
+UPDATE servico SET ativo = FALSE WHERE id_servico = %s;   -- soft delete (nao apaga)</pre>
           <div class="arquivo">backend/portal/db/config.py — atualizar_configuracao_prazos (~linha 28)</div>
           <pre class="cod">UPDATE configuracao_semaforo SET prazo_amarelo_dias = %s, prazo_vermelho_dias = %s
 WHERE id = 1;   -- prazos GLOBAIS (singleton), não por serviço</pre>
@@ -1242,7 +1353,7 @@ if form.is_valid():
             cidadao=request.portal_user,
             servico=d["id_servico"], bairro=d["id_bairro"],
             descricao=d["descricao"], ponto_referencia=d.get("ponto_de_referencia"),
-            foto_file=request.FILES.get("foto"), request=request,
+            foto_file=request.FILES.get("foto"),
         )
     except ValueError as e:
         messages.error(request, str(e))
@@ -1250,9 +1361,9 @@ if form.is_valid():
     messages.success(request, f"Chamado aberto. Protocolo: {protocolo}")
     return redirect("portal:cidadao_chamado", pk=chamado_id)</pre>
           <p class="sub">O retry de protocolo fica no serviço (services/chamado.py — criar_novo_chamado):</p>
-          <pre class="cod">url = salvar_foto_upload(foto_file, request=request)
-protocolo = proximo_protocolo()
-for _ in range(100):
+          <pre class="cod">url = salvar_foto_upload(foto_file)   # sobe a foto (Cloudinary) e devolve a URL
+protocolo = proximo_protocolo()       # 1º palpite (chama a stored function)
+for _ in range(100):                  # retry: se colidir protocolo, gera outro
     try:
         with transaction.atomic(), connection.cursor() as cursor:
             ...  # INSERT chamado RETURNING id + INSERT foto
@@ -1642,6 +1753,33 @@ def gestao_chamado_excluir(request, pk):
         </div>
       </details>
 
+      <!-- COMBO BOX -->
+      <details class="crud">
+        <summary>Combo box (o <code>&lt;select&gt;</code>) — como funciona <span class="tag core">a professora pergunta</span></summary>
+        <div class="crud-corpo">
+          <div class="fala">"Combo box é o campo de escolha em lista — no HTML é a tag <code>&lt;select&gt;</code> com
+          várias <code>&lt;option&gt;</code>. Uso em vários lugares: escolher o status e a prioridade ao editar um chamado,
+          escolher a categoria ao criar um serviço, e nos filtros (bairro/status/serviço). As opções são geradas por um
+          <code>{% for %}</code> a partir dos dados que a view mandou."</div>
+          <div class="arquivo">exemplo: backend/templates/portal/equipe/chamado_detalhe.html — combo de status</div>
+          <pre class="cod">&lt;select id="status-select" name="id_status" required&gt;
+  {% for code, label in form_status.fields.id_status.choices %}
+    {% if code %}
+    &lt;option value="{{ code }}"
+      {% if ch.status_atual.pk == code %}selected{% endif %}&gt;{{ label }}&lt;/option&gt;
+    {% endif %}
+  {% endfor %}
+&lt;/select&gt;</pre>
+          <ul class="exp">
+            <li><code>&lt;select name="id_status"&gt;</code>: o <b>combo box</b>; o <code>name</code> é o que a view lê no POST.</li>
+            <li><code>{% for ... %}</code> cria uma <code>&lt;option&gt;</code> para cada opção (status, prioridade, categoria...).</li>
+            <li><code>selected</code>: marca a opção já escolhida (ex.: o status atual do chamado).</li>
+            <li>Nos <b>filtros</b> dos CRUD é o mesmo combo box (bairro, status, serviço) — cada escolha vira um
+            <code>?bairro=..&amp;status=..</code> na URL que o SQL usa.</li>
+          </ul>
+        </div>
+      </details>
+
       <!-- DASHBOARD CIDADÃO (FRONT) -->
       <details class="crud">
         <summary>Painel do cidadão — lista com status colorido <span class="tag auth">tela</span></summary>
@@ -1838,9 +1976,10 @@ def gestao_chamado_excluir(request, pk):
 
     <details class="pergunta">
       <summary>"Como o número de protocolo é gerado sem repetir?"</summary>
-      <div class="resp"><b>Rafael:</b> função <code>proximo_protocolo</code> (<code>utils.py</code>) com
-      <code>INSERT INTO protocolo_seq ... ON CONFLICT (ano) DO UPDATE SET ultimo_numero = ... + 1 RETURNING</code>
-      — operação atômica. Formato: ano + 6 dígitos (ex.: <code>2026000001</code>).</div>
+      <div class="resp"><b>Rafael:</b> a <b>stored function</b> <code>fn_proximo_protocolo(ano)</code> no banco, com
+      <code>INSERT INTO protocolo_seq ... ON CONFLICT (ano) DO UPDATE SET ultimo_numero = ... + 1 RETURNING</code> dentro
+      de um <code>LOOP</code> — operação atômica. A app só faz <code>SELECT fn_proximo_protocolo(ano)</code>
+      (<code>utils.proximo_protocolo</code>). Formato: ano + 6 dígitos (ex.: <code>2026000001</code>).</div>
     </details>
 
     <details class="pergunta">
@@ -2023,8 +2162,9 @@ def gestao_chamado_excluir(request, pk):
 
     <details class="pergunta">
       <summary>"Como garantir que dois chamados abertos ao mesmo tempo não peguem o mesmo protocolo?"</summary>
-      <div class="resp"><b>Rafael:</b> o protocolo vem de <code>INSERT INTO protocolo_seq ... ON CONFLICT (ano) DO UPDATE
-      SET ultimo_numero = ... + 1 RETURNING</code> — atômico no banco. <b>Bruno:</b> ainda há um <code>for</code> de retry
+      <div class="resp"><b>Rafael:</b> o protocolo vem da <b>stored function</b> <code>fn_proximo_protocolo(ano)</code>,
+      que faz <code>INSERT INTO protocolo_seq ... ON CONFLICT (ano) DO UPDATE SET ultimo_numero = ... + 1 RETURNING</code>
+      dentro de um <code>LOOP</code> — atômico no banco. <b>Bruno:</b> ainda há um <code>for</code> de retry
       em <code>criar_novo_chamado</code> que, se um <code>IntegrityError</code> de protocolo acontecer, gera outro número e
       tenta de novo, tudo em <code>transaction.atomic()</code>.</div>
     </details>
@@ -2075,11 +2215,12 @@ def gestao_chamado_excluir(request, pk):
 
     <details class="pergunta">
       <summary>"Quantas tabelas, triggers e views o banco tem?"</summary>
-      <div class="resp"><b>Rafael:</b> <b>13 tabelas</b> no <code>01_schema.sql</code> (11 entidades do DER +
-      <code>configuracao_semaforo</code> + <code>protocolo_seq</code>), mais <code>banner_publicacao</code> (definida pelo
-      <i>model</i>, <code>managed=False</code>). <b>1 view</b> (<code>vw_estatisticas_chamados</code>) e os <b>triggers</b>:
-      3 de negócio (1, 2A, 2B) em <code>03_functions_triggers.sql</code> e os de integridade em <code>04_rules.sql</code>
-      (foto/observação em encerrado, avaliação imutável, histórico/chamado sem UPDATE/DELETE).</div>
+      <div class="resp"><b>Rafael:</b> <b>14 tabelas</b> no <code>01_schema.sql</code> (11 entidades do DER +
+      <code>configuracao_semaforo</code>, <code>protocolo_seq</code> e <code>banner_publicacao</code>) — todas
+      <code>managed=False</code> (criadas pelo SQL, espelhadas pelos models). <b>10 funções PL/pgSQL</b>: 1 stored
+      function (<code>fn_proximo_protocolo</code>) + 9 funções de trigger. <b>9 triggers</b>: 3 de negócio (Trigger 1/2A/2B
+      em <code>03_functions_triggers.sql</code>) + 6 de integridade (<code>04_rules.sql</code>: foto/observação em
+      encerrado, avaliação imutável, histórico/chamado sem UPDATE/DELETE). <b>1 view</b> (<code>vw_estatisticas_chamados</code>).</div>
     </details>
   </div>
 
@@ -2094,7 +2235,7 @@ def gestao_chamado_excluir(request, pk):
       <tr><td>Dashboard equipe</td><td>COUNT/GROUP BY</td><td>equipe_dashboard</td><td>equipe/estatisticas_graficos.html</td></tr>
       <tr><td>Gestão de Chamados</td><td>JOIN LATERAL + filtros</td><td>equipe_chamados_lista</td><td>equipe/dashboard.html</td></tr>
       <tr><td>Editar chamado</td><td>criar_historico + UPDATE + Trigger 2B</td><td>equipe_chamado_detalhe (GET) / equipe_chamado_status (POST)</td><td>equipe/chamado_detalhe.html</td></tr>
-      <tr><td>Abrir chamado</td><td>proximo_protocolo + INSERT + Trigger 1</td><td>cidadao_chamado_novo</td><td>cidadao/novo_chamado.html</td></tr>
+      <tr><td>Abrir chamado</td><td>fn_proximo_protocolo (stored fn) + INSERT + Trigger 1</td><td>cidadao_chamado_novo</td><td>cidadao/novo_chamado.html</td></tr>
       <tr><td>Notificações</td><td>Trigger 2B + SELECT/DELETE</td><td>cidadao_notificacoes</td><td>cidadao/notificacoes.html</td></tr>
       <tr><td>Banners</td><td>banner_publicacao CRUD</td><td>gestao_banner_*</td><td>gestao/banners.html</td></tr>
       <tr><td>Bairros</td><td>bairro CRUD + ativo</td><td>gestao_bairro_*</td><td>gestao/bairros.html</td></tr>
