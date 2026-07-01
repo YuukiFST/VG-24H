@@ -56,10 +56,11 @@
             <div class="col-md-6">
               <div class="br-input">
                 <label for="prioridade-select">Prioridade</label>
-                {# prioridades eh a lista fixa 0..5 que a view monta na mao #}
+                {# prioridades eh a lista fixa 0..5 que a view monta na mao. #}
+                {# o value envia o texto completo (ex: '3 — Media') e o backend extrai o numero #}
                 <select id="prioridade-select" name="prioridade">
                   {% for val, lbl in prioridades %}
-                    <option value="{{ val }}" {% if ch.prioridade == val %}selected{% endif %}>{{ lbl }}</option>
+                    <option value="{{ lbl }}" {% if ch.prioridade == val %}selected{% endif %}>{{ lbl }}</option>
                   {% endfor %}
                 </select>
               </div>

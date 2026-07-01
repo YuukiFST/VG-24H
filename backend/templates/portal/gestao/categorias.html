@@ -66,14 +66,19 @@
                   <a href="{% url 'portal:gestao_categoria_editar' cat.pk %}" class="br-button circle small" title="Editar">
                     <i class="fas fa-edit"></i>
                   </a>
-                  {# [!] esse form posta 'desativar' pra gestao_categorias, mas a view no POST so #}
-                  {# valida o CategoriaForm e insere -- nao le esse campo. desativar de fato fica no form de editar. #}
+                  {# toggle: se ativo -> botao de Desativar, se inativo -> botao de Reativar #}
                   {% if cat.ativo %}
-                  <form action="{% url 'portal:gestao_categorias' %}" method="post" style="display:inline;">
+                  <form action="{% url 'portal:gestao_categoria_desativar' cat.pk %}" method="post" style="display:inline;">
                     {% csrf_token %}
-                    <input type="hidden" name="desativar" value="{{ cat.pk }}">
                     <button type="submit" class="br-button circle small" title="Desativar" onclick="return confirm('Inativar esta categoria?')">
                       <i class="fas fa-ban"></i>
+                    </button>
+                  </form>
+                  {% else %}
+                  <form action="{% url 'portal:gestao_categoria_ativar' cat.pk %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="br-button circle small" title="Ativar" onclick="return confirm('Reativar esta categoria?')">
+                      <i class="fas fa-check"></i>
                     </button>
                   </form>
                   {% endif %}
